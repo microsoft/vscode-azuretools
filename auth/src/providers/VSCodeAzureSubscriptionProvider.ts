@@ -10,12 +10,15 @@ import type { RefreshSuggestedEvent, TenantIdAndAccount } from '../contracts/Azu
 import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, getCoalescenceKey, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
+import { CaselessMap } from '../utils/map/CaselessMap';
+import { TwoKeyCaselessMap } from '../utils/map/TwoKeyCaselessMap';
 import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
 
 const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
 
 // TODO: cache clearing on account sign out
+// Maybe requires https://github.com/microsoft/vscode/issues/276997
 
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
@@ -25,9 +28,9 @@ const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
  * @note See important notes about caching on {@link BaseOptions.noCache}
  */
 export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBase {
-    private readonly accountCache = new Map<string, AzureAccount>(); // Key is the account ID, lowercase.
-    private readonly tenantCache = new Map<string, AzureTenant[]>(); // Key is the account ID, lowercase.
-    private readonly subscriptionCache = new Map<string, AzureSubscription[]>(); // Key is `${accountId}/${tenantId}`, lowercase.
+    private readonly accountCache = new CaselessMap<AzureAccount>(); // Key is the account ID
+    private readonly tenantCache = new CaselessMap<AzureTenant[]>(); // Key is the account ID
+    private readonly subscriptionCache = new TwoKeyCaselessMap<AzureSubscription[]>(); // Keys are account ID and tenant ID
 
     private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>(); // Key is from getOptionsCoalescenceKey
 
@@ -93,7 +96,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
             // If needed, refill the cache
             if (this.accountCache.size === 0) {
                 const accounts = await super.getAccounts(options);
-                accounts.forEach(account => this.accountCache.set(account.id.toLowerCase(), account));
+                accounts.forEach(account => this.accountCache.set(account.id, account));
                 this.log(`Cached ${accounts.length} accounts`);
             } else {
                 this.log('Using cached accounts');
@@ -123,23 +126,21 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public override async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
         try {
-            const cacheKey = account.id.toLowerCase();
-
             // If needed, delete the cache for this account
             if (options.noCache ?? DefaultOptions.noCache) {
-                this.tenantCache.delete(cacheKey);
+                this.tenantCache.delete(account.id);
             }
 
             // If needed, refill the cache
-            if (!this.tenantCache.has(cacheKey)) {
+            if (!this.tenantCache.has(account.id)) {
                 const tenants = await super.getTenantsForAccount(account, options);
-                this.tenantCache.set(cacheKey, tenants);
+                this.tenantCache.set(account.id, tenants);
                 this.logForAccount(account, `Cached ${tenants.length} tenants for account`);
             } else {
                 this.logForAccount(account, 'Using cached tenants for account');
             }
 
-            let results: AzureTenant[] = this.tenantCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
+            let results: AzureTenant[] = this.tenantCache.get(account.id)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
 
             // If needed, filter according to configured filters
             if (options.filter ?? DefaultOptions.filter) {
@@ -169,23 +170,21 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
         try {
-            const cacheKey = `${tenant.account.id.toLowerCase()}/${tenant.tenantId.toLowerCase()}`;
-
             // If needed, delete the cache for this tenant
             if (options.noCache ?? DefaultOptions.noCache) {
-                this.subscriptionCache.delete(cacheKey);
+                this.subscriptionCache.delete(tenant.account.id, tenant.tenantId);
             }
 
             // If needed, refill the cache
-            if (!this.subscriptionCache.has(cacheKey)) {
+            if (!this.subscriptionCache.has(tenant.account.id, tenant.tenantId)) {
                 const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
-                this.subscriptionCache.set(cacheKey, subscriptions);
+                this.subscriptionCache.set(tenant.account.id, tenant.tenantId, subscriptions);
                 this.logForTenant(tenant, `Cached ${subscriptions.length} subscriptions for account+tenant`);
             } else {
                 this.logForTenant(tenant, 'Using cached subscriptions for account+tenant');
             }
 
-            let results: AzureSubscription[] = this.subscriptionCache.get(cacheKey)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
+            let results: AzureSubscription[] = this.subscriptionCache.get(tenant.account.id, tenant.tenantId)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
 
             // If needed, filter according to configured filters
             if (options.filter ?? DefaultOptions.filter) {
@@ -259,13 +258,8 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @param accountId The ID of the signed-out account
      */
     // private onDidSignOutAccount(accountId: string): void {
-    //     const lowerAccountId = accountId.toLowerCase();
-    //     this.accountCache.delete(lowerAccountId);
-    //     this.tenantCache.delete(lowerAccountId);
-    //     this.subscriptionCache.forEach((_, key) => {
-    //         if (key.startsWith(`${lowerAccountId}/`)) {
-    //             this.subscriptionCache.delete(key);
-    //         }
-    //     });
+    //     this.accountCache.delete(accountId);
+    //     this.tenantCache.delete(accountId);
+    //     this.subscriptionCache.clearByFirstKey(accountId);
     // }
 }

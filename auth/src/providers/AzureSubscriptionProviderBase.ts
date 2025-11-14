@@ -387,6 +387,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
     }
 
+    protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
+        if (token?.isCancellationRequested) {
+            throw new vscode.CancellationError();
+        }
+    }
+
     private timeout: NodeJS.Timeout | undefined;
     private silenceRefreshEvents(): void {
         this.suppressRefreshSuggestedEvents = true;
@@ -407,11 +413,5 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         this.throwIfCancelled(token);
         this.logger?.error(`[auth] Error occurred: ${err}`);
         throw err;
-    }
-
-    protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
-        if (token?.isCancellationRequested) {
-            throw new vscode.CancellationError();
-        }
     }
 }
