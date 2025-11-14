@@ -39,9 +39,8 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "lint": "eslint --ext .ts .",
-        "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./dist/cjs/test/runTest.js",
+        "lint": "eslint --max-warnings 0",
+        "test": "mocha",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
@@ -50,7 +49,8 @@
     },
     "devDependencies": {
         "@azure/core-auth": "^1.10.1",
-        "@types/node": "^18.18.7",
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.1",
+        "@types/node": "22.x",
         "@types/vscode": "1.106.0"
     },
     "dependencies": {
@@ -60,5 +60,14 @@
     },
     "publishConfig": {
         "tag": "alpha"
+    },
+    "mocha": {
+        "ui": "tdd",
+        "node-option": [
+            "import=tsx"
+        ],
+        "spec": [
+            "test/**/*.test.ts"
+        ]
     }
 }
