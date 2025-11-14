@@ -76,8 +76,9 @@ Your tests run directly in Mocha, because **you do not have VS Code dependencies
 
 1. Remove any scripts or tasks that are used to build the tests. Use just `"test": "mocha"` as your test script.
 1. Add the following to your package.json, at the root (sub in your actual test location):
-    ```json
+    ```jsonc
         "mocha": {
+            "ui": "tdd", // Only if your tests use `suite()`, `test()`, etc.
             "node-option": [
                 "import=tsx"
             ],
