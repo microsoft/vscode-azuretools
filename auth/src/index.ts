@@ -12,6 +12,7 @@ export * from './contracts/AzureTenant';
 export * from './providers/VSCodeAzureSubscriptionProvider';
 export * from './utils/configuredAzureEnv';
 export * from './utils/dedupeSubscriptions';
+export * from './utils/getMetricsForTelemetry';
 export * from './utils/getSessionFromVSCode';
 export * from './utils/NotSignedInError';
 export * from './utils/signInToTenant';
