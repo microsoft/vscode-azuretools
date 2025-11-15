@@ -128,7 +128,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             context.syncTriggersPostDeploy = site.isFunctionApp &&
                 !/syncing/i.test(fullLog) &&
                 !site.isKubernetesApp &&
-                !site.isWorkflowApp;
+                !site.isWorkflowApp &&
+                context.deployMethod !== 'flexconsumption'
             return;
         } else {
             await delay(pollingInterval);
