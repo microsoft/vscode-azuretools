@@ -15,7 +15,7 @@ import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
-import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
+import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import { Disposable, LogOutputChannel, Progress, ProviderResult, TreeItem, Uri } from 'vscode';
 
 export type OpenInPortalOptions = {
@@ -57,7 +57,7 @@ export declare abstract class AzureAccountTreeItemBase extends AzExtParentTreeIt
     /**
      * Azure Account Tree Item
      * @param parent The parent of this node or undefined if it's the root of the tree.
-     * @param testAccount Unofficial api for testing - see `TestAzureAccount` in @microsoft/vscode-azext-dev package
+     * @param testAccount Unofficial api for testing
      */
     public constructor(parent?: AzExtParentTreeItem, testAccount?: {});
 
@@ -419,6 +419,16 @@ export declare class UserAssignedIdentityListStep<T extends IResourceGroupWizard
 
     public prompt(wizardContext: T): Promise<void>;
     public shouldPrompt(wizardContext: T): boolean;
+}
+
+export declare class UserAssignedIdentityNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+    public constructor();
+
+    public prompt(wizardContext: T): Promise<void>;
+    public shouldPrompt(wizardContext: T): boolean;
+
+    static isNameAvailable(wizardContext: IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean>;
+    static tryGenerateRelatedName(wizardContext: IResourceGroupWizardContext, rgName: string): Promise<string | undefined>;
 }
 
 export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {

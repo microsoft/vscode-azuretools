@@ -22,8 +22,7 @@ jobs:
             appsettings: "appsettings/**"
             auth: "auth/**"
             azure: "azure/**"
-            dev: "dev/**"
-            eslint-config-azuretools: "eslint-config-azuretools/**"
+            eng: "eng/**"
             github: "github/**"
             utils: "utils/**"
     outputs:

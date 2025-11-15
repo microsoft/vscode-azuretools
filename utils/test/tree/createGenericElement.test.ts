@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import assert = require("assert");
+import assert from 'assert';
 import { createGenericElement } from "../../src/index";
 
 suite('createGenericElement', () => {

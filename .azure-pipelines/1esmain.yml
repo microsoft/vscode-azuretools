@@ -52,10 +52,8 @@ extends:
               working_directory: auth
             - name: microsoft_vscode_azext_azureutils
               working_directory: azure
-            - name: microsoft_vscode_azext_dev
-              working_directory: dev
-            - name: microsoft_eslint_config_azuretools
-              working_directory: eslint-config-azuretools
+            - name: microsoft_vscode_azext_eng
+              working_directory: eng
             - name: microsoft_vscode_azext_github
               working_directory: github
             - name: microsoft_vscode_azext_utils

@@ -7,7 +7,7 @@ import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from 'crypto';
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
 import { ext } from '../extensionVariables';
 import { createAppInsightsClient } from '../utils/azureClients';
@@ -101,7 +101,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
         return !context.appInsightsComponent && !!context.newAppInsightsName;
     }
 
-    private _errorItemId: string = uuidv4();
+    private _errorItemId: string = randomUUID();
 
     public override createFailOutput(context: IAppServiceWizardContext & Partial<ExecuteActivityContext>): ExecuteActivityOutput {
         const item: ActivityChildItem = new ActivityChildItem({

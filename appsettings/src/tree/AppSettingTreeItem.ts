@@ -22,7 +22,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
 
         return createContextValue([contextValue, ...this.parent.contextValuesToAdd]);
     }
-    public readonly parent: AppSettingsTreeItem;
+    public readonly declare parent: AppSettingsTreeItem;
 
     private _key: string;
     private _value: string;

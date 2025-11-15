@@ -3,11 +3,11 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { v4 as uuidv4 } from "uuid";
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
 import * as types from '../../../index';
 import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
+import { crypto } from '../../node/crypto';
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
 import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
 import { ActivityBase, ActivityStatus } from "../Activity";
@@ -36,7 +36,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         this.status = ActivityStatus.Running;
     }
 
-    private _successItemId: string = uuidv4();
+    private _successItemId: string = crypto.randomUUID();
     public successState(): hTypes.ActivityTreeItemOptions {
         const activityResult = this.context.activityResult;
         const resourceId: string | undefined = typeof activityResult === 'string' ? activityResult : activityResult?.id;
@@ -66,7 +66,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
     }
 
-    private _errorItemId: string = uuidv4();
+    private _errorItemId: string = crypto.randomUUID();
     public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,

@@ -9,7 +9,7 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
 import type * as vscodeTypes from 'vscode';
-import { AuthenticationSession, AuthenticationWwwAuthenticateRequest, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { AuthenticationSession, AuthenticationWwwAuthenticateRequest, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogLevel, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
@@ -166,11 +166,11 @@ export interface AzExtServiceClientCredentialsT2 {
      * This method is called automatically by Azure SDK client libraries. You may call this method
      * directly, but you must also handle token caching and token refreshing.
      *
-     * @param scopes - The list of scopes for which the token will have access.
+     * @param scopeOrListOrRequest - The list of scopes for which the token will have access.
      * @param options - The options used to configure any requests this
      *                TokenCredential implementation might make.
      */
-    getToken(scopes?: string | string[] | AuthenticationWwwAuthenticateRequest, options?: any): Promise<any | null>;
+    getToken(scopeOrListOrRequest?: string | string[] | AuthenticationWwwAuthenticateRequest, options?: any): Promise<any | null>;
 }
 
 /**
@@ -178,7 +178,7 @@ export interface AzExtServiceClientCredentialsT2 {
  */
 export interface ISubscriptionContext {
     credentials: AzExtServiceClientCredentials;
-    createCredentialsForScopes: (scopes: string[] | AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentials>;
+    createCredentialsForScopes: (scopeListOrRequest: string[] | AuthenticationWwwAuthenticateRequest) => Promise<AzExtServiceClientCredentials>;
     subscriptionDisplayName: string;
     subscriptionId: string;
     subscriptionPath: string;
@@ -916,7 +916,7 @@ export type PromptResult = {
 
 /**
  * Wrapper interface of several methods that handle user input
- * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui` (in the "@microsoft/vscode-azext-dev" package)
+ * The implementations of this interface are accessed through `IActionContext.ui` or `TestActionContext.ui`
  */
 export interface IAzureUserInput {
     readonly onDidFinishPrompt: Event<PromptResult>;
@@ -1717,7 +1717,7 @@ export interface UIExtensionVariables {
     outputChannel: IAzExtOutputChannel;
 
     /**
-     * Set to true if not running under a webpacked 'dist' folder as defined in '@microsoft/vscode-azext-dev'
+     * Set to true if not running under a webpacked 'dist' folder
      */
     ignoreBundle?: boolean;
 }
@@ -2799,5 +2799,108 @@ export declare interface AzExtLMTool<T> {
      */
     invoke(context: IActionContext, options: LanguageModelToolInvocationOptions<T>, token: CancellationToken): ProviderResult<LanguageModelToolResult>;
 }
+
+// #endregion
+
+// #region Dev/Test features (formerly in `@microsoft/vscode-azext-dev`)
+
+/**
+ * Re-routes output to the console instead of a VS Code output channel (which disappears after a test run has finished)
+ */
+export declare class TestOutputChannel implements LogOutputChannel {
+    public name: string;
+    public append(value: string): void;
+    public appendLine(value: string): void;
+    public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void;
+    public replace(value: string): void;
+    public clear(): void;
+    public show(): void;
+    public hide(): void;
+    public dispose(): void;
+    logLevel: LogLevel;
+    onDidChangeLogLevel: Event<LogLevel>;
+    trace(message: string, ...args: any[]): void;
+    debug(message: string, ...args: any[]): void;
+    info(message: string, ...args: any[]): void;
+    warn(message: string, ...args: any[]): void;
+    error(error: string | Error, ...args: any[]): void;
+}
+
+export declare enum TestInput {
+    /**
+     * Use the first entry in a quick pick or the default value (if it's defined) for an input box. In all other cases, throw an error
+     */
+    UseDefaultValue = 0,
+
+    /**
+     * Simulates the user hitting the back button in an AzureWizard.
+     */
+    BackButton = 1,
+
+    /**
+     * Simulates going back three quickpick steps in an AzureWizard.
+     */
+    BackThreeSteps = 2
+}
+
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to be used for testing in non-interactive mode.
+ */
+export declare class TestUserInput {
+    public readonly onDidFinishPrompt: Event<PromptResult>;
+
+    public constructor(vscode: typeof import('vscode'));
+
+    /**
+     * Boolean set to indicate whether the UI is being used for test inputs. For`TestUserInput`, this will always default to true.
+     * See: https://github.com/microsoft/vscode-azuretools/pull/1807
+     */
+    readonly isTesting: boolean;
+
+    /**
+     * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
+     */
+    public runWithInputs<T>(inputs: (string | RegExp | TestInput)[], callback: () => Promise<T>): Promise<T>;
+
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: VSCodeQuickPickOptions): Promise<T>;
+    public showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: VSCodeQuickPickOptions & { canPickMany: true }): Promise<T[]>;
+    public showInputBox(options: InputBoxOptions): Promise<string>;
+    public showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
+    public showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Promise<MessageItem>;
+    public showOpenDialog(options: OpenDialogOptions): Promise<Uri[]>;
+    public showWorkspaceFolderPick(options: WorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
+}
+
+export declare interface TestActionContext {
+    telemetry: {
+        properties: { [key: string]: string | undefined; };
+        measurements: { [key: string]: number | undefined; };
+    };
+    errorHandling: {
+        issueProperties: {};
+    };
+    valuesToMask: string[];
+    ui: TestUserInput;
+}
+
+export declare function createTestActionContext(): Promise<TestActionContext>;
+
+/**
+ * Similar to `createTestActionContext` but with some extra logging
+ */
+export declare function runWithTestActionContext(callbackId: string, callback: (context: TestActionContext) => Promise<void>): Promise<void>;
+
+declare type registerOnActionStartHandlerType = (handler: (context: { callbackId: string; ui: Partial<TestUserInput>; }) => void) => Disposable;
+
+/**
+ * Alternative to `TestUserInput.runWithInputs` that can be used on the rare occasion when the `IActionContext` must be created inside `callback` instead of before `callback`
+ *
+ * @param callbackId The expected callbackId for the action to be run
+ * @param inputs An ordered array of inputs that will be used instead of interactively prompting in VS Code
+ * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
+ * @param callback The callback to run
+ */
+export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;
 
 // #endregion

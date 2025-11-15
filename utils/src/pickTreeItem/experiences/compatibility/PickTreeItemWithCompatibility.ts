@@ -5,7 +5,6 @@ import { azureResourceExperience, InternalAzureResourceExperienceOptions } from 
 import { subscriptionExperience } from '../subscriptionExperience';
 import { isAzExtTreeItem } from '../../../tree/isAzExtTreeItem';
 import { createSubscriptionContext } from '../../../utils/credentialUtils';
-import { ISubscriptionContext } from '@microsoft/vscode-azext-dev';
 import { AzExtTreeItem } from '../../../tree/AzExtTreeItem';
 import { CompatibilityRecursiveQuickPickStep } from '../../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
 import { AzureWizardPromptStep } from '../../../wizard/AzureWizardPromptStep';
@@ -27,7 +26,7 @@ export namespace PickTreeItemWithCompatibility {
     /**
      * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
      */
-    export async function subscription(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext> {
+    export async function subscription(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<types.ISubscriptionContext> {
         const applicationSubscription = await subscriptionExperience(context, tdp);
 
         if (isAzExtTreeItem(applicationSubscription)) {

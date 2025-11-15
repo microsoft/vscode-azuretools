@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { createTestActionContext } from '@microsoft/vscode-azext-dev';
+import { createTestActionContext } from '@microsoft/vscode-azext-utils';
 import { getDeployFsPath } from '../src/deploy/getDeployFsPath';
 import { assertThrowsAsync } from './assertThrowsAsync';
 import { testWorkspaceRoot } from './global.test';

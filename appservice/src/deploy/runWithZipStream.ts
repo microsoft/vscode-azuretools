@@ -7,7 +7,7 @@ import { AzExtPipelineResponse } from '@microsoft/vscode-azext-azureutils';
 import { AzExtFsExtra, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import * as prettybytes from 'pretty-bytes';
+import prettybytes from 'pretty-bytes';
 import { PassThrough, Readable } from 'stream';
 import * as vscode from 'vscode';
 import * as yazl from 'yazl';

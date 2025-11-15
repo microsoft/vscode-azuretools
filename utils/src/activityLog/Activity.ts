@@ -3,10 +3,10 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { v4 as uuidv4 } from "uuid";
 import { CancellationTokenSource, EventEmitter } from "vscode";
 import * as hTypes from '../../hostapi';
 import * as types from '../../index';
+import { crypto } from '../node/crypto';
 import { parseError } from "../parseError";
 import { dateTimeUtils } from "../utils/dateTimeUtils";
 
@@ -69,7 +69,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     }
 
     public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
-        this.id = uuidv4();
+        this.id = crypto.randomUUID();
         this.task = task;
         this._attributes = options?.attributes;
         this.hasChildren = options?.hasChildren;

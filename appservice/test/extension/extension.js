@@ -6,7 +6,7 @@
 const vscode = require('vscode');
 const ui_1 = require('@microsoft/vscode-azext-utils');
 const azure_1 = require('@microsoft/vscode-azext-azureutils');
-const appservice_1 = require('../../out/src/index');
+const appservice_1 = require('../../dist/cjs/src/index');
 
 function activate(context) {
     const extVars = {

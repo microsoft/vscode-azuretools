@@ -9,24 +9,23 @@ This project provides Node.js packages that make it easy to consume and manage A
 * [Azure Authentication and Subscription Provider](auth/)
 * [Azure Extension UI++ utilities (no Azure dependencies)](utils/)
 * [Azure Extension UI++ utilities (Azure dependencies)](azure/)
-* [Azure Dev](dev/)
-* [ESLint config for Azure extensions](eslint-config-azuretools/)
+* [Azure Extension Engineering](eng/)
 
 ## Developing locally
 
 In order to develop and debug these packages locally, follow these instructions:
 1. Navigate to the package you are developing
 1. Run `npm install`
-1. Run `npm pack` and note down the name of the "tgz" file created
+1. Run `npm run build && npm run package` and note down the name of the "tgz" file created
 1. Navigate to the project that references the package you're developing and run `npm install <path to tgz>`
 
 Example:
 ```
-    cd ~/repos/vscode-azuretools/ui
+    cd ~/repos/vscode-azuretools/utils
     npm install
-    npm pack
+    npm run build && npm run package
     cd ~/repos/vscode-azurestorage
-    npm install ../vscode-azuretools/ui/vscode-azureextensionui-0.44.2.tgz
+    npm install ../vscode-azuretools/utils/microsoft-vscode-azext-utils-4.0.0.tgz
 ```
 
 > NOTE: You may also try [`npm link`](https://docs.npmjs.com/cli/v7/commands/npm-link), but we've had issues with this method including breakpoints not being hit and dependencies (e.g. "fs-extra") being removed in the package's repo

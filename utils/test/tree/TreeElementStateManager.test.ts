@@ -3,10 +3,10 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import assert = require('assert');
+import assert from 'assert';
 import { TreeItem } from 'vscode';
 import { TreeElementBase } from '../..';
-import { TreeElementStateManager } from '../../src/index'
+import { TreeElementStateManager } from '../../src/index';
 
 suite('TreeElementStateManager', () => {
     const state = new TreeElementStateManager();

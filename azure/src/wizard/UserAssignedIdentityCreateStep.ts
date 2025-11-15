@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { type ManagedServiceIdentityClient } from '@azure/arm-msi';
-import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, nonNullValueAndProp, randomUtils } from '@microsoft/vscode-azext-utils';
+import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
 import { createManagedServiceIdentityClient } from '../clients';
 import { storageProvider } from '../constants';
 import { LocationListStep } from './LocationListStep';
+import { UserAssignedIdentityNameStep } from './UserAssignedIdentityNameStep';
 
 /**
  * Naming constraints:
@@ -46,37 +47,24 @@ export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizard
     public async configureBeforeExecute(wizardContext: T): Promise<void> {
         const rgName: string = wizardContext.newResourceGroupName ?? nonNullValueAndProp(wizardContext.resourceGroup, 'name');
         while (!wizardContext.newManagedIdentityName) {
-            wizardContext.newManagedIdentityName = await this.generateRelatedName(wizardContext, rgName);
+            wizardContext.newManagedIdentityName = await UserAssignedIdentityNameStep.tryGenerateRelatedName(wizardContext, rgName);
         }
     }
 
     protected getTreeItemLabel(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Create user assigned identity "{0}"', newName);
+        return l10n.t('Create user-assigned identity "{0}"', newName);
     }
     protected getOutputLogSuccess(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Successfully created user assigned identity "{0}".', newName);
+        return l10n.t('Successfully created user-assigned identity "{0}".', newName);
     }
     protected getOutputLogFail(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Failed to create user assigned identity "{0}".', newName);
+        return l10n.t('Failed to create user-assigned identity "{0}".', newName);
     }
     protected getOutputLogProgress(context: T): string {
         const newName: string = nonNullProp(context, 'newManagedIdentityName');
-        return l10n.t('Creating user assigned identity "{0}"...', newName);
-    }
-
-    private async generateRelatedName(wizardContext: types.IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
-        const newName: string = `${rgName}-identities-${randomUtils.getRandomHexString(6)}`;
-        try {
-            const msiClient: ManagedServiceIdentityClient = await createManagedServiceIdentityClient(wizardContext);
-            await msiClient.userAssignedIdentities.get(rgName, newName);
-        } catch (err) {
-            return newName;
-        }
-
-        // If we get here, the name is already taken. We need to generate a new name.
-        return undefined;
+        return l10n.t('Creating user-assigned identity "{0}"...', newName);
     }
 }

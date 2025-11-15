@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 const vscode = require('vscode');
-const createAzExtOutputChannel = require('../../out/src/AzExtOutputChannel').createAzExtOutputChannel;
+const createAzExtOutputChannel = require('../../dist/cjs/src/AzExtOutputChannel').createAzExtOutputChannel;
 
-const ui_1 = require('../../out/src/index');
-const DebugReporter = require('../../out/src/DebugReporter').DebugReporter;
+const ui_1 = require('../../dist/cjs/src/index');
+const DebugReporter = require('../../dist/cjs/src/DebugReporter').DebugReporter;
 
 function activate(context) {
     const extVars = {
