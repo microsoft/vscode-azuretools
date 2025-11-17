@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.0.0-alpha.2",
+    "version": "1.0.0-alpha.3",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
