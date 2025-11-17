@@ -20,6 +20,7 @@ export const azExtUniversalRules: EslintConfig = {
     },
     rules: {
         '@typescript-eslint/no-floating-promises': 'error', // Raise to error--we want to ensure promises are thoughtfully handled everywhere
+        '@typescript-eslint/no-non-null-assertion': 'warn', // Raise to warning
         curly: 'warn', // Raise to warning
         eqeqeq: 'error', // Raise to error
         'no-template-curly-in-string': 'warn', // Raise to warning
@@ -44,6 +45,7 @@ export const azExtTestRules: EslintConfig = {
     files: ['**/*.test.ts'],
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
+        '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files
     },
 };
 
@@ -99,6 +101,25 @@ export const azExtStylisticRules: EslintConfig = {
             {
                 // As a function parameter, unused parameters are allowed
                 args: 'none',
+            },
+        ],
+    },
+};
+
+/**
+ * Overrides to the strict rulesets
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtStrictOverrides: EslintConfig = {
+    rules: {
+        '@typescript-eslint/restrict-template-expressions': [
+            // Loosen restrictions on template expressions to allow more types
+            'warn', // Move from error to warn
+            {
+                allowArray: true, // Allow arrays
+                allowBoolean: true, // Allow booleans
+                allowNullish: true, // Allow null and undefined
+                allowNumber: true, // Allow numbers
             },
         ],
     },
@@ -188,6 +209,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
     azExtUniversalRules,
     azExtTestRules,
     azExtStylisticRules,
+    azExtStrictOverrides,
 );
 
 /**
@@ -201,4 +223,5 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     azExtUniversalRules,
     azExtTestRules,
     azExtStylisticRules,
+    azExtStrictOverrides,
 );
