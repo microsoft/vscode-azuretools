@@ -45,6 +45,7 @@ export const azExtTestRules: EslintConfig = {
     files: ['**/*.test.ts'],
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
+        '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in test files
         '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files
     },
 };
