@@ -126,7 +126,8 @@ Your tests run in the VS Code extension test host, because **you do have VS Code
     >   - ❌ Variables or other state you expect to be shared
     >
     > To migrate, you may have to rewrite the tests to be more like unit tests, or otherwise, export the necessary
-    > objects from the extension API *but only when running tests*. Use a magic environment variable to control that.
+    > objects from the extension API *but only when running tests*. You can test the `VSCODE_RUNNING_TESTS` env var,
+    > which is set in the base test config.
 1. Also fix other imports as needed.
 1. Create a .vscode-test.mjs file at the root. Read more [here](./src/vscode-test/README.md).
 1. Run the tests. Take note of how many are running, and make sure it's the same as before.
