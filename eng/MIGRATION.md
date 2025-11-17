@@ -9,7 +9,7 @@
 1. Run `npm i --save-dev @microsoft/vscode-azext-eng` to install the latest eng package. Bye bye small package-lock.json.
 1. Update your .nvmrc to Node 22+, and update `@types/node` accordingly. The minimum VS Code version for Node 22 is 1.101.0.
    As appropriate, add a minimum VS Code engine version to your package.json as well.
-1. If needed, update `@microsoft/vscode-azext-utils` to 4.0.1 to get the replacements for TestUserInput, TestActionContext, etc.
+1. If needed, update `@microsoft/vscode-azext-utils` to 4.0.2 to get the replacements for TestUserInput, TestActionContext, etc.
 
 # Migrating an NPM package to use this
 This is relatively easy.
