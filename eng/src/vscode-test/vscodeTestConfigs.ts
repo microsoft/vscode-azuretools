@@ -14,6 +14,10 @@ export const baseConfig: Partial<VscodeTestConfig> = {
         require: ['tsx'],
         timeout: 10000,
     },
+    env: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        VSCODE_RUNNING_TESTS: '1',
+    },
 };
 
 /**
