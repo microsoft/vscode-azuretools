@@ -16,6 +16,12 @@ parameters:
   - name: enableSigning
     type: boolean
     default: True
+  - name: signingSteps
+    type: stepList
+    default:
+      - template: ./templates/signing/signproj.yml
+        parameters:
+          vsixFileNames: ${{ parameters.vsixFileNames }}
   - name: vsixFileNames
     type: object
     default: [""]
@@ -51,6 +57,7 @@ stages:
               - template: ./templates/sign.yml
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
+                  signingSteps: ${{ parameters.signingSteps }}
                   vsixFileNames: ${{ parameters.vsixFileNames }}
 
               - template: ./templates/stage-artifacts.yml

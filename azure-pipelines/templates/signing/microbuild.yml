@@ -1,0 +1,12 @@
+parameters:
+  - name: vsixFileNames
+    type: object
+    default: [""]
+
+steps:
+  # This template uses MicroBuild signing through the templateContext in the job
+  # MicroBuild signing is configured at the job level in 1esstages.yml
+  - powershell: |
+      Write-Output "Using MicroBuild signing with real sign type and prod signing enabled"
+    displayName: "🚀 MicroBuild Signing Configuration"
+    name: microbuildConfig

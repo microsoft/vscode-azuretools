@@ -15,6 +15,12 @@ parameters:
   - name: enableSigning
     type: boolean
     default: true
+  - name: signingSteps
+    type: stepList
+    default:
+      - template: ./templates/signing/signproj.yml
+        parameters:
+          vsixFileNames: ${{ parameters.vsixFileNames }}
   - name: isOfficialBuild
     type: boolean
     default: true
@@ -63,4 +69,5 @@ extends:
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
           enableSigning: ${{ parameters.enableSigning }}
+          signingSteps: ${{ parameters.signingSteps }}
           vsixFileNames: ${{ parameters.vsixFileNames }}
