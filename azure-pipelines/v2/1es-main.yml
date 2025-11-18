@@ -1,33 +1,18 @@
 parameters:
-  # Set to true to enable tests with Azure federated credentials
-  - name: useAzureFederatedCredentials
+  # Set to true for official builds, false for PRs and other unofficial builds
+  - name: isOfficialBuild
     type: boolean
-    default: false
-
-  # The variable group containing the federated credentials service connection info
-  # The group must contain the variables:
-  # - SERVICE_CONNECTION_NAME
-  # - SERVICE_CONNECTION_ID
-  # - TENANT_ID
-  # - SERVICE_PRINCIPAL_ID
-  - name: federatedCredentialsVariableGroup
-    type: string
-    default: ""
-
-  # Additional steps to run during setup (e.g. npm authenticate etc.)
-  - name: additionalSetupSteps
-    type: stepList
-    default: []
+    default: true
 
   # Set to true to enable signing
   - name: enableSigning
     type: boolean
     default: true
 
-  # Set to true for official builds, false for PRs and other unofficial builds
-  - name: isOfficialBuild
-    type: boolean
-    default: true
+  # Additional steps to run during setup (e.g. npm authenticate etc.)
+  - name: additionalSetupSteps
+    type: stepList
+    default: []
 
   # The pool to use for the SDLSources stage
   - name: sdlSourcesPool
@@ -44,6 +29,21 @@ parameters:
       name: AzurePipelines-EO
       image: 1ESPT-Ubuntu22.04
       os: linux
+
+  # Set to true to enable tests with Azure federated credentials
+  - name: useAzureFederatedCredentials
+    type: boolean
+    default: false
+
+  # The variable group containing the federated credentials service connection info
+  # The group must contain the variables:
+  # - FC_SERVICE_CONNECTION_NAME
+  # - FC_SERVICE_CONNECTION_ID
+  # - FC_SERVICE_CONNECTION_TENANT_ID
+  # - FC_SERVICE_CONNECTION_CLIENT_ID
+  - name: federatedCredentialsVariableGroup
+    type: string
+    default: AzCode-BAMI-Variables
 
 resources:
   repositories:

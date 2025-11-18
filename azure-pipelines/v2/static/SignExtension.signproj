@@ -15,20 +15,20 @@
 
   <!-- Copy the manifest file to the $(OutDir) to sign -->
   <Target Name="CopySignatureFile" BeforeTargets="SignFiles">
-    <Copy SourceFiles="$(VsixFileName).extension.manifest" DestinationFiles="$(OutDir)\extension.signature.p7s" />
+    <Copy SourceFiles="$(ManifestName)" DestinationFiles="$(OutDir)\$(SignatureName)" />
   </Target>
 
   <!-- Sign it -->
   <ItemGroup>
     <!-- File must be in the $(OutDir) hence the copying -->
-    <FilesToSign Include="$(OutDir)\extension.signature.p7s">
+    <FilesToSign Include="$(OutDir)\$(SignatureName)">
       <Authenticode>VSCodePublisher</Authenticode>
     </FilesToSign>
   </ItemGroup>
 
   <!-- Copy the signed file back -->
   <Target Name="CopyBackSignatureFile" AfterTargets="SignFiles">
-    <Copy SourceFiles="$(OutDir)\extension.signature.p7s" DestinationFiles="$(VsixFileName).extension.signature.p7s" />
+    <Copy SourceFiles="$(OutDir)\$(SignatureName)" DestinationFiles="$(SignatureName)" />
   </Target>
 
 </Project>

@@ -1,81 +1,40 @@
 steps:
-  # Discover all vsix files and process each one
+  - template: ./find-vsixs.yml
+
   - pwsh: |
-      $vsixFiles = Get-ChildItem -Path "$(Build.SourcesDirectory)" -Filter "*.vsix"
-
-      if ($vsixFiles.Count -eq 0) {
-          Write-Output "No .vsix files found."
-          exit 0
-      }
-
-      $vsixList = @()
-      foreach ($vsixFile in $vsixFiles) {
-          $baseName = $vsixFile.BaseName  # filename without .vsix extension
-          $vsixPath = $vsixFile.FullName
-          $manifestPath = "$baseName.extension.manifest"
-          $signaturePath = "$baseName.extension.signature.p7s"
-
-          Write-Output "Found: $($vsixFile.Name)"
-          Write-Output "  Manifest: $manifestPath"
-          Write-Output "  Signature: $signaturePath"
-
-          $vsixList += @{
-              vsixFile = $vsixFile.Name
-              vsixPath = $vsixPath
-              baseName = $baseName
-              manifestPath = $manifestPath
-              signaturePath = $signaturePath
-              directory = $vsixFile.DirectoryName
-          }
-      }
-
-      # Store the vsix list as JSON for later steps
-      $vsixListJson = $vsixList | ConvertTo-Json -Compress
-      Write-Output "##vso[task.setvariable variable=vsixListJson]$vsixListJson"
-      Write-Output "##vso[task.setvariable variable=vsixCount]$($vsixList.Count)"
-      Write-Output "Discovered $($vsixList.Count) vsix file(s) to sign."
-    condition: and(succeeded(), ${{ parameters.enableSigning }})
-    displayName: "\U0001F449 Discover all .vsix files"
-
-  # Process each discovered vsix file
-  - pwsh: |
-      $vsixListJson = '$(vsixListJson)'
-      $vsixList = $vsixListJson | ConvertFrom-Json
-
-      # Ensure vsixList is an array even with single item
-      if ($vsixList -isnot [System.Object[]]) {
-          $vsixList = @($vsixList)
-      }
+      $vsixList = '$(vsixListJson)' | ConvertFrom-Json
 
       foreach ($vsix in $vsixList) {
-          Write-Output "Processing: $($vsix.vsixFile)"
+          Write-Output "Signing: $($vsix.vsixName)"
           Set-Location $vsix.directory
 
           # Generate manifest
           Write-Output "  Generating manifest..."
-          & npx @vscode/vsce@latest generate-manifest -i $vsix.vsixFile -o $vsix.manifestPath
+          & npx @vscode/vsce@latest generate-manifest -i $vsix.vsixName -o $vsix.manifestName
           if ($LASTEXITCODE -ne 0) {
-              Write-Error "Failed to generate manifest for $($vsix.vsixFile)"
+              Write-Error "  Failed to generate manifest for $($vsix.vsixName)"
               exit 1
           }
 
           # Sign with MSBuild
           Write-Output "  Signing with MSBuild..."
-          dotnet build "$(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj" /p:InputFile="$($vsix.vsixFile)"
+          & dotnet build "$(Agent.BuildDirectory)/s/azExtTemplates/azure-pipelines/v2/static/SignExtension.signproj" /p:ManifestName="$($vsix.manifestName)" /p:SignatureName="$($vsix.signatureName)"
           if ($LASTEXITCODE -ne 0) {
-              Write-Error "Failed to sign $($vsix.vsixFile)"
+              Write-Error "  Failed to sign $($vsix.vsixName)"
               exit 1
           }
 
-          # Verify signature file was created
-          if (-Not (Test-Path $vsix.signaturePath)) {
-              Write-Error "Signature file not created: $($vsix.signaturePath)"
+          # Verify signature file was created correctly
+          Write-Output "  Verifying signature..."
+          & npx @vscode/vsce@latest verify-signature -i $vsix.vsixPath -m $vsix.manifestName -s $vsix.signaturePath
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "  Signature verification failed for $($vsix.vsixName)"
               exit 1
           }
 
-          Write-Output "  Successfully signed: $($vsix.vsixFile)"
+          Write-Output "  Successfully signed: $($vsix.vsixName)"
       }
-    condition: and(succeeded(), eq(variables['signprojExists'], True), gt(variables['vsixCount'], 0))
+    condition: succeeded()
     displayName: "\U0001F449 Sign all discovered .vsix files"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)

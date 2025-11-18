@@ -1,0 +1,35 @@
+steps:
+  - pwsh: |
+      # Find all the VSIX files
+      $vsixFiles = Get-ChildItem -Path "$(working_directory)" -Filter "*.vsix"
+      if ($vsixFiles.Count -eq 0) {
+          Write-Error "No .vsix files found."
+          exit 1
+      }
+
+      # Get some details from package.json that apply to all VSIX files
+      $packageJson = Get-Content "$(working_directory)/package.json" | ConvertFrom-Json
+      $npmVersionString = $packageJson.version
+      $proposedApisJson = "[]"
+      if ($packageJson.enabledApiProposals -ne $null) {
+          $proposedApisJson = $packageJson.enabledApiProposals | ConvertTo-Json -Compress
+      }
+
+      # Loop over the found VSIX files and get their details
+      $vsixList = @()
+      foreach ($vsixFile in $vsixFiles) {
+          $vsixList += @{
+              directory = $vsixFile.DirectoryName
+              vsixName = $vsixFile.Name
+              manifestName = "$($vsixFile.BaseName).extension.manifest"
+              signatureName = "$($vsixFile.BaseName).extension.signature.p7s"
+              npmVersionString = $npmVersionString
+              proposedApisJson = $proposedApisJson
+          }
+      }
+
+      # Store the VSIX list as JSON for later steps
+      $vsixListJson = $vsixList | ConvertTo-Json -Compress
+      Write-Output "##vso[task.setvariable variable=vsixListJson]$vsixListJson"
+    displayName: "\U0001F449 Discover all .vsix files"
+    condition: succeeded()
