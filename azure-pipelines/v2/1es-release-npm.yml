@@ -12,22 +12,19 @@ parameters:
   - name: publishVersion
     type: string
 
-    # When true, skips the deployment job which actually publishes the package
+  # When true, skips the deployment job which actually publishes the package
   - name: dryRun
     type: boolean
     default: false
 
-  - name: OwnerAlias
-    displayName: Owner Alias
-    type: string
-  - name: ApproverAlias
-    displayName: Approver Alias
+  - name: ownerAlias
     type: string
 
-  - name: GitHubServiceConnection
-    displayName: GitHub Service Connection
+  - name: approverAlias
     type: string
-    default: GitHub-AzureTools
+
+  - name: gitHubServiceConnection
+    type: string
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -94,10 +91,10 @@ extends:
                   $dry = ""
                   if ($isDryRun -eq 'True') {
                     Write-Output "Dry run was set to True. Adding 'dry' to the build number."
-                    $dry = "dry"
+                    $dry = "dry-"
                   }
 
-                  $newBuildNumber = "$env:packageToPublish-$npmVersionString-$dry-$currentBuildNumber"
+                  $newBuildNumber = "$env:packageToPublish-$npmVersionString-$dry$currentBuildNumber"
                   Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
                 displayName: "\U0001F449 Prepend version from package.json to build number"
                 env:
@@ -110,7 +107,7 @@ extends:
                   # Get the version from package.json
                   $packageJsonPath = "$(tgzFolderName)/package.json"
                   $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-                  $publishVersion = "$env:publishVersion"
+                  $publishVersion = "${{ parameters.publishVersion }}"
                   Write-Output "Publishing version: $publishVersion"
                   if ($npmVersionString -eq $publishVersion) {
                     Write-Output "Publish version matches package.json version. Proceeding with release."
@@ -119,8 +116,6 @@ extends:
                     exit 1
                   }
                 displayName: "\U0001F449 Verify publish version"
-                env:
-                  publishVersion: ${{ parameters.publishVersion }}
 
               # Publish the package to NPM
               - ${{ if eq(parameters.dryRun, false) }}:
@@ -131,15 +126,15 @@ extends:
                       contentSource: "Folder"
                       folderLocation: "$(tgzFolderName)"
                       waitForReleaseCompletion: true
-                      owners: "${{ parameters.OwnerAlias }}@microsoft.com"
-                      approvers: "${{ parameters.ApproverAlias }}@microsoft.com"
+                      owners: ${{ parameters.ownerAlias }}
+                      approvers: ${{ parameters.approverAlias }}
 
               # Create a release on GitHub containing the package
               - task: GitHubRelease@1
                 displayName: "\U0001F449 GitHub release (create)"
                 condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
                 inputs:
-                  gitHubConnection: ${{ parameters.GitHubServiceConnection }}
+                  gitHubConnection: ${{ parameters.gitHubServiceConnection }}
                   tagSource: userSpecifiedTag
                   tag: "${{ parameters.packageToPublish }}-v${{ parameters.publishVersion }}"
                   title: "${{ parameters.packageToPublish }} v${{ parameters.publishVersion }}"

@@ -1,30 +1,23 @@
 parameters:
-  - name: "jobs"
+  # The jobs to run. Use to parallelize building in subdirectories
+  - name: jobs
     type: object
     default:
       - name: Root
         working_directory: .
-  - name: "useAzureFederatedCredentials"
-    type: boolean
-    default: false
-  - name: additionalSetupSteps
-    type: stepList
-    default: []
-  - name: additionalPostPackageSteps
-    type: stepList
-    default: []
+
+  - name: buildPool
+    type: object
   - name: enableSigning
     type: boolean
-    default: True
-  - name: vsixFileNames
-    type: object
-    default: [""]
+  - name: additionalSetupSteps
+    type: stepList
+  - name: useAzureFederatedCredentials
+    type: boolean
+
 stages:
   - stage: BuildStage
-    pool:
-      name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
-      os: linux
+    pool: ${{ parameters.buildPool }}
     jobs:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
@@ -40,23 +33,18 @@ stages:
                 - output: pipelineArtifact
                   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
                   artifactName: Build $(artifact_name)
+            variables:
+              artifact_name: ${{ replace(job.name, '_', '-') }}
+              working_directory: ${{ job.working_directory }}
             steps:
               - template: ./templates/setup.yml
                 parameters:
                   additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
               - template: ./templates/build.yml
-              - template: ./templates/1espackage.yml
-                parameters:
-                  additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
-              - template: ./templates/sign.yml
-                parameters:
-                  enableSigning: ${{ parameters.enableSigning }}
-                  vsixFileNames: ${{ parameters.vsixFileNames }}
-
+              - template: ./templates/package.yml
+              - ${{ if eq(parameters.enableSigning, true) }}:
+                  - template: ./templates/sign.yml
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-            variables:
-              artifact_name: ${{ replace(job.name, '_', '-') }}
-              working_directory: ${{ job.working_directory }}

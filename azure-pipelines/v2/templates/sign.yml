@@ -1,99 +1,81 @@
-parameters:
-  - name: enableSigning
-    type: boolean
-    default: True
-  - name: vsixFileNames
-    type: object
-    default: ['']
-
 steps:
-  # Check if the SignExtension.signproj file exists and set a variable using PowerShell
-  # All other steps in this template will only run if the file exists
-  - powershell: |
-      $fileExists = Test-Path -Path "$(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj"
-      Write-Output "##vso[task.setvariable variable=signprojExists]$fileExists"
-
-      if ($fileExists) {
-          Write-Output "SignExtension.signproj file found. Signing extension."
-      } else {
-          Write-Output "SignExtension.signproj file not found. Skipping signing."
-      }
-    displayName: "\U0001F449 Check for SignExtension.signproj File"
-    condition: and(succeeded(), ${{ parameters.enableSigning }})
-
-  # put the extension name and version from the package.json into variables to use later. Variables can be used in later steps as $(package.name) and $(package.version)
+  # Discover all vsix files and process each one
   - pwsh: |
-      Write-Output "##vso[task.setvariable variable=name;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).name)"
-      Write-Output "##vso[task.setvariable variable=version;isOutput=true]$((Get-Content -Raw -Path package.json | ConvertFrom-Json).version)"
-    condition: and(succeeded(), eq(variables['signprojExists'], True))
-    name: package
-    displayName: "\U0001F449 Get extension info from package.json"
+      $vsixFiles = Get-ChildItem -Path "$(Build.SourcesDirectory)" -Filter "*.vsix"
 
-  # Sign single vsix file if vsixFileNames are not provided
-  - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
-    - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-      condition: and(succeeded(), eq(variables['signprojExists'], True))
-      displayName: "\U0001F449 Generate extension manifest"
+      if ($vsixFiles.Count -eq 0) {
+          Write-Output "No .vsix files found."
+          exit 0
+      }
 
-    # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
-    - task: DotNetCoreCLI@2
-      condition: and(succeeded(), eq(variables['signprojExists'], True))
-      displayName: "\U0001F449 Sign with MSBuild"
-      inputs:
-        command: 'build'
-        projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
-      env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      $vsixList = @()
+      foreach ($vsixFile in $vsixFiles) {
+          $baseName = $vsixFile.BaseName  # filename without .vsix extension
+          $vsixPath = $vsixFile.FullName
+          $manifestPath = "$baseName.extension.manifest"
+          $signaturePath = "$baseName.extension.signature.p7s"
 
-    - pwsh: |
-        $filePath = "extension.signature.p7s"
+          Write-Output "Found: $($vsixFile.Name)"
+          Write-Output "  Manifest: $manifestPath"
+          Write-Output "  Signature: $signaturePath"
 
-        if (-Not (Test-Path $filePath)) {
-            Write-Error "The file '$filePath' does not exist."
-            exit 1
-        }
+          $vsixList += @{
+              vsixFile = $vsixFile.Name
+              vsixPath = $vsixPath
+              baseName = $baseName
+              manifestPath = $manifestPath
+              signaturePath = $signaturePath
+              directory = $vsixFile.DirectoryName
+          }
+      }
 
-        Write-Output "The file '$filePath' exists."
-        exit 0
-      displayName: "\U0001F449 Verify extension.signature.p7s file was created"
-      condition: and(succeeded(), eq(variables['signprojExists'], True))
+      # Store the vsix list as JSON for later steps
+      $vsixListJson = $vsixList | ConvertTo-Json -Compress
+      Write-Output "##vso[task.setvariable variable=vsixListJson]$vsixListJson"
+      Write-Output "##vso[task.setvariable variable=vsixCount]$($vsixList.Count)"
+      Write-Output "Discovered $($vsixList.Count) vsix file(s) to sign."
+    condition: and(succeeded(), ${{ parameters.enableSigning }})
+    displayName: "\U0001F449 Discover all .vsix files"
 
-  # If vsixFileNames are provided, sign each file in list and move to corresponding directory
-  - ${{ if ne(join('', parameters.vsixFileNames), '') }}:
-    # run this script for each item in vsixFileNames
-    - ${{ each vsixFileName in parameters.vsixFileNames }}:
-        - script: npx @vscode/vsce@latest generate-manifest -i ${{ vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/extension.manifest
-          condition: succeeded()
-          displayName: "\U0001F449 Generate extension manifest for ${{ vsixFileName }}"
+  # Process each discovered vsix file
+  - pwsh: |
+      $vsixListJson = '$(vsixListJson)'
+      $vsixList = $vsixListJson | ConvertFrom-Json
 
-        # this task will pass even if signing fails, so we follow it up with a check to see if the signature file was created
-        - task: DotNetCoreCLI@2
-          condition: succeeded()
-          displayName: "\U0001F449 Sign with MSBuild for ${{ vsixFileName }}"
-          inputs:
-            command: 'build'
-            projects: $(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj
-          env:
-            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      # Ensure vsixList is an array even with single item
+      if ($vsixList -isnot [System.Object[]]) {
+          $vsixList = @($vsixList)
+      }
 
-        - pwsh: |
-            $filePath = "extension.signature.p7s"
+      foreach ($vsix in $vsixList) {
+          Write-Output "Processing: $($vsix.vsixFile)"
+          Set-Location $vsix.directory
 
-            if (-Not (Test-Path $filePath)) {
-                Write-Error "The file '$filePath' does not exist."
-                exit 1
-            }
+          # Generate manifest
+          Write-Output "  Generating manifest..."
+          & npx @vscode/vsce@latest generate-manifest -i $vsix.vsixFile -o $vsix.manifestPath
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to generate manifest for $($vsix.vsixFile)"
+              exit 1
+          }
 
-            Write-Output "The file '$filePath' exists."
-            exit 0
-          displayName: "\U0001F449 Verify extension.signature.p7s file was created for ${{ vsixFileName }}"
-          condition: succeeded()
+          # Sign with MSBuild
+          Write-Output "  Signing with MSBuild..."
+          dotnet build "$(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj" /p:InputFile="$($vsix.vsixFile)"
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to sign $($vsix.vsixFile)"
+              exit 1
+          }
 
-        - pwsh: |
-            $targetDir = "${{ vsixFileName }}"
-            New-Item -ItemType Directory -Force -Path "$(Build.SourcesDirectory)/$targetDir"
-            Move-Item -Path "extension.signature.p7s" -Destination "$(Build.SourcesDirectory)/$targetDir/extension.signature.p7s" -Force
-            Move-Item -Path "extension.manifest" -Destination "$(Build.SourcesDirectory)/$targetDir/extension.manifest" -Force
-            Write-Output "Moved signature files to $targetDir directory"
-          displayName: "\U0001F449 Move signature files to ${{ vsixFileName }} directory"
-          condition: succeeded()
+          # Verify signature file was created
+          if (-Not (Test-Path $vsix.signaturePath)) {
+              Write-Error "Signature file not created: $($vsix.signaturePath)"
+              exit 1
+          }
+
+          Write-Output "  Successfully signed: $($vsix.vsixFile)"
+      }
+    condition: and(succeeded(), eq(variables['signprojExists'], True), gt(variables['vsixCount'], 0))
+    displayName: "\U0001F449 Sign all discovered .vsix files"
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)

@@ -1,0 +1,12 @@
+parameters:
+  - extensionReleaseEnvironmentName: AzCodeDeploy
+  - extensionReleaseServiceConnection: AzCodeReleases
+  - gitHubServiceConnection: GitHub-AzureTools
+  - sdlSourcesPool:
+      name: VSEngSS-MicroBuild2022-1ES
+      image: server2022-microbuildVS2022-1es
+      os: windows
+  - buildPool:
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux

@@ -1,15 +1,8 @@
-parameters:
-  - name: additionalPostPackageSteps
-    type: stepList
-    default: []
-
 steps:
   - task: Npm@1
     displayName: "\U0001F449 Package"
+    condition: succeeded()
     inputs:
       command: custom
       customCommand: run package
       workingDir: $(working_directory)
-    condition: succeeded()
-
-  - ${{ parameters.additionalPostPackageSteps }}

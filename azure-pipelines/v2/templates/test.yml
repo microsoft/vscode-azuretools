@@ -1,35 +1,32 @@
 parameters:
   - name: useAzureFederatedCredentials
     type: boolean
-    default: false
+  - name: federatedCredentialsVariableGroup
+    type: string
+
+variables:
+  ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
+    - group: ${{ parameters.federatedCredentialsVariableGroup }}
 
 steps:
-
-  # This task obtains the values necessary to connect to the AzCodeE2ETests service connection from the AzCodeE2ETestsCredKV key vault.
-  - ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
-      - task: AzureKeyVault@2
-        displayName: "\U0001F449 Get AzCodeE2ETests service connection secrets"
-        inputs:
-          azureSubscription: 'AzCodeE2ETests'
-          KeyVaultName: 'AzCodeE2ETestsKeyVault'
-          SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
-          RunAsPreJob: true
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  - bash: |
+      /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+      echo ">>> Started xvfb"
+    displayName: "\U0001F449 Start X Virtual Frame Buffer"
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
 
   - task: Npm@1
     displayName: "\U0001F449 Test"
+    condition: succeeded()
     inputs:
       command: custom
-      customCommand: test
+      customCommand: run test
       workingDir: $(working_directory)
-    condition: succeeded()
     env:
-      DISPLAY: :99 # Only necessary for linux tests
+      DISPLAY: :99 # Only necessary for linux tests, must match Xvfb display number set above
       ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        AzCode_UseAzureFederatedCredentials: true
-        AzCode_ServiceConnectionID: $(AzCodeServiceConnectionID)
-        AzCode_ServiceConnectionDomain: $(AzCodeServiceConnectionDomain)
-        AzCode_ServiceConnectionClientID: $(AzCodeServiceConnectionClientID)
-
+        FC_SERVICE_CONNECTION_NAME: $(SERVICE_CONNECTION_NAME)
+        FC_SERVICE_CONNECTION_ID: $(SERVICE_CONNECTION_ID)
+        FC_SERVICE_CONNECTION_TENANT_ID: $(TENANT_ID)
+        FC_SERVICE_CONNECTION_CLIENT_ID: $(SERVICE_PRINCIPAL_ID)

@@ -1,39 +1,21 @@
 parameters:
-  - name: pipelineID # No longer used but kept to avoid needing to change the downstream templates
-    type: string
-    default: unused
-  - name: runID # No longer used but kept to avoid needing to change the downstream templates
-    type: string
-    default: unused
-
   # The intended extension version to publish.
   # This is used to verify the version in package.json matches the version to publish to avoid accidental publishing.
   - name: publishVersion
     type: string
 
+  # When true, skips the deployment job which actually publishes the extension
+  - name: dryRun
+    type: boolean
+
   # Customize the environment to associate the deployment with.
   # Useful to control which group of people should be required to approve the deployment.
   - name: environmentName
     type: string
-    default: AzCodeDeploy
 
   # The service connection to use to authenticate the vsce to publish the extension.
-  - name: ExtensionReleaseServiceConnection
+  - name: extensionReleaseServiceConnection
     type: string
-    default: AzCodeReleases
-
-    # When true, skips the deployment job which actually publishes the extension
-  - name: dryRun
-    type: boolean
-    default: false
-
-  # A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specifc), you can add mutliple commands to this list.
-  - name: publishCommands
-    type: object
-    default:
-      [
-        "vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s",
-      ]
 
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
@@ -75,24 +57,16 @@ extends:
                     # Modify the build number to include repo name, extension version, and if dry run is true
                     - powershell: |
                         # Get the version from package.json
-
                         $packageJsonPath = "$(System.DefaultWorkingDirectory)/package.json"
                         $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
-                        $isDryRun = "$env:dryRun"
-                        $currentBuildNumber = "$(Build.BuildId)"
-
-                        $repoName = "$(Build.Repository.Name)"
-                        $repoNameParts = $repoName -split '/'
-                        $repoNameWithoutOwner = $repoNameParts[-1]
 
                         $dry = ""
-                        if ($isDryRun -eq 'True') {
+                        if ($env:dryRun -eq 'True') {
                           Write-Output "Dry run was set to True. Adding 'dry' to the build number."
-                          $dry = "dry"
+                          $dry = "dry-"
                         }
 
-                        $newBuildNumber = "$repoNameWithoutOwner-$npmVersionString-$dry-$currentBuildNumber"
-                        Write-Output "##vso[build.updatebuildnumber]$newBuildNumber"
+                        Write-Output "##vso[build.updatebuildnumber]$npmVersionString-$dry$(Build.BuildNumber)"
                       displayName: "\U0001F449 Prepend version from package.json to build number"
                       env:
                         dryRun: ${{ parameters.dryRun }}
@@ -151,7 +125,7 @@ extends:
                           displayName: "\U0001F449 Run vsce publish"
                           condition: and(succeeded(), ${{ eq(parameters.dryRun, false) }})
                           inputs:
-                            azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
+                            azureSubscription: ${{ parameters.extensionReleaseServiceConnection }}
                             scriptType: pscore
                             scriptLocation: inlineScript
                             inlineScript: ${{ publishCommand }}
