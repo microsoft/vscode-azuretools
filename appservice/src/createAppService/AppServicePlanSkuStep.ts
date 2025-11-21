@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { GeoRegion, SkuDescription } from '@azure/arm-appservice';
+import { type GeoRegion, type SkuDescription } from '@azure/arm-appservice';
 import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
+import { AzureWizardPromptStep, nonNullProp, type IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
-import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { type IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { setLocationsTask } from './setLocationsTask';
 
 type ExtendedSkuDescription = SkuDescription & { label?: string; description?: string; group?: string }
@@ -338,28 +338,31 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ];
     }
 
-    private getWorkflowStandardSkus(): SkuDescription[] {
+    private getWorkflowStandardSkus(): ExtendedSkuDescription[] {
         return [
             {
-                name: 'Workflow Standard WS1',
+                name: 'WS1',
                 tier: 'Workflow Standard',
                 size: 'WS1',
                 family: 'WS',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Workflow Standard (WS1)')
             },
             {
-                name: 'Workflow Standard WS2',
+                name: 'WS2',
                 tier: 'Workflow Standard',
                 size: 'WS2',
                 family: 'WS',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Workflow Standard (WS2)')
             },
             {
-                name: 'Workflow Standard WS3',
+                name: 'WS3',
                 tier: 'Workflow Standard',
                 size: 'WS3',
                 family: 'WS',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Workflow Standard (WS3)')
             }
         ];
     }
