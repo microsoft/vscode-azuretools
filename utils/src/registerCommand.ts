@@ -42,7 +42,13 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
         return await callWithTelemetryAndErrorHandling(
             telemetryId || commandId,
             async (context: types.IActionContext) => {
+                let injectedContext: Partial<types.IActionContext> | undefined;
                 if (args.length > 0) {
+                    if (args[0] && typeof args[0] === "object" && "injectedContext" in args[0]) {
+                        injectedContext = args[0].injectedContext as types.IActionContext
+                        args.shift();
+                    }
+
                     try {
                         await setTelemetryProperties(context, args);
                     } catch (e: unknown) {
@@ -52,7 +58,9 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                         context.telemetry.properties.telemetryError = error.message;
                     }
                 }
-
+                if (injectedContext) {
+                    return callback({ ...context, ...injectedContext }, ...args);
+                }
                 return callback(context, ...args);
             }
         );
