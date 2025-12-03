@@ -23,10 +23,11 @@ Create a new ADO service connection under your organization's project. In this e
  8. Choose the subscription you want to give access to. Do not choose a resource group unless you want to scope access only to that group.
  9. Name the service connection and add a description if needed.
  10. Click on `Save`. This will create a new service connection.
- 11. Click the new service connection to open it. Make note of three things that you will need:
-     1. The service connection ID. Visible at the top and as the `resourceId` query parameter in the URL.
-     2. The tenant ID of the issuer. Visible in the Issuer field as the GUID in the URL. This is the same tenant ID as the owner of the subscription you chose above.
-     3. The service principal ID. Click `Manage App registration` to open the app in the Azure Portal, and copy the `Application (client) ID`.
+ 11. Click the new service connection to open it. Make note of four things that you will need:
+     1. The service connection name, that you just gave it.
+     2. The service connection ID. Visible at the top and as the `resourceId` query parameter in the URL.
+     3. The tenant ID of the issuer. Visible in the Issuer field as the GUID in the URL. This is the same tenant ID as the owner of the subscription you chose above.
+     4. The service principal ID. Click `Manage App registration` to open the app in the Azure Portal, and copy the `Application (client) ID`.
 
    ![Service connection properties](guide-imgs/service_connection_4.jpg)
 
@@ -70,7 +71,25 @@ Make sure you pass an object containing these variables for the `new AzureDevOps
 
    ![Pipeline permissions](guide-imgs/security_1.jpg)
 
- 3. In any steps requiring this provider, set the `SYSTEM_ACCESSTOKEN` environment variable to the `$(System.AccessToken)` build variable.
+ 3. A "dummy" step needs to exist in order for the pipeline to use the service connection. An easy example follows:
+
+    ```yml
+    - task: AzureCLI@2
+      displayName: "Verify service connection"
+      inputs:
+        azureSubscription: MyServiceConnectionName
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          Write-Host "Service connection is accessible"
+          az account show
+        condition: succeeded()
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    ```
+
+ 4. In any steps requiring this provider, set the `SYSTEM_ACCESSTOKEN` environment variable to the `$(System.AccessToken)` build variable. As needed,
+    also pass in service connection ID, service principal ID, and tenant ID.
 
     ```yml
      - task: Npm@1
@@ -78,6 +97,9 @@ Make sure you pass an object containing these variables for the `new AzureDevOps
        inputs:
          command: custom
          customCommand: test
-      env:
+       env:
          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+         SERVICE_CONNECTION_ID: $(ServiceConnectionId)
+         SERVICE_PRINCIPAL_ID: $(ServicePrincipalId)
+         TENANT_ID: $(TenantId)
     ```
