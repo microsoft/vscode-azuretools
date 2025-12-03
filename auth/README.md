@@ -44,19 +44,19 @@ The constructor expects an initializer object with three values set to identify 
 These are:
 
 - `serviceConnectionId`: The resource ID of your service connection, which can be found on the `resourceId` field of the URL at the address bar, when viewing the service connection in the Azure DevOps portal
-- `domain`: The `Tenant ID` field of the service connection properties, which can be accessed by clicking "Edit" on the service connection page
+- `tenantId`: The `Tenant ID` field of the service connection properties, which can be accessed by clicking "Edit" on the service connection page
 - `clientId`: The `Service Principal Id` field of the service connection properties, which can be accessed by clicking "Edit" on the service connection page
 
 Here is an example code of how you might use `AzureDevOpsSubscriptionProvider`:
 
 ```typescript
-import { AzureDevOpsSubscriptionProviderInitializer, AzureDevOpsSubscriptionProvider } from "@microsoft/vscode-azext-azureauth";
+import { AzureDevOpsSubscriptionProviderInitializer, AzureDevOpsSubscriptionProvider } from "@microsoft/vscode-azext-azureauth/azdo";
 
 const initializer: AzureDevOpsSubscriptionProviderInitializer = {
     serviceConnectionId: "<REPLACE_WITH_SERVICE_CONNECTION_ID>",
-    domain: "<REPLACE_WITH_DOMAIN>",
+    tenantId: "<REPLACE_WITH_TENANT_ID>",
     clientId: "<REPLACE_WITH_CLIENT_ID>",
-}
+};
 
 const subscriptionProvider = new AzureDevOpsSubscriptionProvider(initializer);
 
