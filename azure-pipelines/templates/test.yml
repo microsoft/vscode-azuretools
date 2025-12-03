@@ -16,7 +16,6 @@ steps:
           inlineScript: |
             Write-Host "Service connection is accessible"
             az account show
-          RunAsPreJob: true
         condition: succeeded()
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
