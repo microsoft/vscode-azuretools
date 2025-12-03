@@ -69,3 +69,15 @@ Make sure you pass an object containing these variables for the `new AzureDevOps
  2. In the `Pipeline permissions` section, add any pipeline(s) that need permission to use this service connection.
 
    ![Pipeline permissions](guide-imgs/security_1.jpg)
+
+ 3. In any steps requiring this provider, set the `SYSTEM_ACCESSTOKEN` environment variable to the `$(System.AccessToken)` build variable.
+
+    ```yml
+     - task: Npm@1
+       displayName: "Test"
+       inputs:
+         command: custom
+         customCommand: test
+      env:
+         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    ```
