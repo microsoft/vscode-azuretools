@@ -2,6 +2,9 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: false
+  - name: bamiServiceConnectionName
+    type: string
+    default: AzCodeE2ETests
 
 steps:
 
@@ -10,7 +13,7 @@ steps:
       - task: AzureCLI@2
         displayName: "\U0001F449 Verify test service connection"
         inputs:
-          azureSubscription: $(FC_SERVICE_CONNECTION_NAME)
+          azureSubscription: ${{ parameters.bamiServiceConnectionName }}
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
