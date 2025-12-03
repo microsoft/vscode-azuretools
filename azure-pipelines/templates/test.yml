@@ -3,17 +3,24 @@ parameters:
     type: boolean
     default: false
 
+variables:
+  - group: AzCode-BAMI-Variables
+
 steps:
 
-  # This task obtains the values necessary to connect to the AzCodeE2ETests service connection from the AzCodeE2ETestsCredKV key vault.
+  # This task obtains the values necessary to connect to the service connection
   - ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
-      - task: AzureKeyVault@2
-        displayName: "\U0001F449 Get AzCodeE2ETests service connection secrets"
+      - task: AzureCLI@2
+        displayName: "\U0001F449 Verify test service connection"
         inputs:
-          azureSubscription: 'AzCodeE2ETests'
-          KeyVaultName: 'AzCodeE2ETestsKeyVault'
-          SecretsFilter: 'AzCodeServiceConnectionID, AzCodeServiceConnectionDomain, AzCodeServiceConnectionClientID'
+          azureSubscription: $(FC_SERVICE_CONNECTION_NAME)
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            Write-Host "Service connection is accessible"
+            az account show
           RunAsPreJob: true
+        condition: succeeded()
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -25,11 +32,10 @@ steps:
       workingDir: $(working_directory)
     condition: succeeded()
     env:
-      DISPLAY: :99 # Only necessary for linux tests
+      DISPLAY: :99 # Only necessary for linux tests, but must match the display number in file://./setup.yml
       ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         AzCode_UseAzureFederatedCredentials: true
-        AzCode_ServiceConnectionID: $(AzCodeServiceConnectionID)
-        AzCode_ServiceConnectionDomain: $(AzCodeServiceConnectionDomain)
-        AzCode_ServiceConnectionClientID: $(AzCodeServiceConnectionClientID)
-
+        AzCode_ServiceConnectionID: $(FC_SERVICE_CONNECTION_ID)
+        AzCode_ServiceConnectionDomain: $(FC_SERVICE_CONNECTION_TENANT_ID)
+        AzCode_ServiceConnectionClientID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
