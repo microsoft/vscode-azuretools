@@ -2,27 +2,8 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: false
-  - name: bamiServiceConnectionName
-    type: string
-    default: AzCodeE2ETests
 
 steps:
-
-  # This task obtains the values necessary to connect to the service connection
-  - ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
-      - task: AzureCLI@2
-        displayName: "\U0001F449 Verify test service connection"
-        inputs:
-          azureSubscription: ${{ parameters.bamiServiceConnectionName }}
-          scriptType: 'pscore'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            Write-Host "Service connection is accessible"
-            az account show
-        condition: succeeded()
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
   - task: Npm@1
     displayName: "\U0001F449 Test"
     inputs:

@@ -6,9 +6,6 @@ parameters:
   - name: useAzureFederatedCredentials
     type: boolean
     default: false
-  - name: bamiServiceConnectionName
-    type: string
-    default: AzCodeE2ETests
   - name: bamiVariablesGroupName
     type: string
     default: AzCode-BAMI-Variables
@@ -66,7 +63,6 @@ extends:
       - template: ./1esstages.yml
         parameters:
           useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
-          bamiServiceConnectionName: ${{ parameters.bamiServiceConnectionName }}
           bamiVariablesGroupName: ${{ parameters.bamiVariablesGroupName }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
