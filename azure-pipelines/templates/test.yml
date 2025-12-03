@@ -3,9 +3,6 @@ parameters:
     type: boolean
     default: false
 
-variables:
-  - group: AzCode-BAMI-Variables
-
 steps:
 
   # This task obtains the values necessary to connect to the service connection

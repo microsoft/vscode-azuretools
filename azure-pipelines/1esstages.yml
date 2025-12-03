@@ -58,5 +58,8 @@ stages:
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
             variables:
-              artifact_name: ${{ replace(job.name, '_', '-') }}
-              working_directory: ${{ job.working_directory }}
+              - name: artifact_name
+                value: ${{ replace(job.name, '_', '-') }}
+              - name: working_directory
+                value: ${{ job.working_directory }}
+              - group: AzCode-BAMI-Variables
