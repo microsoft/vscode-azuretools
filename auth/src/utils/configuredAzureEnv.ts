@@ -63,7 +63,7 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
  *
  * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
-export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
+export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | null | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
     const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
 
     if (typeof cloud === 'undefined' || !cloud) {

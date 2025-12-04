@@ -35,9 +35,9 @@ export interface AzureDevOpsSubscriptionProviderInitializer {
 
 let azureDevOpsSubscriptionProvider: AzureDevOpsSubscriptionProvider | undefined;
 export function createAzureDevOpsSubscriptionProviderFactory(initializer: AzureDevOpsSubscriptionProviderInitializer): () => Promise<AzureDevOpsSubscriptionProvider> {
-    return async (): Promise<AzureDevOpsSubscriptionProvider> => {
+    return (): Promise<AzureDevOpsSubscriptionProvider> => {
         azureDevOpsSubscriptionProvider ??= new AzureDevOpsSubscriptionProvider(initializer);
-        return azureDevOpsSubscriptionProvider;
+        return Promise.resolve(azureDevOpsSubscriptionProvider);
     };
 }
 
@@ -52,9 +52,9 @@ let azIdentity: typeof import('@azure/identity') | undefined;
  */
 export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBase {
     private _tokenCredential: TokenCredential | undefined;
-    private _SERVICE_CONNECTION_ID: string;
-    private _TENANT_ID: string;
-    private _CLIENT_ID: string;
+    private _serviceConnectionId: string;
+    private _tenantId: string;
+    private _clientId: string;
 
     public constructor({ serviceConnectionId, tenantId, clientId }: AzureDevOpsSubscriptionProviderInitializer, logger?: vscode.LogOutputChannel) {
         super(logger);
@@ -68,9 +68,9 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
             `);
         }
 
-        this._SERVICE_CONNECTION_ID = serviceConnectionId;
-        this._TENANT_ID = tenantId;
-        this._CLIENT_ID = clientId;
+        this._serviceConnectionId = serviceConnectionId;
+        this._tenantId = tenantId;
+        this._clientId = clientId;
     }
 
     /**
@@ -81,38 +81,38 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * For {@link AzureSubscriptionProviderBase}, this returns a single account with a fixed ID and label
      */
-    public override async getAccounts(): Promise<AzureAccount[]> {
-        return [
+    public override getAccounts(): Promise<AzureAccount[]> {
+        return Promise.resolve([
             {
                 id: 'test-account-id',
                 label: 'test-account',
             }
-        ];
+        ]);
     }
 
     /**
      * For {@link AzureSubscriptionProviderBase}, this returns an empty array
      */
-    public override async getUnauthenticatedTenantsForAccount(): Promise<AzureTenant[]> {
+    public override getUnauthenticatedTenantsForAccount(): Promise<AzureTenant[]> {
         // For DevOps federated service connection, there is only one tenant associated with the service principal, and we will be authenticated
-        return [];
+        return Promise.resolve([]);
     }
 
     /**
      * For {@link AzureSubscriptionProviderBase}, this returns a single tenant associated with the service principal
      */
-    public override async getTenantsForAccount(account: AzureAccount): Promise<AzureTenant[]> {
-        return [{
-            tenantId: this._TENANT_ID,
+    public override getTenantsForAccount(account: AzureAccount): Promise<AzureTenant[]> {
+        return Promise.resolve([{
+            tenantId: this._tenantId,
             account: account,
-        }];
+        }]);
     }
 
     /**
      * @inheritdoc
      */
     public override async signIn(): Promise<boolean> {
-        this._tokenCredential ??= await getTokenCredential(this._SERVICE_CONNECTION_ID, this._TENANT_ID, this._CLIENT_ID);
+        this._tokenCredential ??= await getTokenCredential(this._serviceConnectionId, this._tenantId, this._clientId);
         return !!this._tokenCredential;
     }
 
@@ -139,7 +139,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
                 accessToken: token.token,
                 id: crypto.randomUUID(),
                 account: tenant.account,
-                scopes: scopes || [],
+                scopes: scopes,
             } satisfies vscode.AuthenticationSession;
         };
 
