@@ -10,7 +10,7 @@ import type { AzureTenant } from '../contracts/AzureTenant';
 
 /**
  * Prompts user to select from a list of unauthenticated tenants.
- * Once selected, requests a new session from VS Code specifially for this tenant.
+ * Once selected, requests a new session from VS Code specifically for this tenant.
  */
 export async function signInToTenant(subscriptionProvider: AzureSubscriptionProvider, account?: AzureAccount): Promise<void> {
     const tenant = await pickTenant(subscriptionProvider, account);
