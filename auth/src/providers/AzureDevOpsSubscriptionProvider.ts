@@ -38,7 +38,7 @@ export function createAzureDevOpsSubscriptionProviderFactory(initializer: AzureD
     return async (): Promise<AzureDevOpsSubscriptionProvider> => {
         azureDevOpsSubscriptionProvider ??= new AzureDevOpsSubscriptionProvider(initializer);
         return azureDevOpsSubscriptionProvider;
-    }
+    };
 }
 
 let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
@@ -87,7 +87,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
                 id: 'test-account-id',
                 label: 'test-account',
             }
-        ]
+        ];
     }
 
     /**
@@ -105,7 +105,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
         return [{
             tenantId: this._TENANT_ID,
             account: account,
-        }]
+        }];
     }
 
     /**
@@ -154,7 +154,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
                 },
                 getSessionWithScopes: getSessionWithScopes,
             }
-        }
+        };
     }
 }
 
@@ -175,7 +175,6 @@ async function getTokenCredential(serviceConnectionId: string, tenantId: string,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore @azure/identity contains a bug where this type mismatches between CJS and ESM, we must ignore it. We also can't do @ts-expect-error because the error only happens when building CJS.
         azIdentity ??= await import('@azure/identity');
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return new azIdentity!.AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
+        return new azIdentity.AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
     }
 }
