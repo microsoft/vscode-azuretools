@@ -5,18 +5,18 @@
 
 import type { TokenCredential } from '@azure/core-auth';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type * as vscode from "vscode";
+import type { AzureAccount } from './AzureAccount';
 import type { AzureAuthentication } from './AzureAuthentication';
 
 /**
  * A type representing an Azure subscription ID, not including the tenant ID.
  */
-export type SubscriptionId = string;
+export type SubscriptionId = Readonly<string>;
 
 /**
  * A type representing an Azure tenant ID.
  */
-export type TenantId = string;
+export type TenantId = Readonly<string>;
 
 /**
  * Represents an Azure subscription.
@@ -60,5 +60,5 @@ export interface AzureSubscription {
     /**
      * The account associated with this subscription.
      */
-    readonly account: vscode.AuthenticationSessionAccountInformation;
+    readonly account: AzureAccount;
 }
