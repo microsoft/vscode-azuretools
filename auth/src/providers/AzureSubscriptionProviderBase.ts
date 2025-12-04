@@ -59,7 +59,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     /**
      * @inheritdoc
      */
-    public onRefreshSuggested(callback: (reason: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
+    public onRefreshSuggested(callback: (evtArgs: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
         if (!this.sessionChangeListener) {
             this.sessionChangeListener = vscode.authentication.onDidChangeSessions(evt => {
                 if (evt.provider.id === getConfiguredAuthProviderId()) {
@@ -71,7 +71,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
     }
 
-    protected fireRefreshSuggestedIfNeeded(reason: RefreshSuggestedEvent): void {
+    protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): void {
         if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
             // Suppress and/or debounce events to avoid flooding
             return;
@@ -79,7 +79,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         this.log('Firing onRefreshSuggested event');
         this.lastRefreshSuggestedTime = Date.now();
-        this.refreshSuggestedEmitter.fire(reason);
+        this.refreshSuggestedEmitter.fire(evtArgs);
     }
 
     /**
@@ -343,13 +343,10 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             }
         };
 
-        const configuredAzureEnv = getConfiguredAzureEnv();
-        const endpoint = configuredAzureEnv.resourceManagerEndpointUrl;
-
         armSubs ??= await import('@azure/arm-resources-subscriptions');
 
         return {
-            client: new armSubs.SubscriptionClient(credential, { endpoint }),
+            client: new armSubs.SubscriptionClient(credential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
             credential: credential,
             authentication: {
                 getSession: async () => {
