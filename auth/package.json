@@ -39,9 +39,8 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "lint": "eslint --ext .ts .",
-        "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./dist/cjs/test/runTest.js",
+        "lint": "eslint --max-warnings 0",
+        "test": "mocha",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
@@ -50,20 +49,9 @@
     },
     "devDependencies": {
         "@azure/core-auth": "^1.10.1",
-        "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@types/glob": "^8.1.0",
-        "@types/mocha": "^7.0.2",
-        "@types/node": "^18.18.7",
-        "@types/vscode": "1.106.0",
-        "@typescript-eslint/eslint-plugin": "^5.53.0",
-        "@vscode/test-electron": "^2.3.8",
-        "eslint": "^8.34.0",
-        "eslint-plugin-import": "^2.22.1",
-        "glob": "^7.1.6",
-        "mocha": "^11.1.0",
-        "mocha-junit-reporter": "^2.0.2",
-        "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^5.8.2"
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.3",
+        "@types/node": "22.x",
+        "@types/vscode": "1.106.0"
     },
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^2.1.0",
@@ -72,5 +60,14 @@
     },
     "publishConfig": {
         "tag": "alpha"
+    },
+    "mocha": {
+        "ui": "tdd",
+        "node-option": [
+            "import=tsx"
+        ],
+        "spec": [
+            "test/**/*.test.ts"
+        ]
     }
 }
