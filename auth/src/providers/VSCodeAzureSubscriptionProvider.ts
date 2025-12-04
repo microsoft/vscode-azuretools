@@ -17,9 +17,6 @@ import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
 const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
 
-// TODO: cache clearing on account sign out
-// Maybe requires https://github.com/microsoft/vscode/issues/276997
-
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
  * as well as filtering and deduplication according to configured settings. Additionally, promise
