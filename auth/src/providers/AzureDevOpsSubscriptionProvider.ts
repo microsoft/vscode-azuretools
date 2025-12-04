@@ -175,6 +175,7 @@ async function getTokenCredential(serviceConnectionId: string, tenantId: string,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore @azure/identity contains a bug where this type mismatches between CJS and ESM, we must ignore it. We also can't do @ts-expect-error because the error only happens when building CJS.
         azIdentity ??= await import('@azure/identity');
-        return new azIdentity.AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
+        return new azIdentity!.AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
     }
 }
