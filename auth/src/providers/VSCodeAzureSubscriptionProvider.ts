@@ -56,6 +56,18 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         return super.onRefreshSuggested(callback, thisArg, disposables);
     }
 
+    protected override fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
+        const actuallyFired = super.fireRefreshSuggestedIfNeeded(evtArgs);
+
+        if (actuallyFired && evtArgs.reason === 'sessionChange') {
+            // Clear just the account cache--tenants and subscriptions are probably still valid,
+            // but the session change event may been have fired due to account sign out
+            this.accountCache.clear();
+        }
+
+        return actuallyFired;
+    }
+
     /**
      * @inheritdoc
      */
@@ -170,7 +182,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      */
     public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
         try {
-            // If needed, delete the cache for this tenant
+            // If needed, delete the cache for this account+tenant
             if (options.noCache ?? DefaultOptions.noCache) {
                 this.subscriptionCache.delete(tenant.account.id, tenant.tenantId);
             }
@@ -252,14 +264,4 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         const subscriptionIds = fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase());
         return Promise.resolve(Array.from(new Set(subscriptionIds)));
     }
-
-    /**
-     * Clears all caches related to the given signed-out account.
-     * @param accountId The ID of the signed-out account
-     */
-    // private onDidSignOutAccount(accountId: string): void {
-    //     this.accountCache.delete(accountId);
-    //     this.tenantCache.delete(accountId);
-    //     this.subscriptionCache.clearByFirstKey(accountId);
-    // }
 }

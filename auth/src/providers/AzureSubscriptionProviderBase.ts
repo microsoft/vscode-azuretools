@@ -71,15 +71,16 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
     }
 
-    protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): void {
+    protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
         if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
             // Suppress and/or debounce events to avoid flooding
-            return;
+            return false;
         }
 
-        this.log('Firing onRefreshSuggested event');
+        this.log(`Firing onRefreshSuggested event due to reason: ${evtArgs.reason}`);
         this.lastRefreshSuggestedTime = Date.now();
         this.refreshSuggestedEmitter.fire(evtArgs);
+        return true;
     }
 
     /**
