@@ -40,7 +40,7 @@ async function getPicks(subscriptionProvider: AzureSubscriptionProvider, account
         unauthenticatedTenants.push(...await subscriptionProvider.getUnauthenticatedTenantsForAccount(account));
     }
 
-    const duplicateTenants: Set<string | undefined> = new Set(
+    const duplicateTenants = new Set<string | undefined>(
         unauthenticatedTenants
             .filter((tenant, index, self) => index !== self.findIndex(t => t.tenantId === tenant.tenantId))
             .map(tenant => tenant.tenantId)
@@ -52,8 +52,7 @@ async function getPicks(subscriptionProvider: AzureSubscriptionProvider, account
         .sort((a, b) => (a.displayName!).localeCompare(b.displayName!))
         .map(tenant => ({
             label: tenant.displayName ?? '',
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            description: `${tenant.tenantId!}${isDuplicate(tenant.tenantId!) ? ` (${tenant.account.label})` : ''}`,
+            description: `${tenant.tenantId}${isDuplicate(tenant.tenantId) ? ` (${tenant.account.label})` : ''}`,
             detail: tenant.defaultDomain ?? '',
             tenant,
         }));
