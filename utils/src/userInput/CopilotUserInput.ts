@@ -91,14 +91,18 @@ export class CopilotUserInput implements types.IAzureUserInput {
     public async showQuickPick<T extends types.IAzureQuickPickItem<unknown>>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
         let primaryPrompt: string;
         const resolvedItems: T[] = await Promise.resolve(items);
-        const jsonItems: string[] = resolvedItems.map(item => JSON.stringify(item));
+
+        // Clean up items to only include label and description
+        const cleanedItems = this.cleanQuickPickItems(resolvedItems);
+        const jsonItems = cleanedItems.map(item => JSON.stringify(item));
         try {
             if (options.canPickMany) {
                 primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
                 const response = await doCopilotInteraction(primaryPrompt);
                 const jsonResponse: T[] = JSON.parse(response) as T[];
                 const picks = resolvedItems.filter(item => {
-                    return jsonResponse.some(resp => JSON.stringify(resp) === JSON.stringify(item));
+                    return jsonResponse.some(resp => JSON.stringify(resp.label) === JSON.stringify(item.label) &&
+                        JSON.stringify(resp.description || '') === JSON.stringify(item.description || ''));
                 });
 
                 if (!picks || picks.length === 0) {
@@ -109,11 +113,12 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
                 return picks;
             } else {
-                primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, this._relevantContext);
+                primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, options.placeHolder, this._relevantContext);
                 const response = await doCopilotInteraction(primaryPrompt);
                 const jsonResponse: T = JSON.parse(response) as T;
                 const pick = resolvedItems.find(item => {
-                    return JSON.stringify(item) === JSON.stringify(jsonResponse);
+                    return JSON.stringify(item.label) === JSON.stringify(jsonResponse.label) &&
+                        JSON.stringify(item.description || '') === JSON.stringify(jsonResponse.description || '');
                 });
 
                 if (!pick) {
@@ -127,5 +132,13 @@ export class CopilotUserInput implements types.IAzureUserInput {
         } catch {
             throw new InvalidCopilotResponseError();
         }
+    }
+
+    private cleanQuickPickItems<T extends types.IAzureQuickPickItem<unknown>>(items: T[]): { label: string, description: string, id: string | undefined }[] {
+        return items.map(item => ({
+            label: item.label,
+            description: item.description || '',
+            id: (item.data && typeof item.data === 'object' && 'id' in item.data) ? String(item.data.id) : undefined
+        }));
     }
 }
