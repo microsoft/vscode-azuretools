@@ -4,8 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { TenantIdDescription } from "@azure/arm-resources-subscriptions";
-import type * as vscode from 'vscode';
+import type { AzureAccount } from "./AzureAccount";
 
+/**
+ * An Azure tenant associated with a specific account
+ */
 export interface AzureTenant extends TenantIdDescription {
-    account: vscode.AuthenticationSessionAccountInformation;
+    /**
+     * The account associated with this tenant
+     */
+    readonly account: AzureAccount;
+
+    /**
+     * @inheritdoc
+     */
+    readonly tenantId: string; // Override to make required
 }
