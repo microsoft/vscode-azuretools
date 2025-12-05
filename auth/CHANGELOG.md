@@ -1,5 +1,9 @@
 # Change Log
 
+## 6.0.0 - 2025-12-15
+
+* [#2119](https://github.com/microsoft/vscode-azuretools/pull/2119) Complete rewrite of the auth package. Adds caching, parallelization, and smarter filtering.
+
 ## 5.1.1 - 2025-10-28
 
 * [#2111](https://github.com/microsoft/vscode-azuretools/pull/2111) Same as https://github.com/microsoft/vscode-azuretools/pull/2110 but a better fix.

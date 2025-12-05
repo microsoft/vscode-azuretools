@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { GeoRegion, SkuDescription } from '@azure/arm-appservice';
+import { type GeoRegion, type SkuDescription } from '@azure/arm-appservice';
 import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizardPromptStep, IAzureQuickPickItem, nonNullProp } from '@microsoft/vscode-azext-utils';
+import { AzureWizardPromptStep, nonNullProp, type IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
 import { openUrl } from '../utils/openUrl';
 import { AppKind, WebsiteOS } from './AppKind';
-import { IAppServiceWizardContext } from './IAppServiceWizardContext';
+import { type IAppServiceWizardContext } from './IAppServiceWizardContext';
 import { setLocationsTask } from './setLocationsTask';
 
 type ExtendedSkuDescription = SkuDescription & { label?: string; description?: string; group?: string }
@@ -219,134 +219,150 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
         ]
     }
 
-    private getAdvancedSkus(): SkuDescription[] {
+    private getAdvancedSkus(): ExtendedSkuDescription[] {
         return [
             {
-                name: 'Basic (B2)',
+                name: 'B2',
                 tier: 'Basic',
                 size: 'B2',
                 family: 'B',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Basic (B2)')
             },
             {
-                name: 'Basic (B3)',
+                name: 'B3',
                 tier: 'Basic',
                 size: 'B3',
                 family: 'B',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Basic (B3)')
             },
             {
-                name: 'Standard (S1)',
+                name: 'S1',
                 tier: 'Standard',
                 size: 'S1',
                 family: 'S',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Standard (S1)')
             },
             {
-                name: 'Standard (S2)',
+                name: 'S2',
                 tier: 'Standard',
                 size: 'S2',
                 family: 'S',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Standard (S2)')
             },
             {
-                name: 'Standard (S3)',
+                name: 'S3',
                 tier: 'Standard',
                 size: 'S3',
                 family: 'S',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Standard (S3)')
             },
             {
-                name: 'Premium V2 (P2v2)',
+                name: 'P2v2',
                 tier: 'Premium V2',
                 size: 'P2v2',
                 family: 'Pv2',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Premium V2 (P2v2)')
             },
             {
-                name: 'Premium V2 (P3v2)',
+                name: 'P3v2',
                 tier: 'Premium V2',
                 size: 'P3v2',
                 family: 'Pv2',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Premium V2 (P3v2)')
             }
         ];
     }
 
-    private getPremiumV3Skus(): SkuDescription[] {
+    private getPremiumV3Skus(): ExtendedSkuDescription[] {
         return [
             {
-                name: 'Premium V3 (P1v3)',
+                name: 'P1v3',
                 tier: 'Premium V3',
                 size: 'P1v3',
                 family: 'Pv3',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P1v3)')
             },
             {
-                name: 'Premium V3 (P2v3)',
+                name: 'P2v3',
                 tier: 'Premium V3',
                 size: 'P2v3',
                 family: 'Pv3',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P2v3)')
             },
             {
-                name: 'Premium V3 (P3v3)',
+                name: 'P3v3',
                 tier: 'Premium V3',
                 size: 'P3v3',
                 family: 'Pv3',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Premium V3 (P3v3)')
             }
         ];
     }
 
-    private getElasticPremiumSkus(): SkuDescription[] {
+    private getElasticPremiumSkus(): ExtendedSkuDescription[] {
         return [
             {
-                name: 'Elastic Premium (EP1)',
+                name: 'EP1',
                 tier: 'Elastic Premium',
                 size: 'EP1',
                 family: 'EP',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Elastic Premium (EP1)')
             },
             {
-                name: 'Elastic Premium (EP2)',
+                name: 'EP2',
                 tier: 'Elastic Premium',
                 size: 'EP2',
                 family: 'EP',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Elastic Premium (EP2)')
             },
             {
-                name: 'Elastic Premium (EP3)',
+                name: 'EP3',
                 tier: 'Elastic Premium',
                 size: 'EP3',
                 family: 'EP',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Elastic Premium (EP3)')
             }
         ];
     }
 
-    private getWorkflowStandardSkus(): SkuDescription[] {
+    private getWorkflowStandardSkus(): ExtendedSkuDescription[] {
         return [
             {
-                name: 'Workflow Standard WS1',
+                name: 'WS1',
                 tier: 'Workflow Standard',
                 size: 'WS1',
                 family: 'WS',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Workflow Standard (WS1)')
             },
             {
-                name: 'Workflow Standard WS2',
+                name: 'WS2',
                 tier: 'Workflow Standard',
                 size: 'WS2',
                 family: 'WS',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Workflow Standard (WS2)')
             },
             {
-                name: 'Workflow Standard WS3',
+                name: 'WS3',
                 tier: 'Workflow Standard',
                 size: 'WS3',
                 family: 'WS',
-                capacity: 1
+                capacity: 1,
+                label: vscode.l10n.t('Workflow Standard (WS3)')
             }
         ];
     }

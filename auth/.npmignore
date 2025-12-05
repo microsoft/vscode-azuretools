@@ -1,6 +1,7 @@
 node_modules/
 .vscode/
 guide-imgs/
+AzureFederatedCredentialsGuide.md
 src/*
 tsconfig.json
 *.tgz

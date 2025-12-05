@@ -26,6 +26,17 @@ This is relatively easy.
 Hard mode engage!
 
 1. Follow the subsection above on [universal steps](#universal-steps).
+1. As needed, add the following as dev dependencies. Use `*` for the desired version--they are optional peer
+   dependencies in this package, and you don't need to control the version from the extension. Then do `npm i` again.
+    ```json
+    "devDependencies": {
+        "@vscode/test-cli": "*",
+        "@vscode/test-electron": "*",
+        "@vscode/vsce": "*",
+        "esbuild": "*",
+        "esbuild-plugin-copy": "*"
+    }
+    ```
 1. Update your tsconfig.json to use target=es2022, lib=es2022, module=nodenext, moduleResolution=nodenext.
    > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1001/files)
 1. Rewrite main.js at the root, it will look more like [this](https://github.com/microsoft/vscode-containers/blob/main/main.js).

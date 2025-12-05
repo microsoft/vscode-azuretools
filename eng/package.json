@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.0.0-alpha.3",
+    "version": "1.0.0-alpha.4",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -37,21 +37,44 @@
         "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
         "@types/mocha": "^10.0.10",
-        "@vscode/test-cli": "^0.0.12",
-        "@vscode/test-electron": "^2.5.2",
-        "@vscode/vsce": "^3.7.0",
         "chai": "^6.2.1",
         "chai-as-promised": "^8.0.2",
-        "esbuild": "^0.25.12",
-        "esbuild-plugin-copy": "^2.1.1",
         "eslint": "^9.39.1",
         "mocha": "^11.7.5",
-        "tsx": "^4.20.6",
+        "tsx": "^4.21.0",
         "typescript": "~5.9",
-        "typescript-eslint": "^8.46.4"
+        "typescript-eslint": "^8.48.1"
+    },
+    "peerDependencies": {
+        "@vscode/test-cli": "^0.0.12",
+        "@vscode/test-electron": "^2.5.2",
+        "@vscode/vsce": "^3.7.1",
+        "esbuild": "^0.27.1",
+        "esbuild-plugin-copy": "^2.1.1"
+    },
+    "peerDependenciesMeta": {
+        "@vscode/test-cli": {
+            "optional": true
+        },
+        "@vscode/test-electron": {
+            "optional": true
+        },
+        "@vscode/vsce": {
+            "optional": true
+        },
+        "esbuild": {
+            "optional": true
+        },
+        "esbuild-plugin-copy": {
+            "optional": true
+        }
     },
     "devDependencies": {
-        "@types/node": "22.x"
+        "@types/node": "22.x",
+        "@vscode/test-cli": "*",
+        "@vscode/test-electron": "*",
+        "esbuild": "*",
+        "esbuild-plugin-copy": "*"
     },
     "publishConfig": {
         "tag": "alpha"

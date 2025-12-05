@@ -17,11 +17,11 @@ export class NotSignedInError extends Error {
 }
 
 /**
- * Tests if an object is a `NotSignedInError`. This should be used instead of `instanceof`.
+ * Tests if an object is a {@link NotSignedInError}. This should be used instead of `instanceof`.
  *
  * @param error The object to test
  *
- * @returns True if the object is a NotSignedInError, false otherwise
+ * @returns True if the object is a {@link NotSignedInError}, false otherwise
  */
 export function isNotSignedInError(error: unknown): error is NotSignedInError {
     return !!error && typeof error === 'object' && (error as NotSignedInError).isNotSignedInError === true;
