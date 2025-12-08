@@ -13,7 +13,8 @@ export namespace validationUtils {
     }
 
     export function hasValidCharLength(value: string, rc?: RangeConstraints): boolean {
-        const lowerLimitIncl = rc?.lowerLimitIncl ?? 1;
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        const lowerLimitIncl = rc?.lowerLimitIncl || 1;
         const upperLimitIncl = (!rc?.upperLimitIncl || rc.upperLimitIncl > Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : rc.upperLimitIncl;
 
         if (lowerLimitIncl < 1 || upperLimitIncl < 1) {
