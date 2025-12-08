@@ -8,7 +8,7 @@
 import { createAzExtOutputChannel, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 
 // Runs before all tests
-suiteSetup(async () => {
+suiteSetup(() => {
     const extVars = {
         context: {
             extension: {

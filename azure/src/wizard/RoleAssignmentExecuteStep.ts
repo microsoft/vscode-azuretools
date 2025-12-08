@@ -20,7 +20,7 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
 
     public async execute(_wiardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>, _progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         // nothing should execute, but we need shouldExecute to be true so that addExecuteSteps is called
-        return undefined;
+        return Promise.resolve(undefined);
     }
     public shouldExecute(_wizardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): boolean {
         return true;
@@ -93,7 +93,7 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
                 return await this.executeCore(wizardContext, progress);
             }
 
-            throw parsedError;
+            throw error;
         }
     }
 

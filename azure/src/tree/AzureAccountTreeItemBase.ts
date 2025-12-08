@@ -80,7 +80,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         }
 
         context.telemetry.properties.accountStatus = azureAccount.status;
-        const existingSubscriptions: SubscriptionTreeItemBase[] = this._subscriptionTreeItems ? this._subscriptionTreeItems : [];
+        const existingSubscriptions: SubscriptionTreeItemBase[] = this._subscriptionTreeItems ?? [];
         this._subscriptionTreeItems = [];
 
         const contextValue: string = 'azureCommand';
@@ -206,6 +206,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const extension: Extension<AzureAccountExtensionApi> | undefined = extensions.getExtension<AzureAccountExtensionApi>(azureAccountExtensionId);
             if (extension) {
                 try {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     if (semver.lt(extension.packageJSON.version as string, minAccountExtensionVersion)) {
                         return 'needsUpdate';
                     }

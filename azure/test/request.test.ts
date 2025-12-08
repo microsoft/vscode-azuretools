@@ -63,6 +63,7 @@ suite('request', () => {
 
     test('200, json body, no content type', async () => {
         const response = await sendTestRequest({ statusCode: 200, body: '{ "data": "Hello World!" }' });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
@@ -82,16 +83,19 @@ suite('request', () => {
 
     test('200, json body, json content type', async () => {
         const response = await sendTestRequest({ statusCode: 200, body: '{ "data": "Hello World!" }', contentType: 'application/json' });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, json body, no content type, with bom', async () => {
         const response = await sendTestRequest({ statusCode: 200, body: `\ufeff{ "data": "Hello World!" }` });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 
     test('200, json body, json content type, with bom', async () => {
         const response = await sendTestRequest({ statusCode: 200, body: `\ufeff{ "data": "Hello World!" }`, contentType: 'application/json' });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         assert.strictEqual(response.parsedBody.data, 'Hello World!');
     });
 

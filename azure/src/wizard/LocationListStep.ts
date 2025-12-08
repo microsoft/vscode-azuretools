@@ -13,6 +13,7 @@ import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     /**
      * The task used to get locations.
@@ -44,6 +45,7 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
      */
     ui: IAzureAgentInput;
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> {
     protected constructor(private options?: IAzureQuickPickOptions) {
@@ -58,9 +60,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     private static getInternalVariables<T extends ILocationWizardContextInternal>(wizardContext: T): [Promise<types.AzExtLocation[]>, Map<string, Promise<string[]>>] {
-        if (!wizardContext._allLocationsTask) {
-            wizardContext._allLocationsTask = getAllLocations(wizardContext);
-        }
+        wizardContext._allLocationsTask ??= getAllLocations(wizardContext);
 
         if (!wizardContext._providerLocationsMap) {
             wizardContext._providerLocationsMap = new Map<string, Promise<string[]>>();
@@ -194,6 +194,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         const [allLocationsTask, providerLocationsMap] = this.getInternalVariables(wizardContext);
         const locationSubsets: string[][] = await Promise.all(providerLocationsMap.values());
         // Filter to locations supported by every provider
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return (await allLocationsTask).filter(l1 => (l1.type === 'EdgeZone' && wizardContext.includeExtendedLocations) || locationSubsets.every(subset =>
             subset.find(l2 => LocationListStep.generalizeLocationName(l1.name) === LocationListStep.generalizeLocationName(l2))
         ));
@@ -247,6 +248,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public static generalizeLocationName(name: string | undefined): string {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
     }
 
@@ -285,6 +287,7 @@ function isRecommended(l: types.AzExtLocation): boolean {
 
 class ProviderResourceTypeNotFoundError extends Error {
     constructor(provider: Provider, expectedResourceType: string) {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         super(vscode.l10n.t('Provider "{0}" does not have resource type "{1}".', provider.id || 'undefined', expectedResourceType));
     }
 }

@@ -126,7 +126,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
-    return client;
+    return Promise.resolve(client);
 }
 
 function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean, bearerChallengePolicy?: PipelinePolicy): Pipeline {
@@ -183,6 +183,7 @@ export class CorrelationIdPolicy implements PipelinePolicy {
 
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const headerName = 'x-ms-correlation-request-id';
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         const id: string = (this.context.telemetry.properties[headerName] as string | undefined) ||= randomUUID();
         request.headers.set(headerName, id);
         return await next(request);
@@ -270,9 +271,11 @@ class StatusCodePolicy implements PipelinePolicy {
         const response: types.AzExtPipelineResponse = await next(request);
         if (response.status < 200 || response.status >= 300) {
             const errorMessage: string = response.bodyAsText ?
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                 parseError(response.parsedBody || response.bodyAsText).message :
                 vscode.l10n.t('Unexpected status code: {0}', response.status);
             throw new RestError(errorMessage, {
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                 code: String(response.status) || response.bodyAsText || '',
                 statusCode: response.status,
                 request,
@@ -346,6 +349,7 @@ class AzExtBearerChallengePolicy implements PipelinePolicy {
 
         // Only attempt a single retry on auth challenges
         if ((initial.status === 401) && !request.headers.get(this.challengeRetryHeader)) {
+            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
             const header = initial.headers.get('WWW-Authenticate') || initial.headers.get('www-authenticate');
             if (header) {
                 this.context.telemetry.properties.challenge = 'true';
