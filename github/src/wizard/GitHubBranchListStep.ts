@@ -41,6 +41,7 @@ export class GitHubBranchListStep extends AzureWizardPromptStep<GitHubContext> {
         const branchParams: GetBranchesParams = {
             owner: nonNullProp(context, 'gitHubRepositoryOwner'),
             repo: nonNullProp(context, 'gitHubRepository'),
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             per_page: perPage,
             page
         };

@@ -54,6 +54,7 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
         const userRepoParams: GetUserReposReqParams = {
             affiliation: 'owner',
             visibility: 'all',
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             per_page: perPage,
             page
         };
@@ -61,6 +62,7 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
             // Doesn't matter if context.gitHubOrg is undefined; that just means we will end up calling 'getRepositoriesByUser' instead
             org: context.gitHubOrg ?? '',
             type: 'all',
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             per_page: perPage,
             page
         };

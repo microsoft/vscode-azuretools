@@ -67,6 +67,7 @@ export class ActionItem implements TreeElementBase {
             const getJobsParams: GetJobsParams = {
                 owner: nonNullValue(ownerOrOrganization),
                 repo: nonNullValue(repositoryName),
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 run_id: this.actionWorkflowRuns.id
             };
             return await getJobs(context, getJobsParams);
