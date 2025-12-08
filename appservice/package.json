@@ -27,9 +27,8 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "lint": "eslint --ext .ts .",
-        "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./dist/cjs/test/runTest.js",
+        "lint": "eslint --max-warnings 0",
+        "test": "vscode-test",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
@@ -42,8 +41,6 @@
         "@azure/arm-appservice": "^15.0.0",
         "@azure/arm-operationalinsights": "^8.0.1",
         "@azure/arm-resourcegraph": "^5.0.0-beta.3",
-        "@azure/arm-resources-subscriptions": "^2.0.1",
-        "@azure/core-client": "^1.7.2",
         "@azure/core-rest-pipeline": "^1.10.3",
         "@azure/storage-blob": "^12.3.0",
         "@microsoft/vscode-azext-azureutils": "^4.0.0",
@@ -62,23 +59,15 @@
         "@microsoft/vscode-azext-azureappsettings": "^1.0.0"
     },
     "devDependencies": {
-        "@azure/core-auth": "^1.4.0",
-        "@microsoft/eslint-config-azuretools": "^0.2.1",
+        "@azure/core-client": "^1.7.2",
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.5",
         "@types/fs-extra": "^9.0.13",
-        "@types/mocha": "^7.0.2",
         "@types/node": "22.x",
         "@types/p-retry": "^2.0.0",
         "@types/vscode": "1.105.0",
         "@types/ws": "^8.5.3",
         "@types/yazl": "^2.4.2",
-        "@typescript-eslint/eslint-plugin": "^5.53.0",
-        "@vscode/test-electron": "^2.3.8",
-        "eslint": "^8.34.0",
-        "eslint-plugin-import": "^2.22.1",
-        "globby": "^11.0.2",
-        "mocha": "^10.8.2",
-        "mocha-junit-reporter": "^2.0.2",
-        "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^5.9.3"
+        "@vscode/test-cli": "*",
+        "@vscode/test-electron": "*"
     }
 }
