@@ -75,7 +75,7 @@ export function getActionBasedIconPath(data: ActionWorkflowRuns | Job | JobStep)
                 colorId = 'testing.iconSkipped';
                 break;
             case Conclusion.Success:
-                id = 'pass'
+                id = 'pass';
                 colorId = 'testing.iconPassed';
                 break;
         }

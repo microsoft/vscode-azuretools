@@ -68,8 +68,8 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
         // Intentionally use the same map callback on two lines below to force TypeScript to infer the proper repo type
         this.picks.push(
             ...(context.gitHubOrg ?
-                (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }) :
-                (await getRepositoriesByUser(context, userRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }))
+                (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } }; }) :
+                (await getRepositoriesByUser(context, userRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } }; }))
         );
         this.picks.sort((a: QuickPickItem, b: QuickPickItem) => a.label.localeCompare(b.label));
 

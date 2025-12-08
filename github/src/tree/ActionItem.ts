@@ -42,7 +42,7 @@ export class ActionItem implements TreeElementBase {
         const values: string[] = [actionTreeItemContextValue];
 
         if (<Status>nonNullProp(this.actionWorkflowRuns, 'status') === Status.Completed) {
-            values.push(ActionItem.completedContextValue)
+            values.push(ActionItem.completedContextValue);
         } else {
             values.push(ActionItem.inProgressContextValue);
         }
