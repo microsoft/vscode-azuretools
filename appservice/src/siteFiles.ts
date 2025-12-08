@@ -30,7 +30,7 @@ export function createSiteFilesUrl(site: ParsedSite, path: string, href?: string
         path = path.replace(/^\/home\//, '');
         return `${site.id}/hostruntime/admin/vfs/home/${path}/?api-version=2022-03-01`;
     }
-    return href ?? `${site.kuduUrl}/api/vfs/${path}`
+    return href ?? `${site.kuduUrl}/api/vfs/${path}`;
 }
 
 export async function getFile(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFile> {
@@ -45,7 +45,7 @@ export async function getFile(context: IActionContext, site: ParsedSite, url: st
             throw error;
         }
     }
-    return { data: <string>response.bodyAsText, etag: <string>response.headers.get('etag') };
+    return { data: response.bodyAsText!, etag: response.headers.get('etag')! };
 }
 
 export async function listFiles(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFileMetadata[]> {
@@ -62,7 +62,7 @@ export async function putFile(context: IActionContext, site: ParsedSite, data: s
     const options: {} = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
     const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options));
-    return <string>result.headers.get('etag');
+    return result.headers.get('etag')!;
 }
 
 /**

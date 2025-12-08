@@ -43,7 +43,7 @@ export async function runWithZipStream(context: IActionContext, options: {
             onFileSize(stats.size);
         });
     } else {
-        const creatingZip = vscode.l10n.t('Creating zip package...')
+        const creatingZip = vscode.l10n.t('Creating zip package...');
         ext.outputChannel.appendLog(creatingZip, { resourceName: site.fullName });
         options.progress?.report({ message: creatingZip });
 

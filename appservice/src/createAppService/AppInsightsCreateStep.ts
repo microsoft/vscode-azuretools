@@ -125,7 +125,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
         return {
             item,
             message: this.getOutputLogFail(context),
-        }
+        };
     }
 }
 
@@ -139,7 +139,7 @@ class AppInsightsNoCreatePermissionsStep extends AzureWizardExecuteStepWithActiv
         return context.appInsightsComponent?.name ?
             l10n.t('Select application insights "{0}"', context.appInsightsComponent?.name) :
             l10n.t('Select application insights...');
-    }
+    };
 
     public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         progress.report({ message: l10n.t('Selecting application insights...') });

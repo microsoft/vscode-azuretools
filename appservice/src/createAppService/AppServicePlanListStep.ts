@@ -90,7 +90,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         let plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(context);
         const famFilter: RegExp | undefined = context.planSkuFamilyFilter;
         if (famFilter) {
-            plans = plans.filter(plan => !plan.sku || !plan.sku.family || famFilter.test(plan.sku.family));
+            plans = plans.filter(plan => !plan.sku?.family || famFilter.test(plan.sku.family));
         }
 
         let location: AzExtLocation | undefined;

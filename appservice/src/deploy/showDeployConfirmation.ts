@@ -14,7 +14,7 @@ import { AppSource, IDeployContext } from './IDeployContext';
 
 export async function showDeployConfirmation(context: IDeployContext, site: ParsedSite, deployCommandId: string, warningMessages?: string[], learnMoreLink?: string): Promise<void> {
     const warning: string = l10n.t('Are you sure you want to deploy to "{0}"? This will overwrite any previous deployment and cannot be undone.', site.fullName);
-    let addedWarnings = ''
+    let addedWarnings = '';
     if (warningMessages) {
         const warningMessagesString = warningMessages.join('\n\n');
         addedWarnings = warningMessagesString;

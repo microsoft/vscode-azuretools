@@ -95,7 +95,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
         return {
             item,
             message: this.getOutputLogFail(context),
-        }
+        };
     }
 }
 
@@ -108,7 +108,7 @@ class AppServicePlanNoCreatePermissionsStep extends AzureWizardExecuteStepWithAc
         return context.plan?.name ?
             l10n.t('Select app service plan "{0}"', context.plan?.name) :
             l10n.t('Select app service plan');
-    }
+    };
 
     public async execute(context: IAppServiceWizardContext, progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         progress.report({ message: l10n.t('Selecting app service plan...') });

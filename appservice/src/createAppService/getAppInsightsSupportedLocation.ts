@@ -56,7 +56,7 @@ async function getPairedRegions(context: IActionContext, locationName: string): 
 async function getLocations(context: IAppServiceWizardContext): Promise<string[] | undefined> {
     const resourceClient: ResourceManagementClient = await createResourceClient(context);
     const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
-    const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
+    const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes?.find(aiRt => aiRt.resourceType === 'components');
     if (!!componentsResourceType && !!componentsResourceType.locations) {
         return componentsResourceType.locations;
     } else {

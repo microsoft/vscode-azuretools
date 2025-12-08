@@ -34,7 +34,7 @@ const regionalCNAMaxLength: number = 43;
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
     private _siteFor: "functionApp" | "containerizedFunctionApp" | undefined;
 
-    constructor(siteFor?: "functionApp" | "containerizedFunctionApp" | undefined) {
+    constructor(siteFor?: "functionApp" | "containerizedFunctionApp") {
         super();
         this._siteFor = siteFor;
     }

@@ -54,7 +54,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
         }
 
-        if ((deployment === undefined || !deployment.id)) {
+        if ((!deployment?.id)) {
             if ((expectedId || locationUrl) && Date.now() < maxTimeToWaitForExpectedId) {
                 await delay(pollingInterval);
                 continue;
@@ -72,7 +72,6 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         });
 
         let lastLogTimeForThisPoll: Date | undefined;
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             const newEntry: KuduModels.LogEntry | undefined = logEntries.pop();
             if (!newEntry) {
@@ -129,7 +128,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 !/syncing/i.test(fullLog) &&
                 !site.isKubernetesApp &&
                 !site.isWorkflowApp &&
-                context.deployMethod !== 'flexconsumption'
+                context.deployMethod !== 'flexconsumption';
             return;
         } else {
             await delay(pollingInterval);
@@ -194,7 +193,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                     throw error;
                 }
             }
-            if (deployment && deployment.startTime) {
+            if (deployment?.startTime) {
                 // Make note of the startTime because that is when kudu has began the deployment process,
                 // so that we can use that to find the deployment going forward
                 initialStartTime = deployment.startTime;

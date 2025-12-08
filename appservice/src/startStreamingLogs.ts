@@ -27,7 +27,7 @@ function getLogStreamId(site: ParsedSite, logsPath: string): string {
 export async function startStreamingLogs(context: IActionContext, site: ParsedSite, verifyLoggingEnabled: () => Promise<void>, logStreamLabel: string, logsPath: string = ''): Promise<ILogStream> {
     const logStreamId: string = getLogStreamId(site, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
-    if (logStream && logStream.isConnected) {
+    if (logStream?.isConnected) {
         logStream.outputChannel.show();
         void context.ui.showWarningMessage(vscode.l10n.t('The log-streaming service for "{0}" is already active.', logStreamLabel));
         return logStream;
@@ -111,7 +111,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
 export async function stopStreamingLogs(site: ParsedSite, logsPath: string = ''): Promise<void> {
     const logStreamId: string = getLogStreamId(site, logsPath);
     const logStream: ILogStream | undefined = logStreams.get(logStreamId);
-    if (logStream && logStream.isConnected) {
+    if (logStream?.isConnected) {
         logStream.dispose();
     } else {
         await vscode.window.showWarningMessage(vscode.l10n.t('The log-streaming service is already disconnected.'));

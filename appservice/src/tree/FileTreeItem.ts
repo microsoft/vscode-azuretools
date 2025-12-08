@@ -30,7 +30,7 @@ export class FileTreeItem extends AzExtTreeItem {
     }
 
     public get contextValue(): string {
-        return createContextValue([FileTreeItem.contextValue, ...this.parent.contextValuesToAdd])
+        return createContextValue([FileTreeItem.contextValue, ...this.parent.contextValuesToAdd]);
     }
 
     public get iconPath(): TreeItemIconPath {

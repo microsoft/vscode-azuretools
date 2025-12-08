@@ -31,7 +31,7 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
         originalDeployFsPath = target;
         workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(target));
         effectiveDeployFsPath = await appendDeploySubpathSetting(context, workspaceFolder, target);
-    } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
+    } else if (vscode.workspace.workspaceFolders?.length === 1) {
         // If there is only one workspace and it has 'deploySubPath' set - return that value without prompting
         const singleWorkspace = vscode.workspace.workspaceFolders[0];
         const deploySubpath: string | undefined = getWorkspaceSetting(deploySubpathSetting, ext.prefix, singleWorkspace);

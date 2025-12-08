@@ -55,7 +55,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
     const settings: StringDictionary = await client.listApplicationSettings();
-    let connectionString: string | undefined = settings.properties && settings.properties[azureWebJobsStorageKey];
+    let connectionString: string | undefined = settings.properties?.[azureWebJobsStorageKey];
     if (connectionString) {
         try {
             return BlobServiceClient.fromConnectionString(connectionString);

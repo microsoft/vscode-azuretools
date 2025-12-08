@@ -24,7 +24,7 @@ export class DelayFirstWebAppDeployStep extends AzureWizardExecuteStep<InnerDepl
                 }
 
                 const asp: AppServicePlan | undefined = await context.aspPromise;
-                if (!asp || !asp.sku || !asp.sku.tier || asp.sku.tier.toLowerCase() !== 'basic') {
+                if (!asp?.sku?.tier || asp.sku.tier.toLowerCase() !== 'basic') {
                     resolve();
                 }
                 if (!context.site.isLinux) {

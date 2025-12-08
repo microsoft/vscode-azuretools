@@ -22,7 +22,7 @@ export async function connectToGitHub(context: IActionContext, site: ParsedSite)
     const wizardContext: GitHubContext = {
         ...context,
     };
-    const wizard: AzureWizard<GitHubContext> = new AzureWizard(wizardContext, {
+    const wizard = new AzureWizard<GitHubContext>(wizardContext, {
         title,
         promptSteps: [
             new GitHubOrgListStep(),
@@ -62,7 +62,7 @@ export async function connectToGitHub(context: IActionContext, site: ParsedSite)
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             // The portal returns 200, but is expecting a 204 which causes it to throw an error even after a successful sync
-            if (parsedError.message.indexOf('"statusCode":200') === -1) {
+            if (!parsedError.message.includes('"statusCode":200')) {
                 throw error;
             }
         }

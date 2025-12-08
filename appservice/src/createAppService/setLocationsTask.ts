@@ -33,8 +33,8 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         }
     }
 
-    if (context.newPlanSku && context.newPlanSku.tier) {
-        options.sku = <SkuName>context.newPlanSku.tier.replace(/\s/g, '');
+    if (context.newPlanSku?.tier) {
+        options.sku = context.newPlanSku.tier.replace(/\s/g, '');
     }
 
     const queryString = Object.keys(options).map(key => `${key}=${options[key]}`).join('&');
