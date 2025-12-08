@@ -180,7 +180,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
             await this.getCachedChildren(context);
         }
 
-        return <StringDictionary>this._settings;
+        return this._settings!;
     }
 
     public async refreshImpl(context: IActionContext): Promise<void> {

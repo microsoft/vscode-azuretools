@@ -140,7 +140,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
         const client = await this.parent.clientProvider.createClient(context);
         if (client.listSlotConfigurationNames) {
             const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
-            if (slotSettings.appSettingNames && slotSettings.appSettingNames.find((value: string) => { return value === this._key; })) {
+            if (slotSettings.appSettingNames?.find((value: string) => { return value === this._key; })) {
                 this.description = l10n.t('Slot Setting');
             } else {
                 this.description = undefined;
