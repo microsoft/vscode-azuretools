@@ -1,6 +1,8 @@
 parameters:
-  - extensionReleaseEnvironmentName: AzCodeDeploy
+  - extensionReleaseEnvironment: AzCodeDeploy
   - extensionReleaseServiceConnection: AzCodeReleases
+  - testServiceConnection: AzCodeE2ETests
+  - testBAMIVariableGroup: AzCode-BAMI-Variables
   - gitHubServiceConnection: GitHub-AzureTools
   - sdlSourcesPool:
       name: VSEngSS-MicroBuild2022-1ES
