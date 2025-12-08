@@ -2903,4 +2903,10 @@ declare type registerOnActionStartHandlerType = (handler: (context: { callbackId
  */
 export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;
 
+/**
+ * Performs setup necessary for running tests that use extension variables
+ * @returns The registered extension variables
+ */
+export declare function testGlobalSetup(): UIExtensionVariables;
+
 // #endregion
