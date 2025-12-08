@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from '@azure/core-client';
 import { RestError, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
@@ -80,7 +79,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, url: str
             const retries = 3;
             const badGateway: RegExp = /BadGateway/i;
             const serviceUnavailable: RegExp = /ServiceUnavailable/i;
-            const client: ServiceClient = await createGenericClient(context, site.subscription);
+            const client = await createGenericClient(context, site.subscription);
 
             return await retry<AzExtPipelineResponse>(
                 async () => {

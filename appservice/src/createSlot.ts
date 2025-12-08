@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { CheckNameAvailabilityResponse, NameValuePair, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
-import { ServiceClient } from '@azure/core-client';
+import type { ServiceClient } from '@azure/core-client';
 import { createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
 import { ProgressLocation, l10n, window } from "vscode";

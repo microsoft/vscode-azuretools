@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AbortController } from '@azure/abort-controller';
-import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, callWithTelemetryAndErrorHandling, parseError } from '@microsoft/vscode-azext-utils';
@@ -56,7 +55,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                     timerId = setInterval(async () => await pingFunctionApp(streamContext, site), 60 * 1000);
                 }
 
-                const genericClient: ServiceClient = await createGenericClient(streamContext, undefined);
+                const genericClient = await createGenericClient(streamContext, undefined);
 
 
                 const abortController: AbortController = new AbortController();
