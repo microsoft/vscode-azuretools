@@ -58,6 +58,7 @@ stages:
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
                   vsixFileNames: ${{ parameters.vsixFileNames }}
+                  workingDirectory: ${{ job.working_directory }}
 
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
