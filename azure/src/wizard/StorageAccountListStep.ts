@@ -80,8 +80,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const result: StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
+            await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location);
         }
     }
 

@@ -174,7 +174,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const me: AzureAccountTreeItemBase = this;
             class SubscriptionPromptStep extends AzureWizardPromptStep<ISubscriptionActionContext> {
                 public async prompt(): Promise<void> {
-                    const ti: SubscriptionTreeItemBase = <SubscriptionTreeItemBase>await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context, me);
+                    const ti: SubscriptionTreeItemBase = await me.treeDataProvider.showTreeItemPicker(SubscriptionTreeItemBase.contextValue, context, me);
                     Object.assign(context, ti.subscription);
                 }
                 public shouldPrompt(): boolean { return !(<ISubscriptionActionContext>context).subscriptionId; }
@@ -187,8 +187,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         const azureAccount: AzureAccountResult = await this._azureAccountTask;
         if (typeof azureAccount !== 'string' && (azureAccount.status === 'LoggingIn' || azureAccount.status === 'Initializing')) {
             const title: string = l10n.t('Waiting for Azure sign-in...');
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount!.waitForSubscriptions());
+            await window.withProgress({ location: ProgressLocation.Notification, title }, async (): Promise<boolean> => await azureAccount.waitForSubscriptions());
         }
 
         return undefined;
