@@ -303,7 +303,7 @@ async function validateWizard(options: types.IWizardOptions<ITestWizardContext>,
     // copy over properties/measurements
     Object.assign(expectedContext, context);
 
-    const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(context, options);
+    const wizard = new AzureWizard<ITestWizardContext>(context, options);
     await testUserInput.runWithInputs(inputs, async () => {
         await wizard.prompt();
     });

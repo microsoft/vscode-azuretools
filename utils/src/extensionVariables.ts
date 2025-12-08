@@ -46,7 +46,6 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
 
     ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     registerErrorHandler(handleEntryNotFound);
 }
 

@@ -20,7 +20,7 @@ export abstract class GenericQuickPickStepWithCommands<TContext extends types.Qu
             return {
                 // rerun current step after command is executed
                 promptSteps: [this],
-            }
+            };
         }
         return undefined;
     }

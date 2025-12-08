@@ -18,7 +18,7 @@ export function createGenericElement(options: types.GenericElementOptions): type
                     command: options.commandId,
                     arguments: commandArgs,
                 } : undefined,
-            }
+            };
         }
     };
 

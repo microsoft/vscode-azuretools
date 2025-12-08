@@ -81,7 +81,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
     if (isResourceGroupsItem(firstArg)) {
         const resourceId = (firstArg as { resource: Resource })?.resource?.id;
         if (resourceId) {
-            setAzureResourceIdTelemetryProperties(context, resourceId)
+            setAzureResourceIdTelemetryProperties(context, resourceId);
         }
         context.telemetry.properties.subscriptionId = (firstArg as { resource: Resource })?.resource?.subscription?.subscriptionId;
     }
@@ -93,7 +93,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
                 // Only record telemetry if subscription is defined. See: https://github.com/microsoft/vscode-azuretools/pull/1941#discussion_r2016824347
                 if (arg.subscription) {
                     if (arg.id) {
-                        setAzureResourceIdTelemetryProperties(context, arg.id)
+                        setAzureResourceIdTelemetryProperties(context, arg.id);
                     }
                     // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown from just accessing it
                     // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
@@ -120,7 +120,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
         if (node && typeof node === 'object' && 'subscription' in node && node.subscription) {
 
             if (node && typeof node === 'object' && 'id' in node && typeof node.id === 'string') {
-                setAzureResourceIdTelemetryProperties(context, node.id)
+                setAzureResourceIdTelemetryProperties(context, node.id);
             }
 
             // it's possible that if subscription is not set on AzExtTreeItems, an error is thrown from just accessing it

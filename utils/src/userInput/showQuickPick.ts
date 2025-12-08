@@ -23,7 +23,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
         const recentlyUsedKey: string | undefined = await getRecentlyUsedKey(options);
         const groups: QuickPickGroup[] = [];
 
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
+        // eslint-disable-next-line no-async-promise-executor
         const result = await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
             disposables.push(
                 quickPick.onDidAccept(async () => {

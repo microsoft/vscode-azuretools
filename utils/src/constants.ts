@@ -11,7 +11,7 @@ export const azToolsPrefix: string = "azureTools";
 export const showContextValueSetting: string = "showContextValues";
 
 export namespace AzExtQuickInputButtons {
-    export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: learnMore }
+    export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: learnMore };
 }
 
 export const activityInfoContext: string = 'activity:info';

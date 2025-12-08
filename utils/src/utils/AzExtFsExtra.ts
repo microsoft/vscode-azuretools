@@ -30,14 +30,14 @@ export namespace AzExtFsExtra {
         const uri = convertToUri(resource);
         try {
             // if it is a file, then we should create the directory
-            if (await isDirectory(uri)) return;
+            if (await isDirectory(uri)) { return; }
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
             if (pError && pError.errorType === 'FileNotFound') {
                 // drop down below to create the directory
             } else {
-                throw err
+                throw err;
             }
         }
 
@@ -48,7 +48,7 @@ export namespace AzExtFsExtra {
         const uri = convertToUri(resource);
         try {
             // file exists so exit
-            if (await isFile(uri)) return;
+            if (await isFile(uri)) { return; }
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
@@ -56,7 +56,7 @@ export namespace AzExtFsExtra {
                 const dir: string = path.dirname(uri.fsPath);
                 await ensureDir(dir);
             } else {
-                throw err
+                throw err;
             }
         }
 
@@ -118,7 +118,7 @@ export namespace AzExtFsExtra {
         const fileTuples = await workspace.fs.readDirectory(uri);
         // workspace.fs.readDirectory() returns a tuple with the file name and FileType
         // typically, it's more useful to have the full fsPath, so return that as well
-        return fileTuples.map(f => { return { fsPath: path.join(uri.fsPath, f[0]), name: f[0], type: f[1] } });
+        return fileTuples.map(f => { return { fsPath: path.join(uri.fsPath, f[0]), name: f[0], type: f[1] }; });
     }
 
     export async function emptyDir(resource: Uri | string): Promise<void> {
@@ -126,7 +126,7 @@ export namespace AzExtFsExtra {
         const files = await workspace.fs.readDirectory(uri);
 
         await Promise.all(files.map(async file => {
-            await workspace.fs.delete(Uri.file(path.join(uri.fsPath, file[0])), { recursive: true })
+            await workspace.fs.delete(Uri.file(path.join(uri.fsPath, file[0])), { recursive: true });
         }));
     }
 

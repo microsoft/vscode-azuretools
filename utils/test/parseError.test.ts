@@ -24,7 +24,6 @@ suite('Error Parsing Tests', () => {
                 pe = parseError(err);
             }
             assert(!!pe && !!pe.stack);
-            /* eslint-disable @typescript-eslint/no-non-null-assertion */
             assert(!pe.stack!.includes('Error: \n'));
             assert(!pe.stack!.startsWith('at '));
             assert(pe.stack!.includes('parseError.test.ts:'));
@@ -37,7 +36,6 @@ suite('Error Parsing Tests', () => {
             }
             const homedir: string = os.userInfo().homedir;
             assert(!pe.stack!.includes(homedir), `Should have removed first path of path (homedir "${homedir}"), stack is: ${pe.stack}`);
-            /* eslint-enable @typescript-eslint/no-non-null-assertion */
         });
 
         test('Removes first part of paths: Windows', () => {

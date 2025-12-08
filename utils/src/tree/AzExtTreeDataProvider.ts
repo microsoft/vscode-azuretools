@@ -104,8 +104,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const resultMap: Map<string, AzExtTreeItem> = new Map();
+                const resultMap = new Map<string, AzExtTreeItem>();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
                     this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.fullIdWithContext || child.fullId, child);
@@ -235,7 +234,6 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext, cancellationToken?: CancellationToken): Promise<types.AzExtTreeItem | undefined> {
         let treeItem: AzExtParentTreeItem = this._rootTreeItem;
 
-        // eslint-disable-next-line no-constant-condition
         outerLoop: while (true) {
             if (cancellationToken?.isCancellationRequested) {
                 throw new UserCancelledError('findTreeItem');

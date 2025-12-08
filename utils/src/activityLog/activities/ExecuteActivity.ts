@@ -25,7 +25,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     public initialState(): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
-        }
+        };
     }
 
     protected override report(progress?: { message?: string; increment?: number }): void {
@@ -63,7 +63,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
                 ];
 
             }) : undefined
-        }
+        };
     }
 
     private _errorItemId: string = crypto.randomUUID();
@@ -87,7 +87,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
                 return [new ActivityChildItem(errorItemOptions)];
             }
-        }
+        };
     }
 
     public progressState(): hTypes.ActivityTreeItemOptions {
@@ -96,7 +96,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
             getChildren: this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
                 return this.context.activityChildren || [];
             }) : undefined
-        }
+        };
     }
 
     private appendErrorItemToActivityChildren(activityChildren: types.ActivityChildItemBase[], errorItemOptions: types.ActivityChildItemOptions): void {

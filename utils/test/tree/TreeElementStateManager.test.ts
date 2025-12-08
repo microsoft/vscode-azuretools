@@ -19,7 +19,7 @@ suite('TreeElementStateManager', () => {
                 id: 'test-1',
                 label: 'test-1',
                 description: testDescription
-            }
+            };
         }
     } satisfies TreeElementBase;
 
