@@ -3,15 +3,26 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
+import { createAzExtOutputChannel } from '../src/AzExtOutputChannel';
+import { DebugReporter } from '../src/DebugReporter';
+import { registerUIExtensionVariables } from '../src/extensionVariables';
 
 // Runs before all tests
 suiteSetup(async () => {
-    const id: string = 'ms-azuretools.azureextensionui';
-    const extension: vscode.Extension<unknown> | undefined = vscode.extensions.getExtension(id);
-    if (!extension) {
-        throw new Error(`Failed to activate extension with id "${id}".`);
-    } else {
-        await extension.activate();
-    }
+    const extVars = {
+        context: {
+            extension: {
+                packageJSON: {
+                    name: 'azureextensionui',
+                    publisher: 'ms-azuretools',
+                    version: '0.0.1',
+                    aiKey: '00000000-0000-0000-0000-000000000000'
+                },
+            },
+            subscriptions: [],
+        } as any,
+        reporter: new DebugReporter('ms-azuretools.azureextensionui', '0.0.1', true),
+        outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui')
+    };
+    registerUIExtensionVariables(extVars);
 });
