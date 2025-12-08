@@ -248,7 +248,6 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     public static generalizeLocationName(name: string | undefined): string {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return (name || '').toLowerCase().replace(/[^a-z0-9]/gi, '');
     }
 
@@ -287,7 +286,6 @@ function isRecommended(l: types.AzExtLocation): boolean {
 
 class ProviderResourceTypeNotFoundError extends Error {
     constructor(provider: Provider, expectedResourceType: string) {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         super(vscode.l10n.t('Provider "{0}" does not have resource type "{1}".', provider.id || 'undefined', expectedResourceType));
     }
 }
