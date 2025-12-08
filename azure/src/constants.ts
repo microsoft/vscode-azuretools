@@ -86,5 +86,5 @@ export const CommonRoleDefinitions = {
 } as const;
 
 export function createRoleId(subscriptionId: string, RoleDefinition: RoleDefinition): string {
-    return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${RoleDefinition.name}`
+    return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${RoleDefinition.name}`;
 }

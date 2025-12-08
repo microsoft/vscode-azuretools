@@ -144,7 +144,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
                     return await this.createSubscriptionTreeItem({
                         credentials: <AzExtServiceClientCredentials>filter.session.credentials2,
-                        createCredentialsForScopes: () => { return Promise.resolve(filter.session.credentials2) },
+                        createCredentialsForScopes: () => { return Promise.resolve(filter.session.credentials2); },
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
                         subscriptionId,
                         subscriptionPath: nonNullProp(filter.subscription, 'id'),
@@ -207,7 +207,6 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
             const extension: Extension<AzureAccountExtensionApi> | undefined = extensions.getExtension<AzureAccountExtensionApi>(azureAccountExtensionId);
             if (extension) {
                 try {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     if (semver.lt(extension.packageJSON.version as string, minAccountExtensionVersion)) {
                         return 'needsUpdate';
                     }

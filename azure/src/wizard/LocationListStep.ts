@@ -114,7 +114,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return {
             location: locationName,
             extendedLocation
-        }
+        };
     }
 
     public static getAutoSelectLocation<T extends ILocationWizardContextInternal>(wizardContext: T): types.AzExtLocation | undefined {

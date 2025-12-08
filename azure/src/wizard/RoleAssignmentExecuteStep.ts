@@ -70,7 +70,7 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
     }
 
     public async executeCore(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        const amClient = await createAuthorizationManagementClient(wizardContext)
+        const amClient = await createAuthorizationManagementClient(wizardContext);
         const scope = this.role.scopeId;
         if (!scope) {
             throw new Error(l10n.t('No scope was provided for the role assignment.'));

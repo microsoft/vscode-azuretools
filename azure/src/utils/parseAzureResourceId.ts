@@ -19,7 +19,7 @@ export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
         resourceGroup: matches[2],
         provider: matches[3],
         resourceName: matches[4]
-    }
+    };
 }
 
 /**

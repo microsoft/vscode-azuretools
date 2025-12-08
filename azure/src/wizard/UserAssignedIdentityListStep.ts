@@ -45,7 +45,7 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
             return {
                 promptSteps,
                 executeSteps: [new UserAssignedIdentityCreateStep()]
-            }
+            };
         }
 
         return undefined;
