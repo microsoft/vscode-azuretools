@@ -11,41 +11,41 @@ import { parseError } from "./parseError";
 // No attempt will be made to mask usernames that are this length or less
 const UnmaskedUsernameMaxLength: number = 3;
 
-let extValuesToMask: string[] | undefined;
+let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
-    if (!extValuesToMask) {
-        extValuesToMask = [];
+    if (!_extValuesToMask) {
+        _extValuesToMask = [];
     }
-    return extValuesToMask;
+    return _extValuesToMask;
 }
 
-let usernameMask: RegExp | undefined | null = undefined;
+let _usernameMask: RegExp | undefined | null = undefined;
 function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
     // _usernameMask starts out as undefined, and is set to null if building it fails or it is too short
     // Specifically checking for undefined here ensures we will only run the code once
-    if (usernameMask === undefined) {
+    if (_usernameMask === undefined) {
         try {
             const username = getUsername();
 
             if (username.length <= UnmaskedUsernameMaxLength) {
                 // Too short to mask
-                usernameMask = null;
+                _usernameMask = null;
             } else {
-                usernameMask = new RegExp(`\\b${username}\\b`, 'gi');
+                _usernameMask = new RegExp(`\\b${username}\\b`, 'gi');
             }
         } catch {
-            usernameMask = null;
+            _usernameMask = null;
         }
     }
 
-    return usernameMask;
+    return _usernameMask;
 }
 
 /**
  * To be used ONLY by test code.
  */
 export function resetUsernameMask(): void {
-    usernameMask = undefined;
+    _usernameMask = undefined;
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
@@ -102,15 +102,15 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
 
     // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
     // The first and second JWT sections begin with "e" since the header and payload represent encoded json values that always begin with "{"
-    data = data.replace(/e[^.\s]*\.e[^.\s]*\.[^.\s]+/gi, getRedactedLabel('jwt'));
+    data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
 
     if (!lessAggressive) {
         data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
-        data = data.replace(/\b[0-9a-f\-:.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
+        data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
     }
 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
-    data = data.replace(/\S+(?<!(?<!-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
+    data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
 
     const usernameMask = getUsernameMask(getUsername);
