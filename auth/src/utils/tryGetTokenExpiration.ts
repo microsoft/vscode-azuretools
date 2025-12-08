@@ -7,7 +7,6 @@ import type * as vscode from 'vscode';
 
 export function tryGetTokenExpiration(session: vscode.AuthenticationSession | undefined): number {
     try {
-        // eslint-disable-next-line no-extra-boolean-cast
         if (!!session?.idToken) {
             const idTokenParts = session.idToken.split('.');
             if (idTokenParts.length === 3) {

@@ -60,13 +60,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @inheritdoc
      */
     public onRefreshSuggested(callback: (evtArgs: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        if (!this.sessionChangeListener) {
-            this.sessionChangeListener = vscode.authentication.onDidChangeSessions(evt => {
-                if (evt.provider.id === getConfiguredAuthProviderId()) {
-                    this.fireRefreshSuggestedIfNeeded({ reason: 'sessionChange' });
-                }
-            });
-        }
+        this.sessionChangeListener ??= vscode.authentication.onDidChangeSessions(evt => {
+            if (evt.provider.id === getConfiguredAuthProviderId()) {
+                this.fireRefreshSuggestedIfNeeded({ reason: 'sessionChange' });
+            }
+        });
 
         return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
     }
@@ -309,6 +307,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     name: subscription.displayName!,
                     subscriptionId: subscription.subscriptionId!,
                     /* eslint-enable @typescript-eslint/no-non-null-assertion */
+                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     tenantId: subscription.tenantId || tenant.tenantId, // In rare cases, a subscription may be listed but come from a different tenant
                     account: tenant.account,
                 });
@@ -333,6 +332,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const credential: TokenCredential = {
             getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
                 this.silenceRefreshEvents();
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                 const session = await getSessionFromVSCode(scopes, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
                 if (!session) {
                     throw new NotSignedInError();
@@ -409,6 +409,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
     private remapLogRethrow(err: unknown, token: vscode.CancellationToken | undefined): never {
         this.throwIfCancelled(token);
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         this.logger?.error(`[auth] Error occurred: ${err}`);
         throw err;
     }

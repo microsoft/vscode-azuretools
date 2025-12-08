@@ -715,9 +715,7 @@ suite('(unit) TwoKeyCaselessMap', () => {
             assert.strictEqual(retrieved, obj, 'should be same reference');
 
             // Modify through reference
-            if (retrieved) {
-                retrieved.value = 100;
-            }
+            retrieved.value = 100;
 
             assert.strictEqual(map.get('KEY1', 'KEY2')?.value, 100);
         });

@@ -7,7 +7,7 @@
 // which itself looks like just a simplified version of https://github.com/microsoft/vscode/blob/f8e2f71c2f78ac1ce63389e761e2aefc724646fc/src/vs/base/common/async.ts#L696-L786
 // There have been no changes made, even to fix typos
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-confusing-void-expression */
 
 interface ILimitedTaskFactory<T> {
     factory: () => Promise<T>;
