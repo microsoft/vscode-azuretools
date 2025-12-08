@@ -87,7 +87,7 @@ export type GetSubscriptionsForTenantOptions = BaseOptions & {
 /**
  * Options when requesting available subscriptions across all accounts and tenants.
  */
-export type GetAvailableSubscriptionsOptions = GetAccountsOptions & GetTenantsForAccountOptions & GetSubscriptionsForTenantOptions & {
+export type GetAvailableSubscriptionsOptions = GetAccountsOptions & GetTenantsForAccountOptions & GetSubscriptionsForTenantOptions & { // eslint-disable-line @typescript-eslint/no-duplicate-type-constituents
     /**
      * (Optional, default 10) The maximum number of tenants for which to get subscriptions. This is
      * necessary because each account+tenant requires a token request plus a subscription list request.
@@ -127,6 +127,6 @@ export function getCoalescenceKey(options: GetAvailableSubscriptionsOptions): st
         .keys(options)
         .filter(k => k !== 'token') // ignore token
         .sort()
-        .map((k: keyof GetAvailableSubscriptionsOptions) => `${k}:${options[k] ?? DefaultOptions[k]}`)
+        .map(k => `${k}:${options[k] ?? DefaultOptions[k]}`)
         .join(',');
 }

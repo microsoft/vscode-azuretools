@@ -17,42 +17,36 @@ enum CloudEnvironmentSettingValue {
     Custom = 'custom',
 }
 
+class ExtendedEnvironment extends azureEnv.Environment {
+    public constructor(parameters: azureEnv.EnvironmentParameters, public readonly isCustomCloud: boolean) {
+        super(parameters);
+    }
+}
+
 /**
  * Gets the configured Azure environment.
  *
  * @returns The configured Azure environment from the settings in the built-in authentication provider extension
  */
-export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud: boolean } {
+export function getConfiguredAzureEnv(): ExtendedEnvironment {
     const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
     const environmentSettingValue = authProviderConfig.get<string | undefined>(CloudEnvironmentSettingName);
 
     if (environmentSettingValue === CloudEnvironmentSettingValue.ChinaCloud) {
-        return {
-            ...azureEnv.Environment.ChinaCloud,
-            isCustomCloud: false,
-        };
+        return new ExtendedEnvironment(azureEnv.Environment.ChinaCloud, false);
     } else if (environmentSettingValue === CloudEnvironmentSettingValue.USGovernment) {
-        return {
-            ...azureEnv.Environment.USGovernment,
-            isCustomCloud: false,
-        };
+        return new ExtendedEnvironment(azureEnv.Environment.USGovernment, false);
     } else if (environmentSettingValue === CloudEnvironmentSettingValue.Custom) {
         const customCloud = authProviderConfig.get<azureEnv.EnvironmentParameters | undefined>(CustomEnvironmentSettingName);
 
         if (customCloud) {
-            return {
-                ...new azureEnv.Environment(customCloud),
-                isCustomCloud: true,
-            };
+            return new ExtendedEnvironment(customCloud, true);
         }
 
         throw new Error(vscode.l10n.t('The custom cloud choice is not configured. Please configure the setting `{0}.{1}`.', CustomCloudConfigurationSection, CustomEnvironmentSettingName));
     }
 
-    return {
-        ...azureEnv.Environment.get(azureEnv.Environment.AzureCloud.name),
-        isCustomCloud: false,
-    };
+    return new ExtendedEnvironment(azureEnv.Environment.AzureCloud, false);
 }
 
 /**
@@ -63,7 +57,7 @@ export function getConfiguredAzureEnv(): azureEnv.Environment & { isCustomCloud:
  *
  * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
-export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
+export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | null | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
     const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
 
     if (typeof cloud === 'undefined' || !cloud) {

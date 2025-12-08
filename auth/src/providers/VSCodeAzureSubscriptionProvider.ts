@@ -42,13 +42,11 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public override onRefreshSuggested(callback: (reason: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        if (!this.configChangeListener) {
-            this.configChangeListener = vscode.workspace.onDidChangeConfiguration(e => {
-                if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
-                    this.fireRefreshSuggestedIfNeeded({ reason: 'subscriptionFilterChange' });
-                }
-            });
-        }
+        this.configChangeListener ??= vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
+                this.fireRefreshSuggestedIfNeeded({ reason: 'subscriptionFilterChange' });
+            }
+        });
 
         return super.onRefreshSuggested(callback, thisArg, disposables);
     }
@@ -72,7 +70,7 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         try {
             const key = getCoalescenceKey(options);
             if (key && this.availableSubscriptionsPromises.has(key)) {
-                return this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
+                return await this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
             } else {
                 try {
                     const promise = super.getAvailableSubscriptions(options);

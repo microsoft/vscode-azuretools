@@ -18,7 +18,7 @@ import type { AzureSubscription } from '../contracts/AzureSubscription';
  * @param subscriptions The list of subscriptions to deduplicate
  */
 export function dedupeSubscriptions(subscriptions: AzureSubscription[]): AzureSubscription[] {
-    const deduped: Map<string, AzureSubscription> = new Map();
+    const deduped = new Map<string, AzureSubscription>();
     for (const sub of subscriptions) {
         deduped.set(
             `${sub.account.id}/${sub.tenantId}/${sub.subscriptionId}`,

@@ -24,5 +24,6 @@ export class NotSignedInError extends Error {
  * @returns True if the object is a {@link NotSignedInError}, false otherwise
  */
 export function isNotSignedInError(error: unknown): error is NotSignedInError {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare, @typescript-eslint/no-unnecessary-condition
     return !!error && typeof error === 'object' && (error as NotSignedInError).isNotSignedInError === true;
 }

@@ -20,7 +20,7 @@ const domainRegex = /^(?<domain>[^.]+)(?<safeTld>\.com(\..*)?|\.net|\.org|\.co\.
 export function screen(accountOrTenant: AzureAccount | AzureTenant): string {
     if ('label' in accountOrTenant && !!accountOrTenant.label) {
         const match = accountLabelRegex.exec(accountOrTenant.label);
-        if (match?.groups?.email && match?.groups?.domain) {
+        if (match?.groups?.email && match.groups.domain) {
             let screenedEmail = match.groups.email;
             if (screenedEmail.length <= 2) {
                 screenedEmail = '***';
@@ -30,7 +30,7 @@ export function screen(accountOrTenant: AzureAccount | AzureTenant): string {
 
             let screenedDomain = match.groups.domain;
             const domainMatch = domainRegex.exec(match.groups.domain);
-            if (domainMatch?.groups?.domain && domainMatch?.groups?.safeTld) {
+            if (domainMatch?.groups?.domain && domainMatch.groups.safeTld) {
                 if (domainMatch.groups.domain.length <= 2) {
                     screenedDomain = `***${domainMatch.groups.safeTld}`;
                 } else {
