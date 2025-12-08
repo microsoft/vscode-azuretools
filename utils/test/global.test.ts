@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { testGlobalSetup } from '../index';
+import { testGlobalSetup } from '../src/index';
 
 // Runs before all tests
 suiteSetup(async () => {
