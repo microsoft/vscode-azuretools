@@ -12,3 +12,5 @@ test-results.xml
 .eslintignore
 .eslintrc.js
 *.tsbuildinfo
+.vscode-test.mjs
+eslint.config.mjs
