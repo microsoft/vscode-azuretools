@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { GeoRegion, ListGeoRegionsOptionalParams, SkuName } from '@azure/arm-appservice';
+import type { GeoRegion, ListGeoRegionsOptionalParams } from '@azure/arm-appservice';
 import { createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, LocationListStep, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { nonNullProp } from '@microsoft/vscode-azext-utils';
