@@ -9,7 +9,7 @@ import type * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestInput, TestUserInput } from '../src';
 
 interface ITestWizardContext extends types.IActionContext {
-    [key: string]: {} | boolean | string | undefined;
+    [key: string]: unknown | boolean | string | undefined;
 }
 
 abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContext> {

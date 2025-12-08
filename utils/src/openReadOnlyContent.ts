@@ -9,25 +9,25 @@ import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
 
-let _cachedScheme: string | undefined;
+let cachedScheme: string | undefined;
 function getScheme(): string {
-    if (!_cachedScheme) {
+    if (!cachedScheme) {
         // Generate a unique scheme so that multiple extensions using this same code don't conflict with each other
-        _cachedScheme = `azuretools${randomUtils.getRandomHexString(6)}`;
+        cachedScheme = `azuretools${randomUtils.getRandomHexString(6)}`;
     }
-    return _cachedScheme;
+    return cachedScheme;
 }
 
-let _cachedContentProvider: ReadOnlyContentProvider | undefined;
+let cachedContentProvider: ReadOnlyContentProvider | undefined;
 function getContentProvider(): ReadOnlyContentProvider {
-    if (!_cachedContentProvider) {
-        _cachedContentProvider = new ReadOnlyContentProvider();
-        ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(getScheme(), _cachedContentProvider));
+    if (!cachedContentProvider) {
+        cachedContentProvider = new ReadOnlyContentProvider();
+        ext.context.subscriptions.push(workspace.registerTextDocumentContentProvider(getScheme(), cachedContentProvider));
     }
-    return _cachedContentProvider;
+    return cachedContentProvider;
 }
 
-export async function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void> {
+export async function openReadOnlyJson(node: { label: string, fullId: string }, data: unknown): Promise<void> {
     let tab: string = '	';
     const config: WorkspaceConfiguration = workspace.getConfiguration('editor');
     const insertSpaces: boolean = !!config.get<boolean>('insertSpaces');
@@ -106,7 +106,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     private stashReadOnlyContentCore(label: string, fileId: string, fileExtension: string, content: string): ReadOnlyContent {
         const scheme = getScheme();
         // Remove special characters which may prove troublesome when parsing the uri. We'll allow the same set as `encodeUriComponent`
-        const fileName = label.replace(/[^a-z0-9\-\_\.\!\~\*\'\(\)]/gi, '_');
+        const fileName = label.replace(/[^a-z0-9\-_.!~*'()]/gi, '_');
         const uri: Uri = Uri.parse(`${scheme}:///${fileId}/${fileName}${fileExtension}`);
         const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);
         this._contentMap.set(uri.toString(), readOnlyContent);

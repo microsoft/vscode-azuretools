@@ -99,7 +99,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
                     // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
                     context.telemetry.properties.subscriptionId = arg.subscription.subscriptionId;
                 }
-            } catch (e) {
+            } catch {
                 // we don't want to block execution of the command just because we can't set the telemetry properties
                 // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1080
             }
@@ -129,7 +129,7 @@ async function setTelemetryProperties(context: types.IActionContext, args: unkno
                 context.telemetry.properties.subscriptionId = node.subscription.subscriptionId;
             }
         }
-    } catch (e) {
+    } catch {
         // we don't want to block execution of the command just because we can't set the telemetry properties
         // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1080
     }

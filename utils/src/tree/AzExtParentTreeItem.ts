@@ -24,6 +24,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     //#endregion
 
     public readonly initialCollapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isAzExtParentTreeItem: boolean = true;
 
     private _cachedChildren: AzExtTreeItem[] = [];
@@ -200,11 +201,13 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
                 if (item) {
                     // Verify at least the following properties can be accessed without an error
+                    /* eslint-disable @typescript-eslint/no-unused-expressions */
                     item.contextValue;
                     item.description;
                     item.label;
                     item.iconPath;
                     item.id;
+                    /* eslint-enable @typescript-eslint/no-unused-expressions */
 
                     treeItems.push(item);
                 }

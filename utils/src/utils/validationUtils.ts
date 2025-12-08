@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace validationUtils {
     export interface RangeConstraints {
         lowerLimitIncl?: number;

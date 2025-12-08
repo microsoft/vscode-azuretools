@@ -7,6 +7,7 @@ import * as path from 'path';
 import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from '../parseError';
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace AzExtFsExtra {
     export function isVirtualWorkspace(): boolean {
         // based on https://code.visualstudio.com/api/extension-guides/virtual-workspaces#detect-virtual-workspaces-programmatically

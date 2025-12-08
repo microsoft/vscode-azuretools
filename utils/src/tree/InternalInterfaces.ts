@@ -13,6 +13,7 @@ import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 // We can't reference the classes directly because it would result in circular dependencies
 
 export interface IAzExtParentTreeItemInternal extends AzExtParentTreeItem {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _isAzExtParentTreeItem: boolean;
     parent: IAzExtParentTreeItemInternal | undefined;
     treeDataProvider: IAzExtTreeDataProviderInternal;
@@ -21,6 +22,7 @@ export interface IAzExtParentTreeItemInternal extends AzExtParentTreeItem {
 }
 
 export interface IAzExtTreeDataProviderInternal extends types.AzExtTreeDataProvider {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem>;
     refreshUIOnly(treeItem: AzExtTreeItem | undefined): void;
     readonly collapsibleStateTracker: CollapsibleStateTracker | undefined;

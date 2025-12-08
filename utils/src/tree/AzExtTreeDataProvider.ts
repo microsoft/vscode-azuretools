@@ -19,6 +19,7 @@ import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider, Disposable {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
     private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem | undefined> = new EventEmitter<AzExtTreeItem | undefined>();
     private _collapsibleStateTracker: CollapsibleStateTracker | undefined;
@@ -107,6 +108,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const resultMap = new Map<string, AzExtTreeItem>();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                     this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.fullIdWithContext || child.fullId, child);
                 }
 

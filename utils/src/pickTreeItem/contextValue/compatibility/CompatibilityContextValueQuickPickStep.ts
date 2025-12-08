@@ -20,6 +20,7 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         this.setCustomPlaceholder(wizardContext);
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
     }
 

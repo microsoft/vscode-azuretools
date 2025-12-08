@@ -10,6 +10,7 @@ export const learnMore: string = l10n.t("Learn more");
 export const azToolsPrefix: string = "azureTools";
 export const showContextValueSetting: string = "showContextValues";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace AzExtQuickInputButtons {
     export const LearnMore: QuickInputButton = { iconPath: new ThemeIcon('question'), tooltip: learnMore };
 }

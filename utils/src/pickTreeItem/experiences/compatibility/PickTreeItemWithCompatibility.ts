@@ -13,6 +13,7 @@ import { getLastNode } from '../../getLastNode';
 import { NoResourceFoundError } from '../../../errors';
 import { isWrapper } from '@microsoft/vscode-azureresources-api';
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace PickTreeItemWithCompatibility {
     /**
      * Provides compatibility for the legacy `pickAppResource` Resource Groups API

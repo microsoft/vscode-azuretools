@@ -8,6 +8,7 @@ import { AzExtTreeItem } from './AzExtTreeItem';
 import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
 export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeItem {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isGenericTreeItem = true;
     public label: string;
     public contextValue: string;
