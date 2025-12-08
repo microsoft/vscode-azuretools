@@ -47,7 +47,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
         const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
         const response = await doCopilotInteraction(primaryPrompt);
-        const pick = (workspace.workspaceFolders || []).find(folder => {
+        const pick = (workspace.workspaceFolders ?? []).find(folder => {
             return folder.name === response;
         });
 

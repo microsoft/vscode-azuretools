@@ -115,9 +115,7 @@ export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>
 
     quickPick.buttons = buttons;
 
-    if (options.ignoreFocusOut === undefined) {
-        options.ignoreFocusOut = true;
-    }
+    options.ignoreFocusOut ??= true;
 
     if (options.canPickMany && options.placeHolder) {
         options.placeHolder += l10n.t(" (Press 'Space' to select and 'Enter' to confirm)");

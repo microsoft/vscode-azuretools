@@ -94,7 +94,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         return {
             label: this.label,
             getChildren: this.context.activityChildren ? ((_parent: ResourceGroupsItem) => {
-                return this.context.activityChildren || [];
+                return this.context.activityChildren ?? [];
             }) : undefined
         };
     }

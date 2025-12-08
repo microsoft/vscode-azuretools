@@ -69,7 +69,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             command: treeItem.commandId ? {
                 command: treeItem.commandId,
                 title: '',
-                arguments: treeItem.commandArgs || [treeItem]
+                arguments: treeItem.commandArgs ?? [treeItem]
             } : undefined,
             tooltip: treeItem.resolveTooltip ? undefined : treeItem.tooltip // If `resolveTooltip` is defined, return undefined here, so that `resolveTreeItem` and `resolveTooltip` get used
         };
@@ -141,7 +141,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
-        treeItem ||= this._rootTreeItem;
+        treeItem ??= this._rootTreeItem;
 
         if (treeItem.refreshImpl && !treeItem.hasBeenDeleted) {
             await treeItem.refreshImpl(context);
@@ -176,7 +176,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             expectedContextValues = [expectedContextValues];
         }
 
-        let treeItem: AzExtTreeItem = startingTreeItem || this._rootTreeItem;
+        let treeItem: AzExtTreeItem = startingTreeItem ?? this._rootTreeItem;
 
         while (!treeItem.matchesContextValue(expectedContextValues)) {
             if (isAzExtParentTreeItem(treeItem)) {

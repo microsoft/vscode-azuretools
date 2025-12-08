@@ -21,7 +21,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
 
     public constructor(context: IInternalActionContext, onDidFinishPromptEmitter?: EventEmitter<types.PromptResult>) {
         this._context = context;
-        this._onDidFinishPromptEmitter = onDidFinishPromptEmitter || new EventEmitter<types.PromptResult>();
+        this._onDidFinishPromptEmitter = onDidFinishPromptEmitter ?? new EventEmitter<types.PromptResult>();
     }
 
     public get onDidFinishPrompt(): Event<types.PromptResult> {

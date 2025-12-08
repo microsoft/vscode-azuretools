@@ -46,7 +46,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         // reverse steps to make it easier to use push/pop
         this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
         this._promptSteps.forEach(s => { s.effectiveTitle = options.title; });
-        this._executeSteps = options.executeSteps || [];
+        this._executeSteps = options.executeSteps ?? [];
         this._context = context;
         this._wizardHideStepCount = options.hideStepCount;
         this._showLoadingPrompt = options.showLoadingPrompt;
@@ -64,7 +64,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     }
 
     public get hideStepCount(): boolean {
-        return !!(this._wizardHideStepCount || this._stepHideStepCount);
+        return !!(this._wizardHideStepCount ?? this._stepHideStepCount);
     }
 
     public get currentStep(): number {

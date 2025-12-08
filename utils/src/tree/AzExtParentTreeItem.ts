@@ -195,7 +195,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         const treeItems: AzExtTreeItem[] = [];
         let lastUnknownItemError: unknown;
-        sourceArray ||= [];
+        sourceArray ??= [];
         await Promise.all(sourceArray.map(async (source: TSource) => {
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
@@ -287,7 +287,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                         if (!ti.commandId) {
                             throw new Error(l10n.t('Failed to find commandId on generic tree item.'));
                         } else {
-                            const commandArgs: unknown[] = ti.commandArgs || [ti];
+                            const commandArgs: unknown[] = ti.commandArgs ?? [ti];
                             await commands.executeCommand(ti.commandId, ...commandArgs);
                             await this.refresh(context);
                             return this;
@@ -360,7 +360,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         this._error = error;
         this.contextValue = options.contextValue;
         this.data = options.data;
-        this.description = options.description !== undefined ? options.description : l10n.t('Invalid');
+        this.description = options.description ?? l10n.t('Invalid');
     }
 
     public get id(): string {

@@ -49,8 +49,8 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
         if (!this.shouldIncludeTimestamps()) {
             this.appendLine(value);
         } else {
-            options ||= {};
-            const date: Date = options.date || new Date();
+            options ??= {};
+            const date: Date = options.date ?? new Date();
             this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
         }
     }

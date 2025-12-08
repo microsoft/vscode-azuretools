@@ -99,9 +99,7 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
 
     inputBox.buttons = buttons;
 
-    if (options.ignoreFocusOut === undefined) {
-        options.ignoreFocusOut = true;
-    }
+    options.ignoreFocusOut ??= true;
 
     const validateInput = options.validateInput;
     if (validateInput) {

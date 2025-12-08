@@ -183,7 +183,7 @@ class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
     private _executeStep: AzureWizardExecuteStep<ITestWizardContext>;
     constructor(executeStep?: AzureWizardExecuteStep<ITestWizardContext>) {
         super();
-        this._executeStep = executeStep || new SubExecuteStep();
+        this._executeStep = executeStep ?? new SubExecuteStep();
     }
     protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
         return {

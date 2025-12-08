@@ -14,9 +14,7 @@ const UnmaskedUsernameMaxLength: number = 3;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
-    if (!_extValuesToMask) {
-        _extValuesToMask = [];
-    }
+    _extValuesToMask ??= [];
     return _extValuesToMask;
 }
 

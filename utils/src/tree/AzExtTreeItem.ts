@@ -115,7 +115,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get treeDataProvider(): IAzExtTreeDataProviderInternal {
-        return this._treeDataProvider || nonNullProp(this, 'parent').treeDataProvider;
+        return this._treeDataProvider ?? nonNullProp(this, 'parent').treeDataProvider;
     }
 
     public set treeDataProvider(val: IAzExtTreeDataProviderInternal) {
@@ -151,7 +151,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get subscription(): types.ISubscriptionContext {
-        const result = this._subscription || this.parent?.subscription;
+        const result = this._subscription ?? this.parent?.subscription;
         if (!result) {
             throw Error(l10n.t('No Azure subscription found for this tree item.'));
         } else {
