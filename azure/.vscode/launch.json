@@ -5,20 +5,14 @@
             "name": "Launch Tests",
             "type": "extensionHost",
             "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/dist/cjs/test/index"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/dist/cjs/**/*.js"
-            ],
-            "preLaunchTask": "${defaultBuildTask}",
+            "testConfiguration": "${workspaceFolder}/.vscode-test.mjs",
             "env": {
-                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
-                "MOCHA_timeout": "0", // Disable time-outs
                 "DEBUGTELEMETRY": "v",
-                "NODE_DEBUG": ""
-            }
-        }
+            },
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.{js,mjs,cjs}",
+                "${workspaceFolder}/test/**/*.{ts,mts,cts}", // We are using TSX so out files *are* the source files
+            ],
+        },
     ]
 }
