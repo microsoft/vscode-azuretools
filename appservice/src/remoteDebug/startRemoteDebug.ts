@@ -111,8 +111,7 @@ async function getDebugPath(): Promise<string> {
             const root = await vscode.window.showWorkspaceFolderPick();
             if (root) {
                 return root.uri.fsPath;
-            }
-            else {
+            } else {
                 throw new Error(vscode.l10n.t('Please select a workspace folder before attaching a debugger.'));
             }
         }
