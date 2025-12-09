@@ -472,7 +472,7 @@ export class SiteClient implements IAppSettingsClient {
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url,
-            body: typeof data === 'string' ? data : data.toString(),
+            body: typeof data === 'string' ? data : data.toString(), // TODO: This isn't right
             headers
         }));
     }
