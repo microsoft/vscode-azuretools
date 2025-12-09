@@ -194,7 +194,6 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         const [allLocationsTask, providerLocationsMap] = this.getInternalVariables(wizardContext);
         const locationSubsets: string[][] = await Promise.all(providerLocationsMap.values());
         // Filter to locations supported by every provider
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return (await allLocationsTask).filter(l1 => (l1.type === 'EdgeZone' && wizardContext.includeExtendedLocations) || locationSubsets.every(subset =>
             subset.find(l2 => LocationListStep.generalizeLocationName(l1.name) === LocationListStep.generalizeLocationName(l2))
         ));
