@@ -43,14 +43,14 @@ export async function ignore404Error(context: IActionContext, callback: () => Pr
 }
 
 // typings of queryParamsOptions allows booleans, but the ServiceClient only parses strings
-export function convertQueryParamsValuesToString(queryParams: { [key: string]: unknown }): { [key: string]: string } {
+export function convertQueryParamsValuesToString(queryParams: { [key: string]: string | boolean | number | object | undefined | null | bigint }): { [key: string]: string } {
     const keys: string[] = Object.keys(queryParams);
 
     for (const key of keys) {
         if (typeof queryParams[key] === 'object') {
             // skip objects, the ServiceClient will handle them
-        } else {
-            queryParams[key] = String(queryParams[key]); // TODO: this isn't right
+        } else if (queryParams[key] !== undefined && queryParams[key] !== null) {
+            queryParams[key] = String(queryParams[key]);
         }
     }
 
