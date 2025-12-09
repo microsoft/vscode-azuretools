@@ -47,7 +47,6 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             } catch (error: unknown) {
                 const parsedError = parseError(error);
                 if (parsedError.errorType !== 'REQUEST_ABORTED_ERROR') {
-                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw parsedError;
                 }
             }
@@ -164,7 +163,6 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 const parsedError: IParsedError = parseError(error);
                 // swallow 404 error since "latest" might not exist on the first deployment
                 if (parsedError.errorType !== '404') {
-                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw parsedError;
                 }
             }
