@@ -897,7 +897,7 @@ export declare function registerTelemetryHandler(handler: TelemetryHandler): Dis
 
 export declare function parseError(error: any): IParsedError;
 
-export interface IParsedError {
+export interface IParsedError extends Error {
     errorType: string;
     message: string;
     stack?: string;
