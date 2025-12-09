@@ -3,31 +3,22 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// TODO: when available, use `testGlobalSetup` from @microsoft/vscode-azext-utils
-
-import { createAzExtOutputChannel, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { testGlobalSetup } from '@microsoft/vscode-azext-utils';
+import * as fse from 'fs-extra';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { registerAppServiceExtensionVariables } from '../src';
 
 export const testWorkspaceRoot: string = path.resolve(__dirname, '..', 'testWorkspace');
 
 // Runs before all tests
-suiteSetup(() => {
-    const extVars = {
-        context: {
-            extension: {
-                packageJSON: {
-                    name: 'azureextensionui',
-                    publisher: 'ms-azuretools',
-                    version: '0.0.1',
-                    aiKey: '00000000-0000-0000-0000-000000000000'
-                },
-            },
-            subscriptions: [],
-        } as any,
-        prefix: 'azureextensionui',
-        outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui')
-    };
-    registerUIExtensionVariables(extVars);
+suiteSetup(async () => {
+    const baseVars = testGlobalSetup();
+    const extVars = { ...baseVars, prefix: 'azureextensionui' };
     registerAppServiceExtensionVariables(extVars);
+
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    for (const folder of folders) {
+        await fse.ensureDir(folder.uri.fsPath);
+    }
 });
