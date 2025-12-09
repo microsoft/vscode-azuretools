@@ -28,7 +28,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             skus.push(...this.getElasticPremiumSkus());
         } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
             skus = this.getWorkflowStandardSkus();
-        } else if ((context as any).newSiteJavaStack?.majorVersion?.value === 'jbosseap') { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        } else if ((context as { newSiteJavaStack?: { majorVersion?: { value?: string } } }).newSiteJavaStack?.majorVersion?.value === 'jbosseap') {
             // for jboss eap, only Pv3 plan is supported
             skus = this.getPremiumV3Skus();
         }
