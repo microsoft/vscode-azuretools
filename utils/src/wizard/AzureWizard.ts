@@ -64,7 +64,8 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     }
 
     public get hideStepCount(): boolean {
-        return !!(this._wizardHideStepCount ?? this._stepHideStepCount);
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        return !!(this._wizardHideStepCount || this._stepHideStepCount);
     }
 
     public get currentStep(): number {
