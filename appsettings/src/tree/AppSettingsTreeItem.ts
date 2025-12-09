@@ -11,6 +11,7 @@ import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsCl
 import { AppSettingTreeItem, isSettingConnectionString } from './AppSettingTreeItem';
 
 export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
+    // eslint-disable-next-line no-useless-escape
     if (client.isLinux && /[^\w\.]+/.test(newKey)) {
         return 'App setting names can only contain letters, numbers (0-9), periods ("."), and underscores ("_")';
     }
@@ -67,7 +68,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         this.clientProvider = clientProvider;
         this.supportsSlots = options?.supportsSlots ?? true;
         this._settingsToHide = options?.settingsToHide;
-        this.contextValuesToAdd = options?.contextValuesToAdd || [];
+        this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
         this.isLocalSetting = this.contextValuesToAdd.includes('localSettings');
         if (this.isLocalSetting) {
             this.label = vscode.l10n.t('Local Settings');
@@ -107,7 +108,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
         }
 
         const treeItems: AppSettingTreeItem[] = [];
-        const properties: { [name: string]: string } = this._settings.properties || {};
+        const properties: { [name: string]: string } = this._settings.properties ?? {};
         await Promise.all(Object.keys(properties).map(async (key: string) => {
             const appSettingTreeItem: AppSettingTreeItem = await AppSettingTreeItem.createAppSettingTreeItem(context, this, key, properties[key]);
             if (!this._settingsToHide?.includes(key)) {
@@ -163,9 +164,7 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
             validateInput: (v: string): string | undefined => validateAppSettingValue(v)
         });
 
-        if (!settings.properties) {
-            settings.properties = {};
-        }
+        settings.properties ??= {};
 
         context.showCreatingTreeItem(newKey);
         settings.properties[newKey] = newValue;
@@ -180,7 +179,8 @@ export class AppSettingsTreeItem extends AzExtParentTreeItem {
             await this.getCachedChildren(context);
         }
 
-        return <StringDictionary>this._settings;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this._settings!;
     }
 
     public async refreshImpl(context: IActionContext): Promise<void> {
