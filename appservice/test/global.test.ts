@@ -14,7 +14,7 @@ export const testWorkspaceRoot: string = path.resolve(__dirname, '..', 'testWork
 // Runs before all tests
 suiteSetup(async () => {
     const baseVars = testGlobalSetup();
-    const extVars = { ...baseVars, prefix: 'azureextensionui' };
+    const extVars = { ...baseVars, prefix: 'appService' }; // Prefix must match setting prefix in file://./test.code-workspace
     registerAppServiceExtensionVariables(extVars);
 
     const folders = vscode.workspace.workspaceFolders ?? [];
