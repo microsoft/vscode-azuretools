@@ -45,7 +45,7 @@
         "@azure/storage-blob": "^12.3.0",
         "@microsoft/vscode-azext-azureutils": "^4.0.0",
         "@microsoft/vscode-azext-github": "^2.0.0",
-        "@microsoft/vscode-azext-utils": "^4.0.1",
+        "@microsoft/vscode-azext-utils": "^4.0.3",
         "dayjs": "^1.11.2",
         "fs-extra": "^10.0.0",
         "p-retry": "^3.0.1",
@@ -60,7 +60,7 @@
     },
     "devDependencies": {
         "@azure/core-client": "^1.7.2",
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.5",
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.6",
         "@types/fs-extra": "^9.0.13",
         "@types/node": "22.x",
         "@types/p-retry": "^2.0.0",
