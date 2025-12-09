@@ -93,7 +93,7 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
                 return await this.executeCore(wizardContext, progress);
             }
 
-            throw error;
+            throw parsedError;
         }
     }
 
