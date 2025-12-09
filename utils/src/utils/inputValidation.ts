@@ -14,7 +14,8 @@ const inputValidationTimeoutMs: number = 2000;
  */
 export async function validOnTimeoutOrException(inputValidation: () => Promise<InputBoxValidationResult>, timeoutMs?: number): Promise<InputBoxValidationResult> {
     try {
-        timeoutMs ??= inputValidationTimeoutMs;
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        timeoutMs ||= inputValidationTimeoutMs;
         return await valueOnTimeout(timeoutMs, undefined, inputValidation);
     } catch {
         return undefined;
