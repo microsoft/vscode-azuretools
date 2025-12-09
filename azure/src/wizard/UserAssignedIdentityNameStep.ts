@@ -23,7 +23,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
         context.newManagedIdentityName = (await context.ui.showInputBox({
             value: suggestedName,
             prompt: vscode.l10n.t('Enter a name for the new user-assigned identity.'),
-            validateInput: this.validateInput,
+            validateInput: (name) => this.validateInput(name),
             asyncValidationTask: (name: string) => this.asyncValidateUserAssignedIdentityAvailable(context, name),
         })).trim();
         context.valuesToMask.push(context.newManagedIdentityName);

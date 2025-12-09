@@ -5,6 +5,7 @@
 
 import type { PagedAsyncIterableIterator } from "@azure/core-paging";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace uiUtils {
     export interface IPartialList<T> extends Array<T> {
         nextLink?: string;

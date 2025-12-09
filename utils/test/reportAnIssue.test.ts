@@ -14,6 +14,7 @@ suite('getReportAnIssueLink', () => {
     test('Short stack, entire body should be in link', async () => {
         const message: string = 'This is a "message"?';
         const error: IParsedError = {
+            name: 'error Name',
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
@@ -34,6 +35,7 @@ suite('getReportAnIssueLink', () => {
     test('Long stack - should copy body to clipboard', async () => {
         const message: string = 'This is a "message"?';
         const error: IParsedError = {
+            name: 'error Name',
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
@@ -55,6 +57,7 @@ suite('getReportAnIssueLink', () => {
     test('message long - should copy body to clipboard', async () => {
         const message: string = 'x'.repeat(maxUrlLength);
         const error: IParsedError = {
+            name: 'error Name',
             errorType: 'error Type',
             isUserCancelledError: false,
             message: message,
@@ -74,6 +77,7 @@ suite('getReportAnIssueLink', () => {
         test('single property', async () => {
             const message: string = "This is my message";
             const error: IParsedError = {
+                name: 'error Name',
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
@@ -89,6 +93,7 @@ suite('getReportAnIssueLink', () => {
         test('multiple properties', async () => {
             const message: string = "This is my message";
             const error: IParsedError = {
+                name: 'error Name',
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,
@@ -106,6 +111,7 @@ suite('getReportAnIssueLink', () => {
         test('multiple properties and stack', async () => {
             const message: string = "This is my message";
             const error: IParsedError = {
+                name: 'error Name',
                 errorType: 'error Type',
                 isUserCancelledError: false,
                 message: message,

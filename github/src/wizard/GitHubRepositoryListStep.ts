@@ -54,6 +54,7 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
         const userRepoParams: GetUserReposReqParams = {
             affiliation: 'owner',
             visibility: 'all',
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             per_page: perPage,
             page
         };
@@ -61,6 +62,7 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
             // Doesn't matter if context.gitHubOrg is undefined; that just means we will end up calling 'getRepositoriesByUser' instead
             org: context.gitHubOrg ?? '',
             type: 'all',
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             per_page: perPage,
             page
         };
@@ -68,8 +70,8 @@ export class GitHubRepositoryListStep extends AzureWizardPromptStep<GitHubContex
         // Intentionally use the same map callback on two lines below to force TypeScript to infer the proper repo type
         this.picks.push(
             ...(context.gitHubOrg ?
-                (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }) :
-                (await getRepositoriesByUser(context, userRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } } }))
+                (await getRepositoriesByOrg(context, orgRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } }; }) :
+                (await getRepositoriesByUser(context, userRepoParams)).map((repo) => { return { label: repo.name, data: { owner: repo.owner.login, repo: repo.name, url: repo.html_url } }; }))
         );
         this.picks.sort((a: QuickPickItem, b: QuickPickItem) => a.label.localeCompare(b.label));
 

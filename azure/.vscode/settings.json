@@ -7,6 +7,7 @@
     "files.trimTrailingWhitespace": true,
     "search.exclude": {
         "dist": true,
+        ".vscode-test": true,
         "out": true,
         "**/node_modules": true
     },

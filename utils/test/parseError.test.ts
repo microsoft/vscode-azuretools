@@ -24,10 +24,9 @@ suite('Error Parsing Tests', () => {
                 pe = parseError(err);
             }
             assert(!!pe && !!pe.stack);
-            /* eslint-disable @typescript-eslint/no-non-null-assertion */
             assert(!pe.stack!.includes('Error: \n'));
             assert(!pe.stack!.startsWith('at '));
-            assert(pe.stack!.includes('parseError.test.js:'));
+            assert(pe.stack!.includes('parseError.test.ts:'));
             assert(!pe.stack!.includes('extensions'), `Should have removed first path of path (extensions), stack is: ${pe.stack}`);
             assert(!pe.stack!.includes('repos'), `Should have removed first path of path (repos), stack is: ${pe.stack}`);
             const username: string = os.userInfo().username;
@@ -37,7 +36,6 @@ suite('Error Parsing Tests', () => {
             }
             const homedir: string = os.userInfo().homedir;
             assert(!pe.stack!.includes(homedir), `Should have removed first path of path (homedir "${homedir}"), stack is: ${pe.stack}`);
-            /* eslint-enable @typescript-eslint/no-non-null-assertion */
         });
 
         test('Removes first part of paths: Windows', () => {
@@ -264,11 +262,11 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Error in object body', () => {
-        const err: {} = {
+        const err = {
             code: 400,
             body: {
                 code: 'BadRequest',
-                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+                message: 'Message: {"Errors":["The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100."]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
             },
             activityId: '12345678-bf76-43c0-b713-b28e423599c4'
         };
@@ -280,11 +278,11 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Multiple errors in object body', () => {
-        const err: {} = {
+        const err = {
             code: 400,
             body: {
                 code: 300,
-                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\", \"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+                message: 'Message: {"Errors":["The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.", "The offer should have a valid timestamp."]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
             },
             activityId: '12345678-bf76-43c0-b713-b28e423599c4'
         };
@@ -296,11 +294,11 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Multiple errors in stringified body', () => {
-        const err: {} = {
+        const err = {
             code: 400,
             body: JSON.stringify({
                 code: 'BadRequest2',
-                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\" ,\"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+                message: 'Message: {"Errors":["The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100." ,"The offer should have a valid timestamp."]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
             }),
             activityId: '12345678-bf76-43c0-b713-b28e423599c4'
         };
@@ -312,11 +310,11 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Error in object response', () => {
-        const err: {} = {
+        const err = {
             code: 400,
             response: JSON.stringify({
                 code: 'BadRequest4',
-                message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\" ,\"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+                message: 'Message: {"Errors":["The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100." ,"The offer should have a valid timestamp."]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
             }),
             activityId: '12345678-bf76-43c0-b713-b28e423599c4'
         };
@@ -328,12 +326,12 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Error in object response in string body', () => {
-        const err: {} = {
+        const err = {
             code: 400,
             response: {
                 body: JSON.stringify({
                     code: 'BadRequest5',
-                    message: 'Message: {\"Errors\":[\"The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100.\" ,\"The offer should have a valid timestamp.\"]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
+                    message: 'Message: {"Errors":["The offer should have valid throughput values between 400 and 1000000 inclusive in increments of 100." ,"The offer should have a valid timestamp."]}\r\nActivityId: c11a5bcd-bf76-43c0-b713-b28e423599c4, Request URI: /apps/4c8d65d7-216b-46b4-abb7-52c1a0c7123f/services/36df4f13-26ef-48cf-bc7b-9ab28c345ca3/partitions/68d75b64-4651-4c15-b2a5-fc5550bab323/replicas/131570875506839239p, RequestStats: , SDK: Microsoft.Azure.Documents.Common/1.19.121.4'
                 })
             },
             activityId: '12345678-bf76-43c0-b713-b28e423599c4'
@@ -346,7 +344,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Error with multiple nested messages, including a "response.body" that fails to JSON parse', () => {
-        const err: {} = {
+        const err = {
             code: '111AuthorizationFailed',
             message: '111The client with object id does not have authorization to perform action Microsoft.Web/serverfarms/read over scope.',
             body: {
@@ -389,9 +387,10 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
         // This nested value structure is likely from an ErrorPromise in winjs
         // Per the docs, ErrorPromise "Wraps a non-promise error value in a promise. You can use this function if you need to pass an error to a function that requires a promise."
         // https://github.com/Microsoft/vscode/blob/master/src/vs/base/common/winjs.base.js
-        const err: {} = {
+        const err = {
             key: 1,
             value: {
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 _value: {
                     response: {
                         statusCode: 404,
@@ -409,7 +408,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Error when deserializing responseBody', () => {
-        const err: {} = {
+        const err = {
             message: 'Error "Unexpected token T in JSON at position 0" occurred in deserializing the responseBody - "The service is unavailable." for the default response.',
             response: {
                 body: 'The service is unavailable.',
@@ -424,7 +423,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Azure StatusCodeError', () => {
-        const err: {} = {
+        const err = {
             name: "StatusCodeError",
             statusCode: 400,
             message: "400 - \"{\\\"error\\\":{\\\"code\\\":\\\"MissingApiVersionParameter\\\",\\\"message\\\":\\\"The api-version query parameter (?api-version=) is required for all requests.\\\"}}\"",
@@ -443,7 +442,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Error with only a statusCode', () => {
-        const err: {} = {
+        const err = {
             body: '',
             statusCode: 401
         };
@@ -455,7 +454,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
     });
 
     test('Errors array in error property', () => {
-        const err: {} = {
+        const err = {
             name: 'StatusCodeError',
             statusCode: 403,
             message: '403 - {\'errors\':[{\'code\':\'DENIED\',\'message\':\'access forbidden\'}],\'http_status\':403}',
@@ -466,6 +465,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
                         message: 'access forbidden'
                     }
                 ],
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 http_status: 403
             }
         };
@@ -616,7 +616,7 @@ You do not have permission to view this directory or page using the credentials 
     });
 
     test('Docker Request Error', () => {
-        const err: {} = {
+        const err = {
             name: "StatusCodeError",
             statusCode: 401,
             message: "401 - {\"detail\":\"Incorrect authentication credentials.\"}",
@@ -641,7 +641,7 @@ You do not have permission to view this directory or page using the credentials 
     });
 
     test('XML errors', () => {
-        const err1: {} = {
+        const err1 = {
             statusCode: 409,
             message: `<?xml version="1.0" encoding="utf-8"?><Error><Code>ContainerBeingDeleted</Code><Message>The specified container is being deleted. Try operation later.
 RequestId:35eae91c-a01e-0010-1b5c-ca2979000000
@@ -655,7 +655,7 @@ RequestId:35eae91c-a01e-0010-1b5c-ca2979000000
 Time:2020-01-13T21:57:13.6831007Z`);
         assert.strictEqual(pe1.isUserCancelledError, false);
 
-        const err2: {} = {
+        const err2 = {
             statusCode: 412,
             message: `<?xml version="1.0" encoding="utf-8"?><Error><Code>LeaseIdMissing</Code><Message>There is currently a lease on the blob and no lease ID was specified in the request.
 RequestId:2392b993-901e-0018-625e-ca320a000000

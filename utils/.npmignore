@@ -13,3 +13,5 @@ test-results.xml
 .eslintrc.js
 resources/*.png
 *.tsbuildinfo
+.vscode-test.mjs
+eslint.config.mjs

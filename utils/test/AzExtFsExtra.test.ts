@@ -27,7 +27,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         // originally tested NaN, but not a valid JSON value
         // https://stackoverflow.com/questions/1423081/json-left-out-infinity-and-nan-json-status-in-ecmascript
         bar: null
-    }
+    };
 
     const nonJsonContents = `{"foo"-"bar"}`;
 
@@ -46,7 +46,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         workspaceFilePath = path.join(workspacePath, indexHtml);
         ensureFile(workspaceFilePath);
 
-        testFolderPath = path.join(workspacePath, `azExtFsExtra${randomUtils.getRandomHexString()}`)
+        testFolderPath = path.join(workspacePath, `azExtFsExtra${randomUtils.getRandomHexString()}`);
         ensureDir(testFolderPath);
 
         jsonFilePath = path.join(workspacePath, jsonFile);
@@ -55,7 +55,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     suiteTeardown(async function (this: Mocha.Context): Promise<void> {
-        await workspace.fs.delete(Uri.file(testFolderPath), { recursive: true })
+        await workspace.fs.delete(Uri.file(testFolderPath), { recursive: true });
         console.log(testFolderPath, 'deleted.');
     });
 
@@ -208,7 +208,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
 
         for (let i = 0; i < 10; i++) {
             const newFolderPath = path.join(fsPath, `folder-${i.toString()}`);
-            const newFilePath = `file-${i.toString()}`
+            const newFilePath = `file-${i.toString()}`;
             ensureDir(newFolderPath);
             ensureFile(path.join(fsPath, newFilePath));
             ensureFile(path.join(newFolderPath, newFilePath));
@@ -228,7 +228,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
 
         for (let i = 0; i < 5; i++) {
             const newFolderPath = path.join(fsPath, `folder-${i.toString()}`);
-            const newFilePath = `file-${i.toString()}`
+            const newFilePath = `file-${i.toString()}`;
             ensureDir(newFolderPath);
             ensureFile(path.join(fsPath, newFilePath));
             ensureFile(path.join(newFolderPath, newFilePath));
@@ -293,7 +293,6 @@ function ensureDir(fsPath: string): void {
 }
 
 function compareObjects(o1, o2): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     for (const [key, value] of Object.entries(o1)) {
         assert.strictEqual(value, o2[key]);
     }

@@ -9,6 +9,7 @@ import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
 import { randomUtils } from "./utils/randomUtils";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 let _cachedScheme: string | undefined;
 function getScheme(): string {
     if (!_cachedScheme) {
@@ -18,6 +19,7 @@ function getScheme(): string {
     return _cachedScheme;
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 let _cachedContentProvider: ReadOnlyContentProvider | undefined;
 function getContentProvider(): ReadOnlyContentProvider {
     if (!_cachedContentProvider) {
@@ -27,7 +29,7 @@ function getContentProvider(): ReadOnlyContentProvider {
     return _cachedContentProvider;
 }
 
-export async function openReadOnlyJson(node: { label: string, fullId: string }, data: {}): Promise<void> {
+export async function openReadOnlyJson(node: { label: string, fullId: string }, data: unknown): Promise<void> {
     let tab: string = '	';
     const config: WorkspaceConfiguration = workspace.getConfiguration('editor');
     const insertSpaces: boolean = !!config.get<boolean>('insertSpaces');
@@ -106,6 +108,7 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
     private stashReadOnlyContentCore(label: string, fileId: string, fileExtension: string, content: string): ReadOnlyContent {
         const scheme = getScheme();
         // Remove special characters which may prove troublesome when parsing the uri. We'll allow the same set as `encodeUriComponent`
+        // eslint-disable-next-line no-useless-escape
         const fileName = label.replace(/[^a-z0-9\-\_\.\!\~\*\'\(\)]/gi, '_');
         const uri: Uri = Uri.parse(`${scheme}:///${fileId}/${fileName}${fileExtension}`);
         const readOnlyContent: ReadOnlyContent = new ReadOnlyContent(uri, this._onDidChangeEmitter, content);

@@ -3,6 +3,5 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable */
 import * as nodeCrypto from 'crypto';
 export const crypto = nodeCrypto.webcrypto;

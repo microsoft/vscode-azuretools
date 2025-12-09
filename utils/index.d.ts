@@ -897,7 +897,7 @@ export declare function registerTelemetryHandler(handler: TelemetryHandler): Dis
 
 export declare function parseError(error: any): IParsedError;
 
-export interface IParsedError {
+export interface IParsedError extends Error {
     errorType: string;
     message: string;
     stack?: string;
@@ -2902,5 +2902,11 @@ declare type registerOnActionStartHandlerType = (handler: (context: { callbackId
  * @param callback The callback to run
  */
 export declare function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T>;
+
+/**
+ * Performs setup necessary for running tests that use extension variables
+ * @returns The registered extension variables
+ */
+export declare function testGlobalSetup(): UIExtensionVariables;
 
 // #endregion

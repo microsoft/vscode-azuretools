@@ -106,7 +106,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         return {
             item,
             message: this.getOutputLogFail(context),
-        }
+        };
     }
 }
 
@@ -119,7 +119,7 @@ class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupW
         return context.resourceGroup?.name ?
             l10n.t('Select resource group "{0}"', context.resourceGroup.name) :
             l10n.t('Select resource group');
-    }
+    };
 
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         progress.report({ message: l10n.t('Selecting resource group...') });
@@ -143,7 +143,7 @@ class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupW
         await context.ui.showWarningMessage(message, { modal: true, stepName: 'RgNoPermissions' }, selectExisting);
 
         context.telemetry.properties.forbiddenResponse = 'SelectExistingRg';
-        const step: ResourceGroupListStep<T> = new ResourceGroupListStep(true /* suppressCreate */);
+        const step = new ResourceGroupListStep<T>(true /* suppressCreate */);
         await step.prompt(context);
     }
 

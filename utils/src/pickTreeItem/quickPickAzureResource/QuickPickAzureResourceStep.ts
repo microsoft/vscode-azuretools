@@ -33,7 +33,7 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
             // see https://github.com/microsoft/vscode-azuretools/blob/cc1feb3a819dd503eb59ebcc1a70051d4e9a3432/utils/src/tree/AzExtTreeItem.ts#L154
             wizardContext.telemetry.properties.subscriptionId = pickedAzureResource.resource.subscription.subscriptionId;
             setAzureResourceIdTelemetryProperties(wizardContext, pickedAzureResource.resource.id);
-        } catch (e) {
+        } catch {
             // we don't want to block execution just because we can't set the telemetry property
             // see https://github.com/microsoft/vscode-azureresourcegroups/issues/1081
         }

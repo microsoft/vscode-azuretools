@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import { ITreeItemPickerContext } from "..";
 
 export class UserCancelledError extends Error {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _isUserCancelledError = true;
     public stepName: string | undefined;
     constructor(stepName?: string) {

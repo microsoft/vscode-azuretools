@@ -11,14 +11,14 @@ import { parseError } from "./parseError";
 // No attempt will be made to mask usernames that are this length or less
 const UnmaskedUsernameMaxLength: number = 3;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
-    if (!_extValuesToMask) {
-        _extValuesToMask = [];
-    }
+    _extValuesToMask ??= [];
     return _extValuesToMask;
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 let _usernameMask: RegExp | undefined | null = undefined;
 function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
     // _usernameMask starts out as undefined, and is set to null if building it fails or it is too short
@@ -102,14 +102,17 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
 
     // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
     // The first and second JWT sections begin with "e" since the header and payload represent encoded json values that always begin with "{"
+    // eslint-disable-next-line no-useless-escape
     data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
 
     if (!lessAggressive) {
         data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
+        // eslint-disable-next-line no-useless-escape
         data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
     }
 
     data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
+    // eslint-disable-next-line no-useless-escape
     data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
     data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
 
