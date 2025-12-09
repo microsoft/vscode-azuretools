@@ -107,7 +107,11 @@ export const azExtStylisticRules: EslintConfig = {
         '@typescript-eslint/prefer-nullish-coalescing': [
             'error', // Enforce use of nullish coalescing over || where appropriate
             {
-                ignorePrimitives: { string: true, }, // Except for strings to avoid changing behavior
+                ignorePrimitives: {
+                    string: true, // Except for strings to avoid changing behavior
+                    boolean: true, // And booleans
+                    number: true, // And numbers
+                },
             },
         ],
     },
