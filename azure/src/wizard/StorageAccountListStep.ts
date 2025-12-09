@@ -63,7 +63,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
     public constructor(newAccountDefaults: types.INewStorageAccountDefaults, filters?: types.IStorageAccountFilters) {
         super();
         this._newAccountDefaults = newAccountDefaults;
-        this._filters = filters || {};
+        this._filters = filters ?? {};
     }
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
@@ -80,8 +80,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const result: StorageAccount | undefined = (await wizardContext.ui.showQuickPick(picksTask, quickPickOptions)).data;
         wizardContext.storageAccount = result;
         if (wizardContext.storageAccount) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location!);
+            await LocationListStep.setLocation(wizardContext, wizardContext.storageAccount.location);
         }
     }
 
@@ -89,13 +88,13 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         if (!wizardContext.storageAccount) {
             const promptSteps: AzureWizardPromptStep<T>[] = [new StorageAccountNameStep(), new ResourceGroupListStep()];
             LocationListStep.addStep(wizardContext, promptSteps);
-            return {
+            return Promise.resolve({
                 promptSteps: promptSteps,
                 executeSteps: [new StorageAccountCreateStep(this._newAccountDefaults)]
-            };
+            });
         } else {
             wizardContext.valuesToMask.push(nonNullProp(wizardContext.storageAccount, 'name'));
-            return undefined;
+            return Promise.resolve(undefined);
         }
     }
 
@@ -185,6 +184,6 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
 }
 
 function convertFilterToPattern(values?: string[]): string {
-    values ||= [];
+    values ??= [];
     return `(${values.join('|')})`;
 }
