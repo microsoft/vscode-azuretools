@@ -59,7 +59,7 @@ export async function listFiles(context: IActionContext, site: ParsedSite, url: 
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created
  * Returns the latest etag of the updated file
  */
-export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, url: string, etag: string | undefined): Promise<string> {
+export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer | Uint8Array, url: string, etag: string | undefined): Promise<string> {
     const options = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
     const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options as Record<string, string>));

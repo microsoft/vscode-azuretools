@@ -466,14 +466,13 @@ export class SiteClient implements IAppSettingsClient {
         }));
     }
 
-    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, url: string, rawHeaders?: Record<string, string>): Promise<AzExtPipelineResponse> {
+    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer | Uint8Array, url: string, rawHeaders?: Record<string, string>): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const headers = createHttpHeaders(rawHeaders);
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url,
-            // eslint-disable-next-line @typescript-eslint/no-base-to-string
-            body: typeof data === 'string' ? data : data.toString(), // TODO: This isn't right
+            body: typeof data === 'string' ? data : new TextDecoder('utf-8').decode(data),
             headers
         }));
     }
