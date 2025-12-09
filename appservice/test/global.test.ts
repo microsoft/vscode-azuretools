@@ -28,5 +28,6 @@ suiteSetup(() => {
         outputChannel: createAzExtOutputChannel('Extension Test Output', 'azureextensionui')
     };
     registerUIExtensionVariables(extVars);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     registerAppServiceExtensionVariables(extVars as any);
 });

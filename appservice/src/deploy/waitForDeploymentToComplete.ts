@@ -36,8 +36,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const { expectedId, token, locationUrl } = options;
     // recommended to poll every second or the deployment id can be recycled before we find it
     const pollingInterval = options.pollingInterval ?? 1000;
-    context.activityAttributes = context.activityAttributes || {};
-    context.activityAttributes.logs = context.activityAttributes.logs || [];
+    context.activityAttributes = context.activityAttributes ?? {};
+    context.activityAttributes.logs = context.activityAttributes.logs ?? [];
 
     while (!token?.isCancellationRequested) {
         if (locationUrl) {
@@ -47,6 +47,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             } catch (error: unknown) {
                 const parsedError = parseError(error);
                 if (parsedError.errorType !== 'REQUEST_ABORTED_ERROR') {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw parsedError;
                 }
             }
@@ -107,7 +108,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         // a 2 status is also reported and seems to indicate that it is also currently building, but I have been unable to find any actual documentation on it
         if (deployment.status !== 0 && deployment.status !== 2) {
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
-                void showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
+                showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
                 const messageWithoutName: string = l10n.t('Deployment failed.');
                 ext.outputChannel.appendLog(messageWithoutName, { resourceName: site.fullName });
                 context.errorHandling.suppressDisplay = true;
@@ -119,7 +120,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             } else if (deployment.status === 5) {
                 throw new Error(l10n.t('Deployment was cancelled and another deployment is in progress'));
             } else if (deployment.status === 6) {
-                void showErrorMessageWithOutput(l10n.t('Deployment was partially successful.', site.fullName));
+                showErrorMessageWithOutput(l10n.t('Deployment was partially successful.', site.fullName));
             } else if (deployment.status === -1) {
                 throw new Error(l10n.t('Deployment was cancelled.'));
             }
@@ -163,6 +164,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 const parsedError: IParsedError = parseError(error);
                 // swallow 404 error since "latest" might not exist on the first deployment
                 if (parsedError.errorType !== '404') {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw parsedError;
                 }
             }
@@ -225,7 +227,7 @@ function cleanDetails(entries: KuduModels.LogEntry[]): KuduModels.LogEntry[] {
     return result.reverse();
 }
 
-async function showErrorMessageWithOutput(message: string): Promise<void> {
+function showErrorMessageWithOutput(message: string): void {
     const viewOutput: string = l10n.t('View Output');
     // don't wait
     void window.showErrorMessage(message, viewOutput).then(result => {

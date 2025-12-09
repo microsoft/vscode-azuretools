@@ -23,6 +23,7 @@ interface SiteNameStepWizardContext extends IAppServiceWizardContext {
 const siteNamingRules: IAzureNamingRules = {
     minLength: 2,
     maxLength: 60,
+    // eslint-disable-next-line no-useless-escape
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 

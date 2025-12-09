@@ -20,6 +20,7 @@ type GeoRegionJsonResponse = {
  */
 export async function setLocationsTask(context: IAppServiceWizardContext): Promise<void> {
     LocationListStep.setLocationSubset(context, getWebLocations(context), webProvider);
+    return Promise.resolve();
 }
 
 export async function getWebLocations(context: IAppServiceWizardContext): Promise<string[]> {

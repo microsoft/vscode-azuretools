@@ -38,7 +38,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
                 ext.outputChannel.appendLog(l10n.t('Found existing app service plan "{0}".', newPlanName));
                 ext.outputChannel.appendLog(l10n.t('Using existing app service plan "{0}".', newPlanName));
             }
-        } catch (error) {
+        } catch {
             // Don't throw error yet we might still be able to handle this condition in the following methods
         }
     }

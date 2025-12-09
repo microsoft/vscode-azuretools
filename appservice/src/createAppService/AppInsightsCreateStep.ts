@@ -48,7 +48,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
             context.appInsightsComponent = await client.components.get(rgName, newAppInsightsName);
             ext.outputChannel.appendLog(l10n.t('Found existing application insights "{0}".', newAppInsightsName));
             ext.outputChannel.appendLog(l10n.t('Using existing application insights "{0}".', newAppInsightsName));
-        } catch (error) {
+        } catch {
             // Don't throw error yet we might still be able to handle this condition in the following methods
         }
     }

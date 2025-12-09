@@ -11,10 +11,12 @@ import { ParsedSite } from '../SiteClient';
 import { ext } from '../extensionVariables';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export type gitHubOrgData = { login: string, repos_url: string };
 export type gitHubRepoData = { name: string, repos_url: string, url: string, html_url: string };
 export type gitHubBranchData = { name: string };
 export type gitHubLink = { prev?: string, next?: string, last?: string, first?: string };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export async function connectToGitHub(context: IActionContext, site: ParsedSite): Promise<void> {
     const title: string = vscode.l10n.t('Connect GitHub repository');
@@ -54,7 +56,7 @@ export async function connectToGitHub(context: IActionContext, site: ParsedSite)
             void vscode.window.showInformationMessage(connectedToGithub);
             ext.outputChannel.appendLog(connectedToGithub);
         });
-    } catch (err) {
+    } catch {
         try {
             // a resync will fix the first broken build
             // https://github.com/projectkudu/kudu/issues/2277

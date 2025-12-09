@@ -35,7 +35,7 @@ export class DelayFirstWebAppDeployStep extends AzureWizardExecuteStep<InnerDepl
                 if (deployments > 1) {
                     resolve();
                 }
-            } catch (error) {
+            } catch {
                 // ignore the error, an error here isn't a deployment failure
                 resolve();
             }

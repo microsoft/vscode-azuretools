@@ -26,7 +26,7 @@ export abstract class DeployZipBaseExecuteStep extends DeployExecuteStepBase {
                 context.telemetry.properties.deploymentId = response.headers.get('scm-deployment-id');
                 context.locationUrl = response.headers.get('location');
             }
-        } catch (e) {
+        } catch {
             // swallow errors, we don't want a failure here to block deployment
         }
     }

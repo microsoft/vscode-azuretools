@@ -16,6 +16,7 @@ import { LogAnalyticsCreateStep } from "./LogAnalyticsCreateStep";
 export const appInsightsNamingRules: IAzureNamingRules = {
     minLength: 1,
     maxLength: 255,
+    // eslint-disable-next-line no-useless-escape
     invalidCharsRegExp: /[^a-zA-Z0-9\.\_\-\(\)]/
 };
 
@@ -62,13 +63,13 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
         } else if (!context.appInsightsSkip) {
             const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppInsightsNameStep()];
             LocationListStep.addStep(context, promptSteps);
-            return {
+            return Promise.resolve({
                 promptSteps: promptSteps,
                 executeSteps: [new LogAnalyticsCreateStep(), new AppInsightsCreateStep()]
-            };
+            });
         }
 
-        return undefined;
+        return Promise.resolve(undefined);
     }
 
     private async getQuickPicks(context: IAppServiceWizardContext): Promise<IAzureQuickPickItem<ApplicationInsightsComponent | undefined>[]> {

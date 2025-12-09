@@ -45,6 +45,7 @@ export async function getFile(context: IActionContext, site: ParsedSite, url: st
             throw error;
         }
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return { data: response.bodyAsText!, etag: response.headers.get('etag')! };
 }
 
@@ -59,9 +60,10 @@ export async function listFiles(context: IActionContext, site: ParsedSite, url: 
  * Returns the latest etag of the updated file
  */
 export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, url: string, etag: string | undefined): Promise<string> {
-    const options: {} = etag ? { ['If-Match']: etag } : {};
+    const options = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
-    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options));
+    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options as Record<string, string>));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return result.headers.get('etag')!;
 }
 

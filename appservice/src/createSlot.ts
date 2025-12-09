@@ -52,6 +52,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
 const slotNamingRules: IAzureNamingRules = {
     minLength: 2,
     maxLength: 59,
+    // eslint-disable-next-line no-useless-escape
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 

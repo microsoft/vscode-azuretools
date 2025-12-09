@@ -111,7 +111,7 @@ async function appendDeploySubpathSetting(context: IActionContext, workspaceFold
             context.telemetry.properties.hasDeploySubpathSetting = 'true';
 
             if (isPathEqual(workspaceFolder.uri.fsPath, targetPath)) {
-                return path.join(targetPath, deploySubPath);
+                return Promise.resolve(path.join(targetPath, deploySubPath));
             } else {
                 const fsPathWithSetting: string = path.join(workspaceFolder.uri.fsPath, deploySubPath);
                 if (!isPathEqual(fsPathWithSetting, targetPath)) {
@@ -130,12 +130,12 @@ async function appendDeploySubpathSetting(context: IActionContext, workspaceFold
                     }
                 }
 
-                return fsPathWithSetting;
+                return Promise.resolve(fsPathWithSetting);
             }
         }
     }
 
-    return targetPath;
+    return Promise.resolve(targetPath);
 }
 
 export type IDeployPaths = {

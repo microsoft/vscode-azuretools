@@ -21,6 +21,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
 
     public readonly contextValuesToAdd: string[];
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected readonly _isRoot: boolean = true;
 
     constructor(parent: AzExtParentTreeItem, options: SiteFilesTreeItemOptions) {
@@ -30,7 +31,7 @@ export class SiteFilesTreeItem extends FolderTreeItem {
             url: createSiteFilesUrl(options.site, 'site/wwwroot/'),
             isReadOnly: options.isReadOnly
         });
-        this.contextValuesToAdd = options.contextValuesToAdd || [];
+        this.contextValuesToAdd = options.contextValuesToAdd ?? [];
     }
 
     public get contextValue(): string {

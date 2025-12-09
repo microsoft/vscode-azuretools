@@ -56,7 +56,7 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
         // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
         try {
             await setDeploymentTelemetry(context, config, context.aspPromise);
-        } catch (error) {
+        } catch {
             // Ignore
         }
         await this.deployCore(context, config);
