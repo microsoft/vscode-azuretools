@@ -5,7 +5,7 @@
 
 import type { User } from '@azure/arm-appservice';
 import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
-import simpleGit, { Options, SimpleGit, StatusResult } from 'simple-git';
+import simpleGit, { type GitError, Options, SimpleGit, StatusResult } from 'simple-git';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
@@ -85,8 +85,7 @@ export async function localGitDeploy(site: ParsedSite, options: LocalGitOptions,
 
                         const pushOptions: Options = forcePush ? { '-f': null } : {};
 
-                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error) => {
-                            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors, @typescript-eslint/no-unsafe-argument
+                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error: GitError) => {
                             reject(error);
                             tokenSource.cancel();
                         });
