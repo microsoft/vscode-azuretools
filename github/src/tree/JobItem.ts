@@ -45,6 +45,6 @@ export class JobItem implements TreeElementBase {
     }
 
     async getChildren(): Promise<TreeElementBase[]> {
-        return this.job.steps?.map((step) => new StepItem(this.id, this.extensionPrefixContextValue, step)) ?? [];
+        return Promise.resolve(this.job.steps?.map((step) => new StepItem(this.id, this.extensionPrefixContextValue, step)) ?? []);
     }
 }

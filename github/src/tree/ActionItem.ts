@@ -42,7 +42,7 @@ export class ActionItem implements TreeElementBase {
         const values: string[] = [actionTreeItemContextValue];
 
         if (<Status>nonNullProp(this.actionWorkflowRuns, 'status') === Status.Completed) {
-            values.push(ActionItem.completedContextValue)
+            values.push(ActionItem.completedContextValue);
         } else {
             values.push(ActionItem.inProgressContextValue);
         }
@@ -67,6 +67,7 @@ export class ActionItem implements TreeElementBase {
             const getJobsParams: GetJobsParams = {
                 owner: nonNullValue(ownerOrOrganization),
                 repo: nonNullValue(repositoryName),
+                // eslint-disable-next-line @typescript-eslint/naming-convention
                 run_id: this.actionWorkflowRuns.id
             };
             return await getJobs(context, getJobsParams);

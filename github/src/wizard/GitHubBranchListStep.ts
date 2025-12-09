@@ -41,12 +41,13 @@ export class GitHubBranchListStep extends AzureWizardPromptStep<GitHubContext> {
         const branchParams: GetBranchesParams = {
             owner: nonNullProp(context, 'gitHubRepositoryOwner'),
             repo: nonNullProp(context, 'gitHubRepository'),
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             per_page: perPage,
             page
         };
         const branches: Branches = await getBranches(context, branchParams);
 
-        this.picks.push(...branches.map((branch) => { return { label: branch.name, data: branch.name } }));
+        this.picks.push(...branches.map((branch) => { return { label: branch.name, data: branch.name }; }));
 
         this.picks.sort((a: QuickPickItem, b: QuickPickItem) => {
             if (a.label === 'main' || a.label === 'master') {
