@@ -11,6 +11,7 @@ import { createTelemetryReporter, IInternalTelemetryReporter } from './createTel
 import { parseError } from './parseError';
 
 interface IInternalExtensionVariables extends types.UIExtensionVariables {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _internalReporter: IInternalTelemetryReporter;
 }
 
@@ -25,6 +26,7 @@ class UninitializedExtensionVariables implements types.UIExtensionVariables {
         throw this._error;
     }
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public get _internalReporter(): IInternalTelemetryReporter {
         throw this._error;
     }
@@ -44,9 +46,9 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
     assert(extVars.context, 'registerUIExtensionVariables: Missing context');
     assert(extVars.outputChannel, 'registerUIExtensionVariables: Missing outputChannel');
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     registerErrorHandler(handleEntryNotFound);
 }
 

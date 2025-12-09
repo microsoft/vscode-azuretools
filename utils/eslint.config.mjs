@@ -3,9 +3,4 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { testGlobalSetup } from '../src/index';
-
-// Runs before all tests
-suiteSetup(async () => {
-    testGlobalSetup();
-});
+export { azExtEslintRecommended as default } from '@microsoft/vscode-azext-eng/eslint'; // Other configurations exist

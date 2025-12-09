@@ -12,6 +12,7 @@ export { activityErrorContext, activityFailContext, activityFailIcon, activityIn
 export * from './createApiProvider';
 export { createExperimentationService } from './createExperimentationService';
 export * from './dev/TestActionContext';
+export * from './dev/testGlobalSetup';
 export * from './dev/TestOutputChannel';
 export * from './dev/TestUserInput';
 export * from './DialogResponses';

@@ -19,6 +19,7 @@ import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider, Disposable {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
     private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem | undefined> = new EventEmitter<AzExtTreeItem | undefined>();
     private _collapsibleStateTracker: CollapsibleStateTracker | undefined;
@@ -68,7 +69,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             command: treeItem.commandId ? {
                 command: treeItem.commandId,
                 title: '',
-                arguments: treeItem.commandArgs || [treeItem]
+                arguments: treeItem.commandArgs ?? [treeItem]
             } : undefined,
             tooltip: treeItem.resolveTooltip ? undefined : treeItem.tooltip // If `resolveTooltip` is defined, return undefined here, so that `resolveTreeItem` and `resolveTooltip` get used
         };
@@ -104,10 +105,10 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
                 const hasMoreChildren: boolean = treeItem.hasMoreChildrenImpl();
                 context.telemetry.properties.hasMoreChildren = String(hasMoreChildren);
 
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const resultMap: Map<string, AzExtTreeItem> = new Map();
+                const resultMap = new Map<string, AzExtTreeItem>();
                 const duplicateChildren: AzExtTreeItem[] = [];
                 for (const child of children) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                     this.isDuplicateChild(child, resultMap) ? duplicateChildren.push(child) : resultMap.set(child.fullIdWithContext || child.fullId, child);
                 }
 
@@ -140,7 +141,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     }
 
     public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
-        treeItem ||= this._rootTreeItem;
+        treeItem ??= this._rootTreeItem;
 
         if (treeItem.refreshImpl && !treeItem.hasBeenDeleted) {
             await treeItem.refreshImpl(context);
@@ -175,7 +176,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
             expectedContextValues = [expectedContextValues];
         }
 
-        let treeItem: AzExtTreeItem = startingTreeItem || this._rootTreeItem;
+        let treeItem: AzExtTreeItem = startingTreeItem ?? this._rootTreeItem;
 
         while (!treeItem.matchesContextValue(expectedContextValues)) {
             if (isAzExtParentTreeItem(treeItem)) {
@@ -235,7 +236,6 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext, cancellationToken?: CancellationToken): Promise<types.AzExtTreeItem | undefined> {
         let treeItem: AzExtParentTreeItem = this._rootTreeItem;
 
-        // eslint-disable-next-line no-constant-condition
         outerLoop: while (true) {
             if (cancellationToken?.isCancellationRequested) {
                 throw new UserCancelledError('findTreeItem');

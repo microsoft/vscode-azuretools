@@ -9,7 +9,7 @@ import type * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestInput, TestUserInput } from '../src';
 
 interface ITestWizardContext extends types.IActionContext {
-    [key: string]: {} | boolean | string | undefined;
+    [key: string]: unknown | boolean | string | undefined;
 }
 
 abstract class QuickPickStepBase extends AzureWizardPromptStep<ITestWizardContext> {
@@ -183,7 +183,7 @@ class QuickPickStepWithSubWizard extends QuickPickStepWithSubWizardBase {
     private _executeStep: AzureWizardExecuteStep<ITestWizardContext>;
     constructor(executeStep?: AzureWizardExecuteStep<ITestWizardContext>) {
         super();
-        this._executeStep = executeStep || new SubExecuteStep();
+        this._executeStep = executeStep ?? new SubExecuteStep();
     }
     protected getSubWizardInternal(): types.IWizardOptions<ITestWizardContext> {
         return {
@@ -303,7 +303,7 @@ async function validateWizard(options: types.IWizardOptions<ITestWizardContext>,
     // copy over properties/measurements
     Object.assign(expectedContext, context);
 
-    const wizard: AzureWizard<ITestWizardContext> = new AzureWizard(context, options);
+    const wizard = new AzureWizard<ITestWizardContext>(context, options);
     await testUserInput.runWithInputs(inputs, async () => {
         await wizard.prompt();
     });

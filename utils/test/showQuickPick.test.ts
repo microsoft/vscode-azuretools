@@ -110,7 +110,7 @@ suite("showQuickPick", () => {
                     await testSorting({
                         input: [],
                         expected: []
-                    })
+                    });
                 });
                 test("recently used matches nothing", async () => {
                     await testSorting({
@@ -120,7 +120,7 @@ suite("showQuickPick", () => {
                             { label: "c" },
                         ],
                         expected: ["b", "c"]
-                    })
+                    });
                 });
                 test("single item", async () => {
                     await testSorting({
@@ -129,7 +129,7 @@ suite("showQuickPick", () => {
                             { label: "a" },
                         ],
                         expected: ["a (recently used)"]
-                    })
+                    });
                 });
                 test("matches first", async () => {
                     await testSorting({
@@ -141,7 +141,7 @@ suite("showQuickPick", () => {
                             { label: "d" },
                         ],
                         expected: ["b (recently used)", "a", "c", "d"]
-                    })
+                    });
                 });
                 test("matches later item, bumped to start", async () => {
                     await testSorting({
@@ -152,7 +152,7 @@ suite("showQuickPick", () => {
                             { label: "c" },
                         ],
                         expected: ["a (recently used)", "b", "c"]
-                    })
+                    });
                 });
             });
 

@@ -36,8 +36,7 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
         this.childTypeLabel = options.childTypeLabel;
         this.contextValue = options.contextValue;
         this.iconPath = options.iconPath;
-        this.initialCollapsibleState = options.initialCollapsibleState === undefined ?
-            TreeItemCollapsibleState.Collapsed : options.initialCollapsibleState;
+        this.initialCollapsibleState = options.initialCollapsibleState ?? TreeItemCollapsibleState.Collapsed;
         this.label = options.label;
         this.suppressMaskLabel = options.suppressMaskLabel;
 

@@ -18,9 +18,7 @@ let packageInfo: IPackageInfo | undefined;
 
 export function getPackageInfo(ctx?: ExtensionContext): IPackageInfo {
     if (!packageInfo) {
-        if (!ctx) {
-            ctx = ext.context;
-        }
+        ctx ??= ext.context;
 
         const packageJson: IPackageJson = <IPackageJson>ctx.extension.packageJSON;
 

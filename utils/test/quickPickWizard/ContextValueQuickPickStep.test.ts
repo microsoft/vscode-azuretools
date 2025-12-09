@@ -54,7 +54,7 @@ suite('ContextValueQuickPickStep tests', () => {
             contextValueFilter: {
                 include: node1ContextValue
             },
-        }
+        };
 
         test("Don't skip step with single pick when skipIfOne is false", async () => {
             const step = new ContextValueQuickPickStep(tdp, {
