@@ -298,4 +298,5 @@ dist
 esm
 code-model-*
 
-.DS_Storepackage-lock.json
+.DS_Store
+package-lock.json
