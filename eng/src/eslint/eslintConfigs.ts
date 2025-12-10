@@ -106,6 +106,15 @@ export const azExtStylisticRules: EslintConfig = {
                 args: 'none',
             },
         ],
+    },
+};
+
+/**
+ * Overrides to the type checked rulesets
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtTypeCheckedOverrides: EslintConfig = {
+    rules: {
         '@typescript-eslint/prefer-nullish-coalescing': [
             'error', // Enforce use of nullish coalescing over || where appropriate
             {
@@ -209,6 +218,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
     azExtUniversalRules,
     azExtTestRules,
     azExtStylisticRules,
+    azExtTypeCheckedOverrides,
 );
 
 /**
@@ -236,5 +246,6 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     azExtUniversalRules,
     azExtTestRules,
     azExtStylisticRules,
+    azExtTypeCheckedOverrides,
     azExtStrictOverrides,
 );
