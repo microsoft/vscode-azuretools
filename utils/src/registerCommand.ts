@@ -44,9 +44,14 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
             async (context: types.IActionContext) => {
                 let injectedContext: Partial<types.IActionContext> | undefined;
                 if (args.length > 0) {
-                    if (args[0] && typeof args[0] === "object" && "injectedContext" in args[0]) {
-                        injectedContext = args[0].injectedContext as types.IActionContext
-                        args.shift();
+                    const metadata = args[args.length - 1];
+
+                    // Look for our metadata object at the end
+                    if (metadata && typeof metadata === "object" && "__injectedContext" in metadata) {
+                        injectedContext = metadata.__injectedContext as types.IActionContext;
+
+                        // remove only the metadata
+                        args.pop();
                     }
 
                     try {
@@ -58,10 +63,8 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                         context.telemetry.properties.telemetryError = error.message;
                     }
                 }
-                if (injectedContext) {
-                    return callback({ ...context, ...injectedContext }, ...args);
-                }
-                return callback(context, ...args);
+                const finalContext = injectedContext ? { ...context, ...injectedContext } : context;
+                return callback(finalContext, ...args);
             }
         );
     }));

@@ -1421,6 +1421,10 @@ export interface ActivityAttributes {
      * Any Azure resource envelope related to the command or activity being run
      */
     azureResource?: unknown;
+    /**
+     * Optional Azure subscription to be added
+     */
+    subscription?: AzureSubscription;
 
     // For additional one-off properties that could be useful for Copilot
     [key: string]: unknown;
