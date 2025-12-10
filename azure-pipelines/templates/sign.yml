@@ -57,7 +57,7 @@ steps:
         inputs:
           command: "build"
           projects: $(signprojPath)
-          arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/"
+          arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/"
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -91,7 +91,7 @@ steps:
             inputs:
               command: "build"
               projects: $(signprojPath)
-              arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/"
+              arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/"
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
