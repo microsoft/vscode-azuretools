@@ -12,15 +12,25 @@ parameters:
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
   # All other steps in this template will only run if the file exists
+  # Check root first, then fall back to working directory
   - powershell: |
-      $fileExists = Test-Path -Path "$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/SignExtension.signproj"
-      Write-Output "##vso[task.setvariable variable=signprojExists]$fileExists"
+      $rootPath = "$(Build.SourcesDirectory)/.azure-pipelines/SignExtension.signproj"
+      $workingDirPath = "$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/SignExtension.signproj"
 
-      if ($fileExists) {
-          Write-Output "SignExtension.signproj file found. Signing extension."
+      $signprojPath = ""
+      if (Test-Path -Path $rootPath) {
+          $signprojPath = $rootPath
+          Write-Output "SignExtension.signproj file found at root. Signing extension."
+      } elseif (Test-Path -Path $workingDirPath) {
+          $signprojPath = $workingDirPath
+          Write-Output "SignExtension.signproj file found in working directory. Signing extension."
       } else {
           Write-Output "SignExtension.signproj file not found. Skipping signing."
       }
+
+      $fileExists = $signprojPath -ne ""
+      Write-Output "##vso[task.setvariable variable=signprojExists]$fileExists"
+      Write-Output "##vso[task.setvariable variable=signprojPath]$signprojPath"
     displayName: "\U0001F449 Check for SignExtension.signproj File"
     condition: and(succeeded(), ${{ parameters.enableSigning }})
 
@@ -46,7 +56,7 @@ steps:
         displayName: "\U0001F449 Sign with MSBuild"
         inputs:
           command: "build"
-          projects: $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/SignExtension.signproj
+          projects: $(signprojPath)
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -79,7 +89,7 @@ steps:
             displayName: "\U0001F449 Sign with MSBuild for ${{ vsixFileName }}"
             inputs:
               command: "build"
-              projects: $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/SignExtension.signproj
+              projects: $(signprojPath)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
