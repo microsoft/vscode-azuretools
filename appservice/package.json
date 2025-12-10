@@ -60,7 +60,7 @@
     },
     "devDependencies": {
         "@azure/core-client": "^1.7.2",
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.6",
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.8",
         "@types/fs-extra": "^9.0.13",
         "@types/node": "22.x",
         "@types/p-retry": "^2.0.0",
