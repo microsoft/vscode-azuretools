@@ -1,7 +1,19 @@
 steps:
+  - task: UseDotNet@2
+    displayName: "\U0001F449 Install .NET Runtime"
+    condition: succeeded()
+    inputs:
+      packageType: runtime
+
+  - task: Npm@1
+    displayName: "\U0001F449 Install VSCE"
+    condition: succeeded()
+    inputs:
+      command: custom
+      customCommand: install -g @vscode/vsce@latest
+
   - template: ./find-vsixs.yml
 
-  # TODO: does dotnet need to be installed first?
   - pwsh: |
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
 

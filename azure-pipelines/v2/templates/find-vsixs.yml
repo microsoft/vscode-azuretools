@@ -13,6 +13,7 @@ steps:
       # Loop over the found VSIX files and get their details
       $vsixList = @()
       foreach ($vsixFile in $vsixFiles) {
+          Write-Output "Discovered VSIX: $($vsixFile.FullName)"
           $vsixList += @{
               directory = $vsixFile.DirectoryName
               vsixName = $vsixFile.Name
