@@ -21,7 +21,7 @@ steps:
             # TODO Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$($serviceConnection.id)"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
-            # TODO Write-Output "ID = $($serviceConnection.id)"
+            Write-Output "ID = $($env:serviceConnectionId)"
             Write-Output "Client ID = $($env:servicePrincipalId)"
             Write-Output "Tenant ID = $($env:tenantId)"
         env:
