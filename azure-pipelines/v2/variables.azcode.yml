@@ -13,6 +13,10 @@ variables:
   - name: testServiceConnection
     value: AzCodeE2ETests
 
+  # Other
+  - name: lintInCI
+    value: false
+
   # Pools
   # - name: sdlSourcesPool
   #   value:
