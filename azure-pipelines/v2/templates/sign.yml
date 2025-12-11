@@ -1,6 +1,6 @@
 steps:
   - task: UseDotNet@2
-    displayName: "\U0001F449 Install .NET Core 3.1 Runtime" # Eww, but DDSignFiles.dll requires it
+    displayName: "\U0001F449 Signing: Install .NET Core 3.1 Runtime" # Eww, but DDSignFiles.dll requires it
     condition: succeeded()
     inputs:
       packageType: sdk
@@ -8,7 +8,7 @@ steps:
 
   # TODO: this isn't preventing the warning that VSCE isn't installed
   # - task: Npm@1
-  #   displayName: "\U0001F449 Install VSCE"
+  #   displayName: "\U0001F449 Signing: Install VSCE"
   #   condition: succeeded()
   #   inputs:
   #     command: custom
