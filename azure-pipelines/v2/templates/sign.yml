@@ -34,6 +34,9 @@ steps:
           )
       }
 
+      # Ensure VSCE is installed
+      & npm install -g @vscode/vsce@latest
+
       foreach ($vsix in $vsixList) {
           Set-Location $vsix.directory
 
@@ -61,7 +64,7 @@ steps:
     condition: succeeded()
 
   - pwsh: |
-      & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /filelist:$(Build.SourcesDirectory)/filesToSign.json /certs:4014052
+      & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /filelist:$(Build.SourcesDirectory)/filesToSign.json
     displayName: "\U0001F449 Sign VSIX signature files"
     condition: succeeded()
     env:
