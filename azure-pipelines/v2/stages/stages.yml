@@ -55,16 +55,16 @@ stages:
             steps:
               - checkout: self
                 fetchDepth: 1
-              - template: ./templates/setup.yml
+              - template: ../templates/setup.yml
               - ${{ parameters.additionalSetupSteps }}
               - ${{ if parameters.lintInCI }}:
-                  - template: ./templates/lint.yml
-              - template: ./templates/build.yml
-              - template: ./templates/package.yml
+                  - template: ../templates/lint.yml
+              - template: ../templates/build.yml
+              - template: ../templates/package.yml
               - ${{ if ne(parameters.signType, 'none') }}:
                   # TODO: Find a way to parameterize signing steps
-                  - template: ./templates/sign.yml
-              - template: ./templates/stage-artifacts.yml
-              - template: ./templates/test.yml
+                  - template: ../templates/sign.yml
+              - template: ../templates/stage-artifacts.yml
+              - template: ../templates/test.yml
                 parameters:
                   testServiceConnection: ${{ parameters.testServiceConnection }}
