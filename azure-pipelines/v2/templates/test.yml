@@ -16,6 +16,8 @@ steps:
           }
           $uri = "$(System.CollectionUri)$(System.TeamProjectId)/_apis/serviceendpoint/endpoints?api-version=7.1&endpointNames=${{ parameters.testServiceConnection }}"
 
+          Write-Output "URI: $uri"
+
           $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
           Write-Output "Service Connection Response: $($response | ConvertTo-Json -Depth 10)"
 
