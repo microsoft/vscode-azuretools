@@ -55,6 +55,10 @@ stages:
             steps:
               - checkout: self
                 fetchDepth: 1
+              - bash: |
+                  echo "$MBSIGN_APPFOLDER"
+              - pwsh: |
+                  Write-Output "$($env:MBSIGN_APPFOLDER)"
               - template: ../templates/setup.yml
               - ${{ parameters.additionalSetupSteps }}
               - ${{ if parameters.lintInCI }}:

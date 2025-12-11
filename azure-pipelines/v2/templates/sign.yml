@@ -22,6 +22,7 @@ steps:
           Copy-Item $vsix.manifestName $vsix.signatureName
 
           # Verify required files exist before signing
+          Write-Output "  dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052"
           Write-Output "  Verifying required files exist..."
           if (-not (Test-Path $vsix.vsixName)) {
               Write-Error "  VSIX file not found: $($vsix.vsixName)"
@@ -39,8 +40,6 @@ steps:
               Write-Error "  Signature file not found: $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll"
               exit 1
           }
-
-          Write-Output "  dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052"
 
 
           & dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052
