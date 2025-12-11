@@ -24,63 +24,45 @@ steps:
   - template: ./find-vsixs.yml
 
   - pwsh: |
-      Set-PSDebug -Trace 1 # TODO: remove this
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
+      $fileListObject = @{
+          SignFileRecordList = @(
+              @{
+                  SignFileList = @()
+                  Certs = "4014052"
+              }
+          )
+      }
 
       foreach ($vsix in $vsixList) {
           Set-Location $vsix.directory
-          Write-Output "Signing: $($vsix.vsixName)"
 
           # Generate manifest
-          Write-Output "  Generating manifest..."
+          Write-Output "  Generating manifest for $($vsix.vsixName)..."
           & npx @vscode/vsce@latest generate-manifest -i $vsix.vsixName -o $vsix.manifestName
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Failed to generate manifest for $($vsix.vsixName)"
               exit 1
           }
 
-          # Sign with MicroBuild
-          Write-Output "  Signing with MicroBuild..."
+          # Copy the manifest to the soon-to-be-signed signature file
           Copy-Item $vsix.manifestName $vsix.signatureName
 
-          # Verify required files exist before signing
-          Write-Output "  dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052"
-          Write-Output "  Verifying required files exist..."
-          if (-not (Test-Path $vsix.vsixName)) {
-              Write-Error "  VSIX file not found: $($vsix.vsixName)"
-              exit 1
+          # Add to list of files to sign
+          $fileListObject.SignFileRecordList[0].SignFileList += @{
+              SrcPath = $(Join-Path $vsix.directory $vsix.signatureName)
+              DstPath = $null
           }
-          if (-not (Test-Path $vsix.manifestName)) {
-              Write-Error "  Manifest file not found: $($vsix.manifestName)"
-              exit 1
-          }
-          if (-not (Test-Path $vsix.signatureName)) {
-              Write-Error "  Signature file not found: $($vsix.signatureName)"
-              exit 1
-          }
-          # if (-not (Test-Path $env:MBSIGN_APPFOLDER/DDSignFiles.dll)) {
-          #     Write-Error "  Signature file not found: $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll"
-          #     exit 1
-          # }
-
-
-          & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052
-          if ($LASTEXITCODE -ne 0) {
-              Write-Error "  Failed to sign $($vsix.vsixName)"
-              exit 1
-          }
-
-          # Verify signature file was created correctly
-          Write-Output "  Verifying signature..."
-          & npx @vscode/vsce@latest verify-signature -i $vsix.vsixName -m $vsix.manifestName -s $vsix.signatureName
-          if ($LASTEXITCODE -ne 0) {
-              Write-Error "  Signature verification failed for $($vsix.vsixName)"
-              exit 1
-          }
-
-          Write-Output "  Successfully signed: $($vsix.vsixName)"
       }
-    displayName: "\U0001F449 Sign all discovered .vsix files"
+
+      # Write out the file list to sign
+      $fileListObject | ConvertTo-Json -Depth 4 | Out-File -FilePath $(Build.SourcesDirectory)/filesToSign.json
+    displayName: "\U0001F449 Prepare VSIXs for signing"
+    condition: succeeded()
+
+  - pwsh: |
+      & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /filelist:$(Build.SourcesDirectory)/filesToSign.json /certs:4014052
+    displayName: "\U0001F449 Sign VSIX signature files"
     condition: succeeded()
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
