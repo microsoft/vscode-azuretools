@@ -17,6 +17,7 @@ export const baseConfig: Partial<VscodeTestConfig> = {
     env: {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         VSCODE_RUNNING_TESTS: '1',
+        DEBUGTELEMETRY: '1',
     },
 };
 

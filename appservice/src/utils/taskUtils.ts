@@ -6,6 +6,7 @@
 import { Task, tasks as codeTasks, TaskScope, WorkspaceFolder } from "vscode";
 import { isPathEqual, isSubpath } from "./pathUtils";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace taskUtils {
     export function getFsPathFromTask(task: Task): string | undefined {
         if (typeof task.scope === 'object') {
@@ -43,7 +44,7 @@ export namespace taskUtils {
     }
 
     export async function findTask(deployFsPath: string, taskName: string, tasks?: Task[]): Promise<Task | undefined> {
-        tasks = tasks || await codeTasks.fetchTasks();
+        tasks = tasks ?? await codeTasks.fetchTasks();
         taskName = taskName.toLowerCase();
         return tasks.find(t => {
             return isTaskInScopeOfPath(t, deployFsPath) && (

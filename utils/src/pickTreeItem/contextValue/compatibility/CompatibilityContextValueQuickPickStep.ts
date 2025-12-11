@@ -20,6 +20,7 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         this.setCustomPlaceholder(wizardContext);
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         await this.provideCompatabilityWithPickTreeItemImpl(wizardContext) || await super.prompt(wizardContext);
     }
 
@@ -86,7 +87,7 @@ class CompatibleContextValuePickFilter extends ContextValuePickFilter {
      */
     override isAncestorPick(_node: TreeItem, elementWrapper: unknown): boolean {
         const element = isWrapper(elementWrapper) ? elementWrapper.unwrap() : elementWrapper;
-        const include = Array.isArray(this.pickOptions.contextValueFilter.include) ? this.pickOptions.contextValueFilter.include : [this.pickOptions.contextValueFilter.include]
+        const include = Array.isArray(this.pickOptions.contextValueFilter.include) ? this.pickOptions.contextValueFilter.include : [this.pickOptions.contextValueFilter.include];
         return include.some((val: string | RegExp) => {
             if (isAzExtTreeItem(element) && element.isAncestorOfImpl) {
                 return element.isAncestorOfImpl(val);

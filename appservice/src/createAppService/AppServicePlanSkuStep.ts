@@ -28,8 +28,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
             skus.push(...this.getElasticPremiumSkus());
         } else if (context.newSiteKind?.includes(AppKind.workflowapp)) {
             skus = this.getWorkflowStandardSkus();
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        } else if (context['newSiteJavaStack']?.majorVersion?.value === 'jbosseap') {
+        } else if ((context as { newSiteJavaStack?: { majorVersion?: { value?: string } } }).newSiteJavaStack?.majorVersion?.value === 'jbosseap') {
             // for jboss eap, only Pv3 plan is supported
             skus = this.getPremiumV3Skus();
         }
@@ -163,7 +162,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 label: vscode.l10n.t('Premium V3 (P1MV3)'),
                 group: recommendedGroup
             }
-        ]
+        ];
     }
 
     private nonPV4RecommendedSkus(): ExtendedSkuDescription[] {
@@ -216,7 +215,7 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
                 label: vscode.l10n.t('Premium V3 (P1MV3)'),
                 group: recommendedGroup
             }
-        ]
+        ];
     }
 
     private getAdvancedSkus(): ExtendedSkuDescription[] {

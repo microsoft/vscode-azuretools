@@ -71,7 +71,7 @@ export async function doCopilotInteraction(primaryPrompt: string): Promise<strin
     ];
 
     if (lm !== undefined) {
-        const chatRequestOptions = { justification: `Access to Copilot for the @azure agent.` }
+        const chatRequestOptions = { justification: `Access to Copilot for the @azure agent.` };
         const request = await lm.sendRequest(messages, chatRequestOptions);
         const fragments: string[] = [];
         try {

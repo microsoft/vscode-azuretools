@@ -46,7 +46,9 @@ export const azExtTestRules: EslintConfig = {
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
         '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in test files
-        '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files
+        '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files (goes with any)
+        '@typescript-eslint/no-unsafe-member-access': 'off', // Allow unsafe member access in test files (goes with any)
+        '@typescript-eslint/no-unused-expressions': 'off', // Allow unused expressions in test files (e.g., for chai 'expect' statements)
     },
 };
 
@@ -102,6 +104,25 @@ export const azExtStylisticRules: EslintConfig = {
             {
                 // As a function parameter, unused parameters are allowed
                 args: 'none',
+            },
+        ],
+    },
+};
+
+/**
+ * Overrides to the type checked rulesets
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtTypeCheckedOverrides: EslintConfig = {
+    rules: {
+        '@typescript-eslint/prefer-nullish-coalescing': [
+            'error', // Enforce use of nullish coalescing over || where appropriate
+            {
+                ignorePrimitives: {
+                    string: true, // Except for strings to avoid changing behavior
+                    boolean: true, // And booleans
+                    number: true, // And numbers
+                },
             },
         ],
     },
@@ -197,6 +218,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
     azExtUniversalRules,
     azExtTestRules,
     azExtStylisticRules,
+    azExtTypeCheckedOverrides,
 );
 
 /**
@@ -224,5 +246,6 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     azExtUniversalRules,
     azExtTestRules,
     azExtStylisticRules,
+    azExtTypeCheckedOverrides,
     azExtStrictOverrides,
 );

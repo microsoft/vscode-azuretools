@@ -17,7 +17,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
     private _skippedCreate: boolean = false;
 
     protected getTreeItemLabel(context: IAppServiceWizardContext): string {
-        const workspaceName = `workspace-${context.newAppInsightsName}`
+        const workspaceName = `workspace-${context.newAppInsightsName}`;
         let message = l10n.t('Create log analytics workspace "{0}"', workspaceName);
         if (this._skippedCreate) {
             message = l10n.t('Skipping log analytics workspace creation.');
@@ -27,7 +27,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         return message;
     }
     protected getOutputLogSuccess(context: IAppServiceWizardContext): string {
-        const workspaceName = `workspace-${context.newAppInsightsName}`
+        const workspaceName = `workspace-${context.newAppInsightsName}`;
         let message = l10n.t('Successfully created log analytics workspace "{0}".', workspaceName);
         if (this._skippedCreate) {
             message = l10n.t('Skipped creating log analytics workspace.');
@@ -37,11 +37,11 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         return message;
     }
     protected getOutputLogFail(context: IAppServiceWizardContext): string {
-        const workspaceName = `workspace-${context.newAppInsightsName}`
+        const workspaceName = `workspace-${context.newAppInsightsName}`;
         return l10n.t('Failed to create log analytics workspace "{0}".', workspaceName);
     }
     protected getOutputLogProgress(context: IAppServiceWizardContext): string {
-        const workspaceName = `workspace-${context.newAppInsightsName}`
+        const workspaceName = `workspace-${context.newAppInsightsName}`;
         return l10n.t('Creating log analytics workspace "{0}"...', workspaceName);
     }
 
@@ -66,7 +66,7 @@ export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWi
         if (context.logAnalyticsWorkspace) {
             this._usedExistingLaw = true;
         } else {
-            const workspaceName = `workspace-${context.newAppInsightsName}`
+            const workspaceName = `workspace-${context.newAppInsightsName}`;
             context.logAnalyticsWorkspace = await opClient.workspaces.beginCreateOrUpdateAndWait(rgName, workspaceName, { location });
         }
     }

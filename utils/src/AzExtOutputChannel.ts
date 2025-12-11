@@ -19,6 +19,7 @@ export function createAzExtOutputChannel(name: string, extensionPrefix: string):
 class AzExtOutputChannel implements types.IAzExtOutputChannel {
     public readonly name: string;
     public extensionPrefix!: string;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected _outputChannel: OutputChannel | LogOutputChannel;
 
     constructor(name: string) {
@@ -48,8 +49,8 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
         if (!this.shouldIncludeTimestamps()) {
             this.appendLine(value);
         } else {
-            options ||= {};
-            const date: Date = options.date || new Date();
+            options ??= {};
+            const date: Date = options.date ?? new Date();
             this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
         }
     }
@@ -80,6 +81,7 @@ class AzExtOutputChannel implements types.IAzExtOutputChannel {
 
 class AzExtLogOutputChannel extends AzExtOutputChannel implements LogOutputChannel {
     // assigned in AzExtOutputChannel constructor
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected declare _outputChannel: LogOutputChannel;
     readonly onDidChangeLogLevel: Event<LogLevel>;
 

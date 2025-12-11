@@ -39,7 +39,7 @@ function getChallengeHandlerFromCredential(createCredentialsForScopes: (request:
         const credentials = await createCredentialsForScopes(request);
         const token = await credentials.getToken(request) as { token: string };
         return token.token;
-    }
+    };
 
     return getTokenForChallenge;
 }
@@ -126,7 +126,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
-    return client;
+    return Promise.resolve(client);
 }
 
 function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean, bearerChallengePolicy?: PipelinePolicy): Pipeline {
@@ -269,7 +269,6 @@ class StatusCodePolicy implements PipelinePolicy {
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<types.AzExtPipelineResponse> {
         const response: types.AzExtPipelineResponse = await next(request);
         if (response.status < 200 || response.status >= 300) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :
                 vscode.l10n.t('Unexpected status code: {0}', response.status);
@@ -299,7 +298,7 @@ class BasicAuthenticationCredentialsPolicy implements PipelinePolicy {
         const credentials = `${this.userName}:${this.password}`;
         const DEFAULT_AUTHORIZATION_SCHEME = "Basic";
         const encodedCredentials = `${DEFAULT_AUTHORIZATION_SCHEME} ${Buffer.from(credentials).toString("base64")}`;
-        if (!request.headers) request.headers = createHttpHeaders();
+        if (!request.headers) { request.headers = createHttpHeaders(); }
         request.headers.set("authorization", encodedCredentials);
 
         return await next(request);

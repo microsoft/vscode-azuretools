@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import dayjs from 'dayjs';
-// eslint-disable-next-line import/no-internal-modules
 import duration from 'dayjs/plugin/duration';
 
 dayjs.extend(duration);
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace dateTimeUtils {
     export function getFormattedDurationInMinutesAndSeconds(durationTime: number, units?: duration.DurationUnitType): string {
         return dayjs

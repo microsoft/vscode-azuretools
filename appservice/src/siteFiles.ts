@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from '@azure/core-client';
 import { RestError, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
@@ -31,7 +30,7 @@ export function createSiteFilesUrl(site: ParsedSite, path: string, href?: string
         path = path.replace(/^\/home\//, '');
         return `${site.id}/hostruntime/admin/vfs/home/${path}/?api-version=2022-03-01`;
     }
-    return href ?? `${site.kuduUrl}/api/vfs/${path}`
+    return href ?? `${site.kuduUrl}/api/vfs/${path}`;
 }
 
 export async function getFile(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFile> {
@@ -46,7 +45,8 @@ export async function getFile(context: IActionContext, site: ParsedSite, url: st
             throw error;
         }
     }
-    return { data: <string>response.bodyAsText, etag: <string>response.headers.get('etag') };
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return { data: response.bodyAsText!, etag: response.headers.get('etag')! };
 }
 
 export async function listFiles(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFileMetadata[]> {
@@ -59,11 +59,12 @@ export async function listFiles(context: IActionContext, site: ParsedSite, url: 
  * Overwrites or creates a file. The etag passed in may be `undefined` if the file is being created
  * Returns the latest etag of the updated file
  */
-export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer, url: string, etag: string | undefined): Promise<string> {
-    const options: {} = etag ? { ['If-Match']: etag } : {};
+export async function putFile(context: IActionContext, site: ParsedSite, data: string | ArrayBuffer | Uint8Array, url: string, etag: string | undefined): Promise<string> {
+    const options = etag ? { ['If-Match']: etag } : {};
     const kuduClient = await site.createClient(context);
-    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options));
-    return <string>result.headers.get('etag');
+    const result: AzExtPipelineResponse = (await kuduClient.vfsPutItem(context, data, url, options as Record<string, string>));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return result.headers.get('etag')!;
 }
 
 /**
@@ -80,7 +81,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, url: str
             const retries = 3;
             const badGateway: RegExp = /BadGateway/i;
             const serviceUnavailable: RegExp = /ServiceUnavailable/i;
-            const client: ServiceClient = await createGenericClient(context, site.subscription);
+            const client = await createGenericClient(context, site.subscription);
 
             return await retry<AzExtPipelineResponse>(
                 async () => {

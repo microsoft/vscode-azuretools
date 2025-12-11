@@ -5,7 +5,7 @@
 
 import type { User } from '@azure/arm-appservice';
 import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
-import simpleGit, { Options, SimpleGit, StatusResult } from 'simple-git';
+import simpleGit, { type GitError, Options, SimpleGit, StatusResult } from 'simple-git';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
@@ -13,7 +13,7 @@ import { openUrl } from '../utils/openUrl';
 import { verifyNoRunFromPackageSetting } from '../verifyNoRunFromPackageSetting';
 import { waitForDeploymentToComplete } from './waitForDeploymentToComplete';
 
-type localGitOptions = {
+type LocalGitOptions = {
     fsPath: string;
     /**
      * Set if you want to specify what branch to push to. Default is `HEAD:master`.
@@ -25,7 +25,7 @@ type localGitOptions = {
     commit?: boolean;
 };
 
-export async function localGitDeploy(site: ParsedSite, options: localGitOptions, context: IActionContext): Promise<void> {
+export async function localGitDeploy(site: ParsedSite, options: LocalGitOptions, context: IActionContext): Promise<void> {
     const client = await site.createClient(context);
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
@@ -85,8 +85,7 @@ export async function localGitDeploy(site: ParsedSite, options: localGitOptions,
 
                         const pushOptions: Options = forcePush ? { '-f': null } : {};
 
-                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error) => {
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error: GitError) => {
                             reject(error);
                             tokenSource.cancel();
                         });

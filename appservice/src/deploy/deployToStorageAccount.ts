@@ -5,17 +5,14 @@
 
 import type { StringDictionary } from '@azure/arm-appservice';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
-import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, parseError, randomUtils } from '@microsoft/vscode-azext-utils';
 import dayjs from 'dayjs';
-// eslint-disable-next-line import/no-internal-modules
 import relativeTime from 'dayjs/plugin/relativeTime';
-// eslint-disable-next-line import/no-internal-modules
 import utc from 'dayjs/plugin/utc';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
-import { randomUtils } from '../utils/randomUtils';
 import { IDeployContext } from './IDeployContext';
 import { runWithZipStream } from './runWithZipStream';
 
@@ -41,7 +38,7 @@ export async function deployToStorageAccount(context: IDeployContext, fsPath: st
     const blobUrl: string = await createBlobFromZip(context, fsPath, site, blobService, blobName);
     const client = await site.createClient(context);
     const appSettings: StringDictionary = await client.listApplicationSettings();
-    appSettings.properties = appSettings.properties || {};
+    appSettings.properties = appSettings.properties ?? {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
     await client.updateApplicationSettings(appSettings);
@@ -55,7 +52,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
     const settings: StringDictionary = await client.listApplicationSettings();
-    let connectionString: string | undefined = settings.properties && settings.properties[azureWebJobsStorageKey];
+    let connectionString: string | undefined = settings.properties?.[azureWebJobsStorageKey];
     if (connectionString) {
         try {
             return BlobServiceClient.fromConnectionString(connectionString);

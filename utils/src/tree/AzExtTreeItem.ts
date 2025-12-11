@@ -13,6 +13,7 @@ import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./
 import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isAzExtTreeItem = true;
 
     //#region Properties implemented by base class
@@ -37,6 +38,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public readonly parent: IAzExtParentTreeItemInternal | undefined;
     public isLoadingMore!: boolean;
     public readonly valuesToMask: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected _subscription: types.ISubscriptionContext | undefined;
 
     private _temporaryDescription?: string;
@@ -113,7 +115,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get treeDataProvider(): IAzExtTreeDataProviderInternal {
-        return this._treeDataProvider || nonNullProp(this, 'parent').treeDataProvider;
+        return this._treeDataProvider ?? nonNullProp(this, 'parent').treeDataProvider;
     }
 
     public set treeDataProvider(val: IAzExtTreeDataProviderInternal) {
@@ -149,7 +151,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     public get subscription(): types.ISubscriptionContext {
-        const result = this._subscription || this.parent?.subscription;
+        const result = this._subscription ?? this.parent?.subscription;
         if (!result) {
             throw Error(l10n.t('No Azure subscription found for this tree item.'));
         } else {

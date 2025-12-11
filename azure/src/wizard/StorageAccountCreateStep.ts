@@ -28,7 +28,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         const newLocation: string = (await LocationListStep.getLocation(wizardContext, storageProvider)).name;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
-        const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = `${this._defaults.performance}_${this._defaults.replication}`;
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
         wizardContext.storageAccount = await storageClient.storageAccounts.beginCreateAndWait(
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -48,23 +48,23 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
 
     protected getTreeItemLabel(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
-        const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = `${this._defaults.performance}_${this._defaults.replication}`;
         return l10n.t('Create storage account "{0}" with sku "{1}"', newName, newSkuName);
     }
     protected getOutputLogSuccess(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
-        const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = `${this._defaults.performance}_${this._defaults.replication}`;
         return l10n.t('Successfully created storage account "{0}" with sku "{1}".', newName, newSkuName);
     }
     protected getOutputLogFail(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
-        const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = `${this._defaults.performance}_${this._defaults.replication}`;
         return l10n.t('Failed to create storage account "{0}" with sku "{1}".', newName, newSkuName);
     }
 
     protected getOutputLogProgress(context: T): string {
         const newName: string = nonNullProp(context, 'newStorageAccountName');
-        const newSkuName: SkuName = <SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = `${this._defaults.performance}_${this._defaults.replication}`;
         return l10n.t('Creating storage account "{0}" with sku "{1}"...', newName, newSkuName);
     }
 

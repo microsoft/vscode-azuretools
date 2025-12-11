@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /*---------------------------------------------------------------------------------------------
 *  Copyright (c) Microsoft Corporation. All rights reserved.
 *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -118,21 +117,23 @@ export class RoleDefinitionsItem implements TreeElementBase {
             const resourceIconPath = getAzExtResourceType({ type: parsedScopeId.provider });
             iconPath = resourceIconPath ? getAzureIconPath(resourceIconPath) : new ThemeIcon('symbol-field');
         }
-        catch (error) {
+        catch {
             try {
                 // if it's not a resource, then it's possibly a resource group or subscription
                 parsedAzureResourceGroupId = parseAzureResourceGroupId(options.scope);
                 subscriptionId = parsedAzureResourceGroupId.subscriptionId;
                 label = parsedAzureResourceGroupId.resourceGroup;
                 iconPath = getAzureIconPath(AzExtResourceType.ResourceGroup);
-            } catch (error) {
+            } catch {
                 // if it's not a resource group, then it's a subscription
-                subscriptionId = options.scope.split('/').pop() as string;
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                subscriptionId = options.scope.split('/').pop()!;
                 const subClient = await createSubscriptionsClient([options.context, options.subContext]);
                 try {
                     const subscription = await subClient.subscriptions.get(subscriptionId);
-                    label = subscription.displayName as string;
-                } catch (err) {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    label = subscription.displayName!;
+                } catch {
                     // no access to subscription, just display the id
                     label = subscriptionId;
                 }
@@ -156,6 +157,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
 
         if (parsedScopeId.provider.startsWith('Microsoft.DurableTask')) {
             // /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DurableTask/schedulers/{schedulerName}/taskhubs/{taskHubName}
+            // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
             const dtsTaskHubMatch = scopeId.match(/Microsoft\.DurableTask\/schedulers\/([^/]+)\/taskhubs\/([^/]+)$/i);
             if (dtsTaskHubMatch) {
                 // {schedulerName}/{taskHubName}
@@ -173,7 +175,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
             iconPath: this.iconPath,
             description: this.description,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-        }
+        };
     }
 
     getChildren(): TreeElementBase[] {
@@ -211,7 +213,7 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(_clearCache: boolean, _context: IActionContext): Promise<AzExtTreeItem[]> {
-        return this.roleDefinitionsItem.roleDefintions.map((rd) => {
+        return Promise.resolve(this.roleDefinitionsItem.roleDefintions.map((rd) => {
             const roleAssignmentBase: string = rd.id?.split('/').at(-1) ?? '{roleAssignment}';
             return new GenericTreeItem(this, {
                 label: "",
@@ -220,7 +222,7 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
                 tooltip: rd.description,
                 contextValue: 'roleDefinition',
             });
-        });
+        }));
     }
 
     public hasMoreChildrenImpl(): boolean {

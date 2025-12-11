@@ -21,8 +21,8 @@ export class TestOutputChannel implements LogOutputChannel {
     }
 
     public appendLog(value: string, options?: { resourceName?: string, date?: Date }): void {
-        options = options || {};
-        const date: Date = options.date || new Date();
+        options = options ?? {};
+        const date: Date = options.date ?? new Date();
         this.appendLine(`${date.toLocaleTimeString()}${options.resourceName ? ' '.concat(options.resourceName) : ''}: ${value}`);
 
     }
