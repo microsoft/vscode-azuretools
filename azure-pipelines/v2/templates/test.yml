@@ -18,9 +18,13 @@ steps:
           scriptLocation: inlineScript
           addSpnToEnvironment: true
           inlineScript: |
+            # Get an access token for Azure DevOps using current service principal credentials
+            $token = az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 | ConvertFrom-Json
+
             $headers = @{
-                Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
+                Authorization = "Bearer $($token.accessToken)"
             }
+
             $uri = "$(System.CollectionUri)$(System.TeamProjectId)/_apis/serviceendpoint/endpoints?api-version=7.1&endpointNames=${{ parameters.testServiceConnection }}"
 
             Write-Output "URI: $uri"
