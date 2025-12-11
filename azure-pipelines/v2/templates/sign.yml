@@ -36,13 +36,13 @@ steps:
               Write-Error "  Signature file not found: $($vsix.signatureName)"
               exit 1
           }
-          if (-not (Test-Path $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll)) {
-              Write-Error "  Signature file not found: $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll"
-              exit 1
-          }
+          # if (-not (Test-Path $env:MBSIGN_APPFOLDER/DDSignFiles.dll)) {
+          #     Write-Error "  Signature file not found: $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll"
+          #     exit 1
+          # }
 
 
-          & dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052
+          & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Failed to sign $($vsix.vsixName)"
               exit 1
