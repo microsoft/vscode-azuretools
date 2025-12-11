@@ -1,12 +1,13 @@
 steps:
   - template: ./find-vsixs.yml
 
+  # TODO: does dotnet need to be installed first?
   - pwsh: |
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
 
       foreach ($vsix in $vsixList) {
-          Write-Output "Signing: $($vsix.vsixName)"
           Set-Location $vsix.directory
+          Write-Output "Signing: $($vsix.vsixName)"
 
           # Generate manifest
           Write-Output "  Generating manifest..."
@@ -16,9 +17,10 @@ steps:
               exit 1
           }
 
-          # Sign with MSBuild
-          Write-Output "  Signing with MSBuild..."
-          & dotnet build "$(Agent.BuildDirectory)/s/azExtTemplates/azure-pipelines/v2/static/SignExtension.signproj" /p:ManifestName="$($vsix.manifestName)" /p:SignatureName="$($vsix.signatureName)"
+          # Sign with MicroBuild
+          Write-Output "  Signing with MicroBuild..."
+          Copy-Item $vsix.manifestName $vsix.signatureName
+          & dotnet $($env:MBSIGN_APPFOLDER)/ddsignfiles.dll /file:$($vsix.signatureName) /certs:4014052
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Failed to sign $($vsix.vsixName)"
               exit 1
@@ -34,7 +36,7 @@ steps:
 
           Write-Output "  Successfully signed: $($vsix.vsixName)"
       }
-    condition: succeeded()
     displayName: "\U0001F449 Sign all discovered .vsix files"
+    condition: succeeded()
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)

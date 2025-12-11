@@ -1,19 +1,31 @@
 parameters:
-  - name: useAzureFederatedCredentials
-    type: boolean
-  - name: federatedCredentialsVariableGroup
+  # Set to enable tests with Azure federated credentials
+  - name: testServiceConnection
     type: string
-
-variables:
-  ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
-    - group: ${{ parameters.federatedCredentialsVariableGroup }}
 
 steps:
   - bash: |
       /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-      echo ">>> Started xvfb"
     displayName: "\U0001F449 Start X Virtual Frame Buffer"
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+
+  - ${{ if ne(parameters.testServiceConnection, "") }}:
+      - task: AzureCLI@2
+        displayName: "\U0001F449 Verify test service connection"
+        inputs:
+          azureSubscription: ${{ parameters.testServiceConnection }}
+          scriptType: pscore
+          scriptLocation: inlineScript
+          inlineScript: |
+            az extension add --upgrade --yes --name azure-devops
+            $serviceConnection = az devops service-endpoint list --org $(System.CollectionUri) --project $(System.TeamProject) --query "[?name == '{{ parameters.testServiceConnection }}'] | [0]" | ConvertFrom-Json
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_NAME]$($serviceConnection.name)"
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$($serviceConnection.id)"
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$($serviceConnection.authorization.parameters.serviceprincipalid)"
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$($serviceConnection.authorization.parameters.tenantid)"
+        condition: succeeded()
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - task: Npm@1
     displayName: "\U0001F449 Test"
@@ -23,10 +35,10 @@ steps:
       customCommand: run test
       workingDir: $(working_directory)
     env:
-      DISPLAY: :99 # Only necessary for linux tests, must match Xvfb display number set above
-      ${{ if eq(parameters.useAzureFederatedCredentials, true) }}:
+      DISPLAY: :99 # Only necessary for Linux tests, must match Xvfb display number set above
+      ${{ if ne(parameters.testServiceConnection, "") }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         FC_SERVICE_CONNECTION_NAME: $(FC_SERVICE_CONNECTION_NAME)
         FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
-        FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
         FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
+        FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)

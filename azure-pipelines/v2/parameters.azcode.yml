@@ -1,9 +1,14 @@
 parameters:
-  - extensionReleaseEnvironment: AzCodeDeploy
+  # Related to release approval process
   - extensionReleaseServiceConnection: AzCodeReleases
-  - testServiceConnection: AzCodeE2ETests
-  - testBAMIVariableGroup: AzCode-BAMI-Variables
+  - npmReleaseOwnerAlias: azcode
+  - npmReleaseApproverAlias: jinglou
   - gitHubServiceConnection: GitHub-AzureTools
+
+  # Test
+  - testServiceConnection: AzCodeE2ETests
+
+  # Pools
   - sdlSourcesPool:
       name: VSEngSS-MicroBuild2022-1ES
       image: server2022-microbuildVS2022-1es

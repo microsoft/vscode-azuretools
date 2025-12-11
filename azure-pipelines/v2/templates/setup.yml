@@ -1,7 +1,3 @@
-parameters:
-  - name: additionalSetupSteps
-    type: stepList
-
 steps:
   - task: NodeTool@0
     displayName: "\U0001F449 Using Node.js"
@@ -17,5 +13,3 @@ steps:
       command: custom
       customCommand: ci --no-optional
       workingDir: $(working_directory)
-
-  - ${{ parameters.additionalSetupSteps }}

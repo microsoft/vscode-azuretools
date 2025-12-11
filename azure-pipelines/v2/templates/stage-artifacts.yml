@@ -13,6 +13,6 @@ steps:
         **/*.tgz
         !**/node_modules/**
       SourceFolder: $(working_directory)
-      TargetFolder: "$(Build.ArtifactStagingDirectory)/build/$(artifact_name)"
+      TargetFolder: $(Build.ArtifactStagingDirectory)/build/$(artifact_name)
       FlattenFolders: false
     condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))

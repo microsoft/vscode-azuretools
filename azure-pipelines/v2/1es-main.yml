@@ -4,16 +4,6 @@ parameters:
     type: boolean
     default: true
 
-  # Set to true to enable signing
-  - name: enableSigning
-    type: boolean
-    default: true
-
-  # Additional steps to run during setup (e.g. npm authenticate etc.)
-  - name: additionalSetupSteps
-    type: stepList
-    default: []
-
   # The pool to use for the SDLSources stage
   - name: sdlSourcesPool
     type: object
@@ -30,20 +20,29 @@ parameters:
       image: 1ESPT-Ubuntu22.04
       os: linux
 
-  # Set to true to enable tests with Azure federated credentials
-  - name: useAzureFederatedCredentials
-    type: boolean
-    default: false
-
-  # The variable group containing the federated credentials service connection info
-  # The group must contain the variables:
-  # - FC_SERVICE_CONNECTION_NAME
-  # - FC_SERVICE_CONNECTION_ID
-  # - FC_SERVICE_CONNECTION_TENANT_ID
-  # - FC_SERVICE_CONNECTION_CLIENT_ID
-  - name: federatedCredentialsVariableGroup
+  # Set to 'real' or 'test' to enable MicroBuild signing
+  - name: signType
     type: string
-    default: AzCode-BAMI-Variables
+    values:
+      - real
+      - test
+      - none
+    default: real
+
+  # Additional steps to run during setup (e.g. npm authenticate etc.)
+  - name: additionalSetupSteps
+    type: stepList
+    default: []
+
+  # Set to true to lint during CI
+  - name: lintInCI
+    type: boolean
+    default: true
+
+  # Set to enable tests with Azure federated credentials
+  - name: testServiceConnection
+    type: string
+    default: ""
 
 resources:
   repositories:
@@ -63,9 +62,9 @@ extends:
       ${{ if eq(parameters.isOfficialBuild, true) }}:
         tsa:
           enabled: true
-          configFile: "$(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json"
+          configFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json # TODO: default path in .config?
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/.gdnsuppress # TODO: default path in .config?
       componentgovernance:
         directoryExclusionPatterns: "**/.vscode-test"
       codeql:
@@ -77,6 +76,7 @@ extends:
       - template: ./stages/stages.yml
         parameters:
           buildPool: ${{ parameters.buildPool }}
-          enableSigning: ${{ parameters.enableSigning }}
+          signType: ${{ parameters.signType }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
-          useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+          lintInCI: ${{ parameters.lintInCI }}
+          testServiceConnection: ${{ parameters.testServiceConnection }}

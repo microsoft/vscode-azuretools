@@ -1,18 +1,33 @@
 parameters:
-  # The jobs to run. Use to parallelize building in subdirectories.
+  # The jobs to run. Use to parallelize building in subdirectories
   - name: jobs
     type: object
     default:
       - name: Root
         working_directory: .
 
+  # The pool to use for the build stage
   - name: buildPool
     type: object
-  - name: enableSigning
-    type: boolean
+
+  # Set to 'real' or 'test' to enable MicroBuild signing
+  - name: signType
+    type: string
+    values:
+      - real
+      - test
+      - none
+
+  # Additional steps to run during setup (e.g. npm authenticate etc.)
   - name: additionalSetupSteps
     type: stepList
-  - name: useAzureFederatedCredentials
+
+  # Set to enable tests with Azure federated credentials
+  - name: testServiceConnection
+    type: string
+
+  # Set to true to lint during CI
+  - name: lintInCI
     type: boolean
 
 stages:
@@ -22,38 +37,34 @@ stages:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
             templateContext:
-              # TODO: Find a way to move this out to parameters
+              # TODO: Find a way to parameterize signing steps
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  enabled: ${{ parameters.enableSigning }}
-                  signType: real
-                  signWithProd: true
+                  enabled: ${{ ne(parameters.signType, "none") }}
+                  signType: ${{ parameters.signType }}
+                  signWithProd: ${{ eq(parameters.signType, "real") }}
                   zipSources: false
-                  azureSubscription: "MicroBuild Signing Task (DevDiv)"
+                  azureSubscription: MicroBuild Signing Task (DevDiv)
               outputs:
                 - output: pipelineArtifact
-                  targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
+                  targetPath: $(Build.ArtifactStagingDirectory)/build/$(artifact_name)
                   artifactName: Build $(artifact_name)
             variables:
               artifact_name: ${{ replace(job.name, '_', '-') }}
-              working_directory: $(Agent.BuildDirectory)/s/repository/${{ job.working_directory }}
+              working_directory: ${{ job.working_directory }}
             steps:
               - checkout: self
                 fetchDepth: 1
-                path: repository
-              - checkout: azExtTemplates
-                fetchDepth: 1
-                sparseCheckoutDirectories: azure-pipelines/v2
-                path: azExtTemplates
               - template: ./templates/setup.yml
-                parameters:
-                  additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
+              - ${{ parameters.additionalSetupSteps }}
+              - ${{ if parameters.lintInCI }}:
+                  - template: ./templates/lint.yml
               - template: ./templates/build.yml
               - template: ./templates/package.yml
-              - ${{ if eq(parameters.enableSigning, true) }}:
-                  # TODO: Find a way to move this out to parameters
+              - ${{ if ne(parameters.signType, "none") }}:
+                  # TODO: Find a way to parameterize signing steps
                   - template: ./templates/sign.yml
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
-                  useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+                  testServiceConnection: ${{ parameters.testServiceConnection }}
