@@ -40,9 +40,9 @@ stages:
               # TODO: Find a way to parameterize signing steps
               mb: # Enable the MicroBuild Signing toolset
                 signing:
-                  enabled: ${{ ne(parameters.signType, "none") }}
+                  enabled: ${{ ne(parameters.signType, 'none') }}
                   signType: ${{ parameters.signType }}
-                  signWithProd: ${{ eq(parameters.signType, "real") }}
+                  signWithProd: ${{ eq(parameters.signType, 'real') }}
                   zipSources: false
                   azureSubscription: MicroBuild Signing Task (DevDiv)
               outputs:
@@ -61,7 +61,7 @@ stages:
                   - template: ./templates/lint.yml
               - template: ./templates/build.yml
               - template: ./templates/package.yml
-              - ${{ if ne(parameters.signType, "none") }}:
+              - ${{ if ne(parameters.signType, 'none') }}:
                   # TODO: Find a way to parameterize signing steps
                   - template: ./templates/sign.yml
               - template: ./templates/stage-artifacts.yml
