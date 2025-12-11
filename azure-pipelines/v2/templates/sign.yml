@@ -11,7 +11,7 @@ steps:
 
           # Generate manifest
           Write-Output "  Generating manifest..."
-          & npx @vscode/vsce@latest generate-manifest -i "$vsix.vsixName" -o "$vsix.manifestName"
+          & npx @vscode/vsce@latest generate-manifest -i $vsix.vsixName -o $vsix.manifestName
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Failed to generate manifest for $($vsix.vsixName)"
               exit 1
@@ -20,7 +20,7 @@ steps:
           # Sign with MicroBuild
           Write-Output "  Signing with MicroBuild..."
           Copy-Item $vsix.manifestName $vsix.signatureName
-          & dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:"$vsix.signatureName" /certs:4014052
+          & dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Failed to sign $($vsix.vsixName)"
               exit 1
@@ -28,7 +28,7 @@ steps:
 
           # Verify signature file was created correctly
           Write-Output "  Verifying signature..."
-          & npx @vscode/vsce@latest verify-signature -i "$vsix.vsixName" -m "$vsix.manifestName" -s $vsix.signatureName
+          & npx @vscode/vsce@latest verify-signature -i $vsix.vsixName -m $vsix.manifestName -s $vsix.signatureName
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Signature verification failed for $($vsix.vsixName)"
               exit 1
