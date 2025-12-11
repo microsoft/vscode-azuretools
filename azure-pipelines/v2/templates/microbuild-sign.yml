@@ -15,14 +15,6 @@ steps:
       packageType: sdk
       version: 8.x
 
-  # TODO: this isn't preventing the warning that VSCE isn't installed
-  # - task: Npm@1
-  #   displayName: "\U0001F449 Signing: Install VSCE"
-  #   condition: succeeded()
-  #   inputs:
-  #     command: custom
-  #     customCommand: install -g @vscode/vsce@latest
-
   - template: ./find-vsixs.yml
 
   - pwsh: |

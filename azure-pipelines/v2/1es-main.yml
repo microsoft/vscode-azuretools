@@ -4,6 +4,13 @@ parameters:
     type: boolean
     default: true
 
+  # The jobs to run. Use to parallelize building in subdirectories
+  - name: jobs
+    type: object
+    default:
+      - name: Root
+        working_directory: .
+
   # The pool to use for the SDLSources stage
   - name: sdlSourcesPool
     type: object
@@ -34,12 +41,7 @@ parameters:
     type: stepList
     default: []
 
-  # Set to true to lint during CI
-  - name: lintInCI
-    type: boolean
-    default: true
-
-  # Set to enable tests with Azure federated credentials
+  # Set to the ARM service connection name to enable tests with Azure federated credentials
   - name: testServiceConnection
     type: string
     default: ""
@@ -75,8 +77,8 @@ extends:
     stages:
       - template: ./stages/stages.yml
         parameters:
+          jobs: ${{ parameters.jobs }}
           buildPool: ${{ parameters.buildPool }}
           signType: ${{ parameters.signType }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
-          lintInCI: ${{ parameters.lintInCI }}
           testServiceConnection: ${{ parameters.testServiceConnection }}

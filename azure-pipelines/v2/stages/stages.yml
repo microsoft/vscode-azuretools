@@ -2,9 +2,6 @@ parameters:
   # The jobs to run. Use to parallelize building in subdirectories
   - name: jobs
     type: object
-    default:
-      - name: Root
-        working_directory: .
 
   # The pool to use for the build stage
   - name: buildPool
@@ -37,14 +34,14 @@ stages:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
             templateContext:
-              # TODO: Find a way to parameterize signing steps
+              # TODO: Find a way to parameterize signing template context
               mb: # Enable the MicroBuild Signing toolset
                 signing:
                   enabled: ${{ ne(parameters.signType, 'none') }}
                   signType: ${{ parameters.signType }}
                   signWithProd: ${{ eq(parameters.signType, 'real') }}
                   zipSources: false
-                  azureSubscription: MicroBuild Signing Task (DevDiv)
+                  # azureSubscription: MicroBuild Signing Task (DevDiv) TODO: Maybe not needed?
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(Build.ArtifactStagingDirectory)/build/$(artifact_name)
@@ -57,13 +54,12 @@ stages:
                 fetchDepth: 1
               - template: ../templates/setup.yml
               - ${{ parameters.additionalSetupSteps }}
-              - ${{ if parameters.lintInCI }}:
-                  - template: ../templates/lint.yml
+              - template: ../templates/lint.yml
               - template: ../templates/build.yml
               - template: ../templates/package.yml
               - ${{ if ne(parameters.signType, 'none') }}:
                   # TODO: Find a way to parameterize signing steps
-                  - template: ../templates/sign.yml
+                  - template: ../templates/microbuild-sign.yml
               - template: ../templates/stage-artifacts.yml
               - template: ../templates/test.yml
                 parameters:
