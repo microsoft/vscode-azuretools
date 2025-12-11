@@ -1,4 +1,18 @@
 steps:
+  - task: UseDotNet@2
+    displayName: "\U0001F449 Install .NET Core 3.1 Runtime"
+    condition: succeeded()
+    inputs:
+      packageType: runtime
+      version: 3.1
+
+  - task: Npm@1
+    displayName: "\U0001F449 Install VSCE"
+    condition: succeeded()
+    inputs:
+      command: custom
+      customCommand: install -g @vscode/vsce@latest
+
   - template: ./find-vsixs.yml
 
   - pwsh: |
