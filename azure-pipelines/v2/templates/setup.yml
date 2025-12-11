@@ -1,14 +1,12 @@
 steps:
   - task: NodeTool@0
     displayName: "\U0001F449 Using Node.js"
-    condition: succeeded()
     inputs:
       versionSource: fromFile
       versionFilePath: .nvmrc
 
   - task: Npm@1
     displayName: "\U0001F449 Install Dependencies"
-    condition: succeeded()
     inputs:
       command: custom
       customCommand: ci --no-optional

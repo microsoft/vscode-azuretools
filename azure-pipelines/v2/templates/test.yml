@@ -23,13 +23,11 @@ steps:
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$($serviceConnection.id)"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$($serviceConnection.authorization.parameters.serviceprincipalid)"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$($serviceConnection.authorization.parameters.tenantid)"
-        condition: succeeded()
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - task: Npm@1
     displayName: "\U0001F449 Test"
-    condition: succeeded()
     inputs:
       command: custom
       customCommand: run test
