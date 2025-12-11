@@ -2,7 +2,7 @@ steps:
   - template: ./find-vsixs.yml
 
   - pwsh: |
-      Set-PSDebug -Trace 1
+      Set-PSDebug -Trace 1 # TODO: remove this
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
 
       foreach ($vsix in $vsixList) {
@@ -20,6 +20,7 @@ steps:
           # Sign with MicroBuild
           Write-Output "  Signing with MicroBuild..."
           Copy-Item $vsix.manifestName $vsix.signatureName
+          Write-Output "  dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052"
           & dotnet $($env:MBSIGN_APPFOLDER)/DDSignFiles.dll -- /file:$($vsix.signatureName) /certs:4014052
           if ($LASTEXITCODE -ne 0) {
               Write-Error "  Failed to sign $($vsix.vsixName)"
