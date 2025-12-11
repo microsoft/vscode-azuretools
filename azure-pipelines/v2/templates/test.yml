@@ -10,17 +10,6 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
 
   - ${{ if ne(parameters.testServiceConnection, '') }}:
-      - pwsh: |
-          $headers = @{
-              Authorization = "Bearer $(System.AccessToken)"
-          }
-          $uri = "$(System.CollectionUri)$(System.TeamProjectId)/_apis/serviceendpoint/endpoints?api-version=7.1&endpointNames=${{ parameters.testServiceConnection }}"
-
-          Write-Output "URI: $uri"
-
-          $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
-          Write-Output "Service Connection Response: $($response | ConvertTo-Json -Depth 10)"
-
       - task: AzureCLI@2
         displayName: "\U0001F449 Verify test service connection"
         inputs:
@@ -29,6 +18,16 @@ steps:
           scriptLocation: inlineScript
           addSpnToEnvironment: true
           inlineScript: |
+            $headers = @{
+                Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
+            }
+            $uri = "$(System.CollectionUri)$(System.TeamProjectId)/_apis/serviceendpoint/endpoints?api-version=7.1&endpointNames=${{ parameters.testServiceConnection }}"
+
+            Write-Output "URI: $uri"
+
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            Write-Output "Service Connection Response: $($response | ConvertTo-Json -Depth 10)"
+
             # TODO Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$($serviceConnection.id)"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
