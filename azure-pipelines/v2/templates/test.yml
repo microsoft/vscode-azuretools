@@ -18,19 +18,15 @@ steps:
           scriptLocation: inlineScript
           addSpnToEnvironment: true
           inlineScript: |
-            # Get an access token for Azure DevOps using current service principal credentials
-            $token = az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 | ConvertFrom-Json
-
+            # Maybe this?
+            $oidcUri = "$(System.OidcRequestUri)?api-version=7.1&serviceConnectionId=${{ parameters.testServiceConnection }}"
+            Write-Output "OIDC URI: $oidcUri"
             $headers = @{
-                Authorization = "Bearer $($token.accessToken)"
+                Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
             }
 
-            $uri = "$(System.CollectionUri)$(System.TeamProjectId)/_apis/serviceendpoint/endpoints?api-version=7.1&endpointNames=${{ parameters.testServiceConnection }}"
-
-            Write-Output "URI: $uri"
-
-            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
-            Write-Output "Service Connection Response: $($response | ConvertTo-Json -Depth 10)"
+            $response = Invoke-RestMethod -Uri $oidcUri -Headers $headers -Method Get
+            Write-Output "Response: $($response | ConvertTo-Json -Depth 5)"
 
             # TODO Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$($serviceConnection.id)"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
