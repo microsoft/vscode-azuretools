@@ -1,16 +1,16 @@
 steps:
   - pwsh: |
-      # Find all the VSIX files
+      # Find all the VSIXs
       $vsixFiles = Get-ChildItem -Path "$(working_directory)" -Recurse -Filter "*.vsix"
       if ($vsixFiles.Count -eq 0) {
-          Write-Error "No .vsix files found."
+          Write-Error "No VSIXs found."
           exit 1
       }
 
-      # Get some details from package.json that apply to all VSIX files
+      # Get some details from package.json that apply to all VSIXs
       $packageJson = Get-Content "$(working_directory)/package.json" | ConvertFrom-Json
 
-      # Loop over the found VSIX files and get their details
+      # Loop over the found VSIXs and get their details
       $vsixList = @()
       foreach ($vsixFile in $vsixFiles) {
           Write-Output "Discovered VSIX: $($vsixFile.FullName)"
@@ -26,5 +26,5 @@ steps:
 
       # Store the VSIX list as JSON for later steps
       Write-Output "##vso[task.setvariable variable=vsixListJson]$($vsixList | ConvertTo-Json -Compress)"
-    displayName: "\U0001F449 Discover all .vsix files"
+    displayName: "\U0001F449 Discover all VSIXs"
     condition: succeeded()
