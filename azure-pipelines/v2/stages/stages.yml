@@ -23,10 +23,6 @@ parameters:
   - name: testServiceConnection
     type: string
 
-  # Set to true to lint during CI
-  - name: lintInCI
-    type: boolean
-
 stages:
   - stage: BuildStage
     pool: ${{ parameters.buildPool }}
