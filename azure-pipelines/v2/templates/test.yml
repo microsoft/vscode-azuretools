@@ -9,7 +9,7 @@ steps:
     displayName: "\U0001F449 Start X Virtual Frame Buffer"
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
 
-  - ${{ if ne(parameters.testServiceConnection, "") }}:
+  - ${{ if ne(parameters.testServiceConnection, '') }}:
       - task: AzureCLI@2
         displayName: "\U0001F449 Verify test service connection"
         inputs:
@@ -36,7 +36,7 @@ steps:
       workingDir: $(working_directory)
     env:
       DISPLAY: :99 # Only necessary for Linux tests, must match Xvfb display number set above
-      ${{ if ne(parameters.testServiceConnection, "") }}:
+      ${{ if ne(parameters.testServiceConnection, '') }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         FC_SERVICE_CONNECTION_NAME: $(FC_SERVICE_CONNECTION_NAME)
         FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
