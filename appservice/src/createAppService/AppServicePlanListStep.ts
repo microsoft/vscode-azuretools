@@ -64,13 +64,13 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         if (!context.plan) {
             const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new AppServicePlanRedundancyStep(), new ResourceGroupListStep()];
             LocationListStep.addStep(context, promptSteps);
-            return {
+            return Promise.resolve({
                 promptSteps: promptSteps,
                 executeSteps: [new AppServicePlanCreateStep()]
-            };
+            });
         } else {
             context.valuesToMask.push(nonNullProp(context.plan, 'name'));
-            return undefined;
+            return Promise.resolve(undefined);
         }
     }
 
@@ -90,7 +90,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         let plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(context);
         const famFilter: RegExp | undefined = context.planSkuFamilyFilter;
         if (famFilter) {
-            plans = plans.filter(plan => !plan.sku || !plan.sku.family || famFilter.test(plan.sku.family));
+            plans = plans.filter(plan => !plan.sku?.family || famFilter.test(plan.sku.family));
         }
 
         let location: AzExtLocation | undefined;

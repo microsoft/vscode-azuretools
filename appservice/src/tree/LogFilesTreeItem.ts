@@ -22,6 +22,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
     public static contextValue: string = 'logFiles';
     public suppressMaskLabel: boolean = true;
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected readonly _isRoot: boolean = true;
 
     constructor(parent: AzExtParentTreeItem, options: LogFilesTreeItemOptions) {
@@ -30,7 +31,7 @@ export class LogFilesTreeItem extends FolderTreeItem {
             label: l10n.t('Logs'),
             url: createSiteFilesUrl(options.site, 'LogFiles/'),
             isReadOnly: true,
-            contextValuesToAdd: options.contextValuesToAdd || []
+            contextValuesToAdd: options.contextValuesToAdd ?? []
         });
     }
 

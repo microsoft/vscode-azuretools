@@ -7,6 +7,7 @@ import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureut
 import { IAzureQuickPickItem, IAzureQuickPickOptions, parseError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createResourceGraphClient } from '../utils/azureClients';
+import { WebsiteOS } from './AppKind';
 import { CustomLocation, IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export class CustomLocationListStep<T extends IAppServiceWizardContext> extends LocationListStep<T> {
@@ -30,7 +31,7 @@ export class CustomLocationListStep<T extends IAppServiceWizardContext> extends 
 
     protected async getCustomQuickPicks(context: T): Promise<IAzureQuickPickItem<AzExtLocation | CustomLocation>[]> {
         const picks: IAzureQuickPickItem<AzExtLocation | CustomLocation>[] = await super.getQuickPicks(context);
-        if (context.newSiteOS !== 'windows') {
+        if (context.newSiteOS !== WebsiteOS.windows) {
             try {
                 const client = await createResourceGraphClient(context);
                 const response = await client.resources({

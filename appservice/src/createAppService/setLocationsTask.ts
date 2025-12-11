@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { GeoRegion, ListGeoRegionsOptionalParams, SkuName } from '@azure/arm-appservice';
+import type { GeoRegion, ListGeoRegionsOptionalParams } from '@azure/arm-appservice';
 import { createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, LocationListStep, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { nonNullProp } from '@microsoft/vscode-azext-utils';
@@ -20,6 +20,7 @@ type GeoRegionJsonResponse = {
  */
 export async function setLocationsTask(context: IAppServiceWizardContext): Promise<void> {
     LocationListStep.setLocationSubset(context, getWebLocations(context), webProvider);
+    return Promise.resolve();
 }
 
 export async function getWebLocations(context: IAppServiceWizardContext): Promise<string[]> {
@@ -33,8 +34,8 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         }
     }
 
-    if (context.newPlanSku && context.newPlanSku.tier) {
-        options.sku = <SkuName>context.newPlanSku.tier.replace(/\s/g, '');
+    if (context.newPlanSku?.tier) {
+        options.sku = context.newPlanSku.tier.replace(/\s/g, '');
     }
 
     const queryString = Object.keys(options).map(key => `${key}=${options[key]}`).join('&');

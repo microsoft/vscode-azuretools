@@ -16,7 +16,7 @@ export async function verifyNoRunFromPackageSetting(context: IActionContext, sit
     const client = await site.createClient(context);
     const applicationSettings: StringDictionary = await client.listApplicationSettings();
     for (const settingName of runFromPackageSettings) {
-        if (applicationSettings.properties && applicationSettings.properties[settingName]) {
+        if (applicationSettings.properties?.[settingName]) {
             delete applicationSettings.properties[settingName];
             ext.outputChannel.appendLog(vscode.l10n.t('Deleting setting "{0}"...', settingName), { resourceName: site.fullName });
             updateSettings = true;

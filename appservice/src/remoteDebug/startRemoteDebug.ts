@@ -109,10 +109,11 @@ async function getDebugPath(): Promise<string> {
             // In this case we don't know which folder to use. Show a warning and proceed.
             // In the future we should allow users to choose a workspace folder to map sources from.
             const root = await vscode.window.showWorkspaceFolderPick();
-            if (root)
+            if (root) {
                 return root.uri.fsPath;
-            else
+            } else {
                 throw new Error(vscode.l10n.t('Please select a workspace folder before attaching a debugger.'));
+            }
         }
     } else {
         // vscode will throw an error if you try to start debugging without any workspace folder open
@@ -129,7 +130,7 @@ async function getNodeDebugConfiguration(sessionId: string, portNumber: number, 
         request: 'attach',
         address: host,
         port: portNumber,
-    }
+    };
     config.localRoot = await getDebugPath();
     return config;
 }

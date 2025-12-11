@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
 
-export function reportMessage(message: string, progress: vscode.Progress<{}>, token: vscode.CancellationToken): void {
+export function reportMessage(message: string, progress: vscode.Progress<{ message: string }>, token: vscode.CancellationToken): void {
     if (token.isCancellationRequested) {
         throw new UserCancelledError('remoteDebugReportMessage');
     }
@@ -18,7 +18,7 @@ export function reportMessage(message: string, progress: vscode.Progress<{}>, to
     progress.report({ message: message });
 }
 
-export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, site: ParsedSite, siteConfig: SiteConfigResource, progress: vscode.Progress<{}>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
+export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, site: ParsedSite, siteConfig: SiteConfigResource, progress: vscode.Progress<{ message: string }>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
     const client = await site.createClient(context);
     const state: string | undefined = await client.getState();
     if (state && state.toLowerCase() === 'stopped') {

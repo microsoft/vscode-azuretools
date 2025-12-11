@@ -54,7 +54,7 @@ export async function createDeployExecuteSteps(context: InnerDeployContext): Pro
         executeSteps.push(new DelayFirstWebAppDeployStep());
     }
 
-    executeSteps.push(new PostDeployTaskExecuteStep(config))
+    executeSteps.push(new PostDeployTaskExecuteStep(config));
     executeSteps.push(new PostDeploySyncTriggersExecuteStep());
 
     return executeSteps;
