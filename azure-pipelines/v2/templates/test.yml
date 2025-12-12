@@ -23,6 +23,10 @@ steps:
             Write-Output "Client ID = $($env:servicePrincipalId)"
             Write-Output "Tenant ID = $($env:tenantId)"
 
+            Write-Output "Maybe SC ID: $($env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID)"
+            Write-Output "Maybe Client ID: $($env:AZURESUBSCRIPTION_CLIENT_ID)"
+            Write-Output "Maybe Tenant ID: $($env:AZURESUBSCRIPTION_TENANT_ID)"
+
             $oidcUri = "$(System.OidcRequestUri)?api-version=7.1&serviceConnectionId=${{ parameters.testServiceConnection }}"
             Write-Output "OIDC URI: $oidcUri"
             $headers = @{
