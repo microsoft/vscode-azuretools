@@ -20,9 +20,12 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     private _suppressCreate: boolean | undefined;
 
-    public constructor(suppressCreate?: boolean) {
+    public constructor(context: IAppServiceWizardContext, suppressCreate?: boolean) {
         super();
         this._suppressCreate = suppressCreate;
+
+        // Start retrieving the appservice plans right away; tracks the concurrent list call in `context.plansTask`
+        void AppServicePlanListStep.getPlans(context);
     }
 
     public static async getPlans(context: IAppServiceWizardContext): Promise<AppServicePlan[]> {
