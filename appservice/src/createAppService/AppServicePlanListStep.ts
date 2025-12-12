@@ -36,7 +36,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     }
 
     public static async isNameAvailable(context: IAppServiceWizardContext, name: string, resourceGroupName: string): Promise<boolean> {
-        const plans: AppServicePlan[] = await context.plansTask ?? await AppServicePlanListStep.getPlans(context);
+        const plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(context);
         return !plans.some(plan =>
             nonNullProp(plan, 'resourceGroup').toLowerCase() === resourceGroupName.toLowerCase() &&
             nonNullProp(plan, 'name').toLowerCase() === name.toLowerCase()
@@ -88,7 +88,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             }]
             : [];
 
-        let plans: AppServicePlan[] = await context.plansTask ?? await AppServicePlanListStep.getPlans(context);
+        let plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(context);
         const famFilter: RegExp | undefined = context.planSkuFamilyFilter;
         if (famFilter) {
             plans = plans.filter(plan => !plan.sku?.family || famFilter.test(plan.sku.family));
