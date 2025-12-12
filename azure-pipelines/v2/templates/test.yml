@@ -72,11 +72,8 @@ steps:
               } else {
                 console.error('✗ c1: Token is empty or undefined');
               }
-            }).catch(err => {
-              console.error('✗ c1: Failed to get token:', err.message);
-            });
-
-            credential2.getToken('https://management.azure.com/.default').then(token => {
+              return credential2.getToken('https://management.azure.com/.default');
+            }).then(token => {
               if (token && token.token) {
                 console.log('✓ c2: Successfully obtained AzurePipelinesCredential token');
               } else {
