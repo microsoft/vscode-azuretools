@@ -23,6 +23,22 @@ steps:
             Write-Output "Client ID = $($env:servicePrincipalId)"
             Write-Output "Tenant ID = $($env:tenantId)"
 
+            $oidcUri = "$(System.OidcRequestUri)?api-version=7.1&serviceConnectionId=${{ parameters.testServiceConnection }}"
+            Write-Output "OIDC URI: $oidcUri"
+            $headers = @{
+                Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
+                "Content-Type" = "application/json"
+                "X-TFS-FedAuthRedirect" = "Suppress"
+            }
+
+            $response = Invoke-RestMethod -Uri $oidcUri -Headers $headers -Method Post
+
+            if ($response.oidcToken) {
+              Write-Output "oidcToken present and has value"
+            } else {
+              Write-Output "oidcToken is null or empty"
+            }
+
             & npm i @azure/identity@latest
 
             # Verify AzurePipelinesCredential can authenticate
