@@ -17,10 +17,10 @@ import { AppServicePlanRedundancyStep } from './AppServicePlanRedundancyStep';
 import { AppServicePlanSkuStep } from './AppServicePlanSkuStep';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
-export class AppServicePlanListStep<T extends IAppServiceWizardContext> extends AzureWizardPromptStep<T> {
+export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     private _suppressCreate: boolean | undefined;
 
-    public constructor(context: T, suppressCreate?: boolean) {
+    public constructor(context: IAppServiceWizardContext, suppressCreate?: boolean) {
         super();
         this._suppressCreate = suppressCreate;
         context.plansTask ??= AppServicePlanListStep.getPlans(context);
@@ -43,7 +43,7 @@ export class AppServicePlanListStep<T extends IAppServiceWizardContext> extends 
         );
     }
 
-    public async prompt(context: T): Promise<void> {
+    public async prompt(context: IAppServiceWizardContext): Promise<void> {
         // Cache hosting plan separately per subscription
         // Logic Apps only supports Workflow Standard sku and for App Service Plan it only supports one Isolated sku.
         // Since create is not enabled for isolated skus, we explicitly reference the type of plan picked in the placeHolder.
@@ -61,7 +61,7 @@ export class AppServicePlanListStep<T extends IAppServiceWizardContext> extends 
         }
     }
 
-    public async getSubWizard(context: T): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
+    public async getSubWizard(context: IAppServiceWizardContext): Promise<IWizardOptions<IAppServiceWizardContext> | undefined> {
         if (!context.plan) {
             const promptSteps: AzureWizardPromptStep<IAppServiceWizardContext>[] = [new AppServicePlanNameStep(), new AppServicePlanSkuStep(), new AppServicePlanRedundancyStep(), new ResourceGroupListStep()];
             LocationListStep.addStep(context, promptSteps);
@@ -75,11 +75,11 @@ export class AppServicePlanListStep<T extends IAppServiceWizardContext> extends 
         }
     }
 
-    public shouldPrompt(context: T): boolean {
+    public shouldPrompt(context: IAppServiceWizardContext): boolean {
         return !context.plan && !context.newPlanName;
     }
 
-    private async getQuickPicks(context: T): Promise<IAzureQuickPickItem<AppServicePlan | undefined>[]> {
+    private async getQuickPicks(context: IAppServiceWizardContext): Promise<IAzureQuickPickItem<AppServicePlan | undefined>[]> {
         const picks: IAzureQuickPickItem<AppServicePlan | undefined>[] = !this._suppressCreate
             ? [{
                 label: vscode.l10n.t('$(plus) Create new App Service plan'),
