@@ -18,28 +18,45 @@ steps:
           scriptLocation: inlineScript
           addSpnToEnvironment: true
           inlineScript: |
-            # Maybe this?
-            $oidcUri = "$(System.OidcRequestUri)?api-version=7.1&serviceConnectionId=${{ parameters.testServiceConnection }}"
-            Write-Output "OIDC URI: $oidcUri"
-            $headers = @{
-                Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
-                "Content-Type" = "application/json"
-            }
-
-            $response = Invoke-RestMethod -Uri $oidcUri -Headers $headers -Method Post
-
-            if ($response.oidcToken) {
-              Write-Output "oidcToken present and has value"
-            } else {
-              Write-Output "oidcToken is null or empty"
-            }
-
-            # TODO Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$($serviceConnection.id)"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
-            Write-Output "ID = $($env:serviceConnectionId)"
             Write-Output "Client ID = $($env:servicePrincipalId)"
             Write-Output "Tenant ID = $($env:tenantId)"
+
+            & npm i @azure/identity@latest
+
+            # Verify AzurePipelinesCredential can authenticate
+            $nodeScript = @"
+            const { AzurePipelinesCredential } = require('@azure/identity');
+
+            console.log('Creating AzurePipelinesCredential with:');
+            console.log('  Tenant ID: ' + process.env.tenantId);
+            console.log('  Client ID: ' + process.env.servicePrincipalId);
+            console.log('  Service Connection Name: ' + '${{ parameters.testServiceConnection }}');
+            const credential = new AzurePipelinesCredential(
+              process.env.tenantId,
+              process.env.servicePrincipalId,
+              '${{ parameters.testServiceConnection }}',
+              process.env.SYSTEM_ACCESSTOKEN
+            );
+
+            console.log('Requesting token for ARM scope...');
+
+            credential.getToken('https://management.azure.com/.default').then(token => {
+              if (token && token.token) {
+                console.log('✓ Successfully obtained AzurePipelinesCredential token');
+                process.exit(0);
+              } else {
+                console.error('✗ Token is empty or undefined');
+                process.exit(1);
+              }
+            }).catch(err => {
+              console.error('✗ Failed to get token:', err.message);
+              process.exit(1);
+            });
+            "@
+
+            & node -e $nodeScript
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -54,6 +71,6 @@ steps:
       ${{ if ne(parameters.testServiceConnection, '') }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         FC_SERVICE_CONNECTION_NAME: ${{ parameters.testServiceConnection }}
-        FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
+        FC_SERVICE_CONNECTION_ID: ${{ parameters.testServiceConnection }}
         FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
         FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
