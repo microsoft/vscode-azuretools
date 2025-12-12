@@ -36,7 +36,7 @@ steps:
             const credential = new AzurePipelinesCredential(
               process.env.tenantId,
               process.env.servicePrincipalId,
-              '${{ parameters.testServiceConnection }}',
+              '7eed1dc7-f1c5-4076-ad61-f03e3b7d6ec3',
               process.env.SYSTEM_ACCESSTOKEN
             );
 
