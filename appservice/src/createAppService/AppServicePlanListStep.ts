@@ -25,7 +25,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         this._suppressCreate = suppressCreate;
 
         // Start retrieving the appservice plans right away; tracks the concurrent list call in `context.plansTask`
-        AppServicePlanListStep.getPlans(context);
+        void AppServicePlanListStep.getPlans(context);
     }
 
     public static async getPlans(context: IAppServiceWizardContext): Promise<AppServicePlan[]> {
