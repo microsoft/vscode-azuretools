@@ -28,6 +28,8 @@ steps:
             # Verify AzurePipelinesCredential can authenticate
             $nodeScript = @"
             const { AzurePipelinesCredential } = require('@azure/identity');
+            const { setLogLevel } = require('@azure/logger');
+            setLogLevel('verbose');
 
             console.log('Creating AzurePipelinesCredential with:');
             console.log('  Tenant ID: ' + process.env.tenantId);
@@ -39,20 +41,33 @@ steps:
               '7eed1dc7-f1c5-4076-ad61-f03e3b7d6ec3',
               process.env.SYSTEM_ACCESSTOKEN
             );
+            const credential2 = new AzurePipelinesCredential(
+              process.env.tenantId,
+              process.env.servicePrincipalId,
+              '${{ parameters.testServiceConnection }}',
+              process.env.SYSTEM_ACCESSTOKEN
+            );
 
             console.log('Requesting token for ARM scope...');
 
             credential.getToken('https://management.azure.com/.default').then(token => {
               if (token && token.token) {
-                console.log('✓ Successfully obtained AzurePipelinesCredential token');
-                process.exit(0);
+                console.log('✓ c1: Successfully obtained AzurePipelinesCredential token');
               } else {
-                console.error('✗ Token is empty or undefined');
-                process.exit(1);
+                console.error('✗ c1: Token is empty or undefined');
               }
             }).catch(err => {
-              console.error('✗ Failed to get token:', err.message);
-              process.exit(1);
+              console.error('✗ c1: Failed to get token:', err.message);
+            });
+
+            credential2.getToken('https://management.azure.com/.default').then(token => {
+              if (token && token.token) {
+                console.log('✓ c2: Successfully obtained AzurePipelinesCredential token');
+              } else {
+                console.error('✗ c2: Token is empty or undefined');
+              }
+            }).catch(err => {
+              console.error('✗ c2: Failed to get token:', err.message);
             });
             "@
 
