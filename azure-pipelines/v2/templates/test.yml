@@ -23,6 +23,7 @@ steps:
             Write-Output "OIDC URI: $oidcUri"
             $headers = @{
                 Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
+                "Content-Type" = "application/json"
             }
 
             $response = Invoke-RestMethod -Uri $oidcUri -Headers $headers -Method Post
