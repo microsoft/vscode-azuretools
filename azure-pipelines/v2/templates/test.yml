@@ -34,7 +34,8 @@ steps:
             $response = Invoke-RestMethod -Uri $oidcUri -Headers $headers -Method Post
 
             if ($response.oidcToken) {
-              Write-Output "oidcToken present and has value"
+              Write-Output "oidcToken present and has value, attempting login..."
+              & az login --service-principal -u $env:servicePrincipalId --tenant $env:tenantId --federated-token $response.oidcToken --allow-no-subscriptions
             } else {
               Write-Output "oidcToken is null or empty"
             }
