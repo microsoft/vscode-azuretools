@@ -37,9 +37,6 @@ resources:
       type: git
       name: MicroBuildTemplates/MicroBuildTemplates
       ref: refs/heads/release
-  pipelines:
-    - pipeline: build
-      source: ${{ parameters.artifactPipeline }}
 
 extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
