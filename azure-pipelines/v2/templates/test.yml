@@ -22,43 +22,6 @@ steps:
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
 
-            & npm i @azure/identity@latest
-
-            # Verify AzurePipelinesCredential can authenticate
-            $nodeScript = @"
-            const { AzurePipelinesCredential } = require('@azure/identity');
-            const { setLogLevel } = require('@azure/logger');
-            setLogLevel('verbose');
-
-            console.log('Creating AzurePipelinesCredential with:');
-            console.log('  Tenant ID: ' + process.env.tenantId);
-            console.log('  Client ID: ' + process.env.servicePrincipalId);
-            console.log('  Service Connection Name: ' + '${{ parameters.testServiceConnection }}');
-            console.log('  Service Connection ID: ' + process.env.AZURESUBSCRIPTION_SERVICE_CONNECTION_ID);
-            const credential = new AzurePipelinesCredential(
-              process.env.tenantId,
-              process.env.servicePrincipalId,
-              process.env.AZURESUBSCRIPTION_SERVICE_CONNECTION_ID,
-              process.env.SYSTEM_ACCESSTOKEN
-            );
-
-            console.log('Requesting token for ARM scope...');
-
-            credential.getToken('https://management.azure.com/.default').then(token => {
-              if (token && token.token) {
-                console.log('✓ Successfully obtained AzurePipelinesCredential token');
-              } else {
-                console.error('✗ Token is empty or undefined');
-              }
-            }).catch(err => {
-              console.error('✗ Failed to get token:', err.message);
-            });
-            "@
-
-            & node -e $nodeScript
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
   - task: Npm@1
     displayName: "\U0001F449 Test"
     inputs:
@@ -70,6 +33,6 @@ steps:
       ${{ if ne(parameters.testServiceConnection, '') }}:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         FC_SERVICE_CONNECTION_NAME: ${{ parameters.testServiceConnection }}
-        FC_SERVICE_CONNECTION_ID: ${{ parameters.testServiceConnection }}
+        FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
         FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
         FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
