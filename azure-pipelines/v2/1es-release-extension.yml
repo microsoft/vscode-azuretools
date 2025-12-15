@@ -73,7 +73,7 @@ extends:
 
               - template: ./templates/find-vsixs.yml
                 parameters:
-                  tarballName: ${{ parameters.packageToPublish }}
+                  vsixName: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
 
               - template: ./templates/set-release-build-number.yml
