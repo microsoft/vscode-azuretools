@@ -14,10 +14,6 @@ parameters:
     type: boolean
     default: false
 
-  # The source pipeline that produces the build artifacts
-  - name: artifactPipeline
-    type: string
-
   # In the build artifacts, the name of the artifact containing the package to publish
   - name: artifactName
     type: string
