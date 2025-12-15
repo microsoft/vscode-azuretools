@@ -78,7 +78,7 @@ extends:
               # Publish the package to VS Marketplace
               - ${{ if eq(parameters.dryRun, false) }}:
                   - task: AzureCLI@2
-                    displayName: "\U0001F4E4 Publish VSIXs to Marketplace"
+                    displayName: "\U0001F449 Publish VSIXs to Marketplace"
                     inputs:
                       azureSubscription: ${{ parameters.extensionReleaseServiceConnection }}
                       scriptType: pscore
