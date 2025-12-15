@@ -41,6 +41,7 @@ resources:
 extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
   parameters:
+    pool: ${{ parameters.releasePool }}
     stages:
       - stage: ReleaseStage
         displayName: Release extension
