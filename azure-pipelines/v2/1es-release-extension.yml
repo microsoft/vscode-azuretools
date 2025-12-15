@@ -39,7 +39,7 @@ resources:
       ref: refs/heads/release
 
 extends:
-  template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
   parameters:
     pool: ${{ parameters.releasePool }}
     stages:
@@ -64,12 +64,12 @@ extends:
                 inputs:
                   versionSpec: "22.x"
 
-              - template: /azure-pipelines/v2/templates/find-vsixs.yml@self
+              - template: ./templates/find-vsixs.yml
                 parameters:
                   vsixName: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
 
-              - template: /azure-pipelines/v2/templates/set-release-build-number.yml@self
+              - template: ./templates/set-release-build-number.yml
                 parameters:
                   packageToPublish: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
