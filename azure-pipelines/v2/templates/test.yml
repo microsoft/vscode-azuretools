@@ -18,31 +18,9 @@ steps:
           scriptLocation: inlineScript
           addSpnToEnvironment: true
           inlineScript: |
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
-            Write-Output "Client ID = $($env:servicePrincipalId)"
-            Write-Output "Tenant ID = $($env:tenantId)"
-
-            Write-Output "Maybe SC ID: $($env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID)"
-            Write-Output "Maybe Client ID: $($env:AZURESUBSCRIPTION_CLIENT_ID)"
-            Write-Output "Maybe Tenant ID: $($env:AZURESUBSCRIPTION_TENANT_ID)"
-
-            $oidcUri = "$(System.OidcRequestUri)?api-version=7.1&serviceConnectionId=${{ parameters.testServiceConnection }}"
-            Write-Output "OIDC URI: $oidcUri"
-            $headers = @{
-                Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
-                "Content-Type" = "application/json"
-                "X-TFS-FedAuthRedirect" = "Suppress"
-            }
-
-            $response = Invoke-RestMethod -Uri $oidcUri -Headers $headers -Method Post
-
-            if ($response.oidcToken) {
-              Write-Output "oidcToken present and has value, attempting login..."
-              & az login --service-principal -u $env:servicePrincipalId --tenant $env:tenantId --federated-token $response.oidcToken --allow-no-subscriptions
-            } else {
-              Write-Output "oidcToken is null or empty"
-            }
 
             & npm i @azure/identity@latest
 
@@ -56,16 +34,11 @@ steps:
             console.log('  Tenant ID: ' + process.env.tenantId);
             console.log('  Client ID: ' + process.env.servicePrincipalId);
             console.log('  Service Connection Name: ' + '${{ parameters.testServiceConnection }}');
+            console.log('  Service Connection ID: ' + process.env.AZURESUBSCRIPTION_SERVICE_CONNECTION_ID);
             const credential = new AzurePipelinesCredential(
               process.env.tenantId,
               process.env.servicePrincipalId,
-              '7eed1dc7-f1c5-4076-ad61-f03e3b7d6ec3',
-              process.env.SYSTEM_ACCESSTOKEN
-            );
-            const credential2 = new AzurePipelinesCredential(
-              process.env.tenantId,
-              process.env.servicePrincipalId,
-              '${{ parameters.testServiceConnection }}',
+              process.env.AZURESUBSCRIPTION_SERVICE_CONNECTION_ID,
               process.env.SYSTEM_ACCESSTOKEN
             );
 
@@ -73,19 +46,12 @@ steps:
 
             credential.getToken('https://management.azure.com/.default').then(token => {
               if (token && token.token) {
-                console.log('✓ c1: Successfully obtained AzurePipelinesCredential token');
+                console.log('✓ Successfully obtained AzurePipelinesCredential token');
               } else {
-                console.error('✗ c1: Token is empty or undefined');
-              }
-              return credential2.getToken('https://management.azure.com/.default');
-            }).then(token => {
-              if (token && token.token) {
-                console.log('✓ c2: Successfully obtained AzurePipelinesCredential token');
-              } else {
-                console.error('✗ c2: Token is empty or undefined');
+                console.error('✗ Token is empty or undefined');
               }
             }).catch(err => {
-              console.error('✗ c2: Failed to get token:', err.message);
+              console.error('✗ Failed to get token:', err.message);
             });
             "@
 
