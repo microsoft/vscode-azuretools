@@ -1,0 +1,50 @@
+parameters:
+  # Set to filter to tarballs matching this name (optional)
+  - name: tarballName
+    type: string
+    default: ""
+
+  # Set to verify publish version matches package.json version (optional)
+  - name: publishVersion
+    type: string
+    default: ""
+
+steps:
+  - pwsh: |
+      # Find all the matching tarballs
+      $tarballFiles = Get-ChildItem -Recurse -Filter "${{ parameters.tarballName }}*.tgz"
+
+      # Must be exactly one matching tarball found
+      if ($tarballFiles.Count -eq 0) {
+          Write-Error "No matching tarballs found."
+          exit 1
+      } elseif ($tarballFiles.Count -gt 1) {
+          Write-Error "More than one matching tarball found."
+          exit 1
+      }
+
+      # Loop over the found tarballs and get their details
+      $tarballList = @()
+      foreach ($tarballFile in $tarballFiles) {
+          Write-Output "Discovered tarball: $($tarballFile.FullName)"
+
+          # Get some details from the adjacent package.json
+          $packageJson = Get-Content "$($tarballFile.DirectoryName)/package.json" | ConvertFrom-Json
+
+          # If publishVersion is set, verify it matches the package.json version
+          if ('${{ parameters.publishVersion }}' -ne '' -and $packageJson.version -ne '${{ parameters.publishVersion }}') {
+              Write-Error "Publish version ${{ parameters.publishVersion }} doesn't match version found in package.json $($packageJson.version). Cancelling."
+              exit 1
+          }
+
+          # Add it to the list
+          $tarballList += @{
+              directory = $tarballFile.DirectoryName
+              tarballName = $tarballFile.Name
+              npmVersionString = $packageJson.version
+          }
+      }
+
+      # Store the tarball list as JSON for later steps
+      Write-Output "##vso[task.setvariable variable=tarballListJson]$($tarballList | ConvertTo-Json -Compress)"
+    displayName: "\U0001F449 Discover all tarballs"

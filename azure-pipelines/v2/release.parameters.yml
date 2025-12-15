@@ -1,0 +1,24 @@
+parameters:
+  # The name of the package to publish.
+  # This is regex matched against .tgz/.vsix files found in the build artifact.
+  - name: packageToPublish
+    type: string
+
+  # The intended package version to publish.
+  # This is used to verify the version in package.json matches the version to publish to avoid publishing the wrong package/version
+  - name: publishVersion
+    type: string
+
+  # When true, skips the deployment job that actually publishes the package
+  - name: dryRun
+    type: boolean
+    default: false
+
+  # The source pipeline that produces the build artifacts
+  - name: artifactPipeline
+    type: string
+
+  # In the build artifacts, the name of the artifact containing the package to publish
+  - name: artifactName
+    type: string
+    default: Build Root

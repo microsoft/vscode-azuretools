@@ -11,21 +11,8 @@ parameters:
       - name: Root
         working_directory: .
 
-  # The pool to use for the SDLSources stage
-  - name: sdlSourcesPool
-    type: object
-    default:
-      name: VSEngSS-MicroBuild2022-1ES
-      image: server2022-microbuildVS2022-1es
-      os: windows
-
-  # The pool to use for the build stage
-  - name: buildPool
-    type: object
-    default:
-      name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
-      os: linux
+  # Pool configuration
+  - template: ./pools.parameters.yml
 
   # Set to 'real' or 'test' to enable MicroBuild signing
   - name: signType
@@ -64,9 +51,6 @@ extends:
       ${{ if eq(parameters.isOfficialBuild, true) }}:
         tsa:
           enabled: true
-          configFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/tsaoptions.json # TODO: default path in .config?
-      suppression:
-        suppressionFile: $(Build.SourcesDirectory)/.azure-pipelines/compliance/.gdnsuppress # TODO: default path in .config?
       componentgovernance:
         directoryExclusionPatterns: "**/.vscode-test"
       codeql:
