@@ -1,6 +1,6 @@
 parameters:
   # The name of the package to publish.
-  # This is regex matched against .vsix files found in the build artifact.
+  # This is regex matched against .tgz files found in the build artifact.
   - name: packageToPublish
     type: string
 
