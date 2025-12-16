@@ -39,7 +39,9 @@ resources:
       ref: refs/heads/release
 
 extends:
-  template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
+  # TODO: uncomment
+  # template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
   parameters:
     pool: ${{ parameters.releasePool }}
     stages:
@@ -49,8 +51,9 @@ extends:
           - job: Publish
             displayName: Publish extension
             templateContext:
-              type: releaseJob
-              isProduction: false # TODO: back to true after testing
+              # TODO: uncomment
+              # type: releaseJob
+              # isProduction: true
               inputs:
                 - input: pipelineArtifact
                   pipeline: build
