@@ -1,6 +1,23 @@
 parameters:
-  # Required release parameters
-  - template: ./release.parameters.yml
+  # The name of the package to publish.
+  # This is regex matched against .vsix files found in the build artifact.
+  - name: packageToPublish
+    type: string
+
+  # The intended package version to publish.
+  # This is used to verify the version in package.json matches the version to publish to avoid publishing the wrong package/version
+  - name: publishVersion
+    type: string
+
+  # When true, skips the deployment job that actually publishes the package
+  - name: dryRun
+    type: boolean
+    default: false
+
+  # In the build artifacts, the name of the artifact containing the package to publish
+  - name: artifactName
+    type: string
+    default: Build Root
 
   # ESRP release also requires owner aliases, though does not use them currently
   - name: ownerAliases
@@ -10,8 +27,13 @@ parameters:
   - name: approverAliases
     type: string
 
-  # Pool configuration
-  - template: ./pools.parameters.yml
+  # The pool to use for releases
+  - name: releasePool
+    type: object
+    default:
+      name: VSEngSS-MicroBuild2022-1ES
+      image: server2022-microbuildVS2022-1es
+      os: windows
 
   # The GitHub service connection to use for creating the GitHub release (optional)
   - name: gitHubServiceConnection
@@ -24,9 +46,6 @@ resources:
       type: git
       name: MicroBuildTemplates/MicroBuildTemplates
       ref: refs/heads/release
-  pipelines:
-    - pipeline: build
-      source: ${{ parameters.artifactPipeline }}
 
 extends:
   template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
@@ -49,7 +68,7 @@ extends:
             steps:
               - checkout: none
 
-              - template: ./templates/find-tarballs.yml
+              - template: azure-pipelines/v2/templates/find-tarballs.yml@azExtTemplates # TODO: For some reason need to explicitly use the full path and repository reference here
                 parameters:
                   tarballName: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
@@ -62,7 +81,7 @@ extends:
                   Write-Host "##vso[task.setvariable variable=tgzFileName]$tgzFileName"
                 displayName: "\U0001F449 Set variables for found tarball"
 
-              - template: ./templates/set-release-build-number.yml
+              - template: azure-pipelines/v2/templates/set-release-build-number.yml@azExtTemplates # TODO: For some reason need to explicitly use the full path and repository reference here
                 parameters:
                   packageToPublish: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
