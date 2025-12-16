@@ -50,7 +50,7 @@ extends:
             displayName: Publish extension
             templateContext:
               type: releaseJob
-              isProduction: true
+              isProduction: false # TODO: back to true after testing
               inputs:
                 - input: pipelineArtifact
                   pipeline: build
