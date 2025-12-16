@@ -1,13 +1,19 @@
 variables:
-  # Related to release approval process
+  # Related to extension release approval process
   - name: extensionReleaseServiceConnection
     value: AzCodeReleases
+  - name: extensionReleaseApprovalEnvironment
+    value: AzCodeDeploy
+
+  # Related to NPM release approval process
+  - name: gitHubServiceConnection
+    value: GitHub-AzureTools
+  - name: npmReleaseApprovalEnvironment
+    value: AzCodeDeploy
   - name: npmReleaseOwnerAlias
     value: azcode
   - name: npmReleaseApproverAlias
     value: jinglou
-  - name: gitHubServiceConnection
-    value: GitHub-AzureTools
 
   # Test
   - name: testServiceConnection

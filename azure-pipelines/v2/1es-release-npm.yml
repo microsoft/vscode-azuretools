@@ -40,6 +40,11 @@ parameters:
     type: string
     default: ""
 
+  # Set to the AzDO environment used for enforcing approval before the release runs
+  - name: releaseApprovalEnvironment
+    type: string
+    default: ""
+
 resources:
   repositories:
     - repository: MicroBuildTemplate
@@ -56,6 +61,8 @@ extends:
         displayName: Release NPM package
         jobs:
           - job: Publish
+            ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
+              environment: ${{ parameters.releaseApprovalEnvironment }}
             displayName: Publish NPM package
             templateContext:
               type: releaseJob

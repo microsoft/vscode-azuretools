@@ -23,6 +23,11 @@ parameters:
   - name: extensionReleaseServiceConnection
     type: string
 
+  # Set to the AzDO environment used for enforcing approval before the release runs
+  - name: releaseApprovalEnvironment
+    type: string
+    default: ""
+
   # The pool to use for releases
   - name: releasePool
     type: object
@@ -49,6 +54,8 @@ extends:
         displayName: Release extension
         jobs:
           - job: Publish
+            ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
+              environment: ${{ parameters.releaseApprovalEnvironment }}
             displayName: Publish extension
             templateContext:
               # TODO: uncomment
