@@ -64,12 +64,12 @@ extends:
                 inputs:
                   versionSpec: 22.x
 
-              - template: ./templates/find-vsixs.yml
+              - template: azure-pipelines/v2/templates/find-vsixs.yml@azExtTemplates
                 parameters:
                   vsixName: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
 
-              - template: ./templates/set-release-build-number.yml
+              - template: azure-pipelines/v2/templates/set-release-build-number.yml@azExtTemplates
                 parameters:
                   packageToPublish: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
