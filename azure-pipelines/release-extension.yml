@@ -27,7 +27,7 @@ parameters:
     type: boolean
     default: false
 
-  # A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specifc), you can add mutliple commands to this list.
+  # A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specific), you can add multiple commands to this list.
   - name: publishCommands
     type: object
     default:
@@ -162,9 +162,15 @@ extends:
                         if ($vsixFiles.Count -eq 0) {
                           Write-Error "No .vsix files found in $workingDirectory"
                           exit 1
+                        } elseif ($vsixFiles.Count -gt 1) {
+                          Write-Error "Multiple .vsix files found in $workingDirectory. Expected exactly one."
+                          foreach ($file in $vsixFiles) {
+                            Write-Output "  - $($file.Name)"
+                          }
+                          exit 1
                         } else {
                           # Set the pipeline variable with the full path
-                          $vsixFileName = $vsixFiles[0].FullName
+                          $vsixFileName = ($vsixFiles | Select-Object -First 1).FullName
                           Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
                           Write-Output "Found .vsix file: $vsixFileName"
                         }
