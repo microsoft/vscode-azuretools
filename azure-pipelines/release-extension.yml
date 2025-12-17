@@ -35,6 +35,13 @@ parameters:
         "vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s",
       ]
 
+  # The subdirectory within the build artifacts where the extension files are located.
+  # Leave empty (default) for extensions at the root level.
+  # Set to the subdirectory name (e.g., "helper") for extensions in subdirectories.
+  - name: artifactSubdirectory
+    type: string
+    default: ""
+
 # `resources` specifies the location of templates to pick up, use it to get 1ES templates
 resources:
   repositories:
@@ -75,8 +82,17 @@ extends:
                     # Modify the build number to include repo name, extension version, and if dry run is true
                     - powershell: |
                         # Get the version from package.json
+                        $artifactSubdirectory = "$env:artifactSubdirectory"
+                        $workingDirectory = "$(System.DefaultWorkingDirectory)"
+                        
+                        if ($artifactSubdirectory) {
+                          $workingDirectory = Join-Path $workingDirectory $artifactSubdirectory
+                          Write-Output "Using subdirectory: $artifactSubdirectory"
+                          Write-Output "Working directory: $workingDirectory"
+                        }
 
-                        $packageJsonPath = "$(System.DefaultWorkingDirectory)/package.json"
+                        $packageJsonPath = Join-Path $workingDirectory "package.json"
+                        Write-Output "Looking for package.json at: $packageJsonPath"
                         $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                         $isDryRun = "$env:dryRun"
                         $currentBuildNumber = "$(Build.BuildId)"
@@ -96,12 +112,22 @@ extends:
                       displayName: "\U0001F449 Prepend version from package.json to build number"
                       env:
                         dryRun: ${{ parameters.dryRun }}
+                        artifactSubdirectory: ${{ parameters.artifactSubdirectory }}
 
                     # For safety, verify the version in package.json matches the version to publish entered by the releaser
                     # If they don't match, this step fails
                     - powershell: |
                         # Get the version from package.json
-                        $packageJsonPath = "$(System.DefaultWorkingDirectory)/package.json"
+                        $artifactSubdirectory = "$env:artifactSubdirectory"
+                        $workingDirectory = "$(System.DefaultWorkingDirectory)"
+                        
+                        if ($artifactSubdirectory) {
+                          $workingDirectory = Join-Path $workingDirectory $artifactSubdirectory
+                          Write-Output "Using subdirectory: $artifactSubdirectory"
+                        }
+
+                        $packageJsonPath = Join-Path $workingDirectory "package.json"
+                        Write-Output "Looking for package.json at: $packageJsonPath"
                         $npmVersionString = (Get-Content $packageJsonPath | ConvertFrom-Json).version
                         $publishVersion = "$env:publishVersion"
                         Write-Output "Publishing version: $publishVersion"
@@ -115,24 +141,36 @@ extends:
                       displayName: "\U0001F449 Verify publish version"
                       env:
                         publishVersion: ${{ parameters.publishVersion }}
+                        artifactSubdirectory: ${{ parameters.artifactSubdirectory }}
 
                     # Find the vsix to release and set the vsix file name variable
                     # Fails with an error if more than one .vsix file is found, or if no .vsix file is found
                     - powershell: |
                         # Get all .vsix files in the current directory
-                        $vsixFiles = Get-ChildItem -Path $(System.DefaultWorkingDirectory) -Filter *.vsix -File
+                        $artifactSubdirectory = "$env:artifactSubdirectory"
+                        $workingDirectory = "$(System.DefaultWorkingDirectory)"
+                        
+                        if ($artifactSubdirectory) {
+                          $workingDirectory = Join-Path $workingDirectory $artifactSubdirectory
+                          Write-Output "Using subdirectory: $artifactSubdirectory"
+                        }
+
+                        Write-Output "Looking for .vsix files in: $workingDirectory"
+                        $vsixFiles = Get-ChildItem -Path $workingDirectory -Filter *.vsix -File
 
                         # Check if no .vsix file is found
                         if ($vsixFiles.Count -eq 0) {
-                          Write-Error "No .vsix files found."
+                          Write-Error "No .vsix files found in $workingDirectory"
                           exit 1
                         } else {
-                          # Set the pipeline variable
-                          $vsixFileName = $vsixFiles.Name
+                          # Set the pipeline variable with the full path
+                          $vsixFileName = $vsixFiles[0].FullName
                           Write-Output "##vso[task.setvariable variable=vsixFileName;]$vsixFileName"
                           Write-Output "Found .vsix file: $vsixFileName"
                         }
                       displayName: "\U0001F449 Find and Set .vsix File Variable"
+                      env:
+                        artifactSubdirectory: ${{ parameters.artifactSubdirectory }}
 
                     - task: UseNode@1
                       inputs:
@@ -141,6 +179,23 @@ extends:
 
                     - script: npm i -g @vscode/vsce
                       displayName: "\U0001F449 Install vsce"
+
+                    # Set the working directory for vsce publish
+                    - powershell: |
+                        $artifactSubdirectory = "$env:artifactSubdirectory"
+                        $workingDirectory = "$(System.DefaultWorkingDirectory)"
+                        
+                        if ($artifactSubdirectory) {
+                          $workingDirectory = Join-Path $workingDirectory $artifactSubdirectory
+                          Write-Output "Setting working directory for vsce publish: $workingDirectory"
+                        } else {
+                          Write-Output "Using default working directory: $workingDirectory"
+                        }
+                        
+                        Write-Output "##vso[task.setvariable variable=vsceWorkingDirectory;]$workingDirectory"
+                      displayName: "\U0001F449 Set vsce working directory"
+                      env:
+                        artifactSubdirectory: ${{ parameters.artifactSubdirectory }}
 
                     - ${{ each publishCommand in parameters.publishCommands }}:
                         # log the publishCommand
@@ -154,4 +209,5 @@ extends:
                             azureSubscription: ${{ parameters.ExtensionReleaseServiceConnection }}
                             scriptType: pscore
                             scriptLocation: inlineScript
+                            workingDirectory: $(vsceWorkingDirectory)
                             inlineScript: ${{ publishCommand }}
