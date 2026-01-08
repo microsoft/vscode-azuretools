@@ -8,7 +8,7 @@ import { copy } from 'esbuild-plugin-copy';
 import * as fs from 'fs/promises';
 import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 
-const { isAutoDebug, isAutoWatch } = getAutoBuildSettings();
+export const { isAutoDebug, isAutoWatch } = getAutoBuildSettings();
 
 /**
  * Base config - shared between prod/dev/debug
