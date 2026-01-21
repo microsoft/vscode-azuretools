@@ -192,6 +192,7 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     'eslint.config.mjs',
     'main.js',
     'main.mjs',
+    'test/testProjects/**'
 ]);
 
 /**
