@@ -10,6 +10,7 @@ import { Identity, ManagedServiceIdentityClient } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
+import { type StorageManagementClient } from '@azure/arm-storage';
 import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
@@ -550,6 +551,12 @@ export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClien
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
 export declare function createAzureSubscriptionClient<T>(context: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T;
+
+/**
+ *
+ * @param context
+ */
+export declare function createStorageClient(context: AzExtClientContext): Promise<StorageManagementClient>;
 
 export declare namespace uiUtils {
     export function listAllIterator<T>(iterator: PagedAsyncIterableIterator<T>): Promise<T[]>
