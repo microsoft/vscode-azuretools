@@ -552,10 +552,6 @@ export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClien
  */
 export declare function createAzureSubscriptionClient<T>(context: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T;
 
-/**
- *
- * @param context
- */
 export declare function createStorageClient(context: AzExtClientContext): Promise<StorageManagementClient>;
 
 export declare namespace uiUtils {
