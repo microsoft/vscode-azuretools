@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ConfigObject as EslintConfig } from '@eslint/core';
+import type { ConfigObject as EslintConfig, Plugin as EslintPlugin } from '@eslint/core';
 import eslint from '@eslint/js';
-import { defineConfig, globalIgnores } from 'eslint/config';
 import eslintPluginHeader from '@tony.ganchev/eslint-plugin-header';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -44,19 +44,22 @@ export const azExtUniversalRules: EslintConfig = {
  */
 export const azExtCopyrightHeaderRule: EslintConfig = {
     plugins: {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        header: eslintPluginHeader,
+        'header': eslintPluginHeader as EslintPlugin,
     },
     rules: {
         'header/header': [
             'error',
-            'block',
-            [
-                { pattern: '^-+$', template: '---------------------------------------------------------------------------------------------' },
-                { pattern: '^ \\*  Copyright.*Microsoft', template: ' *  Copyright (c) Microsoft Corporation. All rights reserved.' },
-                { pattern: '^ \\*  [Ll]icensed under the MIT [Ll]icense', template: ' *  Licensed under the MIT License. See LICENSE.md in the project root for license information.' },
-                { pattern: '^ \\*-+$', template: ' *--------------------------------------------------------------------------------------------' },
-            ],
+            {
+                header: {
+                    commentType: 'block',
+                    lines: [
+                        /.*/,
+                        /Copyright.*Microsoft/,
+                        /LICENSE/i,
+                        /.*/,
+                    ],
+                },
+            },
         ],
     },
 };
