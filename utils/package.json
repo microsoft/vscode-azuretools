@@ -39,7 +39,6 @@
         "@microsoft/vscode-azureresources-api": "^3.0.0",
         "@vscode/extension-telemetry": "^0.9.6",
         "dayjs": "^1.11.2",
-        "escape-string-regexp": "^2.0.0",
         "html-to-text": "^9.0.0",
         "semver": "^7.3.7",
         "vscode-tas-client": "^0.1.84"
