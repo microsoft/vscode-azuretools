@@ -6,6 +6,7 @@
 import type { ConfigObject as EslintConfig } from '@eslint/core';
 import eslint from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import eslintPluginHeader from '@tony.ganchev/eslint-plugin-header';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -34,6 +35,29 @@ export const azExtUniversalRules: EslintConfig = {
         '@typescript-eslint/consistent-type-definitions': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         'no-extra-boolean-cast': 'off',
+    },
+};
+
+/**
+ * Copyright header rule that should apply to all projects
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtCopyrightHeaderRule: EslintConfig = {
+    plugins: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        header: eslintPluginHeader,
+    },
+    rules: {
+        'header/header': [
+            'error',
+            'block',
+            [
+                { pattern: '-+', template: '---------------------------------------------------------------------------------------------' },
+                { pattern: '.*Copyright.*Microsoft', template: ' *  Copyright (c) Microsoft Corporation. All rights reserved.' },
+                { pattern: '.*[Ll]icensed under the MIT [Ll]icense', template: ' *  Licensed under the MIT License. See LICENSE.md in the project root for license information.' },
+                { pattern: '-+', template: ' *--------------------------------------------------------------------------------------------' },
+            ],
+        ],
     },
 };
 
@@ -203,6 +227,7 @@ export const azExtEslintRecommended: EslintConfig[] = defineConfig(
     tseslint.configs.recommended,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
 );
@@ -216,6 +241,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.recommendedTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtTypeCheckedOverrides,
@@ -230,6 +256,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
     tseslint.configs.strict,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtStrictOverrides,
@@ -244,6 +271,7 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtTypeCheckedOverrides,

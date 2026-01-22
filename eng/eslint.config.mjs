@@ -3,4 +3,4 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { azExtEslintStrictTypeChecked as default } from './src/eslint/eslintConfigs.ts';
+export { azExtEslintStrictTypeChecked as default } from './dist/esm/eslint/eslintConfigs.js';
