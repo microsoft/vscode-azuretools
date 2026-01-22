@@ -59,6 +59,9 @@ export const azExtCopyrightHeaderRule: EslintConfig = {
                         /.*/,
                     ],
                 },
+                trailingEmptyLines: {
+                    minimum: 2,
+                },
             },
         ],
     },
