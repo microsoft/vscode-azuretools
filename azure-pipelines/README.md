@@ -214,4 +214,28 @@ The extension release pipeline has the following parameters.
 - name: publishCommands
   type: object
   default: ['vsce publish --azure-credential --packagePath $(vsixFileName) --manifestPath extension.manifest --signaturePath extension.signature.p7s']
+
+# The subdirectory within the build artifacts where the extension files are located.
+# Leave empty (default) for extensions at the root level.
+# Set to the subdirectory name (e.g., "helper") for extensions in subdirectories.
+- name: artifactSubdirectory
+  type: string
+  default: ""
 ```
+
+#### Using with extensions in subdirectories
+
+If your extension is located in a subdirectory (e.g., `helper/`) and the build artifacts preserve that directory structure, you need to specify the `artifactSubdirectory` parameter when calling the release template:
+
+```yaml
+extends:
+  template: azure-pipelines/release-extension.yml@azExtTemplates
+  parameters:
+    publishVersion: ${{ parameters.publishVersion }}
+    dryRun: ${{ parameters.dryRun }}
+    artifactSubdirectory: "helper" # Specify the subdirectory name
+    environmentName: AzCodeDeploy
+    ExtensionReleaseServiceConnection: AzCodeReleases
+```
+
+This ensures the release pipeline looks for `package.json`, `.vsix` files, and signing artifacts in the correct subdirectory within the downloaded build artifacts.
