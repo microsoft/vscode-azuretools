@@ -47,7 +47,7 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
   parameters:
     settings:
-      networkIsolationPolicy: Npm
+      networkIsolationPolicy: CFSClean,Npm
     pool:
       name: VSEngSS-MicroBuild2022-1ES # Name of your hosted pool
       image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
