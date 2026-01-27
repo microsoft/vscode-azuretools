@@ -40,13 +40,11 @@ resources:
   repositories:
     - repository: MicroBuildTemplate
       type: git
-      name: MicroBuildTemplates/MicroBuildTemplates
+      name: 1ESPipelineTemplates/MicroBuildTemplate
       ref: refs/heads/release
 
 extends:
-  # TODO: uncomment
-  # template: azure-pipelines/1ES.Official.Publish.yml@MicroBuildTemplate
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
   parameters:
     pool: ${{ parameters.releasePool }}
     stages:
@@ -74,12 +72,12 @@ extends:
                 inputs:
                   versionSpec: 22.x
 
-              - template: azure-pipelines/v2/templates/find-vsixs.yml@azExtTemplates # TODO: For some reason need to explicitly use the full path and repository reference here
+              - template: ./templates/find-vsixs.yml
                 parameters:
                   vsixName: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
 
-              - template: azure-pipelines/v2/templates/set-release-build-number.yml@azExtTemplates # TODO: For some reason need to explicitly use the full path and repository reference here
+              - template: ./templates/set-release-build-number.yml
                 parameters:
                   packageToPublish: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}

@@ -16,5 +16,5 @@ variables:
     value: jinglou
 
   # Test
-  - name: testServiceConnection
+  - name: testARMServiceConnection
     value: AzCodeE2ETests

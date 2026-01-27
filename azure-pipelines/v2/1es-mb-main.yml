@@ -36,13 +36,18 @@ parameters:
       - none
     default: real
 
+  # Supply to disable MicroBuild signing steps and use these instead
+  - name: alternativeSigningSteps
+    type: stepList
+    default: []
+
   # Additional steps to run during setup (e.g. npm authenticate etc.)
   - name: additionalSetupSteps
     type: stepList
     default: []
 
   # Set to the ARM service connection name to enable tests with Azure federated credentials
-  - name: testServiceConnection
+  - name: testARMServiceConnection
     type: string
     default: ""
 
@@ -72,10 +77,11 @@ extends:
     pool: ${{ parameters.sdlPool }}
 
     stages:
-      - template: ./stages/stages.yml
+      - template: ./stages/1es-stages.yml
         parameters:
           jobs: ${{ parameters.jobs }}
           buildPool: ${{ parameters.buildPool }}
           signType: ${{ parameters.signType }}
+          alternativeSigningSteps: ${{ parameters.alternativeSigningSteps }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
-          testServiceConnection: ${{ parameters.testServiceConnection }}
+          testARMServiceConnection: ${{ parameters.testARMServiceConnection }}
