@@ -15,6 +15,11 @@ parameters:
       - test
       - none
 
+  # Supply to disable MicroBuild signigng steps and use these instead
+  - name: alternativeSigningSteps
+    type: stepList
+    default: []
+
   # Additional steps to run during setup (e.g. npm authenticate etc.)
   - name: additionalSetupSteps
     type: stepList
@@ -30,14 +35,13 @@ stages:
       - ${{ each job in parameters.jobs }}:
           - job: ${{ job.name }}
             templateContext:
-              # TODO: Find a way to parameterize signing template context
-              mb: # Enable the MicroBuild Signing toolset
-                signing:
-                  enabled: ${{ ne(parameters.signType, 'none') }}
-                  signType: ${{ parameters.signType }}
-                  signWithProd: ${{ eq(parameters.signType, 'real') }}
-                  zipSources: false
-                  # azureSubscription: MicroBuild Signing Task (DevDiv) TODO: Maybe not needed?
+              ${{ if eq(length(parameters.alternativeSigningSteps), 0) }}:
+                mb: # Enable the MicroBuild Signing toolset
+                  signing:
+                    enabled: ${{ ne(parameters.signType, 'none') }}
+                    signType: ${{ parameters.signType }}
+                    signWithProd: ${{ eq(parameters.signType, 'real') }}
+                    zipSources: false
               outputs:
                 - output: pipelineArtifact
                   targetPath: $(Build.ArtifactStagingDirectory)/build/$(artifact_name)
