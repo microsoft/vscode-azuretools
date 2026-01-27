@@ -11,8 +11,21 @@ parameters:
       - name: Root
         working_directory: .
 
-  # Pool configuration
-  - template: ./pools.parameters.yml
+  # The pool to use for the SDL stage
+  - name: sdlPool
+    type: object
+    default:
+      name: VSEngSS-MicroBuild2022-1ES
+      image: server2022-microbuildVS2022-1es
+      os: windows
+
+  # The pool to use for the build stage
+  - name: buildPool
+    type: object
+    default:
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux
 
   # Set to 'real' or 'test' to enable MicroBuild signing
   - name: signType
@@ -56,7 +69,7 @@ extends:
       codeql:
         excludePathPatterns: "**/.vscode-test, **/dist"
 
-    pool: ${{ parameters.sdlSourcesPool }}
+    pool: ${{ parameters.sdlPool }}
 
     stages:
       - template: ./stages/stages.yml
