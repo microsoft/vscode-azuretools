@@ -56,9 +56,8 @@ extends:
               environment: ${{ parameters.releaseApprovalEnvironment }}
             displayName: Publish extension
             templateContext:
-              # TODO: uncomment
-              # type: releaseJob
-              # isProduction: true
+              type: releaseJob
+              isProduction: true
               inputs:
                 - input: pipelineArtifact
                   pipeline: build
@@ -101,16 +100,15 @@ extends:
                             $commandLine = "npx @vscode/vsce@latest publish --azure-credential --packagePath $($vsix.vsixName) --manifestPath $($vsix.manifestName) --signaturePath $($vsix.signatureName)"
                             if ($vsix.proposedApis -ne $null -and $vsix.proposedApis.Count -gt 0) {
                                 # TODO: Need to make sure this is the right argument syntax for multiple proposed APIs
-                                $commandLine += " --allow-proposed-apis $($vsix.proposedApis -join ',')"
+                                $commandLine += " --allow-proposed-apis $($vsix.proposedApis -join ' ')"
                             }
 
                             # TODO: Need to make sure that if an extension was packaged as platform-specific, it doesn't still need to be published with the same platform-specific argument
                             Write-Output "Publishing VSIX: $($vsix.vsixName) with command:"
                             Write-Output "    $($commandLine)"
 
-                            # TODO: temporarily disabled for testing
                             # Execute the publish command line
-                            # & $commandLine
+                            # & $commandLine # TODO: temporarily disabled for testing
                             # if ($LASTEXITCODE -ne 0) {
                             #     Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
                             #     exit 1

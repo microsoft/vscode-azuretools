@@ -2,7 +2,7 @@ variables:
   # Related to extension release approval process
   - name: extensionReleaseServiceConnection
     value: AzCodeReleases
-  - name: extensionReleaseApprovalEnvironment # TODO: move approval to the service connections?
+  - name: extensionReleaseApprovalEnvironment
     value: AzCodeDeploy
 
   # Related to NPM release approval process
