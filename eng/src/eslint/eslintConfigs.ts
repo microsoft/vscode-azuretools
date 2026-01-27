@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ConfigObject as EslintConfig } from '@eslint/core';
+import type { ConfigObject as EslintConfig, Plugin as EslintPlugin } from '@eslint/core';
 import eslint from '@eslint/js';
+import eslintPluginHeader from '@tony.ganchev/eslint-plugin-header';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -34,6 +35,47 @@ export const azExtUniversalRules: EslintConfig = {
         '@typescript-eslint/consistent-type-definitions': 'off',
         '@typescript-eslint/no-inferrable-types': 'off',
         'no-extra-boolean-cast': 'off',
+    },
+};
+
+/**
+ * Copyright header rule that should apply to all projects
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtCopyrightHeaderRule: EslintConfig = {
+    plugins: {
+        'header': eslintPluginHeader as EslintPlugin,
+    },
+    rules: {
+        'header/header': [
+            'error',
+            {
+                header: {
+                    commentType: 'block',
+                    lines: [
+                        {
+                            pattern: /.*/,
+                            template: '---------------------------------------------------------------------------------------------',
+                        },
+                        {
+                            pattern: /Copyright.*Microsoft/,
+                            template: ' *  Copyright (c) Microsoft Corporation. All rights reserved.',
+                        },
+                        {
+                            pattern: /LICENSE/i,
+                            template: ' *  Licensed under the MIT License. See LICENSE in the project root for license information.',
+                        },
+                        {
+                            pattern: /.*/,
+                            template: ' *--------------------------------------------------------------------------------------------',
+                        },
+                    ],
+                },
+                trailingEmptyLines: {
+                    minimum: 2,
+                },
+            },
+        ],
     },
 };
 
@@ -192,6 +234,7 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     'eslint.config.mjs',
     'main.js',
     'main.mjs',
+    '**/test/testProjects/**'
 ]);
 
 /**
@@ -203,6 +246,7 @@ export const azExtEslintRecommended: EslintConfig[] = defineConfig(
     tseslint.configs.recommended,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
 );
@@ -216,6 +260,7 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.recommendedTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtTypeCheckedOverrides,
@@ -230,6 +275,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
     tseslint.configs.strict,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtStrictOverrides,
@@ -244,6 +290,7 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtTypeCheckedOverrides,
