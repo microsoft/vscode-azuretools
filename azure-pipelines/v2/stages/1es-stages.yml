@@ -1,0 +1,66 @@
+parameters:
+  # The jobs to run. Use to parallelize building in subdirectories
+  - name: jobs
+    type: object
+
+  # The pool to use for the build stage
+  - name: buildPool
+    type: object
+
+  # Set to 'real' or 'test' to enable MicroBuild signing
+  - name: signType
+    type: string
+    values:
+      - real
+      - test
+      - none
+
+  # Supply to disable MicroBuild signing steps and use these instead
+  - name: alternativeSigningSteps
+    type: stepList
+
+  # Additional steps to run during setup (e.g. npm authenticate etc.)
+  - name: additionalSetupSteps
+    type: stepList
+
+  # Set to enable tests with Azure federated credentials
+  - name: testARMServiceConnection
+    type: string
+
+stages:
+  - stage: BuildStage
+    pool: ${{ parameters.buildPool }}
+    jobs:
+      - ${{ each job in parameters.jobs }}:
+          - job: ${{ job.name }}
+            templateContext:
+              ${{ if eq(length(parameters.alternativeSigningSteps), 0) }}:
+                mb: # Enable the MicroBuild Signing toolset
+                  signing:
+                    enabled: ${{ ne(parameters.signType, 'none') }}
+                    signType: ${{ parameters.signType }}
+                    signWithProd: ${{ eq(parameters.signType, 'real') }}
+                    zipSources: false
+              outputs:
+                - output: pipelineArtifact
+                  targetPath: $(Build.ArtifactStagingDirectory)/build/$(artifact_name)
+                  artifactName: Build $(artifact_name)
+            variables:
+              artifact_name: ${{ replace(job.name, '_', '-') }}
+              working_directory: ${{ job.working_directory }}
+            steps:
+              - checkout: self
+                fetchDepth: 1
+              - template: ../templates/setup.yml
+              - ${{ parameters.additionalSetupSteps }}
+              - template: ../templates/lint.yml
+              - template: ../templates/build.yml
+              - template: ../templates/package.yml
+              - ${{ if and(eq(length(parameters.alternativeSigningSteps), 0), ne(parameters.signType, 'none')) }}:
+                  - template: ../templates/1es-mb-sign.yml
+                ${{ elseif ne(length(parameters.alternativeSigningSteps), 0) }}:
+                  - ${{ parameters.alternativeSigningSteps }}
+              - template: ../templates/stage-artifacts.yml
+              - template: ../templates/test.yml
+                parameters:
+                  testARMServiceConnection: ${{ parameters.testARMServiceConnection }}

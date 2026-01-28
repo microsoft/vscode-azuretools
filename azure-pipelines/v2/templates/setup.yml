@@ -1,0 +1,13 @@
+steps:
+  - task: NodeTool@0
+    displayName: "\U0001F449 Using Node.js"
+    inputs:
+      versionSource: fromFile
+      versionFilePath: .nvmrc
+
+  - task: Npm@1
+    displayName: "\U0001F449 Install Dependencies"
+    inputs:
+      command: custom
+      customCommand: ci --no-optional
+      workingDir: $(working_directory)

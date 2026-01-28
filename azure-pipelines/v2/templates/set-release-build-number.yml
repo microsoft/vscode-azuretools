@@ -1,0 +1,24 @@
+parameters:
+  # The name of the package being published
+  - name: packageToPublish
+    type: string
+
+  # The version to publish
+  - name: publishVersion
+    type: string
+
+  # When true, skips the deployment job which actually publishes the package
+  - name: dryRun
+    type: boolean
+
+steps:
+  - pwsh: |
+      $newBuildNumber = "$(Build.BuildNumber)-${{ parameters.packageToPublish }}-${{ parameters.publishVersion}}"
+
+      if ('${{ parameters.dryRun }}' -eq 'True') {
+          Write-Output "Dry run was set to True. Adding 'dry' to the build number."
+          $newBuildNumber += "-dry"
+      }
+
+      Write-Host "##vso[build.updatebuildnumber]$newBuildNumber"
+    displayName: "\U0001F449 Add package name and version to build number"

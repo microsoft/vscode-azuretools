@@ -1,0 +1,122 @@
+parameters:
+  # The name of the package to publish.
+  # This is regex matched against .tgz files found in the build artifact.
+  - name: packageToPublish
+    type: string
+
+  # The intended package version to publish.
+  # This is used to verify the version in package.json matches the version to publish to avoid publishing the wrong package/version
+  - name: publishVersion
+    type: string
+
+  # When true, skips the deployment job that actually publishes the package
+  - name: dryRun
+    type: boolean
+    default: false
+
+  # In the build artifacts, the name of the artifact containing the package to publish
+  - name: artifactName
+    type: string
+    default: Build Root
+
+  # ESRP release also requires owner aliases, though does not use them currently
+  - name: ownerAliases
+    type: string
+
+  # ESRP release also requires approver aliases, though does not use them currently
+  - name: approverAliases
+    type: string
+
+  # The pool to use for releases
+  - name: releasePool
+    type: object
+    default:
+      name: VSEngSS-MicroBuild2022-1ES
+      image: server2022-microbuildVS2022-1es
+      os: windows
+
+  # The GitHub service connection to use for creating the GitHub release (optional)
+  - name: gitHubServiceConnection
+    type: string
+    default: ""
+
+  # Set to the AzDO environment used for enforcing approval before the release runs
+  - name: releaseApprovalEnvironment
+    type: string
+    default: ""
+
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/heads/release
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
+  parameters:
+    pool: ${{ parameters.releasePool }}
+    stages:
+      - stage: ReleaseStage
+        displayName: Release NPM package
+        jobs:
+          - job: Publish
+            ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
+              environment: ${{ parameters.releaseApprovalEnvironment }}
+            displayName: Publish NPM package
+            templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+                - input: pipelineArtifact
+                  pipeline: build
+                  targetPath: "$(System.DefaultWorkingDirectory)"
+                  artifactName: "${{ parameters.artifactName }}"
+            steps:
+              - checkout: none
+
+              - template: ./templates/find-tarballs.yml
+                parameters:
+                  tarballName: ${{ parameters.packageToPublish }}
+                  publishVersion: ${{ parameters.publishVersion }}
+
+              - pwsh: |
+                  $tarballList = '$(tarballListJson)' | ConvertFrom-Json
+                  $tgzFolderName = $tarballList[0].directory
+                  $tgzFileName = Join-Path $tgzFolderName $tarballList[0].tarballName
+                  Write-Host "##vso[task.setvariable variable=tgzFolderName]$tgzFolderName"
+                  Write-Host "##vso[task.setvariable variable=tgzFileName]$tgzFileName"
+                displayName: "\U0001F449 Set variables for found tarball"
+
+              - template: ./templates/set-release-build-number.yml
+                parameters:
+                  packageToPublish: ${{ parameters.packageToPublish }}
+                  publishVersion: ${{ parameters.publishVersion }}
+                  dryRun: ${{ parameters.dryRun }}
+
+              # Publish the package to NPM
+              - ${{ if eq(parameters.dryRun, false) }}:
+                  - template: MicroBuild.Publish.yml@MicroBuildTemplate
+                    parameters:
+                      intent: PackageDistribution
+                      contentType: npm
+                      contentSource: Folder
+                      folderLocation: "$(tgzFolderName)"
+                      waitForReleaseCompletion: true
+                      owners: "${{ parameters.ownerAliases }}"
+                      approvers: "${{ parameters.approverAliases }}"
+
+              # (Optional) Create a draft release on GitHub containing the package
+              - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, "")) }}:
+                  - task: GitHubRelease@1
+                    displayName: "\U0001F449 Create draft release on GitHub"
+                    inputs:
+                      gitHubConnection: ${{ parameters.gitHubServiceConnection }}
+                      tagSource: userSpecifiedTag
+                      tag: "${{ parameters.packageToPublish }}-v${{ parameters.publishVersion }}"
+                      title: "${{ parameters.packageToPublish }} v${{ parameters.publishVersion }}"
+                      releaseNotesSource: inline
+                      assets: "$(tgzFileName)"
+                      isDraft: true
+                      isPreRelease: true
+                      addChangeLog: false
