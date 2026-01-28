@@ -17,14 +17,14 @@ There are three main templates available:
 Your project must meet the following requirements to use these templates:
 
 1. An `.nvmrc` file at the root (or working directory) specifying the Node.js version
-1. Optionally, an `.npmrc` file at the root (or working directory) for authenticating NPM
-1. A `package.json` file with the following NPM scripts (if a script needs to skip, simply use a blank value or `"exit 0"` as the script):
+2. Optionally, an `.npmrc` file at the root (or working directory) for authenticating NPM
+3. A `package.json` file with the following NPM scripts (if a script needs to skip, simply use a blank value or `"exit 0"` as the script):
    - `lint` - Lints the code (typically using ESLint)
    - `build` - Builds the code (for VS Code extensions, this should include bundling via webpack/esbuild)
    - `package` - Packages the built code (e.g., into a `.vsix` or `.tgz`). Runs after `build`.
    - `test` - Runs tests. Runs after `build` and `package`.
-1. After the `package` script has run, the output must match the required build artifacts (see corresponding release pipeline)
-1. (For compliance) A `tsaoptions.json` file in `.config` (see [Compliance Configuration](#compliance-configuration))
+4. After the `package` script has run, the output must match the required build artifacts (see corresponding release pipeline)
+5. (For compliance) A `tsaoptions.json` file in `.config` (see [Compliance Configuration](#compliance-configuration))
 
 ## Build Pipeline (`1es-mb-main.yml`)
 
@@ -70,9 +70,9 @@ This template releases a signed VS Code extension to the Visual Studio Marketpla
 The build pipeline must produce the following artifacts for extension release:
 
 1. `*.vsix` - The packaged extension
-1. `package.json` - Used to verify extension name and version
-1. `extension.manifest` - Generated with `vsce generate-manifest`
-1. `extension.signature.p7s` - The signed manifest
+2. `package.json` - Used to verify extension name and version
+3. `extension.manifest` - Generated with `vsce generate-manifest`
+4. `extension.signature.p7s` - The signed manifest
 
 ### Example
 
@@ -103,7 +103,7 @@ This template releases an NPM package via ESRP.
 The build pipeline must produce the following artifacts for extension release:
 
 1. `*.tgz` - The packaged NPM package
-1. `package.json` - Used to verify extension name and version
+2. `package.json` - Used to verify extension name and version
 
 ### Example
 
