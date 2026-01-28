@@ -3,41 +3,90 @@ name: Release Pipeline Templates
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Tag to update or create (e.g., azext-pt/v1)"
+      branch:
+        description: "Branch to update (e.g., azext-pt/v1)"
         required: true
         default: "azext-pt/v1"
 
 jobs:
-  update-tag:
+  create-pr:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
         with:
-          fetch-depth: 0
+          script: |
+            const branch = '${{ inputs.branch }}';
 
-      - name: Validate tag format
-        run: |
-          if [[ ! "${{ inputs.tag }}" =~ ^azext-pt/v[0-9]+$ ]]; then
-            echo "::error::Tag must match pattern azext-pt/vN (e.g., azext-pt/v1)"
-            exit 1
-          fi
+            // Validate branch format
+            if (!/^azext-pt\/v\d+$/.test(branch)) {
+              core.setFailed(`Branch must match pattern azext-pt/vN (e.g., azext-pt/v1)`);
+              return;
+            }
 
-      - name: Delete existing tag (if exists)
-        run: |
-          git push origin --delete ${{ inputs.tag }} 2>/dev/null || echo "Tag does not exist remotely, will create new"
-          git tag -d ${{ inputs.tag }} 2>/dev/null || true
+            // Get main branch SHA
+            const { data: mainRef } = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'heads/main'
+            });
+            const mainSha = mainRef.object.sha;
 
-      - name: Create and push tag
-        run: |
-          git tag ${{ inputs.tag }} origin/main
-          git push origin ${{ inputs.tag }}
+            // Check if release branch exists
+            let branchExists = true;
+            let branchSha = null;
+            try {
+              const { data: branchRef } = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/${branch}`
+              });
+              branchSha = branchRef.object.sha;
+            } catch (e) {
+              if (e.status === 404) {
+                branchExists = false;
+              } else {
+                throw e;
+              }
+            }
 
-      - name: Summary
-        run: |
-          echo "## ✅ Tag Released" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Tag:** \`${{ inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`$(git rev-parse origin/main)\`" >> $GITHUB_STEP_SUMMARY
+            // Create branch if it doesn't exist
+            if (!branchExists) {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/heads/${branch}`,
+                sha: mainSha
+              });
+              core.summary.addHeading('✅ Branch Created', 2);
+              core.summary.addRaw(`**Branch:** \`${branch}\`\n\n`);
+              core.summary.addRaw(`**Commit:** \`${mainSha}\`\n`);
+              await core.summary.write();
+              return;
+            }
+
+            // Check if already up to date
+            if (mainSha === branchSha) {
+              core.notice(`Branch ${branch} is already up to date with main`);
+              core.summary.addHeading('ℹ️ No Changes', 2);
+              core.summary.addRaw(`Branch \`${branch}\` is already at the same commit as \`main\`.\n`);
+              await core.summary.write();
+              return;
+            }
+
+            // Create PR
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: 'main',
+              base: branch,
+              title: `Release pipeline templates to ${branch}`,
+              body: `Updates \`${branch}\` to match \`main\`.\n\n**Current ${branch}:** \`${branchSha}\`\n**New (from main):** \`${mainSha}\`\n\nTriggered by @${{ github.actor }} via workflow dispatch.`
+            });
+
+            core.summary.addHeading('✅ PR Created', 2);
+            core.summary.addRaw(`**PR:** ${pr.html_url}\n\n`);
+            core.summary.addRaw(`**Target Branch:** \`${branch}\`\n`);
+            await core.summary.write();
