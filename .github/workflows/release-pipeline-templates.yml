@@ -1,0 +1,43 @@
+name: Release Pipeline Templates
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to update or create (e.g., azext-pt/v1)"
+        required: true
+        default: "azext-pt/v1"
+
+jobs:
+  update-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ inputs.tag }}" =~ ^azext-pt/v[0-9]+$ ]]; then
+            echo "::error::Tag must match pattern azext-pt/vN (e.g., azext-pt/v1)"
+            exit 1
+          fi
+
+      - name: Delete existing tag (if exists)
+        run: |
+          git push origin --delete ${{ inputs.tag }} 2>/dev/null || echo "Tag does not exist remotely, will create new"
+          git tag -d ${{ inputs.tag }} 2>/dev/null || true
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ inputs.tag }} origin/main
+          git push origin ${{ inputs.tag }}
+
+      - name: Summary
+        run: |
+          echo "## ✅ Tag Released" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** \`${{ inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`$(git rev-parse origin/main)\`" >> $GITHUB_STEP_SUMMARY

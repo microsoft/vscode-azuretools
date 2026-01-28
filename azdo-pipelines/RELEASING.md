@@ -4,26 +4,12 @@ Because consumers of these pipeline templates typically do not reference `main` 
 
 If at all possible, avoid breaking changes.
 
-The steps for releasing are as follows:
+## Releasing
 
-1. Elevate to repository administrator [here](https://repos.opensource.microsoft.com/orgs/microsoft/repos/vscode-azuretools/jit/grant). This is required due to tag protection rules.
-2. Run the appropriate script:
-    - For non-breaking changes, delete and recreate the existing Git tag:
+Use the [Release Pipeline Templates](https://github.com/microsoft/vscode-azuretools/actions/workflows/release-pipeline-templates.yml) workflow to update or create tags.
 
-        ```bash
-        git fetch origin main
-        git push origin --delete azext-pt/v1
-        git tag -d azext-pt/v1
-        git tag azext-pt/v1 origin/main
-        git push origin azext-pt/v1
-        ```
+1. Go to the workflow and click "Run workflow"
+2. Enter the tag name (e.g., `azext-pt/v1` for updates, `azext-pt/v2` to create a new tag for breaking changes)
+3. Click "Run workflow"
 
-    - For breaking changes, a new tag needs to be established with a new version:
-
-        ```bash
-        git fetch origin main
-        git tag azext-pt/v2 origin/main
-        git push origin azext-pt/v2
-        ```
-
-       Then, consumers will need to be updated accordingly.
+The workflow automatically handles both new and existing tags. It's protected by a GitHub ruleset—only the workflow can modify `azext-pt/*` tags.
