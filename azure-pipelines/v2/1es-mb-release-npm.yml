@@ -81,7 +81,7 @@ extends:
                   publishVersion: ${{ parameters.publishVersion }}
 
               - pwsh: |
-                  $tarballList = '$(tarballListJson)' | ConvertFrom-Json
+                  $tarballList = @('$(tarballListJson)' | ConvertFrom-Json)
                   $tgzFolderName = $tarballList[0].directory
                   $tgzFileName = Join-Path $tgzFolderName $tarballList[0].tarballName
                   Write-Host "##vso[task.setvariable variable=tgzFolderName]$tgzFolderName"

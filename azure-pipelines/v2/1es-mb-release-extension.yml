@@ -106,7 +106,7 @@ extends:
                             Write-Output "    $($commandLine)"
 
                             # Execute the publish command line
-                            # & $commandLine # TODO: temporarily disabled for testing
+                            # Invoke-Expression $commandLine # TODO: temporarily disabled for testing
                             # if ($LASTEXITCODE -ne 0) {
                             #     Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
                             #     exit 1

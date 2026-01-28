@@ -46,5 +46,5 @@ steps:
       }
 
       # Store the VSIX list as JSON for later steps
-      Write-Output "##vso[task.setvariable variable=vsixListJson]$($vsixList | ConvertTo-Json -Compress)"
+      Write-Output "##vso[task.setvariable variable=vsixListJson]$($vsixList | ConvertTo-Json -Compress -AsArray)"
     displayName: "\U0001F449 Discover all VSIXs"
