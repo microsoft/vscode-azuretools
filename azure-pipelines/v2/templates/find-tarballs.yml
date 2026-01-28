@@ -46,5 +46,5 @@ steps:
       }
 
       # Store the tarball list as JSON for later steps
-      Write-Output "##vso[task.setvariable variable=tarballListJson]$($tarballList | ConvertTo-Json -Compress)"
+      Write-Output "##vso[task.setvariable variable=tarballListJson]$($tarballList | ConvertTo-Json -Compress -AsArray)"
     displayName: "\U0001F449 Discover all tarballs"
