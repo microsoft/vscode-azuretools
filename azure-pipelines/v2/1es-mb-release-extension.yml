@@ -91,7 +91,7 @@ extends:
                       scriptType: pscore
                       scriptLocation: inlineScript
                       inlineScript: |
-                        $vsixList = '$(vsixListJson)' | ConvertFrom-Json
+                        $vsixList = @('$(vsixListJson)' | ConvertFrom-Json)
 
                         # Publish each of the found VSIXs, automatically adding the enabled API proposals argument as well
                         foreach ($vsix in $vsixList) {
