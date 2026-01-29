@@ -7,8 +7,8 @@ steps:
       Contents: |
         **/*.vsix
         **/package.json
-        **/*extension.manifest
-        **/*extension.signature.p7s
+        **/*.extension.manifest
+        **/*.extension.signature.p7s
         **/*.tar.gz
         **/*.tgz
         !**/node_modules/**
