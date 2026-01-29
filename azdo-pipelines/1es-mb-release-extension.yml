@@ -20,7 +20,7 @@ parameters:
     default: Build Root
 
   # The service connection that VSCE will use to publish the extension
-  - name: extensionReleaseServiceConnection
+  - name: releaseServiceConnection
     type: string
 
   # Set to the AzDO environment used for enforcing approval before the release runs
@@ -87,7 +87,7 @@ extends:
                   - task: AzureCLI@2
                     displayName: "\U0001F449 Publish VSIXs to Marketplace"
                     inputs:
-                      azureSubscription: ${{ parameters.extensionReleaseServiceConnection }}
+                      azureSubscription: ${{ parameters.releaseServiceConnection }}
                       scriptType: pscore
                       scriptLocation: inlineScript
                       inlineScript: |

@@ -10,9 +10,9 @@ variables:
     value: GitHub-AzureTools
   - name: npmReleaseApprovalEnvironment
     value: AzCodeDeploy
-  - name: npmReleaseOwnerAlias
+  - name: npmReleaseOwnerAliases
     value: azcode
-  - name: npmReleaseApproverAlias
+  - name: npmReleaseApproverAliases
     value: jinglou
 
   # Test
