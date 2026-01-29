@@ -69,7 +69,7 @@ stages:
               - template: ../templates/package.yml
               - ${{ if and(eq(length(parameters.alternativeSigningSteps), 0), ne(parameters.signType, 'none')) }}:
                   - template: ../templates/1es-mb-sign.yml
-                ${{ elseif ne(length(parameters.alternativeSigningSteps), 0) }}:
+              - ${{ elseif ne(length(parameters.alternativeSigningSteps), 0) }}:
                   - ${{ parameters.alternativeSigningSteps }}
               - template: ../templates/stage-artifacts.yml
               - template: ../templates/test.yml
