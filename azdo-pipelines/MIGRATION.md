@@ -8,3 +8,7 @@ Migration to the new templates is very easy.
 4. Rewrite your release pipeline as needed, following the examples in the README for [extensions](./README.md#example-1) or [npm](./README.md#example-2).
 5. Ensure your `.vscodeignore` or `.npmignore` is ignoring the new `.config` folder.
 6. In Azure DevOps, update your [pipelines](https://devdiv.visualstudio.com/DevDiv/_build?definitionScope=%5CAzure%20Tools%5CVSCode) to point to the new pipeline files in `.config`. This can be done in the pipeline settings, and does not require the "DevDiv Edit Pipelines" entitlement.
+
+Example PRs:
+- Extension: https://github.com/microsoft/vscode-containers/pull/365
+- NPM packages: https://github.com/microsoft/vscode-docker-extensibility/pull/334
