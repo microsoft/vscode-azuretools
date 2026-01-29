@@ -89,15 +89,15 @@ This template releases a signed VS Code extension to the Visual Studio Marketpla
 
 ### Parameters
 
-| Parameter                          | Type    | Default      | Description                                        |
-| ---------------------------------- | ------- | ------------ | -------------------------------------------------- |
-| `packageToPublish`                 | string  | *required*   | Regex pattern to match the `.vsix` file            |
-| `publishVersion`                   | string  | *required*   | Expected version (verified against `package.json`) |
-| `dryRun`                           | boolean | `false`      | Skip the actual publish step                       |
-| `artifactName`                     | string  | `Build Root` | Name of the artifact containing the package        |
-| `extensionReleaseServiceConnection`| string  | *required*   | Service connection for VSCE authentication         |
-| `releaseApprovalEnvironment`       | string  | `""`         | AzDO environment for release approval              |
-| `releasePool`                      | object  | Windows MicroBuild pool | Pool for the release job                |
+| Parameter                   | Type    | Default      | Description                                        |
+| --------------------------- | ------- | ------------ | -------------------------------------------------- |
+| `packageToPublish`          | string  | *required*   | Regex pattern to match the `.vsix` file            |
+| `publishVersion`            | string  | *required*   | Expected version (verified against `package.json`) |
+| `dryRun`                    | boolean | `false`      | Skip the actual publish step                       |
+| `artifactName`              | string  | `Build Root` | Name of the artifact containing the package        |
+| `releaseServiceConnection`  | string  | *required*   | Service connection for VSCE authentication         |
+| `releaseApprovalEnvironment`| string  | `""`         | AzDO environment for release approval              |
+| `releasePool`               | object  | Windows MicroBuild pool | Pool for the release job                |
 
 ### Required Build Artifacts
 
