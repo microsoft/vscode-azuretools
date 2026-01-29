@@ -75,6 +75,9 @@ resources:
 variables:
   # Pick up shared AZCode variables
   - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+  # Required for MicroBuild signing
+  - name: TeamName
+    value: "Azure Tools for VS Code" # Note: if `azcode.variables.yml` is in use above, this is not needed
 
 extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates # Use the main build template
