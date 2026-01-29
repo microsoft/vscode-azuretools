@@ -80,6 +80,7 @@ extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates # Use the main build template
   parameters:
     testARMServiceConnection: ${{ variables.testARMServiceConnection }}
+    # signType: none # For NPM packages, disable signing
 ```
 
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
