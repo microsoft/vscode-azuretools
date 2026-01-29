@@ -75,7 +75,7 @@ resources:
 variables:
   # Pick up shared AZCode variables
   - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
-  # Required for MicroBuild signing
+  # Required for MicroBuild signing and telemetry
   - name: TeamName
     value: "Azure Tools for VS Code" # Note: if `azcode.variables.yml` is in use above, this is not needed
 
@@ -145,6 +145,9 @@ resources:
 variables:
   # Pick up shared AZCode variables
   - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+  # Required for MicroBuild signing and telemetry
+  - name: TeamName
+    value: "Azure Tools for VS Code" # Note: if `azcode.variables.yml` is in use above, this is not needed
 
 extends:
   template: azdo-pipelines/1es-mb-release-extension.yml@azExtTemplates # Use the extension release template
@@ -224,6 +227,9 @@ resources:
 variables:
   # Pick up shared AZCode variables
   - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+  # Required for MicroBuild signing and telemetry
+  - name: TeamName
+    value: "Azure Tools for VS Code" # Note: if `azcode.variables.yml` is in use above, this is not needed
 
 extends:
   template: azdo-pipelines/1es-mb-release-npm.yml@azExtTemplates # Use the NPM release template

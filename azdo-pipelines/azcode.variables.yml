@@ -19,6 +19,6 @@ variables:
   - name: testARMServiceConnection
     value: AzCodeE2ETests
 
-  # Required for MicroBuild signing
+  # Required for MicroBuild signing and telemetry
   - name: TeamName
     value: "Azure Tools for VS Code"
