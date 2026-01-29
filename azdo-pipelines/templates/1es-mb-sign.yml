@@ -41,8 +41,9 @@ steps:
           Copy-Item $vsix.manifestName $vsix.signatureName
 
           # Add to the list of files to sign
+          $srcPath = Join-Path $vsix.directory $vsix.signatureName
           $fileListObject.SignFileRecordList[0].SignFileList += @{
-              SrcPath = $(Join-Path $vsix.directory $vsix.signatureName)
+              SrcPath = $srcPath
               DstPath = $null
           }
       }
