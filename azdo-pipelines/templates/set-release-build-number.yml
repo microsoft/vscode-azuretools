@@ -13,7 +13,7 @@ parameters:
 
 steps:
   - pwsh: |
-      $newBuildNumber = "$(Build.BuildNumber)-${{ parameters.packageToPublish }}-${{ parameters.publishVersion}}"
+      $newBuildNumber = "$(Build.BuildNumber)-${{ parameters.packageToPublish }}-${{ parameters.publishVersion }}"
 
       if ('${{ parameters.dryRun }}' -eq 'True') {
           Write-Output "Dry run was set to True. Adding 'dry' to the build number."

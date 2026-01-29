@@ -18,7 +18,9 @@ steps:
           scriptLocation: inlineScript
           addSpnToEnvironment: true
           inlineScript: |
-            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID" # Note: this gets set by the task, but that behavior may not be intentional, unlike the next two which are documented for addSpnToEnvironment. However, I asked the dev and was told it was safe to use.
+            # FC_SERVICE_CONNECTION_ID is sourced from AZURESUBSCRIPTION_SERVICE_CONNECTION_ID set by the AzureCLI@2 task.
+            # This behavior is not clearly documented, but was confirmed by the task developer as safe to rely on.
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
 
