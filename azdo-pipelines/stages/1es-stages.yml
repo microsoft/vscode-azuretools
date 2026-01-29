@@ -2,10 +2,17 @@ parameters:
   # The jobs to run. Use to parallelize building in subdirectories
   - name: jobs
     type: object
+    default:
+      - name: Root
+        working_directory: .
 
   # The pool to use for the build stage
   - name: buildPool
     type: object
+    default:
+      name: AzurePipelines-EO
+      image: 1ESPT-Ubuntu22.04
+      os: linux
 
   # Set to 'real' or 'test' to enable MicroBuild signing
   - name: signType
@@ -14,18 +21,22 @@ parameters:
       - real
       - test
       - none
+    default: real
 
   # Supply to disable MicroBuild signing steps and use these instead
   - name: alternativeSigningSteps
     type: stepList
+    default: []
 
   # Additional steps to run during setup (e.g. npm authenticate etc.)
   - name: additionalSetupSteps
     type: stepList
+    default: []
 
   # Set to enable tests with Azure federated credentials
   - name: testARMServiceConnection
     type: string
+    default: ""
 
 stages:
   - stage: BuildStage
