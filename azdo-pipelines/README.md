@@ -46,7 +46,40 @@ This template handles building, linting, testing, packaging, and signing your co
 ### Example
 
 ```yaml
-# TODO: Paste your example here
+# Trigger the build whenever `main` or `rel/*` is updated
+trigger:
+  - main
+  - rel/*
+
+# Disable PR trigger
+pr: none
+
+# Scheduled nightly build of `main`
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Nightly scheduled build
+    always: false # Don't rebuild if there haven't been changes
+    branches:
+      include:
+        - main
+
+resources:
+  repositories:
+    # Use the shared templates from microsoft/vscode-azuretools
+    - repository: azExtTemplates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: azext-pt/v1
+      endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
+
+variables:
+  # Pick up shared AZCode variables
+  - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+
+extends:
+  template: azdo-pipelines/1es-mb-main.yml@azExtTemplates # Use the main build template
+  parameters:
+    testARMServiceConnection: ${{ variables.testARMServiceConnection }}
 ```
 
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
@@ -77,7 +110,46 @@ The build pipeline must produce the following artifacts for extension release:
 ### Example
 
 ```yaml
-# TODO: Paste your example here
+# Only run this pipeline when manually triggered
+trigger: none
+pr: none
+
+parameters:
+  # The version to publish--used for ensuring the expected version is published
+  - name: publishVersion
+    displayName: Version to publish
+    type: string
+  # Whether to do a dry run (i.e., not actually publish)
+  - name: dryRun
+    displayName: Dry run
+    type: boolean
+    default: false
+
+resources:
+  pipelines:
+    # Reference the build pipeline to get the artifacts
+    - pipeline: build # This must be "build"
+      source: \Azure Tools\VSCode\Extensions\vscode-containers # Name of the pipeline that produces the artifacts
+  repositories:
+    # Use the shared templates from microsoft/vscode-azuretools
+    - repository: azExtTemplates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: azext-pt/v1
+      endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
+
+variables:
+  # Pick up shared AZCode variables
+  - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+
+extends:
+  template: azdo-pipelines/1es-mb-release-extension.yml@azExtTemplates # Use the extension release template
+  parameters:
+    packageToPublish: vscode-containers
+    publishVersion: ${{ parameters.publishVersion }}
+    dryRun: ${{ parameters.dryRun }}
+    releaseServiceConnection: ${{ variables.extensionReleaseServiceConnection }}
+    releaseApprovalEnvironment: ${{ variables.extensionReleaseApprovalEnvironment }}
 ```
 
 ## NPM Release Pipeline (`1es-mb-release-npm.yml`)
@@ -108,7 +180,57 @@ The build pipeline must produce the following artifacts for extension release:
 ### Example
 
 ```yaml
-# TODO: Paste your example here
+# Only run this pipeline when manually triggered
+trigger: none
+pr: none
+
+parameters:
+  # Choose a package to publish at the time of job creation
+  - name: packageToPublish
+    displayName: Package to publish
+    type: string
+    values:
+      - microsoft-vscode-processutils
+      - microsoft-vscode-container-client
+      - microsoft-vscode-docker-registries
+      - microsoft-vscode-inproc-mcp
+  # The version to publish--used for ensuring the expected version is published
+  - name: publishVersion
+    displayName: Version to publish
+    type: string
+  # Whether to do a dry run (i.e., not actually publish)
+  - name: dryRun
+    displayName: Dry run
+    type: boolean
+    default: false
+
+resources:
+  pipelines:
+    # Reference the build pipeline to get the artifacts
+    - pipeline: build # This must be "build"
+      source: \Azure Tools\VSCode\Packages\vscode-docker-extensibility # Name of the pipeline that produces the artifacts
+  repositories:
+    # Use the shared templates from microsoft/vscode-azuretools
+    - repository: azExtTemplates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: azext-pt/v1
+      endpoint: GitHub-AzureTools # The service connection to use when accessing this repository
+
+variables:
+  # Pick up shared AZCode variables
+  - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+
+extends:
+  template: azdo-pipelines/1es-mb-release-npm.yml@azExtTemplates # Use the NPM release template
+  parameters:
+    packageToPublish: ${{ parameters.packageToPublish }}
+    publishVersion: ${{ parameters.publishVersion }}
+    dryRun: ${{ parameters.dryRun }}
+    ownerAliases: ${{ variables.npmReleaseOwnerAliases }}
+    approverAliases: ${{ variables.npmReleaseApproverAliases }}
+    gitHubServiceConnection: ${{ variables.gitHubServiceConnection }}
+    releaseApprovalEnvironment: ${{ variables.npmReleaseApprovalEnvironment }}
 ```
 
 ## Compliance Configuration
