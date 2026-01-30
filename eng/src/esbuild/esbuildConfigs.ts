@@ -11,7 +11,7 @@ import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 export const { isAutoDebug, isAutoWatch } = getAutoBuildSettings();
 
 /**
- * Base config - shared between prod/dev/debug
+ * Base config - shared between telemetry/prod/dev/debug
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const baseEsbuildConfig: EsbuildConfig = {
@@ -20,13 +20,35 @@ export const baseEsbuildConfig: EsbuildConfig = {
     outdir: './dist',
     platform: 'node',
     target: 'es2022',
-    keepNames: true,
     entryPoints: [{
         in: './src/extension.ts',
         out: 'extension.bundle',
     }],
     format: 'cjs',
     mainFields: ['module', 'main'],
+};
+
+/**
+ * Config for building the telemetry bundle
+ */
+export const telemetryEsbuildConfig: EsbuildConfig = {
+    ...baseEsbuildConfig,
+    keepNames: false, // Due to object freezing in the AppInsights packages, we cannot use keepNames on the telemetry stack
+    entryPoints: [{
+        in: '@vscode/extension-telemetry',
+        out: 'extension-telemetry.bundle',
+    }],
+    minify: true,
+    sourcemap: false,
+};
+
+/**
+ * Config for building the extension bundle
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const extensionEsbuildConfig: EsbuildConfig = {
+    ...baseEsbuildConfig,
+    keepNames: true,
     plugins: [
         copy({
             assets: [
@@ -62,6 +84,9 @@ export const baseEsbuildConfig: EsbuildConfig = {
             },
         },
     ],
+    alias: {
+        '@vscode/extension-telemetry': './dist/extension-telemetry.bundle.js',
+    },
 };
 
 // #region CJS configs
@@ -70,7 +95,7 @@ export const baseEsbuildConfig: EsbuildConfig = {
  * Production config - minified, no sourcemap
  */
 export const azExtEsbuildConfigProd: EsbuildConfig = {
-    ...baseEsbuildConfig,
+    ...extensionEsbuildConfig,
     minify: true,
     sourcemap: false,
 };
@@ -79,7 +104,7 @@ export const azExtEsbuildConfigProd: EsbuildConfig = {
  * Dev config - not minified, linked sourcemap
  */
 export const azExtEsbuildConfigDev: EsbuildConfig = {
-    ...baseEsbuildConfig,
+    ...extensionEsbuildConfig,
     minify: false,
     sourcemap: 'linked',
 };
@@ -103,6 +128,16 @@ const esmBanner = `
 import {createRequire} from 'module';
 const require = createRequire(import.meta.url);
 `;
+
+/**
+ * ESM telemetry config - no splitting for this one
+ */
+export const telemetryEsbuildConfigEsm: EsbuildConfig = {
+    ...telemetryEsbuildConfig,
+    banner: { js: esmBanner },
+    format: 'esm',
+    splitting: false,
+};
 
 /**
  * ESM production config - minified, no sourcemap
@@ -136,43 +171,70 @@ export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
 // #endregion
 
 /**
- * Auto-selects the appropriate esbuild config based on environment variables and command line args
- * @param esm (Optional) True if the ESM config should be returned
- * @returns
- * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config
- * - else if `--watch` is passed, returns the dev config
- * - else, returns the prod config
+ * A config for building two bundles--one for the extension, one for the telemetry reporter
  */
-export function autoSelectEsbuildConfig(esm?: boolean): EsbuildConfig {
-    if (isAutoDebug) {
-        return !!esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
-    } else if (isAutoWatch) {
-        return !!esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
-    } else {
-        return !!esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
-    }
+export interface DualBundleConfig {
+    /**
+     * Config for building the extension bundle
+     */
+    extensionConfig: EsbuildConfig;
+
+    /**
+     * Config for building the telemetry bundle
+     */
+    telemetryConfig: EsbuildConfig;
 }
 
 /**
- * Builds or watches the given esbuild config based on environment variables and command line args
+ * Auto-selects the appropriate esbuild config based on environment variables and command line args
+ * @param esm (Optional) True if the ESM config should be returned
+ * @returns
+ * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + telemetry config
+ * - else if `--watch` is passed, returns the dev config + telemetry config
+ * - else, returns the prod config + telemetry config
+ */
+export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
+    let extensionConfig: EsbuildConfig;
+    if (isAutoDebug) {
+        extensionConfig = !!esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+    } else if (isAutoWatch) {
+        extensionConfig = !!esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
+    } else {
+        extensionConfig = !!esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
+    }
+
+    const telemetryConfig = !!esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
+
+    return { extensionConfig, telemetryConfig };
+}
+
+/**
+ * Builds the telemetry bundle, and then either builds or watches the extension bundle based
+ * on environment variables and command line args
  * - if `--watch` is passed, starts esbuild in watch mode
  * - else, builds once
  *
  * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
- * @param config The config to build or watch
+ * @note Even in watch mode, the telemetry bundle is only built once at startup--the build must
+ * be restarted if the telemetry dependencies change
+ * @param configs The configs to build or watch
  */
-export async function autoEsbuildOrWatch(config: EsbuildConfig): Promise<void> {
+export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
+    // Build telemetry bundle first (needed because the extension bundle depends on it)
+    await build(configs.telemetryConfig);
+
+    // Build (or watch) the extension bundle next
     if (isAutoWatch) {
-        const ctx = await context(config);
+        const ctx = await context(configs.extensionConfig);
         process.on('SIGINT', () => {
             console.log('Stopping esbuild watch');
             void ctx.dispose();
         });
         await ctx.watch();
     } else {
-        const result = await build(config);
+        const result = await build(configs.extensionConfig);
 
-        if (!!config.metafile && !!result.metafile) {
+        if (!!configs.extensionConfig.metafile && !!result.metafile) {
             await fs.writeFile('esbuild.meta.json', JSON.stringify(result.metafile));
         }
     }
