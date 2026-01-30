@@ -219,8 +219,10 @@ export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
  * @param configs The configs to build or watch
  */
 export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
+    // Build telemetry bundle first (needed because the extension bundle depends on it)
     await build(configs.telemetryConfig);
 
+    // Build (or watch) the extension bundle next
     if (isAutoWatch) {
         const ctx = await context(configs.extensionConfig);
         process.on('SIGINT', () => {
