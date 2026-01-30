@@ -35,7 +35,6 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
     ...baseEsbuildConfig,
     keepNames: false, // Due to object freezing in the AppInsights packages, we cannot use keepNames on the telemetry stack
     entryPoints: [{
-
         in: '@vscode/extension-telemetry',
         out: 'extension-telemetry.bundle',
     }],
@@ -216,6 +215,8 @@ export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
  * - else, builds once
  *
  * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
+ * @note Even in watch mode, the telemetry bundle is only built once at startup--the build must
+ * be restarted if the telemetry dependencies change
  * @param configs The configs to build or watch
  */
 export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
