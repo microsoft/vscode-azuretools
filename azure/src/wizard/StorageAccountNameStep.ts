@@ -23,9 +23,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
             validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
         })).trim();
 
-        if (!wizardContext.relatedNameTask) {
-            wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
-        }
+        wizardContext.relatedNameTask ??= this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
         wizardContext.valuesToMask.push(wizardContext.newStorageAccountName);
     }
 

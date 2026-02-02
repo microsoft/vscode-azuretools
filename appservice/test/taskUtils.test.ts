@@ -118,7 +118,9 @@ suite("taskUtils", () => {
     });
 });
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace tasks {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace js {
         export const install = <Task><unknown>{
             definition: {
@@ -169,6 +171,7 @@ namespace tasks {
         };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace ts {
         export const install = <Task><unknown>{
             definition: {
@@ -235,6 +238,7 @@ namespace tasks {
         };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace cs {
         export const clean = <Task><unknown>{
             definition: {
@@ -317,10 +321,12 @@ namespace tasks {
         };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace py {
         export const install = <Task><unknown>{
             definition: {
                 type: "shell",
+                // eslint-disable-next-line no-template-curly-in-string
                 id: "shell,${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt,"
             },
             scope: {
@@ -351,6 +357,7 @@ namespace tasks {
         };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace other {
         export const global = <Task><unknown>{
             definition: {

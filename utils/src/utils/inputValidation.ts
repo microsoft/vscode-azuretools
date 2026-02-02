@@ -16,7 +16,7 @@ export async function validOnTimeoutOrException(inputValidation: () => Promise<I
     try {
         timeoutMs ||= inputValidationTimeoutMs;
         return await valueOnTimeout(timeoutMs, undefined, inputValidation);
-    } catch (error) {
+    } catch {
         return undefined;
     }
 }

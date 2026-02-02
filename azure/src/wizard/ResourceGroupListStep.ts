@@ -17,6 +17,7 @@ import { ResourceGroupVerifyStep } from './ResourceGroupVerifyStep';
 export const resourceGroupNamingRules: IAzureNamingRules = {
     minLength: 1,
     maxLength: 90,
+    // eslint-disable-next-line no-useless-escape
     invalidCharsRegExp: /[^a-zA-Z0-9\.\_\-\(\)]/
 };
 
@@ -56,16 +57,16 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
             const promptSteps: AzureWizardPromptStep<T>[] = [new ResourceGroupNameStep()];
             LocationListStep.addStep(wizardContext, promptSteps);
 
-            return {
+            return Promise.resolve({
                 promptSteps,
                 executeSteps: [
                     new ResourceGroupVerifyStep(),
                     new ResourceGroupCreateStep(),
                 ],
-            };
+            });
         } else {
             wizardContext.valuesToMask.push(nonNullProp(wizardContext.resourceGroup, 'name'));
-            return undefined;
+            return Promise.resolve(undefined);
         }
     }
 

@@ -3,22 +3,15 @@
     "configurations": [
         {
             "name": "Launch Tests",
-            "type": "extensionHost",
             "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/test/extension",
-                "--extensionTestsPath=${workspaceFolder}/dist/cjs/test/index"
+            "runtimeArgs": [
+                "test",
             ],
-            "outFiles": [
-                "${workspaceFolder}/dist/cjs/**/*.js"
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
             ],
-            "preLaunchTask": "${defaultBuildTask}",
-            "env": {
-                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
-                "MOCHA_timeout": "0", // Disable time-outs
-                "DEBUGTELEMETRY": "v",
-                "NODE_DEBUG": ""
-            }
-        }
+            "type": "node"
+        },
     ]
 }

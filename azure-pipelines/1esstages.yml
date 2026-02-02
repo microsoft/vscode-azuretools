@@ -7,6 +7,12 @@ parameters:
   - name: "useAzureFederatedCredentials"
     type: boolean
     default: false
+  - name: bamiServiceConnectionName
+    type: string
+    default: AzCodeE2ETests
+  - name: bamiVariablesGroupName
+    type: string
+    default: AzCode-BAMI-Variables
   - name: additionalSetupSteps
     type: stepList
     default: []
@@ -52,11 +58,16 @@ stages:
                 parameters:
                   enableSigning: ${{ parameters.enableSigning }}
                   vsixFileNames: ${{ parameters.vsixFileNames }}
+                  workingDirectory: ${{ job.working_directory }}
 
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
                 parameters:
                   useAzureFederatedCredentials: ${{ parameters.useAzureFederatedCredentials }}
+                  bamiServiceConnectionName: ${{ parameters.bamiServiceConnectionName }}
             variables:
-              artifact_name: ${{ replace(job.name, '_', '-') }}
-              working_directory: ${{ job.working_directory }}
+              - name: artifact_name
+                value: ${{ replace(job.name, '_', '-') }}
+              - name: working_directory
+                value: ${{ job.working_directory }}
+              - group: ${{ parameters.bamiVariablesGroupName }}

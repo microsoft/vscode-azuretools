@@ -27,6 +27,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     public readonly contextValuesToAdd: string[];
 
     public readonly site: ParsedSite;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected readonly _isRoot: boolean = false;
 
     constructor(parent: AzExtParentTreeItem, options: FolderTreeItemOptions) {
@@ -35,7 +36,7 @@ export class FolderTreeItem extends AzExtParentTreeItem {
         this.label = options.label;
         this.url = options.url;
         this.isReadOnly = options.isReadOnly;
-        this.contextValuesToAdd = options.contextValuesToAdd || [];
+        this.contextValuesToAdd = options.contextValuesToAdd ?? [];
     }
 
     public get contextValue(): string {
@@ -73,11 +74,9 @@ export class FolderTreeItem extends AzExtParentTreeItem {
     public compareChildrenImpl(ti1: AzExtTreeItem, ti2: AzExtTreeItem): number {
         let result: number | undefined = instanceOfCompare(ti1, ti2, GenericTreeItem);
 
-        if (result === undefined) {
-            result = instanceOfCompare(ti1, ti2, FolderTreeItem);
-        }
+        result ??= instanceOfCompare(ti1, ti2, FolderTreeItem);
 
-        return result === undefined ? ti1.label.localeCompare(ti2.label) : result;
+        return result ?? ti1.label.localeCompare(ti2.label);
     }
 }
 

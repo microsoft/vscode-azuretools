@@ -51,7 +51,7 @@ suite("getDeployFsPath", () => {
                 assert.strictEqual(file, expectedFiles.find(f => f === file));
             }
         });
-    })
+    });
 
 });
 

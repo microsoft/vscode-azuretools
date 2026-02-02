@@ -14,7 +14,7 @@ import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 
 // returns the supported location, a location in the region map, or undefined
 export async function getAppInsightsSupportedLocation(context: IAppServiceWizardContext, location: AzExtLocation): Promise<string | undefined> {
-    const locations: string[] = await getLocations(context) || [];
+    const locations: string[] = await getLocations(context) ?? [];
     const locationName: string = nonNullProp(location, 'name');
 
     if (locations.some((loc) => areLocationNamesEqual(loc, location.name))) {
@@ -47,7 +47,7 @@ async function getPairedRegions(context: IActionContext, locationName: string): 
         if (regionMappingJson.regions[locationName]) {
             return regionMappingJson.regions[locationName].pairedRegions;
         }
-    } catch (error) {
+    } catch {
         // ignore the error
     }
     return [];
@@ -56,7 +56,7 @@ async function getPairedRegions(context: IActionContext, locationName: string): 
 async function getLocations(context: IAppServiceWizardContext): Promise<string[] | undefined> {
     const resourceClient: ResourceManagementClient = await createResourceClient(context);
     const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
-    const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes && supportedRegions.resourceTypes.find(aiRt => aiRt.resourceType === 'components');
+    const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes?.find(aiRt => aiRt.resourceType === 'components');
     if (!!componentsResourceType && !!componentsResourceType.locations) {
         return componentsResourceType.locations;
     } else {

@@ -61,7 +61,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         const lastPickedItem: unknown | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
-        const childElements = (await this.treeDataProvider.getChildren(lastPickedItem)) || [];
+        const childElements = (await this.treeDataProvider.getChildren(lastPickedItem)) ?? [];
         const childItems = await Promise.all(childElements.map(async (childElement: unknown) => await this.treeDataProvider.getTreeItem(childElement)));
         const childPairs: [unknown, vscode.TreeItem][] = childElements.map((childElement: unknown, i: number) => [childElement, childItems[i]]);
 

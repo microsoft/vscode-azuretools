@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 interface AppServiceWizardContext extends IAppServiceWizardContext {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _location: AzExtLocation;
     zoneRedundant: boolean;
 }
@@ -73,8 +74,9 @@ export class AppServicePlanRedundancyStep extends AzureWizardPromptStep<IAppServ
     }
 
     public shouldPrompt(context: AppServiceWizardContext): boolean {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const { customLocation, _location, plan, newPlanSku } = context;
-        const { name } = _location || {};
+        const { name } = _location ?? {};
         if (plan === undefined && customLocation === undefined && name && newPlanSku) {
             return AppServicePlanRedundancyStep.isZoneRedundancySupported(name, newPlanSku);
         }

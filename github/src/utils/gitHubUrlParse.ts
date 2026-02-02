@@ -27,6 +27,7 @@ export interface ParsedGitHubUrl {
  * @example 'https://github.com/microsoft/foo-bar'
  */
 export function gitHubUrlParse(url: string): ParsedGitHubUrl {
+    // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
     const match: RegExpMatchArray | null = url.match(/github\.com\/(?<ownerOrOrganization>[^/]+)\/(?<repositoryName>[^/]+)/i);
     return {
         urlReference: url,

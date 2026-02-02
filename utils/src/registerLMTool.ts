@@ -36,11 +36,9 @@ export function registerLMTool<T>(name: string, tool: types.AzExtLMTool<T>): voi
                 }
             });
 
-            if (!result) {
-                result = {
-                    content: [new vscode.LanguageModelTextPart('No result was returned.')],
-                };
-            }
+            result ??= {
+                content: [new vscode.LanguageModelTextPart('No result was returned.')],
+            };
 
             return result;
         }
@@ -52,7 +50,7 @@ export function registerLMTool<T>(name: string, tool: types.AzExtLMTool<T>): voi
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 return await tool.prepareInvocation!(context, options, token);
             });
-        }
+        };
     }
 
     ext.context.subscriptions.push(

@@ -49,7 +49,7 @@ export async function findFreePort(startPort: number = 0, maxAttempts: number = 
             doResolve(startPort, resolve);
         });
         server.on('error', err => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (err && ((<any>err).code === 'EADDRINUSE' || (<any>err).code === 'EACCES') && (countTried < maxAttempts)) {
                 startPort += countTried;
                 countTried++;

@@ -23,6 +23,7 @@ interface SiteNameStepWizardContext extends IAppServiceWizardContext {
 const siteNamingRules: IAzureNamingRules = {
     minLength: 2,
     maxLength: 60,
+    // eslint-disable-next-line no-useless-escape
     invalidCharsRegExp: /[^a-zA-Z0-9\-]/
 };
 
@@ -34,7 +35,7 @@ const regionalCNAMaxLength: number = 43;
 export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
     private _siteFor: "functionApp" | "containerizedFunctionApp" | undefined;
 
-    constructor(siteFor?: "functionApp" | "containerizedFunctionApp" | undefined) {
+    constructor(siteFor?: "functionApp" | "containerizedFunctionApp") {
         super();
         this._siteFor = siteFor;
     }

@@ -57,6 +57,7 @@ export class ParsedSite implements AppSettingsClientProvider {
     constructor(site: Site, subscription: ISubscriptionContext) {
         this.rawSite = site;
 
+        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 
@@ -95,13 +96,14 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.subscription = subscription;
     }
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public async createClient(context: IActionContext & { _parsedSiteClients?: { [id: string]: SiteClient | undefined } }): Promise<SiteClient> {
         let client = context._parsedSiteClients?.[this.id];
         if (!client) {
             const internalClient = await createWebSiteClient([context, this.subscription]);
             client = new SiteClient(internalClient, this);
 
-            context._parsedSiteClients ||= {};
+            context._parsedSiteClients ??= {};
             context._parsedSiteClients[this.id] = client;
         }
 
@@ -150,12 +152,14 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async stop(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         this._site.slotName ?
             await this._client.webApps.stopSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.stop(this._site.resourceGroup, this._site.siteName);
     }
 
     public async start(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         this._site.slotName ?
             await this._client.webApps.startSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.start(this._site.resourceGroup, this._site.siteName);
@@ -218,6 +222,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async syncRepository(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         this._site.slotName ?
             await this._client.webApps.syncRepositorySlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
             await this._client.webApps.syncRepository(this._site.resourceGroup, this._site.siteName);
@@ -244,6 +249,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async deleteMethod(options?: { deleteMetrics?: boolean, deleteEmptyServerFarm?: boolean, skipDnsRegistration?: boolean, customHeaders?: { [headerName: string]: string; } }): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         this._site.slotName ?
             await this._client.webApps.deleteSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName, options) :
             await this._client.webApps.delete(this._site.resourceGroup, this._site.siteName, options);
@@ -291,6 +297,7 @@ export class SiteClient implements IAppSettingsClient {
 
     public async syncFunctionTriggers(): Promise<void> {
         try {
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             this._site.slotName ?
                 await this._client.webApps.syncFunctionTriggersSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
                 await this._client.webApps.syncFunctionTriggers(this._site.resourceGroup, this._site.siteName);
@@ -388,6 +395,7 @@ export class SiteClient implements IAppSettingsClient {
             url: `${this._site.kuduUrl}/api/deployments`
         }));
 
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const results = response.parsedBody as (KuduModels.DeployResult & { received_time: string })[];
         // old kuduClient parsed recived_time: string as receivedTime: Date so we need to do the same
         return results.map(r => {
@@ -419,6 +427,7 @@ export class SiteClient implements IAppSettingsClient {
             url: `${this._site.kuduUrl}/api/deployments/${deployId}/log`
         }));
 
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const entries = response.parsedBody as (KuduModels.LogEntry & { log_time: string, details_url: string })[];
         // old kuduClient parsed log_time: string as logTime: Date so we need to do the same
         return entries.map(obj => {
@@ -439,6 +448,7 @@ export class SiteClient implements IAppSettingsClient {
             url: `${this._site.kuduUrl}/api/deployments/${deployId}/log/${logId}`
         }));
 
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const entries = response.parsedBody as (KuduModels.LogEntry & { log_time: string, details_url: string })[];
         return entries.map(e => {
             const le = { ...e };
@@ -456,13 +466,13 @@ export class SiteClient implements IAppSettingsClient {
         }));
     }
 
-    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer, url: string, rawHeaders?: {}): Promise<AzExtPipelineResponse> {
+    public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer | Uint8Array, url: string, rawHeaders?: Record<string, string>): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await createGenericClient(context, this._site.subscription);
         const headers = createHttpHeaders(rawHeaders);
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url,
-            body: typeof data === 'string' ? data : data.toString(),
+            body: typeof data === 'string' ? data : new TextDecoder('utf-8').decode(data),
             headers
         }));
     }

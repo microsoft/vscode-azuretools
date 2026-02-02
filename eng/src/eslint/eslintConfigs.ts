@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ConfigObject as EslintConfig } from '@eslint/core';
+import type { ConfigObject as EslintConfig, Plugin as EslintPlugin } from '@eslint/core';
 import eslint from '@eslint/js';
+import eslintPluginHeader from '@tony.ganchev/eslint-plugin-header';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -38,6 +39,47 @@ export const azExtUniversalRules: EslintConfig = {
 };
 
 /**
+ * Copyright header rule that should apply to all projects
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtCopyrightHeaderRule: EslintConfig = {
+    plugins: {
+        'header': eslintPluginHeader as EslintPlugin,
+    },
+    rules: {
+        'header/header': [
+            'error',
+            {
+                header: {
+                    commentType: 'block',
+                    lines: [
+                        {
+                            pattern: /.*/,
+                            template: '---------------------------------------------------------------------------------------------',
+                        },
+                        {
+                            pattern: /Copyright.*Microsoft/,
+                            template: ' *  Copyright (c) Microsoft Corporation. All rights reserved.',
+                        },
+                        {
+                            pattern: /LICENSE/i,
+                            template: ' *  Licensed under the MIT License. See LICENSE in the project root for license information.',
+                        },
+                        {
+                            pattern: /.*/,
+                            template: ' *--------------------------------------------------------------------------------------------',
+                        },
+                    ],
+                },
+                trailingEmptyLines: {
+                    minimum: 2,
+                },
+            },
+        ],
+    },
+};
+
+/**
  * Rules that apply only to test code
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
@@ -46,7 +88,9 @@ export const azExtTestRules: EslintConfig = {
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
         '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in test files
-        '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files
+        '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files (goes with any)
+        '@typescript-eslint/no-unsafe-member-access': 'off', // Allow unsafe member access in test files (goes with any)
+        '@typescript-eslint/no-unused-expressions': 'off', // Allow unused expressions in test files (e.g., for chai 'expect' statements)
     },
 };
 
@@ -102,6 +146,25 @@ export const azExtStylisticRules: EslintConfig = {
             {
                 // As a function parameter, unused parameters are allowed
                 args: 'none',
+            },
+        ],
+    },
+};
+
+/**
+ * Overrides to the type checked rulesets
+ * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
+ */
+export const azExtTypeCheckedOverrides: EslintConfig = {
+    rules: {
+        '@typescript-eslint/prefer-nullish-coalescing': [
+            'error', // Enforce use of nullish coalescing over || where appropriate
+            {
+                ignorePrimitives: {
+                    string: true, // Except for strings to avoid changing behavior
+                    boolean: true, // And booleans
+                    number: true, // And numbers
+                },
             },
         ],
     },
@@ -167,10 +230,11 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     '**/*.d.ts',
     '.vscode-test/**',
     '.vscode-test.mjs',
-    'esbuild.mjs',
+    'esbuild*.mjs',
     'eslint.config.mjs',
     'main.js',
     'main.mjs',
+    '**/test/testProjects/**'
 ]);
 
 /**
@@ -182,6 +246,7 @@ export const azExtEslintRecommended: EslintConfig[] = defineConfig(
     tseslint.configs.recommended,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
 );
@@ -195,8 +260,10 @@ export const azExtEslintRecommendedTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.recommendedTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
+    azExtTypeCheckedOverrides,
 );
 
 /**
@@ -208,6 +275,7 @@ export const azExtEslintStrict: EslintConfig[] = defineConfig(
     tseslint.configs.strict,
     tseslint.configs.stylistic,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
     azExtStrictOverrides,
@@ -222,7 +290,9 @@ export const azExtEslintStrictTypeChecked: EslintConfig[] = defineConfig(
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
     azExtUniversalRules,
+    azExtCopyrightHeaderRule,
     azExtTestRules,
     azExtStylisticRules,
+    azExtTypeCheckedOverrides,
     azExtStrictOverrides,
 );

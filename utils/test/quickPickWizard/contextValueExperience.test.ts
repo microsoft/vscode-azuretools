@@ -24,7 +24,7 @@ suite('contextValueExperience', () => {
 
     const functionAppsGroupLabel = 'Function Apps';
     const functionAppsGroupId = 'functionAppsGroup';
-    const functionAppsGroupContextValues = ['group', 'functions']
+    const functionAppsGroupContextValues = ['group', 'functions'];
 
     const appServiceGroupLabel = 'Web Apps';
 
@@ -150,7 +150,7 @@ suite('contextValueExperience', () => {
                     await contextValueExperience<TestTreeNode>(context, tdp, {
                         include: azureFunctionContextValues
                     });
-                })
+                });
             });
         });
     });

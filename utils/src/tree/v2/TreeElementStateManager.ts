@@ -57,7 +57,7 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
                 return this.applyToTreeItem({ ...treeItem, id: item.id });
             }
             return treeItem;
-        }
+        };
 
         if (item.getChildren) {
             const getChildren = item.getChildren.bind(item) as typeof item.getChildren;
@@ -69,7 +69,7 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
                 }
 
                 return children;
-            }
+            };
         }
 
         this.onDidRequestRefresh(item.id, () => refresh(item));

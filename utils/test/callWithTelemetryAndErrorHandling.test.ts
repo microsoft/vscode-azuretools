@@ -67,28 +67,24 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
     // https://github.com/microsoft/vscode-azuretools/issues/967
     test('Unexpected error during masking', async () => {
         const func = (context: IActionContext) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             context.telemetry.properties.prop1 = <any>3;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             context.telemetry.measurements.meas1 = <any>'fdafs';
-        }
+        };
         assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', func), undefined);
     });
 
     test('Unexpected error during telemetry handling', async () => {
         const func = (context: IActionContext) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             context.telemetry = <any>undefined;
-        }
+        };
         assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', func), undefined);
     });
 
     test('Unexpected error during error handling', async () => {
         const func = (context: IActionContext) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             context.errorHandling = <any>undefined;
             throw new Error('test');
-        }
+        };
         assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', func), undefined);
     });
 });

@@ -36,7 +36,7 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
     public constructor(parent: AzExtParentTreeItem, options: DeploymentsTreeItemOptions) {
         super(parent);
         this.site = options.site;
-        this.contextValuesToAdd = options?.contextValuesToAdd || [];
+        this.contextValuesToAdd = options?.contextValuesToAdd ?? [];
     }
 
     public get iconPath(): TreeItemIconPath {

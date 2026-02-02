@@ -19,7 +19,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
     }
 
     const config: SiteConfigResource = await client.getSiteConfig();
-    newScmType = newScmType ? newScmType : await showScmPrompt(context, nonNullProp(config, 'scmType'));
+    newScmType = newScmType ? newScmType : await showScmPrompt(context, nonNullProp(config, 'scmType') as ScmType);
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
             // GitHub cannot be configured if there is an existing configuration source-- a limitation of Azure
@@ -49,7 +49,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
     return newScmType;
 }
 
-async function showScmPrompt(context: IActionContext, currentScmType: string): Promise<ScmType> {
+async function showScmPrompt(context: IActionContext, currentScmType: ScmType): Promise<ScmType> {
     const currentSource: string = l10n.t('(Current source)');
     const scmQuickPicks: IAzureQuickPickItem<ScmType | undefined>[] = [];
     // generate quickPicks to not include current type

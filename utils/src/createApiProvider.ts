@@ -29,7 +29,7 @@ export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExten
             return <AzureExtensionApiFactory>{
                 apiVersion: azExt.apiVersion,
                 createApi: () => azExt,
-            }
+            };
         }
     });
 

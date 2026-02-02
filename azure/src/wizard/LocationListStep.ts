@@ -13,6 +13,7 @@ import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
     /**
      * The task used to get locations.
@@ -44,6 +45,7 @@ interface ILocationWizardContextInternal extends types.ILocationWizardContext {
      */
     ui: IAzureAgentInput;
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export class LocationListStep<T extends ILocationWizardContextInternal> extends AzureWizardPromptStep<T> {
     protected constructor(private options?: IAzureQuickPickOptions) {
@@ -58,9 +60,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
     }
 
     private static getInternalVariables<T extends ILocationWizardContextInternal>(wizardContext: T): [Promise<types.AzExtLocation[]>, Map<string, Promise<string[]>>] {
-        if (!wizardContext._allLocationsTask) {
-            wizardContext._allLocationsTask = getAllLocations(wizardContext);
-        }
+        wizardContext._allLocationsTask ??= getAllLocations(wizardContext);
 
         if (!wizardContext._providerLocationsMap) {
             wizardContext._providerLocationsMap = new Map<string, Promise<string[]>>();
@@ -114,7 +114,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         return {
             location: locationName,
             extendedLocation
-        }
+        };
     }
 
     public static getAutoSelectLocation<T extends ILocationWizardContextInternal>(wizardContext: T): types.AzExtLocation | undefined {

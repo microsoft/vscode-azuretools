@@ -36,8 +36,8 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
     const { expectedId, token, locationUrl } = options;
     // recommended to poll every second or the deployment id can be recycled before we find it
     const pollingInterval = options.pollingInterval ?? 1000;
-    context.activityAttributes = context.activityAttributes || {};
-    context.activityAttributes.logs = context.activityAttributes.logs || [];
+    context.activityAttributes = context.activityAttributes ?? {};
+    context.activityAttributes.logs = context.activityAttributes.logs ?? [];
 
     while (!token?.isCancellationRequested) {
         if (locationUrl) {
@@ -54,7 +54,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             [deployment, permanentId, initialStartTime] = await tryGetLatestDeployment(context, kuduClient, permanentId, initialStartTime, expectedId);
         }
 
-        if ((deployment === undefined || !deployment.id)) {
+        if ((!deployment?.id)) {
             if ((expectedId || locationUrl) && Date.now() < maxTimeToWaitForExpectedId) {
                 await delay(pollingInterval);
                 continue;
@@ -72,7 +72,6 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         });
 
         let lastLogTimeForThisPoll: Date | undefined;
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             const newEntry: KuduModels.LogEntry | undefined = logEntries.pop();
             if (!newEntry) {
@@ -108,7 +107,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
         // a 2 status is also reported and seems to indicate that it is also currently building, but I have been unable to find any actual documentation on it
         if (deployment.status !== 0 && deployment.status !== 2) {
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
-                void showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
+                showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
                 const messageWithoutName: string = l10n.t('Deployment failed.');
                 ext.outputChannel.appendLog(messageWithoutName, { resourceName: site.fullName });
                 context.errorHandling.suppressDisplay = true;
@@ -120,7 +119,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
             } else if (deployment.status === 5) {
                 throw new Error(l10n.t('Deployment was cancelled and another deployment is in progress'));
             } else if (deployment.status === 6) {
-                void showErrorMessageWithOutput(l10n.t('Deployment was partially successful.', site.fullName));
+                showErrorMessageWithOutput(l10n.t('Deployment was partially successful.', site.fullName));
             } else if (deployment.status === -1) {
                 throw new Error(l10n.t('Deployment was cancelled.'));
             }
@@ -129,7 +128,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 !/syncing/i.test(fullLog) &&
                 !site.isKubernetesApp &&
                 !site.isWorkflowApp &&
-                context.deployMethod !== 'flexconsumption'
+                context.deployMethod !== 'flexconsumption';
             return;
         } else {
             await delay(pollingInterval);
@@ -194,7 +193,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                     throw error;
                 }
             }
-            if (deployment && deployment.startTime) {
+            if (deployment?.startTime) {
                 // Make note of the startTime because that is when kudu has began the deployment process,
                 // so that we can use that to find the deployment going forward
                 initialStartTime = deployment.startTime;
@@ -226,7 +225,7 @@ function cleanDetails(entries: KuduModels.LogEntry[]): KuduModels.LogEntry[] {
     return result.reverse();
 }
 
-async function showErrorMessageWithOutput(message: string): Promise<void> {
+function showErrorMessageWithOutput(message: string): void {
     const viewOutput: string = l10n.t('View Output');
     // don't wait
     void window.showErrorMessage(message, viewOutput).then(result => {

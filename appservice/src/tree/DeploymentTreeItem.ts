@@ -27,6 +27,7 @@ enum DeployStatus {
  * NOTE: This leverages two commands prefixed with `ext.prefix` that should be registered by each extension: "showOutputChannel" and "viewDeploymentLogs"
  */
 export class DeploymentTreeItem extends AzExtTreeItem {
+    // eslint-disable-next-line no-useless-escape
     public static contextValue: RegExp = new RegExp('deployment\/.*');
     public label: string;
     public receivedTime: Date;

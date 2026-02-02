@@ -65,7 +65,7 @@ suite("timeout Tests", () => {
                 });
 
                 assert.fail(null, null, "Expected exception");
-            } catch (error) {
+            } catch {
                 // ignore
             }
 

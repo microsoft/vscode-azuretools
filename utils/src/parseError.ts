@@ -81,6 +81,7 @@ export function parseError(error: any): IParsedError {
     message = parseIfXml(message);
 
     return {
+        name: errorType,
         errorType: errorType,
         message: message,
         stack: stack,

@@ -34,6 +34,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private readonly _onStartEmitter = new EventEmitter<hTypes.OnStartActivityData>();
     private readonly _onSuccessEmitter = new EventEmitter<hTypes.OnSuccessActivityData>();
     private readonly _onErrorEmitter = new EventEmitter<hTypes.OnErrorActivityData>();
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected readonly _onProgressEmitter = new EventEmitter<hTypes.OnProgressActivityData>();
 
     protected status: ActivityStatus = ActivityStatus.NotStarted;
@@ -42,6 +43,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private timer: NodeJS.Timeout;
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected _attributes: types.ActivityAttributes | undefined;
 
     public error?: types.IParsedError;

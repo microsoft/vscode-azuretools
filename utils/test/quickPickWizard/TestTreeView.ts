@@ -6,7 +6,7 @@
 import * as vscode from 'vscode';
 
 export type TestTreeNode = vscode.TreeItem & {
-    element?: any;
+    element?: unknown;
     children?: TestTreeNode[];
 }
 

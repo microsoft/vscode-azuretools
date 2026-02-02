@@ -44,6 +44,6 @@ export class ContextValuePickFilter implements PickFilter {
 
             // Context value matcher is a string, do full equality (same as old behavior)
             return c === matcher;
-        })
+        });
     }
 }

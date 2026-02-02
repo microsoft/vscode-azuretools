@@ -2,21 +2,24 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "npm",
-            "script": "build",
+            "label": "Build+Watch",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "build:esm",
+                "--",
+                "--watch",
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
+            "isBackground": true,
             "presentation": {
-                "reveal": "never"
+                "revealProblems": "onProblem"
             },
-            "problemMatcher": "$tsc"
+            "problemMatcher": "$tsc-watch",
         },
-        {
-            "type": "npm",
-            "script": "lint",
-            "problemMatcher": "$eslint-stylish"
-        }
     ]
 }

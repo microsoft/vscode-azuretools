@@ -109,7 +109,7 @@ export class TestUserInput implements types.TestUserInput {
                     if (resolvedItem) {
                         result = resolvedItem;
                     } else {
-                        const picksString = resolvedItems.map(i => `"${i.label}"`).join(', ')
+                        const picksString = resolvedItems.map(i => `"${i.label}"`).join(', ');
                         const lastItem = resolvedItems[resolvedItems.length - 1];
                         if (/load more/i.test(lastItem.label)) {
                             console.log(`Loading more items for quick pick with placeholder "${options.placeHolder}"...`);
@@ -172,7 +172,6 @@ export class TestUserInput implements types.TestUserInput {
         if (input === undefined) {
             throw new Error(`No more inputs left for call to showWarningMessage. Message: ${message}`);
         } else if (typeof input === 'string') {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const matchingItem: T | undefined = args.find((item: T) => item.title === input);
             if (matchingItem) {
                 result = matchingItem;

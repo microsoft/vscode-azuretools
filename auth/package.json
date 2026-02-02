@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureauth",
     "author": "Microsoft Corporation",
-    "version": "5.1.1",
+    "version": "6.0.0-alpha.1",
     "description": "Azure authentication helpers for Visual Studio Code",
     "tags": [
         "azure",
@@ -11,6 +11,18 @@
         "azure",
         "vscode"
     ],
+    "exports": {
+        ".": {
+            "import": "./dist/esm/src/index.js",
+            "require": "./dist/cjs/src/index.js",
+            "types": "./dist/esm/src/index.d.ts"
+        },
+        "./azdo": {
+            "import": "./dist/esm/src/providers/AzureDevOpsSubscriptionProvider.js",
+            "require": "./dist/cjs/src/providers/AzureDevOpsSubscriptionProvider.js",
+            "types": "./dist/esm/src/providers/AzureDevOpsSubscriptionProvider.d.ts"
+        }
+    },
     "module": "dist/esm/src/index.js",
     "main": "dist/cjs/src/index.js",
     "types": "dist/esm/src/index.d.ts",
@@ -27,37 +39,35 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "lint": "eslint --ext .ts .",
-        "lint-fix": "eslint --ext .ts . --fix",
-        "test": "node ./dist/cjs/test/runTest.js",
+        "lint": "eslint --max-warnings 0",
+        "test": "mocha",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
-        "vscode": "^1.105.0"
+        "vscode": "^1.106.0"
     },
     "devDependencies": {
-        "@azure/core-auth": "^1.4.0",
-        "@microsoft/eslint-config-azuretools": "^0.2.1",
-        "@types/glob": "^8.1.0",
-        "@types/mocha": "^7.0.2",
-        "@types/node": "^18.18.7",
-        "@types/vscode": "1.105.0",
-        "@typescript-eslint/eslint-plugin": "^5.53.0",
-        "@vscode/test-electron": "^2.3.8",
-        "eslint": "^8.34.0",
-        "eslint-plugin-import": "^2.22.1",
-        "glob": "^7.1.6",
-        "mocha": "^11.1.0",
-        "mocha-junit-reporter": "^2.0.2",
-        "mocha-multi-reporters": "^1.1.7",
-        "typescript": "^5.8.2"
+        "@azure/core-auth": "^1.10.1",
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.4",
+        "@types/node": "22.x",
+        "@types/vscode": "1.106.0"
     },
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^2.1.0",
-        "@azure/core-client": "^1.9.2",
-        "@azure/core-rest-pipeline": "^1.16.0",
-        "@azure/identity": "^4.2.0",
+        "@azure/identity": "^4.13.0",
         "@azure/ms-rest-azure-env": "^2.0.0"
+    },
+    "publishConfig": {
+        "tag": "alpha"
+    },
+    "mocha": {
+        "ui": "tdd",
+        "node-option": [
+            "import=tsx"
+        ],
+        "spec": [
+            "test/**/*.test.ts"
+        ]
     }
 }

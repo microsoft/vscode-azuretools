@@ -51,12 +51,12 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
         const client = context.client;
         this.progress = progress;
         const config: SiteConfigResource = await client.getSiteConfig();
-        const startingDeployment = l10n.t('Starting deployment...')
+        const startingDeployment = l10n.t('Starting deployment...');
         progress.report({ message: startingDeployment });
         // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
         try {
             await setDeploymentTelemetry(context, config, context.aspPromise);
-        } catch (error) {
+        } catch {
             // Ignore
         }
         await this.deployCore(context, config);

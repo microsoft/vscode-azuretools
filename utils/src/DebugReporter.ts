@@ -9,10 +9,10 @@ import { IInternalTelemetryReporter } from './createTelemetryReporter';
 export class DebugReporter implements IInternalTelemetryReporter {
     constructor(private _extensionName: string, private _extensionVersion: string, private _verbose: boolean) { }
 
-    public sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }, _errorProps?: string[]): void {
+    public sendTelemetryErrorEvent(eventName: string, properties?: { [key: string]: string | undefined; }, measures?: { [key: string]: number | undefined; }): void {
         try {
-            const propertiesString: string = JSON.stringify(properties || {});
-            const measuresString: string = JSON.stringify(measures || {});
+            const propertiesString: string = JSON.stringify(properties ?? {});
+            const measuresString: string = JSON.stringify(measures ?? {});
 
             if (this._verbose) {
                 const msg: string = `** TELEMETRY("${this._extensionName}/${eventName}", ${this._extensionVersion}) properties=${propertiesString}, measures=${measuresString}`;

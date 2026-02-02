@@ -55,7 +55,7 @@ suite("AzExtTreeFileSystem", function () {
         const id = "mock_id";
         try {
             await mockAzExtTreeFileSystem.showTextDocument({ id: id });
-        } catch (error) {
+        } catch {
             // Ignore error. Only used showTextDocument to add the document to itemsCache.
         }
         const uri: vscode.Uri = vscode.Uri.parse(`${mockAzExtTreeFileSystem.scheme}://mock_file_path?id=${id}`);
@@ -68,7 +68,7 @@ suite("AzExtTreeFileSystem", function () {
         const id = "ZTA?AMGB????oaUBAAAAAAAAAA???";
         try {
             await mockAzExtTreeFileSystem.showTextDocument({ id: id });
-        } catch (error) {
+        } catch {
             // Ignore error. Only used showTextDocument to add the document to itemsCache.
         }
         const uri: vscode.Uri = vscode.Uri.parse(`${mockAzExtTreeFileSystem.scheme}://mock_file_path?id=${id}`);
@@ -81,7 +81,7 @@ suite("AzExtTreeFileSystem", function () {
         const id = "ZTA=AMGBoaUB===AAAAAAAAAA==";
         try {
             await mockAzExtTreeFileSystem.showTextDocument({ id: id });
-        } catch (error) {
+        } catch {
             // Ignore error. Only used showTextDocument to add the document to itemsCache.
         }
         const uri: vscode.Uri = vscode.Uri.parse(`${mockAzExtTreeFileSystem.scheme}://mock_file_path?id=${id}`);

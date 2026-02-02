@@ -48,7 +48,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
 
             const item: TItem = await this.lookup(context, uri);
             return await this.statImpl(context, item, uri);
-        }) || { type: FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
+        }) ?? { type: FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
     }
 
     public async readFile(uri: Uri): Promise<Uint8Array> {
@@ -59,7 +59,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
 
             const item: TItem = await this.lookup(context, uri);
             return await this.readFileImpl(context, item, uri);
-        }) || Buffer.from('');
+        }) ?? Buffer.from('');
     }
 
     public async writeFile(uri: Uri, content: Uint8Array): Promise<void> {

@@ -43,7 +43,7 @@ export async function runWithZipStream(context: IActionContext, options: {
             onFileSize(stats.size);
         });
     } else {
-        const creatingZip = vscode.l10n.t('Creating zip package...')
+        const creatingZip = vscode.l10n.t('Creating zip package...');
         ext.outputChannel.appendLog(creatingZip, { resourceName: site.fullName });
         options.progress?.report({ message: creatingZip });
 
@@ -108,12 +108,12 @@ export async function getFilesFromGlob(folderPath: string, resourceName: string,
 
     // first find all files without any ignorePatterns
     let files: vscode.Uri[] = await vscode.workspace.findFiles(new vscode.RelativePattern(folderPath, globPattern));
-    const ignoringFiles = vscode.l10n.t('Ignoring files from \"{0}.{1}\"', ext.prefix, zipIgnorePatternStr);
+    const ignoringFiles = vscode.l10n.t('Ignoring files from "{0}.{1}"', ext.prefix, zipIgnorePatternStr);
     if (ignorePatternList) {
         try {
             // not all ouptut channels _have_ to support appendLog, so catch the error
             ext.outputChannel.appendLog(ignoringFiles, { resourceName });
-        } catch (error) {
+        } catch {
             ext.outputChannel.appendLine(ignoringFiles);
         }
 
@@ -124,7 +124,7 @@ export async function getFilesFromGlob(folderPath: string, resourceName: string,
             const filesIgnored = (await vscode.workspace.findFiles(globPattern, pattern)).map(uri => uri.fsPath);
             // only leave in files that are in both lists
             files = files.filter(uri => filesIgnored.includes(uri.fsPath));
-            ext.outputChannel.appendLine(`\"${pattern}\"`);
+            ext.outputChannel.appendLine(`"${pattern}"`);
         }
     }
     return files.map(f => path.relative(folderPath, f.fsPath));

@@ -8,7 +8,8 @@
     "search.exclude": {
         "dist": true,
         "out": true,
-        "**/node_modules": true
+        "**/node_modules": true,
+        "**/.vscode-test": true,
     },
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"

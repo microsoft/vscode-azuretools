@@ -31,7 +31,7 @@ export async function getDeployFsPath(context: IActionContext, target: vscode.Ur
         originalDeployFsPath = target;
         workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(target));
         effectiveDeployFsPath = await appendDeploySubpathSetting(context, workspaceFolder, target);
-    } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
+    } else if (vscode.workspace.workspaceFolders?.length === 1) {
         // If there is only one workspace and it has 'deploySubPath' set - return that value without prompting
         const singleWorkspace = vscode.workspace.workspaceFolders[0];
         const deploySubpath: string | undefined = getWorkspaceSetting(deploySubpathSetting, ext.prefix, singleWorkspace);
@@ -111,7 +111,7 @@ async function appendDeploySubpathSetting(context: IActionContext, workspaceFold
             context.telemetry.properties.hasDeploySubpathSetting = 'true';
 
             if (isPathEqual(workspaceFolder.uri.fsPath, targetPath)) {
-                return path.join(targetPath, deploySubPath);
+                return Promise.resolve(path.join(targetPath, deploySubPath));
             } else {
                 const fsPathWithSetting: string = path.join(workspaceFolder.uri.fsPath, deploySubPath);
                 if (!isPathEqual(fsPathWithSetting, targetPath)) {
@@ -130,12 +130,12 @@ async function appendDeploySubpathSetting(context: IActionContext, workspaceFold
                     }
                 }
 
-                return fsPathWithSetting;
+                return Promise.resolve(fsPathWithSetting);
             }
         }
     }
 
-    return targetPath;
+    return Promise.resolve(targetPath);
 }
 
 export type IDeployPaths = {

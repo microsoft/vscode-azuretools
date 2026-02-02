@@ -24,6 +24,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     //#endregion
 
     public readonly initialCollapsibleState: TreeItemCollapsibleState | undefined = TreeItemCollapsibleState.Collapsed;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isAzExtParentTreeItem: boolean = true;
 
     private _cachedChildren: AzExtTreeItem[] = [];
@@ -194,17 +195,19 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
         const treeItems: AzExtTreeItem[] = [];
         let lastUnknownItemError: unknown;
-        sourceArray ||= [];
+        sourceArray ??= [];
         await Promise.all(sourceArray.map(async (source: TSource) => {
             try {
                 const item: AzExtTreeItem | undefined = await createTreeItem(source);
                 if (item) {
                     // Verify at least the following properties can be accessed without an error
+                    /* eslint-disable @typescript-eslint/no-unused-expressions */
                     item.contextValue;
                     item.description;
                     item.label;
                     item.iconPath;
                     item.id;
+                    /* eslint-enable @typescript-eslint/no-unused-expressions */
 
                     treeItems.push(item);
                 }
@@ -284,7 +287,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                         if (!ti.commandId) {
                             throw new Error(l10n.t('Failed to find commandId on generic tree item.'));
                         } else {
-                            const commandArgs: unknown[] = ti.commandArgs || [ti];
+                            const commandArgs: unknown[] = ti.commandArgs ?? [ti];
                             await commands.executeCommand(ti.commandId, ...commandArgs);
                             await this.refresh(context);
                             return this;
@@ -357,7 +360,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         this._error = error;
         this.contextValue = options.contextValue;
         this.data = options.data;
-        this.description = options.description !== undefined ? options.description : l10n.t('Invalid');
+        this.description = options.description ?? l10n.t('Invalid');
     }
 
     public get id(): string {

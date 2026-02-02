@@ -4,25 +4,34 @@ Contains default esbuild configuration for Azure extensions.
 
 # Minimal Usage
 
+1. Add the esbuild dev dependencies. They are optional peer dependencies of this package, which
+   will control the version. As such, use `*` as the desired version.
+    ```diff
+        "devDependencies": {
+    +        "esbuild": "*",
+    +        "esbuild-plugin-copy": "*"
+        }
+    ```
+
 1. Add `esbuild.mjs` to the root of your extension package:
-```js
-import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
-await autoEsbuildOrWatch(autoSelectEsbuildConfig());
-```
+    ```js
+    import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
+    await autoEsbuildOrWatch(autoSelectEsbuildConfig());
+    ```
 
-2. Add the script to `package.json`:
-```diff
-    "scripts": [
-+        "build": "node esbuild.mjs"
-    ]
-```
+1. Add the script to `package.json`:
+    ```diff
+        "scripts": [
+    +        "build": "node esbuild.mjs"
+        ]
+    ```
 
-3. (Recommended) esbuild does not do type-checking. Add a type-checking script to `package.json`:
-```diff
-    "scripts": [
-+        "check": "tsc --noEmit"
-    ]
-```
+1. (Recommended) esbuild does not do type-checking. Add a type-checking script to `package.json`:
+    ```diff
+        "scripts": [
+    +        "check": "tsc --noEmit"
+        ]
+    ```
 
 # Normal Usage
 

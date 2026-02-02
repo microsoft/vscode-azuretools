@@ -18,7 +18,7 @@ export async function updateWorkspaceSetting<T = string>(section: string, value:
 export function getGlobalSetting<T>(key: string, prefix: string): T | undefined {
     const projectConfiguration: WorkspaceConfiguration = workspace.getConfiguration(prefix);
     const result: { globalValue?: T } | undefined = projectConfiguration.inspect<T>(key);
-    return result && result.globalValue;
+    return result?.globalValue;
 }
 
 export function getWorkspaceSetting<T>(key: string, prefix: string, fsPath?: string | WorkspaceFolder): T | undefined {

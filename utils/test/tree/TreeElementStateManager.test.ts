@@ -8,6 +8,8 @@ import { TreeItem } from 'vscode';
 import { TreeElementBase } from '../..';
 import { TreeElementStateManager } from '../../src/index';
 
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 suite('TreeElementStateManager', () => {
     const state = new TreeElementStateManager();
 
@@ -19,7 +21,7 @@ suite('TreeElementStateManager', () => {
                 id: 'test-1',
                 label: 'test-1',
                 description: testDescription
-            }
+            };
         }
     } satisfies TreeElementBase;
 

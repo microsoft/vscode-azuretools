@@ -6,6 +6,7 @@
 import { l10n, MessageItem } from 'vscode';
 import * as constants from './constants';
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace DialogResponses {
     export const yes: MessageItem = { title: l10n.t('Yes') };
     export const no: MessageItem = { title: l10n.t('No') };

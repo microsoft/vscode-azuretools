@@ -67,6 +67,6 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
     public shouldExecute(context: InnerDeployContext): boolean {
         const settingKey: string = 'postDeployTask';
         const taskName: string | undefined = workspace.getConfiguration(ext.prefix, Uri.file(context.fsPath)).get(settingKey);
-        return !!(taskName && shouldExecuteTask(context, this.config.scmType, settingKey, taskName))
+        return !!(taskName && shouldExecuteTask(context, this.config.scmType, settingKey, taskName));
     }
 }

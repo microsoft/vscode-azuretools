@@ -81,6 +81,6 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
         return {
             item,
             message: this.getOutputLogFail(context),
-        }
+        };
     }
 }

@@ -42,7 +42,6 @@ export function createSubscriptionContext(subscription: AzureSubscription): ISub
         credentials: createCredential(subscription.authentication.getSession),
         createCredentialsForScopes: async (scopeListOrRequest: string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
             // Have to use bind here because we need to pass a `getSessions` function with a `scopes` parameter to `createCredential`
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             return createCredential(subscription.authentication.getSessionWithScopes.bind(subscription.authentication, scopeListOrRequest));
         }
     };

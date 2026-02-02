@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import dayjs from 'dayjs';
-// eslint-disable-next-line import/no-internal-modules
 import relativeTime from 'dayjs/plugin/relativeTime';
 import * as vscode from 'vscode';
 import * as types from '../index';

@@ -143,7 +143,7 @@ suite("masking", () => {
             const context = <types.IActionContext><any>{ valuesToMask: [] };
             addValuesToMaskFromAzureId(context, appId);
             assert.strictEqual(maskUserInfo(appId, context.valuesToMask), '/subscriptions/---/resourceGroups/---/providers/Microsoft.Web/sites/---');
-        })
+        });
 
         test('Email', async () => {
             assert.strictEqual(maskUserInfo('user@microsoft.com user2@microsoft.com us---Er@mic.rosoft.com', []), 'redacted:email redacted:email redacted:email');

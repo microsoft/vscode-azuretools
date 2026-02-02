@@ -42,13 +42,13 @@ export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardCo
             LocationListStep.addProviderForFiltering(wizardContext, IdentityProvider, UserAssignedIdentityResourceType);
             LocationListStep.addStep(wizardContext, promptSteps);
 
-            return {
+            return Promise.resolve({
                 promptSteps,
                 executeSteps: [new UserAssignedIdentityCreateStep()]
-            }
+            });
         }
 
-        return undefined;
+        return Promise.resolve(undefined);
     }
 
     private async getQuickPicks(wizardContext: T): Promise<IAzureQuickPickItem<Identity | undefined>[]> {

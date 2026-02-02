@@ -40,9 +40,9 @@ export async function selectWorkspaceFile(context: IActionContext, placeHolder: 
 export async function selectWorkspaceItem(context: IActionContext, placeHolder: string, options: vscode.OpenDialogOptions): Promise<vscode.WorkspaceFolder | vscode.Uri> {
     let folder: vscode.WorkspaceFolder | undefined;
     if (vscode.workspace.workspaceFolders) {
-        const folderPicks: IAzureQuickPickItem<vscode.WorkspaceFolder | undefined>[] = await Promise.all(vscode.workspace.workspaceFolders.map((f: vscode.WorkspaceFolder) => {
+        const folderPicks: IAzureQuickPickItem<vscode.WorkspaceFolder | undefined>[] = vscode.workspace.workspaceFolders.map((f: vscode.WorkspaceFolder) => {
             return { label: path.basename(f.uri.fsPath), description: f.uri.fsPath, data: f };
-        }));
+        });
 
         folderPicks.push({ label: vscode.l10n.t('$(file-directory) Browse...'), description: '', data: undefined });
         folder = (await context.ui.showQuickPick(folderPicks, { placeHolder })).data;
