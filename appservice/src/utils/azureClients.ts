@@ -14,8 +14,6 @@ import { AzExtClientContext, AzExtClientType, createAzureClient, createAzureSubs
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
 
 export async function createWebSiteClient(context: AzExtClientContext): Promise<WebSiteManagementClient> {
-    // Newer versions of "WebSiteManagementClient" have multiple constructor overloads.
-    // Typecasting helps TypeScript match with the correct "AzExtClientType".
     return createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient as unknown as AzExtClientType<WebSiteManagementClient>);
 }
 
