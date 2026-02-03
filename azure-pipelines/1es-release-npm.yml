@@ -60,6 +60,8 @@ extends:
                   targetPath: $(System.DefaultWorkingDirectory)
                   artifactName: ${{ parameters.artifactName }}
             steps:
+              - pwsh: |
+                  Write-Host "##vso[task.logissue type=warning]These pipeline templates are deprecated and will be removed soon. Please contact the AzCode alias with questions, or see https://github.com/microsoft/vscode-azuretools/issues/2173."
 
               # Locate the desired .tgz file and set the relevant variables
               - powershell: |

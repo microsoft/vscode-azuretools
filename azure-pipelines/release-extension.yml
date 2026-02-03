@@ -72,6 +72,9 @@ extends:
                   steps:
                     - checkout: none
 
+                    - pwsh: |
+                        Write-Host "##vso[task.logissue type=warning]These pipeline templates are deprecated and will be removed soon. Please contact the AzCode alias with questions, or see https://github.com/microsoft/vscode-azuretools/issues/2173."
+
                     # Modify the build number to include repo name, extension version, and if dry run is true
                     - powershell: |
                         # Get the version from package.json

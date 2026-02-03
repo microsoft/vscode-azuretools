@@ -47,6 +47,8 @@ stages:
                   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
                   artifactName: Build $(artifact_name)
             steps:
+              - pwsh: |
+                  Write-Host "##vso[task.logissue type=warning]These pipeline templates are deprecated and will be removed soon. Please contact the AzCode alias with questions, or see https://github.com/microsoft/vscode-azuretools/issues/2173."
               - template: ./templates/setup.yml
                 parameters:
                   additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
