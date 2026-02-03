@@ -38,7 +38,7 @@
     "dependencies": {
         "@azure/abort-controller": "^1.0.4",
         "@azure/arm-appinsights": "^5.0.0-beta.4",
-        "@azure/arm-appservice": "^15.0.0",
+        "@azure/arm-appservice": "^18.0.0",
         "@azure/arm-operationalinsights": "^8.0.1",
         "@azure/arm-resourcegraph": "^5.0.0-beta.3",
         "@azure/core-rest-pipeline": "^1.10.3",
