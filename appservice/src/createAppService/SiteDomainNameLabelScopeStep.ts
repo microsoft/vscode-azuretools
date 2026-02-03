@@ -20,6 +20,7 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
         const picks: IAzureQuickPickItem<DomainNameLabelScope | typeof learnMore | undefined>[] = [
             // Matching the portal which doesn't yet offer anything beyond `Tenant` and `Legacy` offerings
             // If new domain name label scopes are added to this pick list, it is required to implement corresponding naming validation under `SiteNameStep`
+            // Example of the kinds of changes that may be required: https://github.com/microsoft/vscode-azuretools/pull/2182#discussion_r2760621222
             { label: vscode.l10n.t('Secure unique default hostname'), description: vscode.l10n.t('Tenant Scope'), data: DomainNameLabelScope.Tenant },
             { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Legacy'), data: undefined },
             { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: learnMore },
