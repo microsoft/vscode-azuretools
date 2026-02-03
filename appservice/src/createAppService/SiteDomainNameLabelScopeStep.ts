@@ -20,7 +20,7 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
         const picks: IAzureQuickPickItem<DomainNameLabelScope | typeof learnMore | undefined>[] = [
             // Matching the portal which doesn't yet offer ResourceGroup and Subscription level domain scope
             { label: vscode.l10n.t('Secure unique default hostname'), description: vscode.l10n.t('Tenant Scope'), data: DomainNameLabelScope.Tenant },
-            { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Global'), data: undefined }, // The legacy default which corresponds to no value being set
+            { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Legacy'), data: undefined },
             { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: learnMore },
         ];
         const learnMoreUrl: string = 'https://aka.ms/AAu7lhs';
