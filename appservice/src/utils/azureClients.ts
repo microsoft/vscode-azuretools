@@ -14,6 +14,8 @@ import { AzExtClientContext, AzExtClientType, createAzureClient, createAzureSubs
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
 
 export async function createWebSiteClient(context: AzExtClientContext): Promise<WebSiteManagementClient> {
+    // Typecast required for CJS compilation due to TypeScript not recognizing "WebSiteManagementClient" extends the required "ServiceClient".
+    // Copilot mentions that this could be a dual-package (ESM/CJS) module resolution quirk.
     return createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient as unknown as AzExtClientType<WebSiteManagementClient>);
 }
 
