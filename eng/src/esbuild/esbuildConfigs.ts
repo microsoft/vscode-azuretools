@@ -160,6 +160,7 @@ export const azExtEsbuildConfigProdEsm: EsbuildConfig = {
     banner: { js: esmBanner, },
     format: 'esm',
     splitting: true,
+    outExtension: { '.js': '.mjs', }, // Use .mjs extension for ESM files
 };
 
 /**
@@ -170,6 +171,7 @@ export const azExtEsbuildConfigDevEsm: EsbuildConfig = {
     banner: { js: esmBanner, },
     format: 'esm',
     splitting: true,
+    outExtension: { '.js': '.mjs', }, // Use .mjs extension for ESM files
 };
 
 /**
