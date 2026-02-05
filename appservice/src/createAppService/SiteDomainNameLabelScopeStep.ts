@@ -41,7 +41,7 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
         } while (result === learnMore);
 
         context.newSiteDomainNameLabelScope = result;
-        context.telemetry.properties.siteDomainNameLabelScope = context.newSiteDomainNameLabelScope;
+        context.telemetry.properties.siteDomainNameLabelScope = context.newSiteDomainNameLabelScope ?? 'Legacy';
     }
 
     public shouldPrompt(context: T): boolean {
