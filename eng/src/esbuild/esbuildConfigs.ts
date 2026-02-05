@@ -26,6 +26,7 @@ export const {
  */
 export const baseEsbuildConfig: EsbuildConfig = {
     bundle: true,
+    external: ['vscode'],
     outdir: './dist',
     platform: 'node',
     target: 'es2022',
@@ -54,7 +55,6 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
 export const extensionEsbuildConfig: EsbuildConfig = {
     ...baseEsbuildConfig,
     mainFields: ['module', 'main'], // Use the 'module' field in package.json to get ESM versions of dependencies when available
-    external: ['vscode'],
     keepNames: true,
     entryPoints: [{
         in: './src/extension.ts',
