@@ -10,12 +10,12 @@ import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 
 export const {
     /**
-     * Whether debugging is enabled via `process.env.DEBUG_ESBUILD` (results in non-minified build with source maps)
+     * Whether debugging is enabled via `process.env.DEBUG_ESBUILD` (results in a metafile being generated)
      */
     isAutoDebug,
 
     /**
-     * Whether watch build is enabled via `--watch` arg (results in esbuild in watch mode)
+     * Whether watch build is enabled via `--watch` arg (results in non-minified build with source maps, and esbuild in watch mode)
      */
     isAutoWatch,
 } = getAutoBuildSettings();
