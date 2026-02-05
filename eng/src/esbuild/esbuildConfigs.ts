@@ -8,7 +8,17 @@ import { copy } from 'esbuild-plugin-copy';
 import * as fs from 'fs/promises';
 import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 
-export const { isAutoDebug, isAutoWatch } = getAutoBuildSettings();
+export const {
+    /**
+     * Whether debugging is enabled via `process.env.DEBUG_ESBUILD` (results in non-minified build with source maps)
+     */
+    isAutoDebug,
+
+    /**
+     * Whether watch build is enabled via `--watch` arg (results in esbuild in watch mode)
+     */
+    isAutoWatch,
+} = getAutoBuildSettings();
 
 /**
  * Base config - shared between telemetry/prod/dev/debug
@@ -16,16 +26,10 @@ export const { isAutoDebug, isAutoWatch } = getAutoBuildSettings();
  */
 export const baseEsbuildConfig: EsbuildConfig = {
     bundle: true,
-    external: ['vscode'],
     outdir: './dist',
     platform: 'node',
     target: 'es2022',
-    entryPoints: [{
-        in: './src/extension.ts',
-        out: 'extension.bundle',
-    }],
     format: 'cjs',
-    mainFields: ['module', 'main'],
 };
 
 /**
@@ -33,6 +37,7 @@ export const baseEsbuildConfig: EsbuildConfig = {
  */
 export const telemetryEsbuildConfig: EsbuildConfig = {
     ...baseEsbuildConfig,
+    mainFields: ['module'], // Use the 'module' field in package.json to get only ESM versions of dependencies
     keepNames: false, // Due to object freezing in the AppInsights packages, we cannot use keepNames on the telemetry stack
     entryPoints: [{
         in: '@vscode/extension-telemetry',
@@ -48,7 +53,13 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
  */
 export const extensionEsbuildConfig: EsbuildConfig = {
     ...baseEsbuildConfig,
+    mainFields: ['module', 'main'], // Use the 'module' field in package.json to get ESM versions of dependencies when available
+    external: ['vscode'],
     keepNames: true,
+    entryPoints: [{
+        in: './src/extension.ts',
+        out: 'extension.bundle',
+    }],
     plugins: [
         copy({
             assets: [
@@ -110,7 +121,7 @@ export const azExtEsbuildConfigDev: EsbuildConfig = {
 };
 
 /**
- * Debug config - same as prod, plus metafile
+ * Debug config - same as {@link azExtEsbuildConfigProd} (the production config), plus metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
 export const azExtEsbuildConfigDebug: EsbuildConfig = {
@@ -122,45 +133,47 @@ export const azExtEsbuildConfigDebug: EsbuildConfig = {
 
 // #region ESM configs - Here be dragons
 
-// For ESM builds, a banner is needed to create the 'require' function, since not all of our dependencies are available as ESM
-// I have no idea what other effects this might have :)
+/**
+ * For ESM builds, a banner is needed to create the 'require' function, since not all of our dependencies are available as ESM
+ * @note I have no idea what other effects this might have :)
+ */
 const esmBanner = `
-import {createRequire} from 'module';
+import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 `;
 
 /**
- * ESM telemetry config - no splitting for this one
+ * ESM telemetry config - no splitting and no banner
  */
 export const telemetryEsbuildConfigEsm: EsbuildConfig = {
     ...telemetryEsbuildConfig,
-    banner: { js: esmBanner },
+    // No banner needed here since the telemetry package and all its dependencies are already ESM (and the banner would cause activation to fail, see https://github.com/microsoft/vscode-azuretools/issues/2181)
     format: 'esm',
     splitting: false,
 };
 
 /**
- * ESM production config - minified, no sourcemap
+ * ESM production config - minified, no sourcemap, splitting enabled
  */
 export const azExtEsbuildConfigProdEsm: EsbuildConfig = {
     ...azExtEsbuildConfigProd,
-    banner: { js: esmBanner },
+    banner: { js: esmBanner, },
     format: 'esm',
     splitting: true,
 };
 
 /**
- * ESM dev config - not minified, linked sourcemap
+ * ESM dev config - not minified, linked sourcemap, splitting enabled
  */
 export const azExtEsbuildConfigDevEsm: EsbuildConfig = {
     ...azExtEsbuildConfigDev,
-    banner: { js: esmBanner },
+    banner: { js: esmBanner, },
     format: 'esm',
     splitting: true,
 };
 
 /**
- * ESM debug config - same as ESM prod, plus metafile
+ * ESM debug config - same as {@link azExtEsbuildConfigProdEsm} (the production ESM config), plus metafile
  * @note To use the metafile, it also needs to be written to disk. See https://esbuild.github.io/api/#metafile
  */
 export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
@@ -187,7 +200,7 @@ export interface DualBundleConfig {
 
 /**
  * Auto-selects the appropriate esbuild config based on environment variables and command line args
- * @param esm (Optional) True if the ESM config should be returned
+ * @param esm (Optional) True if the ESM configs should be returned
  * @returns
  * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + telemetry config
  * - else if `--watch` is passed, returns the dev config + telemetry config
@@ -205,7 +218,7 @@ export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
 
     const telemetryConfig = !!esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
 
-    return { extensionConfig, telemetryConfig };
+    return { extensionConfig, telemetryConfig, };
 }
 
 /**
@@ -215,8 +228,10 @@ export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
  * - else, builds once
  *
  * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
+ *
  * @note Even in watch mode, the telemetry bundle is only built once at startup--the build must
  * be restarted if the telemetry dependencies change
+ *
  * @param configs The configs to build or watch
  */
 export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
