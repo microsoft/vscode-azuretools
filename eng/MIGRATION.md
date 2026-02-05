@@ -148,6 +148,7 @@ Only do this if you wish to also migrate your extension to ESM. This allows ESBu
 which can improve load times by deferring package loading until it is necessary.
 > [Sample PR](https://github.com/microsoft/vscode-containers/pull/373/files)
 
+1. First do all of the above
 1. Update to at least v1.0.0-alpha.12 of this package (but prefer the latest alpha).
 1. Rename your `main.js` to `main.mjs`, and change it according to the above sample PR. It will primarily have just an
    `await import` of the bundle, an `activate()`, and a `deactivate()`.
