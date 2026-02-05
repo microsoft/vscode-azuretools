@@ -1,0 +1,7 @@
+steps:
+  - task: Npm@1
+    displayName: "\U0001F449 Lint"
+    inputs:
+      command: custom
+      customCommand: run lint
+      workingDir: $(working_directory)

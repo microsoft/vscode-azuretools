@@ -1,0 +1,50 @@
+parameters:
+  # Set to filter to VSIXs matching this name (optional)
+  - name: vsixName
+    type: string
+    default: ""
+
+  # Set to verify publish version matches package.json version (optional)
+  - name: publishVersion
+    type: string
+    default: ""
+
+steps:
+  - pwsh: |
+      # Find all the (matching) VSIXs
+      $vsixFiles = Get-ChildItem -Recurse -Filter "${{ parameters.vsixName }}*.vsix"
+
+      # Must be at least one VSIX found
+      if ($vsixFiles.Count -eq 0) {
+          Write-Error "No VSIXs found."
+          exit 1
+      }
+
+      # Loop over the found VSIXs and get their details
+      $vsixList = @()
+      foreach ($vsixFile in $vsixFiles) {
+          Write-Output "Discovered VSIX: $($vsixFile.FullName)"
+
+          # Get some details from the adjacent package.json
+          $packageJson = Get-Content "$($vsixFile.DirectoryName)/package.json" | ConvertFrom-Json
+
+          # If publishVersion is set, verify it matches the package.json version
+          if ('${{ parameters.publishVersion }}' -ne '' -and $packageJson.version -ne '${{ parameters.publishVersion }}') {
+              Write-Error "Publish version ${{ parameters.publishVersion }} doesn't match version found in package.json $($packageJson.version). Cancelling."
+              exit 1
+          }
+
+          # Add it to the list
+          $vsixList += @{
+              directory = $vsixFile.DirectoryName
+              vsixName = $vsixFile.Name
+              manifestName = "$($vsixFile.BaseName).extension.manifest"
+              signatureName = "$($vsixFile.BaseName).extension.signature.p7s"
+              npmVersionString = $packageJson.version
+              proposedApis = $packageJson.enabledApiProposals
+          }
+      }
+
+      # Store the VSIX list as JSON for later steps
+      Write-Output "##vso[task.setvariable variable=vsixListJson]$($vsixList | ConvertTo-Json -Compress -AsArray)"
+    displayName: "\U0001F449 Discover all VSIXs"

@@ -1,0 +1,40 @@
+parameters:
+  # Set to enable tests with Azure federated credentials
+  - name: testARMServiceConnection
+    type: string
+
+steps:
+  - bash: |
+      /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+    displayName: "\U0001F449 Start X Virtual Frame Buffer"
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+
+  - ${{ if ne(parameters.testARMServiceConnection, '') }}:
+      - task: AzureCLI@2
+        displayName: "\U0001F449 Verify test service connection"
+        inputs:
+          azureSubscription: ${{ parameters.testARMServiceConnection }}
+          scriptType: pscore
+          scriptLocation: inlineScript
+          addSpnToEnvironment: true
+          inlineScript: |
+            # FC_SERVICE_CONNECTION_ID is sourced from AZURESUBSCRIPTION_SERVICE_CONNECTION_ID set by the AzureCLI@2 task.
+            # This behavior is not clearly documented, but was confirmed by the task developer as safe to rely on.
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_ID]$env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
+            Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
+
+  - task: Npm@1
+    displayName: "\U0001F449 Test"
+    inputs:
+      command: custom
+      customCommand: run test
+      workingDir: $(working_directory)
+    env:
+      DISPLAY: :99 # Only necessary for Linux tests, must match Xvfb display number set above
+      ${{ if ne(parameters.testARMServiceConnection, '') }}:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        FC_SERVICE_CONNECTION_NAME: ${{ parameters.testARMServiceConnection }}
+        FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
+        FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
+        FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
