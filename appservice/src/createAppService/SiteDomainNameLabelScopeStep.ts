@@ -11,20 +11,23 @@ export enum DomainNameLabelScope {
     ResourceGroup = 'ResourceGroupReuse',
     Subscription = 'SubscriptionReuse',
     Tenant = 'TenantReuse',
-    Global = 'NoReuse',
+    NoReuse = 'NoReuse',
 }
 
 export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> extends AzureWizardPromptStep<T> {
     public async prompt(context: T): Promise<void> {
-        const picks: IAzureQuickPickItem<DomainNameLabelScope | undefined>[] = [
-            // Matching the portal which doesn't yet offer ResourceGroup and Subscription level domain scope
+        const learnMore = 'learnMore';
+        const picks: IAzureQuickPickItem<DomainNameLabelScope | typeof learnMore | undefined>[] = [
+            // Matching the portal which doesn't yet offer anything beyond `Tenant` and `Legacy` offerings
+            // If new domain name label scopes are added to this pick list, it is required to implement corresponding naming validation under `SiteNameStep`
+            // Example of the kinds of changes that may be required: https://github.com/microsoft/vscode-azuretools/pull/2182#discussion_r2760621222
             { label: vscode.l10n.t('Secure unique default hostname'), description: vscode.l10n.t('Tenant Scope'), data: DomainNameLabelScope.Tenant },
-            { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Global'), data: DomainNameLabelScope.Global },
-            { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: undefined },
+            { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Legacy'), data: undefined },
+            { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: learnMore },
         ];
         const learnMoreUrl: string = 'https://aka.ms/AAu7lhs';
 
-        let result: DomainNameLabelScope | undefined;
+        let result: DomainNameLabelScope | typeof learnMore | undefined;
         do {
             result = (await context.ui.showQuickPick(picks, {
                 placeHolder: vscode.l10n.t('Select default hostname format'),
@@ -32,13 +35,13 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
                 learnMoreLink: learnMoreUrl,
             })).data;
 
-            if (!result) {
+            if (result === learnMore) {
                 await openUrl(learnMoreUrl);
             }
-        } while (!result);
+        } while (result === learnMore);
 
-        context.telemetry.properties.siteDomainNameLabelScope = result;
         context.newSiteDomainNameLabelScope = result;
+        context.telemetry.properties.siteDomainNameLabelScope = context.newSiteDomainNameLabelScope;
     }
 
     public shouldPrompt(context: T): boolean {
