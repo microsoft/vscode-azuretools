@@ -142,3 +142,16 @@ Your tests run in the VS Code extension test host, because **you do have VS Code
 1. Also fix other imports as needed.
 1. Create a .vscode-test.mjs file at the root. Read more [here](./src/vscode-test/README.md).
 1. Run the tests. Take note of how many are running, and make sure it's the same as before.
+
+# Migrating an extension to ESM
+Only do this if you wish to also migrate your extension to ESM. This allows ESBuild to do code splitting,
+which can improve load times by deferring package loading until it is necessary.
+> [Sample PR](https://github.com/microsoft/vscode-containers/pull/373/files)
+
+1. Update to at least v1.0.0-alpha.12 of this package (but prefer the latest alpha).
+1. Rename your `main.js` to `main.mjs`, and change it according to the above sample PR. It will primarily have just an
+   `await import` of the bundle, an `activate()`, and a `deactivate()`.
+1. Add a `module` field to `package.json`, referencing your `main.mjs`, and update `main` as well to reference the same.
+1. In `esbuild.mjs`, pass `true` to `autoSelectEsbuildConfig()`.
+1. There may be other things that need to change--for example, the Container Tools extension launches the language servers
+   in a separate process. The file extension changed for those. This is visible in the sample above in the changes to `extension.ts`.
