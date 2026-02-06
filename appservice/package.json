@@ -36,14 +36,14 @@
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@azure/abort-controller": "^1.0.4",
+        "@azure/abort-controller": "^2.1.2",
         "@azure/arm-appinsights": "^5.0.0-beta.4",
         "@azure/arm-appservice": "^18.0.0",
         "@azure/arm-operationalinsights": "^8.0.1",
         "@azure/arm-resourcegraph": "^5.0.0-beta.3",
-        "@azure/core-rest-pipeline": "^1.10.3",
+        "@azure/core-rest-pipeline": "^1.19.1",
         "@azure/storage-blob": "^12.3.0",
-        "@microsoft/vscode-azext-azureutils": "^4.0.0",
+        "@microsoft/vscode-azext-azureutils": "file:../azure/microsoft-vscode-azext-azureutils-4.0.1.tgz",
         "@microsoft/vscode-azext-github": "^2.0.0",
         "@microsoft/vscode-azext-utils": "^4.0.3",
         "dayjs": "^1.11.2",
@@ -59,7 +59,7 @@
         "@microsoft/vscode-azext-azureappsettings": "^1.0.0"
     },
     "devDependencies": {
-        "@azure/core-client": "^1.7.2",
+        "@azure/core-client": "^1.9.3",
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.8",
         "@types/fs-extra": "^9.0.13",
         "@types/node": "22.x",
