@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
-    "version": "4.0.2",
+    "version": "4.1.0",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
@@ -38,7 +38,7 @@
     "dependencies": {
         "@azure/abort-controller": "^1.0.4",
         "@azure/arm-appinsights": "^5.0.0-beta.4",
-        "@azure/arm-appservice": "^15.0.0",
+        "@azure/arm-appservice": "^18.0.0",
         "@azure/arm-operationalinsights": "^8.0.1",
         "@azure/arm-resourcegraph": "^5.0.0-beta.3",
         "@azure/core-rest-pipeline": "^1.10.3",
