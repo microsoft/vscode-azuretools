@@ -60,66 +60,63 @@ extends:
       - stage: ReleaseStage
         displayName: Release NPM package
         jobs:
-          - deployment: Publish
-            ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
-              environment: ${{ parameters.releaseApprovalEnvironment }}
+          - job: Publish
             displayName: Publish NPM package
             templateContext:
               type: releaseJob
               isProduction: true
+              ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
+                environment: ${{ parameters.releaseApprovalEnvironment }}
               inputs:
                 - input: pipelineArtifact
                   pipeline: build
                   targetPath: "$(System.DefaultWorkingDirectory)"
                   artifactName: "${{ parameters.artifactName }}"
-            strategy:
-              runOnce:
-                deploy:
-                  steps:
-                    - checkout: none
+            steps:
+              - checkout: none
 
-                    - template: azdo-pipelines/templates/find-tarballs.yml@azExtTemplates
-                      parameters:
-                        tarballName: ${{ parameters.packageToPublish }}
-                        publishVersion: ${{ parameters.publishVersion }}
+              - template: ./templates/find-tarballs.yml
+                parameters:
+                  tarballName: ${{ parameters.packageToPublish }}
+                  publishVersion: ${{ parameters.publishVersion }}
 
-                    - pwsh: |
-                        $tarballList = @('$(tarballListJson)' | ConvertFrom-Json)
-                        $tgzFolderName = $tarballList[0].directory
-                        $tgzFileName = Join-Path $tgzFolderName $tarballList[0].tarballName
-                        Write-Host "##vso[task.setvariable variable=tgzFolderName]$tgzFolderName"
-                        Write-Host "##vso[task.setvariable variable=tgzFileName]$tgzFileName"
-                      displayName: "\U0001F449 Set variables for found tarball"
+              - pwsh: |
+                  $tarballList = @('$(tarballListJson)' | ConvertFrom-Json)
+                  $tgzFolderName = $tarballList[0].directory
+                  $tgzFileName = Join-Path $tgzFolderName $tarballList[0].tarballName
+                  Write-Host "##vso[task.setvariable variable=tgzFolderName]$tgzFolderName"
+                  Write-Host "##vso[task.setvariable variable=tgzFileName]$tgzFileName"
+                displayName: "\U0001F449 Set variables for found tarball"
 
-                    - template: azdo-pipelines/templates/set-release-build-number.yml@azExtTemplates
-                      parameters:
-                        packageToPublish: ${{ parameters.packageToPublish }}
-                        publishVersion: ${{ parameters.publishVersion }}
-                        dryRun: ${{ parameters.dryRun }}
+              - template: ./templates/set-release-build-number.yml
+                parameters:
+                  packageToPublish: ${{ parameters.packageToPublish }}
+                  publishVersion: ${{ parameters.publishVersion }}
+                  dryRun: ${{ parameters.dryRun }}
 
-                    # Publish the package to NPM
-                    - ${{ if eq(parameters.dryRun, false) }}:
-                        - template: MicroBuild.Publish.yml@MicroBuildTemplate
-                          parameters:
-                            intent: PackageDistribution
-                            contentType: npm
-                            contentSource: Folder
-                            folderLocation: "$(tgzFolderName)"
-                            waitForReleaseCompletion: true
-                            owners: "${{ parameters.ownerAliases }}"
-                            approvers: "${{ parameters.approverAliases }}"
+              # Publish the package to NPM
+              - ${{ if eq(parameters.dryRun, false) }}:
+                  - template: MicroBuild.Publish.yml@MicroBuildTemplate
+                    parameters:
+                      intent: PackageDistribution
+                      contentType: npm
+                      contentSource: Folder
+                      folderLocation: "$(tgzFolderName)"
+                      waitForReleaseCompletion: true
+                      owners: "${{ parameters.ownerAliases }}"
+                      approvers: "${{ parameters.approverAliases }}"
 
-                    # (Optional) Create a draft release on GitHub containing the package
-                    - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, '')) }}:
-                        - task: GitHubRelease@1
-                          displayName: "\U0001F449 Create draft release on GitHub"
-                          inputs:
-                            gitHubConnection: ${{ parameters.gitHubServiceConnection }}
-                            tagSource: userSpecifiedTag
-                            tag: "${{ parameters.packageToPublish }}-v${{ parameters.publishVersion }}"
-                            title: "${{ parameters.packageToPublish }} v${{ parameters.publishVersion }}"
-                            releaseNotesSource: inline
-                            assets: "$(tgzFileName)"
-                            isDraft: true
-                            isPreRelease: true
-                            addChangeLog: false
+              # (Optional) Create a draft release on GitHub containing the package
+              - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, '')) }}:
+                  - task: GitHubRelease@1
+                    displayName: "\U0001F449 Create draft release on GitHub"
+                    inputs:
+                      gitHubConnection: ${{ parameters.gitHubServiceConnection }}
+                      tagSource: userSpecifiedTag
+                      tag: "${{ parameters.packageToPublish }}-v${{ parameters.publishVersion }}"
+                      title: "${{ parameters.packageToPublish }} v${{ parameters.publishVersion }}"
+                      releaseNotesSource: inline
+                      assets: "$(tgzFileName)"
+                      isDraft: true
+                      isPreRelease: true
+                      addChangeLog: false
