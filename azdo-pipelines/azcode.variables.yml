@@ -11,9 +11,9 @@ variables:
   - name: npmReleaseApprovalEnvironment
     value: AzCodeDeploy
   - name: npmReleaseOwnerAliases
-    value: azcode
-  - name: npmReleaseApproverAliases
     value: jinglou
+  - name: npmReleaseApproverAliases
+    value: azcode
 
   # Test
   - name: testARMServiceConnection
