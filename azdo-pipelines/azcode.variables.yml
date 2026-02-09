@@ -13,7 +13,7 @@ variables:
   - name: npmReleaseOwnerAliases
     value: jinglou
   - name: npmReleaseApproverAliases
-    value: azcode
+    value: bwater
 
   # Test
   - name: testARMServiceConnection
