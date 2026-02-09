@@ -53,7 +53,7 @@ resources:
       ref: refs/heads/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
   parameters:
     pool: ${{ parameters.releasePool }}
     stages:
