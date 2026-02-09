@@ -49,7 +49,7 @@ resources:
   repositories:
     - repository: MicroBuildTemplate
       type: git
-      name: 1ESPipelineTemplates/MicroBuildTemplate
+      name: MicroBuildTemplates/MicroBuildTemplates # TODO: Back to the 1ES repo after migration
       ref: refs/heads/release
 
 extends:
