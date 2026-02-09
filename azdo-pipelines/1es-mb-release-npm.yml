@@ -78,7 +78,7 @@ extends:
                   steps:
                     - checkout: none
 
-                    - template: ./templates/find-tarballs.yml
+                    - template: azdo-pipelines/templates/find-tarballs.yml@azExtTemplates
                       parameters:
                         tarballName: ${{ parameters.packageToPublish }}
                         publishVersion: ${{ parameters.publishVersion }}
@@ -91,7 +91,7 @@ extends:
                         Write-Host "##vso[task.setvariable variable=tgzFileName]$tgzFileName"
                       displayName: "\U0001F449 Set variables for found tarball"
 
-                    - template: ./templates/set-release-build-number.yml
+                    - template: azdo-pipelines/templates/set-release-build-number.yml@azExtTemplates
                       parameters:
                         packageToPublish: ${{ parameters.packageToPublish }}
                         publishVersion: ${{ parameters.publishVersion }}
