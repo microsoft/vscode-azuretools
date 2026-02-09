@@ -53,7 +53,7 @@ resources:
       ref: refs/heads/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
   parameters:
     pool: ${{ parameters.releasePool }}
     stages:
@@ -73,7 +73,7 @@ extends:
                   targetPath: "$(System.DefaultWorkingDirectory)"
                   artifactName: "${{ parameters.artifactName }}"
             steps:
-              # - checkout: none
+              - checkout: none
 
               - pwsh: |
                   write-host 'hello from the release pipeline!'
