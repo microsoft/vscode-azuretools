@@ -53,11 +53,12 @@ extends:
         jobs:
           - job: Publish
             displayName: Publish extension
+            # TODO: not working, `jobs.job` doesn't support `environment`, only `jobs.deployment` does
+            # ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
+            #   environment: ${{ parameters.releaseApprovalEnvironment }}
             templateContext:
               type: releaseJob
               isProduction: true
-              ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
-                environment: ${{ parameters.releaseApprovalEnvironment }}
               inputs:
                 - input: pipelineArtifact
                   pipeline: build
