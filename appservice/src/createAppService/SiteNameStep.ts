@@ -123,7 +123,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         name = name.trim();
 
         let maxLength: number = siteNamingRules.maxLength;
-        if (context.newSiteDomainNameLabelScope && context.newSiteDomainNameLabelScope !== DomainNameLabelScope.Global) {
+        if (context.newSiteDomainNameLabelScope) {
             maxLength = regionalCNAMaxLength;
         }
 
@@ -143,14 +143,12 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         name = name.trim();
 
         let validationMessage: string | undefined;
-        if (!context.newSiteDomainNameLabelScope || context.newSiteDomainNameLabelScope === DomainNameLabelScope.Global) {
+        if (!context.newSiteDomainNameLabelScope) {
             validationMessage ??= await this.asyncValidateGlobalCNA(sdkClient, name);
         }
 
-        if (context.newSiteDomainNameLabelScope) {
-            validationMessage ??= await this.asyncValidateRegionalCNA(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
-            validationMessage ??= await this.asyncValidateUniqueARMId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
-        }
+        validationMessage ??= await this.asyncValidateRegionalCNA(context, context.newSiteDomainNameLabelScope, name, context.resourceGroup?.name ?? context.newResourceGroupName);
+        validationMessage ??= await this.asyncValidateUniqueARMId(context, sdkClient, name, context.resourceGroup?.name ?? context.newResourceGroupName);
 
         return validationMessage;
     }
@@ -164,7 +162,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         }
     }
 
-    private async asyncValidateRegionalCNA(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
+    private async asyncValidateRegionalCNA(context: SiteNameStepWizardContext, domainNameScope: DomainNameLabelScope | undefined, siteName: string, resourceGroupName?: string): Promise<string | undefined> {
         if (!LocationListStep.hasLocation(context)) {
             throw new Error(vscode.l10n.t('Internal Error: A location is required when validating a site name with regional CNA.'));
         } else if (domainNameScope === DomainNameLabelScope.ResourceGroup && !resourceGroupName) {
@@ -202,7 +200,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         if (!checkNameResponse.nameAvailable) {
             // For global domain scope, if site name input is greater than regionalCNAMaxLength, ignore result of regional CNA because it inherently has a shorter character limit than Global CNA
-            if (domainNameScope === DomainNameLabelScope.Global && siteName.length > regionalCNAMaxLength) {
+            if (!domainNameScope && siteName.length > regionalCNAMaxLength) {
                 // Ensure the error message is the expected character validation error message before ignoring it
                 if (checkNameResponse.message && /must be less than \d{2} chars/i.test(checkNameResponse.message)) {
                     return undefined;
