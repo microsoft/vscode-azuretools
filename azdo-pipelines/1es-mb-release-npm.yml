@@ -107,7 +107,7 @@ extends:
                       approvers: "${{ parameters.approverAliases }}"
 
               # (Optional) Create a draft release on GitHub containing the package
-              - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, "")) }}:
+              - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, '')) }}:
                   - task: GitHubRelease@1
                     displayName: "\U0001F449 Create draft release on GitHub"
                     inputs:
