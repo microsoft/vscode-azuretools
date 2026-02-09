@@ -65,8 +65,6 @@ extends:
             templateContext:
               type: releaseJob
               isProduction: true
-              ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
-                environment: ${{ parameters.releaseApprovalEnvironment }}
               inputs:
                 - input: pipelineArtifact
                   pipeline: build
