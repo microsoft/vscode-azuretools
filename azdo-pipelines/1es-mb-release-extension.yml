@@ -71,12 +71,12 @@ extends:
                 inputs:
                   versionSpec: 22.x
 
-              - template: ./templates/find-vsixs.yml
+              - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
                 parameters:
                   vsixName: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
 
-              - template: ./templates/set-release-build-number.yml
+              - template: azdo-pipelines/templates/set-release-build-number.yml@azExtTemplates
                 parameters:
                   packageToPublish: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
