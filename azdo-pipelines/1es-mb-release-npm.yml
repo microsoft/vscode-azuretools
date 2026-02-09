@@ -73,7 +73,7 @@ extends:
                   targetPath: "$(System.DefaultWorkingDirectory)"
                   artifactName: "${{ parameters.artifactName }}"
             steps:
-              - checkout: none
+              # - checkout: none
 
               - pwsh: |
                   write-host 'hello from the release pipeline!'
