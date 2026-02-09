@@ -1,5 +1,9 @@
 # Change Log
 
+## 6.0.0-alpha.2 - 2026-02-09
+
+* Fix copy all optional properties in `ExtendedEnvironment` constructor
+
 ## 6.0.0 - 2025-12-15
 
 * [#2119](https://github.com/microsoft/vscode-azuretools/pull/2119) Complete rewrite of the auth package. Adds caching, parallelization, and smarter filtering.
