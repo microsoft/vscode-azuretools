@@ -708,6 +708,14 @@ export declare function callWithTelemetryAndErrorHandlingSync<T>(callbackId: str
 export declare function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T>;
 
 /**
+ * A wrapper for the VS Code executeCommand command
+ * Used to pass in additional context when executing a command
+ * @param commandId Identifier of the command to execute
+ * @param additionalContext Full context including addtional properties
+ * @param args Parameters passed to the command function
+ */
+export declare function executeCommandWithAddedContext<T>(commandId: string, additionalContext: Partial<IActionContext>, ...args: unknown[]): Thenable<T>;
+/**
  * Add an extension-wide value to mask for all commands
  * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channel)
  * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
@@ -1413,6 +1421,10 @@ export interface ActivityAttributes {
      * Any Azure resource envelope related to the command or activity being run
      */
     azureResource?: unknown;
+    /**
+     * Optional Azure subscription to be added
+     */
+    subscription?: AzureSubscription;
 
     // For additional one-off properties that could be useful for Copilot
     [key: string]: unknown;
@@ -2382,6 +2394,13 @@ export declare class QuickPickAzureResourceStep extends GenericQuickPickStep<Azu
  */
 export declare function runQuickPickWizard<TPick>(context: PickExperienceContext, wizardOptions?: IWizardOptions<AzureResourceQuickPickWizardContext>, startingNode?: unknown): Promise<TPick>;
 //#endregion
+
+/**
+ * Creates and runs a generic prompt step. Use runQuickPickWizard to run quick pick steps
+ * @param context The action context
+ * @param wizardOptions The options used to construct the wizard
+ */
+export declare function runGenericPromptStep(context: PickExperienceContext, wizardOptions: IWizardOptions<AzureResourceQuickPickWizardContext>): Promise<void>;
 
 /**
  * Registers a namespace for common random utility functions
