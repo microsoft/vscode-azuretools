@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource } from "@azure/arm-appservice";
+import type { SiteConfigResource } from "@azure/arm-appservice";
 import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import { ScmType } from "../../ScmType";

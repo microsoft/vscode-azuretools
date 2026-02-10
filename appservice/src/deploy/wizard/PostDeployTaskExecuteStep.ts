@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfig } from "@azure/arm-appservice";
+import type { SiteConfig } from "@azure/arm-appservice";
 import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput } from "@microsoft/vscode-azext-utils";
 import { l10n, Progress, Task, Uri, workspace } from "vscode";
 import { ext } from "../../extensionVariables";

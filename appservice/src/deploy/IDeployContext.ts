@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan } from '@azure/arm-appservice';
+import type { AppServicePlan } from '@azure/arm-appservice';
 import { ExecuteActivityContext, IActionContext } from '@microsoft/vscode-azext-utils';
 import { WorkspaceFolder } from 'vscode';
 import { ParsedSite, SiteClient } from '../SiteClient';
