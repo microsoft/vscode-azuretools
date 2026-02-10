@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ManagedServiceIdentityClient } from '@azure/arm-msi';
 import { AzureWizardPromptStep, randomUtils, validationUtils } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
@@ -61,7 +60,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
 
     static async isNameAvailable(context: types.IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean> {
         try {
-            const client: ManagedServiceIdentityClient = await createManagedServiceIdentityClient(context);
+            const client = await createManagedServiceIdentityClient(context);
             return !await client.userAssignedIdentities.get(rgName, identityName);
         } catch {
             return true;

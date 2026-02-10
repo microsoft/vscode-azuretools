@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from '@azure/arm-resources';
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress, TreeItemCollapsibleState } from 'vscode';
@@ -32,7 +31,7 @@ export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext
         progress.report({ message: l10n.t('Checking resource group availability...') });
 
         const newName: string = nonNullProp(context, 'newResourceGroupName');
-        const resourceClient: ResourceManagementClient = await createResourcesClient(context);
+        const resourceClient = await createResourcesClient(context);
 
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
