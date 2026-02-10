@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
@@ -31,7 +30,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
         }
 
         const newName: string = nonNullProp(context, 'newResourceGroupName');
-        const resourceClient: ResourceManagementClient = await createResourcesClient(context);
+        const resourceClient = await createResourcesClient(context);
 
         try {
             const rgExists: boolean = (await resourceClient.resourceGroups.checkExistence(newName)).body;
@@ -56,7 +55,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
 
         const newName: string = nonNullProp(wizardContext, 'newResourceGroupName');
         const newLocationName: string = (await LocationListStep.getLocation(wizardContext, resourcesProvider, false)).name;
-        const resourceClient: ResourceManagementClient = await createResourcesClient(wizardContext);
+        const resourceClient = await createResourcesClient(wizardContext);
 
         try {
             wizardContext.resourceGroup = await resourceClient.resourceGroups.createOrUpdate(newName, { location: newLocationName });
@@ -125,11 +124,11 @@ class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupW
         progress.report({ message: l10n.t('Selecting resource group...') });
 
         const newName: string = nonNullProp(context, 'newResourceGroupName');
-        const resourceClient: ResourceManagementClient = await createResourcesClient(context);
+        const resourceClient = await createResourcesClient(context);
 
         // if we suspect that this is a Concierge account, only pick the rg if it begins with "learn" and there is only 1
         if (/concierge/i.test(context.subscriptionDisplayName)) {
-            const rgs: ResourceGroup[] = await uiUtils.listAllIterator(resourceClient.resourceGroups.list());
+            const rgs = await uiUtils.listAllIterator(resourceClient.resourceGroups.list());
             if (rgs.length === 1 && rgs[0].name && /^learn/i.test(rgs[0].name)) {
                 context.resourceGroup = rgs[0];
                 context.telemetry.properties.forbiddenResponse = 'SelectLearnRg';
