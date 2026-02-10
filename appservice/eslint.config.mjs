@@ -10,7 +10,10 @@ export default defineConfig([
     azExtEslintRecommendedTypeChecked,
     lazyImportRuleConfig([
         '@azure/*',
-        '!@azure/core-rest-pipeline',
-        '!@azure/abort-controller',
+        '@microsoft/vscode-azext-github',
+        'simple-git',
+        'ws',
+        '!@azure/core-rest-pipeline', // Small
+        '!@azure/abort-controller', // Small
     ]),
 ]);

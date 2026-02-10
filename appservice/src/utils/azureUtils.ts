@@ -7,7 +7,7 @@
 import type { CheckNameAvailabilityResponse } from "@azure/arm-appservice";
 import type { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
-import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
+import type { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 
 export function areLocationNamesEqual(name1: string | undefined, name2: string | undefined): boolean {
     return normalizeLocationName(name1) === normalizeLocationName(name2);

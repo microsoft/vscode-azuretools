@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SkuDescription } from '@azure/arm-appservice';
-import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
+import type { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
