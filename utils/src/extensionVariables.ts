@@ -15,8 +15,8 @@ interface IInternalExtensionVariables extends types.UIExtensionVariables {
     _internalReporter: IInternalTelemetryReporter;
 }
 
-class UninitializedExtensionVariables implements types.UIExtensionVariables {
-    private _error: Error = new Error(l10n.t('"registerUIExtensionVariables" must be called before using the vscode-azureextensionui package.'));
+class UninitializedExtensionVariables implements types.UIExtensionVariables, IInternalExtensionVariables {
+    private _error: Error = new Error(l10n.t('"registerUIExtensionVariables" must be called before using the @microsoft/vscode-azext-utils package.'));
 
     public get context(): ExtensionContext {
         throw this._error;
