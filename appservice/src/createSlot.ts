@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { CheckNameAvailabilityResponse, NameValuePair, Site, StringDictionary, WebSiteManagementClient } from "@azure/arm-appservice";
+import type { NameValuePair, Site } from "@azure-rest/arm-appservice";
 import type { ServiceClient } from '@azure/core-client';
 import { createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, IAzureNamingRules, IAzureQuickPickItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
@@ -15,7 +15,7 @@ import { createWebSiteClient } from "./utils/azureClients";
 import { checkNameAvailability } from "./utils/azureUtils";
 
 export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], context: ICreateChildImplContext): Promise<Site> {
-    const client: WebSiteManagementClient = await createWebSiteClient([context, site.subscription]);
+    const client = await createWebSiteClient([context, site.subscription]);
     const gClient = await createGenericClient(context, site.subscription);
     const slotName: string = (await context.ui.showInputBox({
         prompt: l10n.t('Enter a unique name for the new deployment slot'),
@@ -35,7 +35,7 @@ export async function createSlot(site: ParsedSite, existingSlots: ParsedSite[], 
 
     const configurationSource = await chooseConfigurationSource(context, site, existingSlots);
     if (configurationSource) {
-        const appSettings: NameValuePair[] = await parseAppSettings(context, configurationSource);
+        const appSettings = await parseAppSettings(context, configurationSource);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         newDeploymentSlot.siteConfig!.appSettings = appSettings;
     }
@@ -68,7 +68,7 @@ async function validateSlotName(value: string, client: ServiceClient, site: Pars
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
         return l10n.t("The name can only contain letters, numbers, or hyphens.");
     } else {
-        const nameAvailability: CheckNameAvailabilityResponse = await checkNameAvailability(client, site.subscription.subscriptionId, `${site.siteName}-${value}`, 'Slot');
+        const nameAvailability = await checkNameAvailability(client, site.subscription.subscriptionId, `${site.siteName}-${value}`, 'Slot');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
         } else {
@@ -108,7 +108,7 @@ async function chooseConfigurationSource(context: IActionContext, site: ParsedSi
 
 async function parseAppSettings(context: IActionContext, site: ParsedSite): Promise<NameValuePair[]> {
     const client = await site.createClient(context);
-    const appSettings: StringDictionary = await client.listApplicationSettings();
+    const appSettings = await client.listApplicationSettings();
     const appSettingPairs: NameValuePair[] = [];
     if (appSettings.properties) {
         // iterate String Dictionary to parse into NameValuePair[]

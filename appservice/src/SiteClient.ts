@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, ManagedServiceIdentity, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, ManagedServiceIdentity, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure-rest/arm-appservice';
 import type { ServiceClient } from '@azure/core-client';
 import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
@@ -57,7 +57,7 @@ export class ParsedSite implements AppSettingsClientProvider {
     constructor(site: Site, subscription: ISubscriptionContext) {
         this.rawSite = site;
 
-        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
+
         let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
         matches = nonNullValue(matches, 'Invalid serverFarmId.');
 

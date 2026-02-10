@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type GeoRegion, type SkuDescription } from '@azure/arm-appservice';
+import type { SkuDescription } from '@azure/arm-appservice';
 import { LocationListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, nonNullProp, type IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
@@ -71,8 +71,8 @@ export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWiza
 
     private async isPV4Region(context: IAppServiceWizardContext): Promise<boolean> {
         const client = await createWebSiteClient(context);
-        const geoRegions: GeoRegion[] = await uiUtils.listAllIterator(client.listGeoRegions());
-        const pv4Regions = geoRegions.filter((region: GeoRegion) => region.orgDomain?.includes('PV4SERIES'));
+        const geoRegions = await uiUtils.listAllIterator(client.listGeoRegions());
+        const pv4Regions = geoRegions.filter(region => region.orgDomain?.includes('PV4SERIES'));
         if (LocationListStep.hasLocation(context)) {
             const location = await LocationListStep.getLocation(context);
             if (pv4Regions.some(region => region.displayName === location.displayName)) {

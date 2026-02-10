@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
-import type { WebSiteManagementClient } from '@azure/arm-appservice';
+import type { WebSiteManagementClient } from '@azure-rest/arm-appservice';
 import type { OperationalInsightsManagementClient } from '@azure/arm-operationalinsights';
 import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
 import type { ResourceManagementClient } from '@azure/arm-resources';
@@ -15,7 +15,7 @@ import { AzExtClientContext, AzExtClientType, createAzureClient, createAzureSubs
 
 export async function createWebSiteClient(context: AzExtClientContext): Promise<WebSiteManagementClient> {
     // Typecast done for CJS compilation due to TypeScript not recognizing "WebSiteManagementClient" extends the required "ServiceClient" although both type definitions appear to be the same
-    return createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient as unknown as AzExtClientType<WebSiteManagementClient>);
+    return createAzureClient(context, (await import('@azure-rest/arm-appservice')).WebSiteManagementClient as unknown as AzExtClientType<WebSiteManagementClient>);
 }
 
 export async function createAppInsightsClient(context: AzExtClientContext): Promise<ApplicationInsightsManagementClient> {
