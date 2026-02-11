@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AuthorizationManagementClient as AMC } from '@azure/arm-authorization';
+import type { AuthorizationManagementClient } from '@azure/arm-authorization';
 import type { AuthorizationManagementClient as PAMC } from '@azure/arm-authorization-profile-2020-09-01-hybrid';
 import type { ManagedServiceIdentityClient } from '@azure/arm-msi';
-import type { ResourceManagementClient as RMC } from '@azure/arm-resources';
+import type { ResourceManagementClient } from '@azure/arm-resources';
 import type { ResourceManagementClient as PRMC } from '@azure/arm-resources-profile-2020-09-01-hybrid';
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
-import type { StorageManagementClient as SMC } from '@azure/arm-storage';
+import type { StorageManagementClient } from '@azure/arm-storage';
 import type { StorageManagementClient as PSMC } from '@azure/arm-storage-profile-2020-09-01-hybrid';
 import type { AzExtClientType } from '../index';
 import { createAzureClient, createAzureSubscriptionClient, InternalAzExtClientContext, parseClientContext } from './createAzureClient';
 
-export type CommonAuthorizationManagementClient = AMC | PAMC;
-export type CommonResourcesClient = RMC | PRMC;
-export type CommonStorageManagementClient = SMC | PSMC;
+export type CommonAuthorizationManagementClient = AuthorizationManagementClient | PAMC;
+export type CommonResourcesClient = ResourceManagementClient | PRMC;
+export type CommonStorageManagementClient = StorageManagementClient | PSMC;
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
@@ -25,7 +25,7 @@ export async function createStorageClient(context: InternalAzExtClientContext): 
     if (parseClientContext(context).isCustomCloud) {
         return createAzureClient(context, (await import('@azure/arm-storage-profile-2020-09-01-hybrid')).StorageManagementClient);
     } else {
-        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient as unknown as AzExtClientType<SMC>);
+        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient as unknown as AzExtClientType<StorageManagementClient>);
     }
 }
 
