@@ -6,7 +6,7 @@
 import type { SkuName } from '@azure/arm-storage';
 import { AzureWizardExecuteStepWithActivityOutput, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
-import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../types';
+import { INewStorageAccountDefaults, IStorageAccountWizardContext } from './storageWizardTypes';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';
 import { LocationListStep } from './LocationListStep';

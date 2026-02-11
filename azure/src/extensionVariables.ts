@@ -5,9 +5,10 @@
 
 import { IAzExtOutputChannel, registerUIExtensionVariables, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtensionContext, l10n } from "vscode";
-import { IAzureUtilsExtensionVariables } from './types';
 
-export { IAzureUtilsExtensionVariables } from './types';
+export interface IAzureUtilsExtensionVariables extends UIExtensionVariables {
+    prefix: string;
+}
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
     private _error: Error = new Error(l10n.t('"registerAzureUtilsExtensionVariables" must be called before using the @microsoft/vscode-azext-azureutils package.'));

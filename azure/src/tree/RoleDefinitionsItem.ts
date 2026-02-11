@@ -8,7 +8,7 @@ import type { Identity } from "@azure/arm-msi";
 import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
-import { ParsedAzureResourceGroupId, ParsedAzureResourceId } from '../types';
+import { ParsedAzureResourceGroupId, ParsedAzureResourceId } from '../utils/parseAzureResourceId';
 import { createAuthorizationManagementClient, createSubscriptionsClient } from "../clients";
 import { createPortalUri } from "../utils/createPortalUri";
 import { parseAzureResourceGroupId, parseAzureResourceId } from "../utils/parseAzureResourceId";

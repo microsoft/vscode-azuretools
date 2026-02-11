@@ -3,16 +3,40 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServiceClient } from '@azure/core-client';
-import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
-import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { ServiceClient, ServiceClientOptions } from '@azure/core-client';
+import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineRequestOptions, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import type { Environment } from '@azure/ms-rest-azure-env';
+import { appendExtensionUserAgent, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";
-import { AzExtClientContext, AzExtClientType, AzExtGenericClientInfo, AzExtGenericCredentials, AzExtPipelineResponse, AzExtRequestPrepareOptions, AzExtSubscriptionClientType, IGenericClientOptions } from './types';
 import { parseJson, removeBom } from './utils/parseJson';
 
-export { AzExtClientContext, AzExtClientType, AzExtGenericClientInfo, AzExtGenericCredentials, AzExtPipelineResponse, AzExtRequestPrepareOptions, AzExtSubscriptionClientType, IGenericClientOptions } from './types';
+export type AzExtClientType<T extends ServiceClient> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
+
+/**
+ * Convenience type to give us multiple ways to specify subscription info and action context depending on the scenario
+ */
+export type AzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
+
+/**
+ * Credential type to be used for creating generic http rest clients
+ */
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
+export type AzExtGenericCredentials = AzExtServiceClientCredentials | AzExtServiceClientCredentialsT2;
+export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
+
+export interface IGenericClientOptions {
+    noRetryPolicy?: boolean;
+    addStatusCodePolicy?: boolean;
+    endpoint?: string;
+}
+
+export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
+
+export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: ServiceClientOptions) => T;
 
 /**
  * Converts `AzExtClientContext` into a single object: `ISubscriptionActionContext`

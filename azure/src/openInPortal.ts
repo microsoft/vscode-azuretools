@@ -4,7 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, isAzExtTreeItem, ISubscriptionContext, openUrl } from '@microsoft/vscode-azext-utils';
-import { OpenInPortalOptions } from './types';
+
+export type OpenInPortalOptions = {
+    /**
+     * A query string applied directly to the host URL, e.g. "feature.staticwebsites=true" (turns on a preview feature)
+     */
+    queryPrefix?: string;
+};
 
 /**
  * Combines the root.environment.portalLink and id to open the resource in the portal.

@@ -5,7 +5,7 @@
 
 import { AzureWizardPromptStep, randomUtils, validationUtils } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { IResourceGroupWizardContext } from '../types';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createManagedServiceIdentityClient } from '../clients';
 
 export class UserAssignedIdentityNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {

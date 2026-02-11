@@ -6,7 +6,7 @@
 import { type ManagedServiceIdentityClient } from '@azure/arm-msi';
 import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
-import { IResourceGroupWizardContext } from '../types';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createManagedServiceIdentityClient } from '../clients';
 import { storageProvider } from '../constants';
 import { LocationListStep } from './LocationListStep';

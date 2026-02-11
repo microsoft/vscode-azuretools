@@ -7,11 +7,17 @@ import type { ExtendedLocation, Provider } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import { AgentQuickPickItem, AgentQuickPickOptions, AzureWizardPromptStep, IActionContext, IAzureAgentInput, IAzureQuickPickItem, IAzureQuickPickOptions, nonNullProp, nonNullValue } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { AzExtLocation, ILocationWizardContext } from '../types';
+import { ILocationWizardContext } from './resourceGroupWizardTypes';
 import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
+
+export type AzExtLocation = Location & {
+    id: string;
+    name: string;
+    displayName: string;
+}
 
 /* eslint-disable @typescript-eslint/naming-convention */
 interface ILocationWizardContextInternal extends ILocationWizardContext {

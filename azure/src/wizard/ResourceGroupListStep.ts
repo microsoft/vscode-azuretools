@@ -6,7 +6,7 @@
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { IResourceGroupWizardContext } from '../types';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createResourcesClient } from '../clients';
 import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';

@@ -4,7 +4,20 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ParsedAzureResourceGroupId, ParsedAzureResourceId } from '../types';
+
+export interface ParsedAzureResourceId {
+    rawId: string;
+    subscriptionId: string;
+    resourceGroup: string;
+    provider: string;
+    resourceName: string;
+}
+
+export interface ParsedAzureResourceGroupId {
+    rawId: string;
+    subscriptionId: string;
+    resourceGroup: string;
+}
 
 export function parseAzureResourceId(id: string): ParsedAzureResourceId {
     // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec

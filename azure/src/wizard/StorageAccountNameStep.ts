@@ -6,7 +6,7 @@
 import type { StorageManagementClient } from '@azure/arm-storage';
 import { AzureNameStep } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { IStorageAccountWizardContext } from '../types';
+import { IStorageAccountWizardContext } from './storageWizardTypes';
 import { createStorageClient } from '../clients';
 import { storageProviderType } from '../constants';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';

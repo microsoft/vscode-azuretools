@@ -8,9 +8,9 @@ import type { ManagedServiceIdentityClient } from '@azure/arm-msi';
 import type { ResourceManagementClient } from '@azure/arm-resources';
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { StorageManagementClient } from '@azure/arm-storage';
-import type { AzExtClientType } from './types';
+import type { AzExtClientType } from './createAzureClient';
 import { createAzureClient, createAzureSubscriptionClient, parseClientContext } from './createAzureClient';
-import type { AzExtClientContext } from './types';
+import type { AzExtClientContext } from './createAzureClient';
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript

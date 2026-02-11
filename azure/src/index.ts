@@ -11,7 +11,6 @@ export * from './openInPortal';
 export * from './tree/AzureAccountTreeItemBase';
 export * from './tree/RoleDefinitionsItem';
 export * from './tree/SubscriptionTreeItemBase';
-export * from './types';
 export * from './utils/createPortalUri';
 export * from './utils/parseAzureResourceId';
 export * from './utils/setupAzureLogger';
@@ -29,4 +28,6 @@ export * from './wizard/UserAssignedIdentityCreateStep';
 export * from './wizard/UserAssignedIdentityListStep';
 export * from './wizard/UserAssignedIdentityNameStep';
 export * from './wizard/VerifyProvidersStep';
+export * from './wizard/resourceGroupWizardTypes';
+export * from './wizard/storageWizardTypes';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

@@ -6,7 +6,7 @@
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress, TreeItemCollapsibleState } from 'vscode';
-import { IResourceGroupWizardContext } from '../types';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createResourcesClient } from '../clients';
 import { ext } from '../extensionVariables';
 

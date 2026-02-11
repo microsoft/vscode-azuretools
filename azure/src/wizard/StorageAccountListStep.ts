@@ -6,11 +6,11 @@
 import type { NetworkRuleSet, StorageAccount } from '@azure/arm-storage';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp, openUrl } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { AzExtLocation, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../types';
+import { INewStorageAccountDefaults, IStorageAccountWizardContext } from './storageWizardTypes';
 import { createStorageClient } from '../clients';
 import { storageProvider, storageProviderType } from '../constants';
 import { uiUtils } from '../utils/uiUtils';
-import { LocationListStep } from './LocationListStep';
+import { AzExtLocation, LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { StorageAccountCreateStep } from './StorageAccountCreateStep';
 import { StorageAccountNameStep } from './StorageAccountNameStep';
@@ -22,7 +22,19 @@ export const storageAccountNamingRules: IAzureNamingRules = {
     lowercaseOnly: true
 };
 
-export { StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from '../types';
+export { StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from './storageWizardTypes';
+import { StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from './storageWizardTypes';
+
+export interface IStorageAccountFilters {
+    kind?: StorageAccountKind[];
+    performance?: StorageAccountPerformance[];
+    replication?: StorageAccountReplication[];
+
+    /**
+     * If specified, a 'learn more' option will be displayed to explain why some storage accounts were filtered
+     */
+    learnMoreLink?: string;
+}
 
 export class StorageAccountListStep<T extends IStorageAccountWizardContext> extends AzureWizardPromptStep<T> {
     private readonly _newAccountDefaults: INewStorageAccountDefaults;

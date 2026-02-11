@@ -6,7 +6,7 @@
 import { AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress } from 'vscode';
-import { IResourceGroupWizardContext } from '../types';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createAuthorizationManagementClient } from '../clients';
 
 export interface Role {

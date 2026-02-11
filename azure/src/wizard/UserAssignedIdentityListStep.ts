@@ -6,7 +6,7 @@
 import type { Identity } from '@azure/arm-msi';
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { IResourceGroupWizardContext } from '../types';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createManagedServiceIdentityClient } from '../clients';
 import { IdentityProvider, UserAssignedIdentityResourceType } from '../constants';
 import { uiUtils } from '../utils/uiUtils';
