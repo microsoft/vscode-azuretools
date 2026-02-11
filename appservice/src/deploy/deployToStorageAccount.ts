@@ -55,7 +55,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
     if (connectionString) {
         const storageBlob = await import('@azure/storage-blob');
         try {
-            return storageBlob.BlobServiceClient.fromConnectionString(connectionString);
+            return storageBlob.BlobServiceClient.fromConnectionString(connectionString) as unknown as BlobServiceClient;
         } catch (error) {
             // EndpointSuffix was optional in the old sdk, but is required in the new sdk
             // https://github.com/microsoft/vscode-azurefunctions/issues/2360
@@ -66,7 +66,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
                     connectionString += separator;
                 }
                 connectionString += `${endpointSuffix}=${AzureCloudStorageEndpointSuffix}${separator}`;
-                return storageBlob.BlobServiceClient.fromConnectionString(connectionString);
+                return storageBlob.BlobServiceClient.fromConnectionString(connectionString) as unknown as BlobServiceClient;
             } else {
                 throw error;
             }

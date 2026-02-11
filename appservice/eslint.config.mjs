@@ -13,6 +13,5 @@ export default defineConfig([
         'simple-git',
         'ws',
         '!@azure/core-rest-pipeline', // Small
-        '!@azure/abort-controller', // Small
     ]),
 ]);
