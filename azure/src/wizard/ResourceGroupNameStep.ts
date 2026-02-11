@@ -5,10 +5,10 @@
 
 import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 
-export class ResourceGroupNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupNameStep<T> {
+export class ResourceGroupNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newResourceGroupName = (await wizardContext.ui.showInputBox({

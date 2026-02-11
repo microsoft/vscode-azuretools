@@ -5,14 +5,22 @@
 
 import { AzureWizardExecuteStep, IParsedError, ISubscriptionActionContext, maskUserInfo, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
-import * as types from '../../index';
 import { createResourcesClient } from '../clients';
 import { delay } from '../utils/delay';
 
-export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends AzureWizardExecuteStep<T> implements types.VerifyProvidersStep<T> {
+/**
+ * Checks to see if providers (i.e. 'Microsoft.Web') are registered and registers them if they're not
+ */
+export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends AzureWizardExecuteStep<T> {
+    /**
+     * 90
+     */
     public priority: number = 90;
     private _providers: string[];
 
+    /**
+     * @param providers List of providers to verify
+     */
     public constructor(providers: string[]) {
         super();
         this._providers = providers;

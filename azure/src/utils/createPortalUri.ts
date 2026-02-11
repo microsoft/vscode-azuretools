@@ -6,7 +6,7 @@
 import { ISubscriptionContext } from "@microsoft/vscode-azext-utils";
 import type { AzureSubscription } from "@microsoft/vscode-azureresources-api";
 import * as vscode from 'vscode';
-import { OpenInPortalOptions } from "../../index";
+import { OpenInPortalOptions } from "../openInPortal";
 
 export function createPortalUri(subscription: AzureSubscription | ISubscriptionContext, id: string, options?: OpenInPortalOptions): vscode.Uri {
     const queryPrefix: string = (options?.queryPrefix) ? `?${options.queryPrefix}` : '';

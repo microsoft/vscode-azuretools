@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export type * from './azure-account.api';
 export * from './clients';
 export { CommonRoleDefinitions, createRoleId, IdentityProvider, UserAssignedIdentityResourceType } from './constants';
 export * from './createAzureClient';
-export { registerAzureUtilsExtensionVariables } from './extensionVariables';
+export { IAzureUtilsExtensionVariables, registerAzureUtilsExtensionVariables } from './extensionVariables';
 export * from './openInPortal';
 export * from './tree/AzureAccountTreeItemBase';
 export * from './tree/RoleDefinitionsItem';
@@ -26,5 +27,8 @@ export * from './wizard/StorageAccountListStep';
 export * from './wizard/StorageAccountNameStep';
 export * from './wizard/UserAssignedIdentityCreateStep';
 export * from './wizard/UserAssignedIdentityListStep';
+export * from './wizard/UserAssignedIdentityNameStep';
 export * from './wizard/VerifyProvidersStep';
+export * from './wizard/resourceGroupWizardTypes';
+export * from './wizard/storageWizardTypes';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

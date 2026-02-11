@@ -6,7 +6,7 @@
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, MessageItem, Progress, TreeItemCollapsibleState } from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createResourcesClient } from '../clients';
 import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
@@ -14,7 +14,10 @@ import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 
-export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+export class ResourceGroupCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    /**
+     * 100
+     */
     public priority: number = 100;
     public stepName: string = 'resourceGroupCreateStep';
 
@@ -109,7 +112,7 @@ export class ResourceGroupCreateStep<T extends types.IResourceGroupWizardContext
     }
 }
 
-class ResourceGroupNoCreatePermissionsSelectStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+class ResourceGroupNoCreatePermissionsSelectStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number = 101;
     public stepName: string = 'resourceGroupNoCreatePermissionsSelectStep';
     protected getOutputLogSuccess = (context: T) => l10n.t('Successfully selected existing resource group "{0}".', nonNullValueAndProp(context.resourceGroup, 'name'));
