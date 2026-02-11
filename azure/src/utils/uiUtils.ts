@@ -5,12 +5,12 @@
 
 import type { PagedAsyncIterableIterator } from "@azure/core-paging";
 
+interface IPartialList<T> extends Array<T> {
+    nextLink?: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace uiUtils {
-    export interface IPartialList<T> extends Array<T> {
-        nextLink?: string;
-    }
-
     export async function listAll<T>(client: { listNext(nextPageLink: string): Promise<IPartialList<T>>; }, first: Promise<IPartialList<T>>): Promise<T[]> {
         const all: T[] = [];
 

@@ -151,7 +151,8 @@ export interface IAzureUtilsExtensionVariables extends UIExtensionVariables {
 /**
  * Credential type to be used for creating generic http rest clients
  */
-export type AzExtGenericCredentials = AzExtServiceClientCredentialsT2;
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
+export type AzExtGenericCredentials = AzExtServiceClientCredentials | AzExtServiceClientCredentialsT2;
 export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: AzExtGenericCredentials; environment: Environment; } | undefined;
 
 export interface IGenericClientOptions {

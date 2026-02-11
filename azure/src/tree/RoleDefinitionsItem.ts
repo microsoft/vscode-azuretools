@@ -212,8 +212,7 @@ export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
     public static contextValue: string = 'azureRoleDefinitions';
     public readonly contextValue: string = RoleDefinitionsTreeItem.contextValue;
 
-
-    constructor(parent: AzExtParentTreeItem, readonly roleDefinitionsItem: RoleDefinitionsItem) {
+    constructor(parent: AzExtParentTreeItem, private readonly roleDefinitionsItem: RoleDefinitionsItem) {
         super(parent);
         this.id = roleDefinitionsItem.id;
         this.label = roleDefinitionsItem.label;

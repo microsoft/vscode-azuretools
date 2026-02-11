@@ -21,7 +21,10 @@ import { UserAssignedIdentityNameStep } from './UserAssignedIdentityNameStep';
  * we don't need to do any verification
  **/
 export class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
-    // We should create this immediately after the resource group is created
+    /**
+     * We should create this immediately after the resource group is created
+     * 101
+     */
     public priority: number = 101;
     public stepName: string = 'UserAssignedIdentityCreateStep';
 

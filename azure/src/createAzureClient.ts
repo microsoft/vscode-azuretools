@@ -206,7 +206,7 @@ export function addBasicAuthenticationCredentialsToClient(client: ServiceClient,
 /**
  * Automatically add id to correlate our telemetry with the platform team's telemetry
  */
-export class CorrelationIdPolicy implements PipelinePolicy {
+class CorrelationIdPolicy implements PipelinePolicy {
     public readonly name = 'CorrelationIdPolicy';
 
     constructor(private readonly context: IActionContext) {

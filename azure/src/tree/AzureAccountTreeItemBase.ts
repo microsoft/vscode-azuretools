@@ -28,7 +28,7 @@ const minAccountExtensionVersion: string = '0.9.0';
  * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
  */
 export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
-    public static contextValue: string = 'azureextensionui.azureAccount';
+    public static readonly contextValue: string = 'azureextensionui.azureAccount';
     public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
     public readonly label: string = 'Azure';
     public childTypeLabel: string = l10n.t('subscription');
