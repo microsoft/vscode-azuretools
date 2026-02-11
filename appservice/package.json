@@ -58,7 +58,7 @@
         "@microsoft/vscode-azext-azureappsettings": "^1.0.0"
     },
     "devDependencies": {
-        "@azure/core-client": "^1.10.1",
+        "@azure/core-client": "*",
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
         "@types/fs-extra": "^11.0.4",
         "@types/node": "22.x",
