@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { SiteSourceControl } from '@azure/arm-appservice';
-import type { GitHubContext } from '@microsoft/vscode-azext-github';
+import { GitHubBranchListStep, type GitHubContext, GitHubOrgListStep, GitHubRepositoryListStep } from '@microsoft/vscode-azext-github';
 import { AzureWizard, IActionContext, IParsedError, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ParsedSite } from '../SiteClient';
@@ -19,8 +19,6 @@ export type gitHubLink = { prev?: string, next?: string, last?: string, first?: 
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export async function connectToGitHub(context: IActionContext, site: ParsedSite): Promise<void> {
-    const { GitHubOrgListStep, GitHubRepositoryListStep, GitHubBranchListStep } = await import('@microsoft/vscode-azext-github');
-
     const title: string = vscode.l10n.t('Connect GitHub repository');
 
     const wizardContext: GitHubContext = {
