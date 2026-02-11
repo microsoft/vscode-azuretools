@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Provider, ProviderResourceType, ResourceManagementClient } from '@azure/arm-resources';
-import type { ServiceClient } from '@azure/core-client';
 import { createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtLocation, AzExtPipelineResponse, createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, nonNullProp } from "@microsoft/vscode-azext-utils";
@@ -36,7 +34,7 @@ export async function getAppInsightsSupportedLocation(context: IAppServiceWizard
 
 async function getPairedRegions(context: IActionContext, locationName: string): Promise<string[]> {
     try {
-        const client: ServiceClient = await createGenericClient(context, undefined);
+        const client = await createGenericClient(context, undefined);
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: 'https://appinsights.azureedge.net/portal/regionMapping.json'
@@ -54,9 +52,9 @@ async function getPairedRegions(context: IActionContext, locationName: string): 
 }
 
 async function getLocations(context: IAppServiceWizardContext): Promise<string[] | undefined> {
-    const resourceClient: ResourceManagementClient = await createResourceClient(context);
-    const supportedRegions: Provider = await resourceClient.providers.get('microsoft.insights');
-    const componentsResourceType: ProviderResourceType | undefined = supportedRegions.resourceTypes?.find(aiRt => aiRt.resourceType === 'components');
+    const resourceClient = await createResourceClient(context);
+    const supportedRegions = await resourceClient.providers.get('microsoft.insights');
+    const componentsResourceType = supportedRegions.resourceTypes?.find(aiRt => aiRt.resourceType === 'components');
     if (!!componentsResourceType && !!componentsResourceType.locations) {
         return componentsResourceType.locations;
     } else {

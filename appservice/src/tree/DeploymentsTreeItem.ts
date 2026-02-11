@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SiteConfig, SiteSourceControl } from '@azure/arm-appservice';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon, l10n } from 'vscode';
 import type * as KuduModels from '../KuduModels';
@@ -66,8 +65,8 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
 
     public async init(context: IActionContext): Promise<void> {
         const client = await this.site.createClient(context);
-        const siteConfig: SiteConfig = await client.getSiteConfig();
-        const sourceControl: SiteSourceControl = await client.getSourceControl();
+        const siteConfig = await client.getSiteConfig();
+        const sourceControl = await client.getSourceControl();
 
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
@@ -114,8 +113,8 @@ export class DeploymentsTreeItem extends AzExtParentTreeItem {
 
     public async refreshImpl(context: IActionContext): Promise<void> {
         const client = await this.site.createClient(context);
-        const siteConfig: SiteConfig = await client.getSiteConfig();
-        const sourceControl: SiteSourceControl = await client.getSourceControl();
+        const siteConfig = await client.getSiteConfig();
+        const sourceControl = await client.getSourceControl();
         this._scmType = siteConfig.scmType;
         this._repoUrl = sourceControl.repoUrl;
     }

@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SiteConfigResource, User } from '@azure/arm-appservice';
 import { IActionContext, IAzureQuickPickItem, IAzureQuickPickOptions, ISubscriptionContext, UserCancelledError, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { l10n, window } from 'vscode';
 import { ext } from './extensionVariables';
@@ -18,7 +17,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
         throw new Error(l10n.t('Linux consumption plans only support zip deploy. See [here](https://aka.ms/AA7avjx) for more information.'));
     }
 
-    const config: SiteConfigResource = await client.getSiteConfig();
+    const config = await client.getSiteConfig();
     newScmType = newScmType ? newScmType : await showScmPrompt(context, nonNullProp(config, 'scmType') as ScmType);
     if (newScmType === ScmType.GitHub) {
         if (config.scmType !== ScmType.None) {
@@ -38,7 +37,7 @@ export async function editScmType(context: IActionContext, site: ParsedSite, sub
     }
 
     if (newScmType === ScmType.LocalGit) {
-        const user: User = await client.getPublishingUser();
+        const user = await client.getPublishingUser();
         if (user.publishingUserName) {
             // first time users must set up deployment credentials via the Portal or they will not have a UserName
             const gitCloneUri: string = `https://${user.publishingUserName}@${site.gitUrl}`;

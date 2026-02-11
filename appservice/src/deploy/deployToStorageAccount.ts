@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StringDictionary } from '@azure/arm-appservice';
 import type { BlobServiceClient } from '@azure/storage-blob';
 import { IActionContext, parseError, randomUtils } from '@microsoft/vscode-azext-utils';
 import dayjs from 'dayjs';
@@ -37,7 +36,7 @@ export async function deployToStorageAccount(context: IDeployContext, fsPath: st
     const blobService = await createBlobServiceClient(context, site);
     const blobUrl: string = await createBlobFromZip(context, fsPath, site, blobService, blobName);
     const client = await site.createClient(context);
-    const appSettings: StringDictionary = await client.listApplicationSettings();
+    const appSettings = await client.listApplicationSettings();
     appSettings.properties = appSettings.properties ?? {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
@@ -51,7 +50,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
     const client = await site.createClient(context);
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
-    const settings: StringDictionary = await client.listApplicationSettings();
+    const settings = await client.listApplicationSettings();
     let connectionString: string | undefined = settings.properties?.[azureWebJobsStorageKey];
     if (connectionString) {
         const storageBlob = await import('@azure/storage-blob');

@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ServiceClient } from '@azure/core-client';
 import { RestError, bearerTokenAuthenticationPolicy, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { AzExtServiceClientCredentials, IActionContext, IParsedError, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
@@ -79,7 +78,7 @@ export class TunnelProxy {
      */
     private async pingApp(context: IActionContext): Promise<void> {
         ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
-        const client: ServiceClient = await createGenericClient(context, undefined);
+        const client = await createGenericClient(context, undefined);
         let statusCode: number | undefined;
         try {
             const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({ method: 'GET', url: this._site.defaultHostUrl }));
@@ -95,7 +94,7 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
-        const client: ServiceClient = await createGenericClient(context, undefined);
+        const client = await createGenericClient(context, undefined);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
             scopes: [],
             credential: this._credentials

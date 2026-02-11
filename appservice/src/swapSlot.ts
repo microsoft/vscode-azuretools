@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebSiteManagementClient } from '@azure/arm-appservice';
 import { IActionContext, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import { l10n, ProgressLocation, window } from 'vscode';
 import { ext } from './extensionVariables';
@@ -38,7 +37,7 @@ export async function swapSlot(context: IActionContext, sourceSlot: ParsedSite, 
     const swappingSlots: string = l10n.t('Swapping "{0}" with "{1}"...', targetSlotLabel, sourceSlot.fullName);
     const successfullySwapped: string = l10n.t('Successfully swapped "{0}" with "{1}".', targetSlotLabel, sourceSlot.fullName);
     ext.outputChannel.appendLog(swappingSlots);
-    const client: WebSiteManagementClient = await createWebSiteClient([context, sourceSlot.subscription]);
+    const client = await createWebSiteClient([context, sourceSlot.subscription]);
     await window.withProgress({ location: ProgressLocation.Notification, title: swappingSlots }, async () => {
         // if targetSlot was assigned undefined, the user selected 'production'
         if (!targetSlot) {
