@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-github",
     "author": "Microsoft Corporation",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "description": "Common GitHub tools for VS Code",
     "tags": [
         "azure",
