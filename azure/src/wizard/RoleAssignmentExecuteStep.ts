@@ -81,7 +81,18 @@ class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContex
             const roleDefinitionId = this.role.roleDefinitionId;
             const principalId = nonNullValueAndProp(wizardContext.managedIdentity, 'principalId');
 
-            await amClient.roleAssignments.create(scope, guid, { roleDefinitionId, principalId });
+            await amClient.roleAssignments.create(
+                scope,
+                guid,
+                {
+                    roleDefinitionId, // Regular SDK wants this
+                    principalId, // Regular SDK wants this
+                    properties: { // Azure Stack SDK wants this instead
+                        roleDefinitionId,
+                        principalId
+                    },
+                }
+            );
         } catch (error) {
             const parsedError = parseError(error);
             const maxRetries = 5;
