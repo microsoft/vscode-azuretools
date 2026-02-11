@@ -26,6 +26,7 @@ const minAccountExtensionVersion: string = '0.9.0';
 
 /**
  * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
+ * @deprecated The Azure Account extension is deprecated.
  */
 export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements Disposable {
     public static readonly contextValue: string = 'azureextensionui.azureAccount';
