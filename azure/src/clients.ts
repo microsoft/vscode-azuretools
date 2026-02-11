@@ -33,7 +33,7 @@ export async function createResourcesClient(context: InternalAzExtClientContext)
     if (parseClientContext(context).isCustomCloud) {
         return createAzureClient(context, (await import('@azure/arm-resources-profile-2020-09-01-hybrid')).ResourceManagementClient);
     } else {
-        return createAzureClient(context, (await import('@azure/arm-resources')).ResourceManagementClient);
+        return createAzureClient(context, (await import('@azure/arm-resources')).ResourceManagementClient as unknown as AzExtClientType<ResourceManagementClient>);
     }
 }
 
