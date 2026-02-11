@@ -1,0 +1,27 @@
+steps:
+  - task: NodeTool@0
+    displayName: "\U0001F449 Using Node.js"
+    inputs:
+      versionSource: fromFile
+      versionFilePath: $(working_directory)/.nvmrc
+
+  - pwsh: |
+      if (Test-Path "$(working_directory)/.npmrc") {
+        Write-Output "##vso[task.setvariable variable=npmrcExists]true"
+      } else {
+        Write-Output "##vso[task.setvariable variable=npmrcExists]false"
+      }
+    displayName: "\U0001F449 Check for .npmrc"
+
+  - task: npmAuthenticate@0
+    displayName: "\U0001F449 Authenticate NPM"
+    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+    inputs:
+      workingFile: $(working_directory)/.npmrc
+
+  - task: Npm@1
+    displayName: "\U0001F449 Install Dependencies"
+    inputs:
+      command: custom
+      customCommand: ci --no-optional
+      workingDir: $(working_directory)

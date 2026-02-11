@@ -1,0 +1,18 @@
+steps:
+  - task: CopyFiles@2
+    displayName: "\U0001F449 Copy packages and VSIXs to staging directory"
+    inputs:
+      # Including package.json helps with version and proposed API checks later
+      # Including extension.manifest and extension.signature.p7s is needed for publishing later
+      Contents: |
+        **/*.vsix
+        **/package.json
+        **/*.extension.manifest
+        **/*.extension.signature.p7s
+        **/*.tar.gz
+        **/*.tgz
+        !**/node_modules/**
+      SourceFolder: $(working_directory)
+      TargetFolder: $(Build.ArtifactStagingDirectory)/build/$(artifact_name)
+      FlattenFolders: false
+    condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))

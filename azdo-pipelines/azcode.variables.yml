@@ -1,0 +1,24 @@
+variables:
+  # Related to extension release approval process
+  - name: extensionReleaseServiceConnection
+    value: AzCodeReleases
+  - name: extensionReleaseApprovalEnvironment
+    value: AzCodeDeploy
+
+  # Related to NPM release approval process
+  - name: gitHubServiceConnection
+    value: GitHub-AzureTools
+  - name: npmReleaseApprovalEnvironment
+    value: AzCodeDeploy
+  - name: npmReleaseOwnerAliases
+    value: jinglou
+  - name: npmReleaseApproverAliases
+    value: bwater
+
+  # Test
+  - name: testARMServiceConnection
+    value: AzCodeE2ETests
+
+  # Required for MicroBuild signing and telemetry
+  - name: TeamName
+    value: "Azure Tools for VS Code"
