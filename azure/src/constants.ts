@@ -12,6 +12,10 @@ export const storageProviderType = "Microsoft.Storage/storageAccounts";
 export const IdentityProvider: string = 'Microsoft.ManagedIdentity';
 export const UserAssignedIdentityResourceType: string = 'userAssignedIdentities';
 
+/**
+ * Common Roles that should be used to assign permissions to resources
+ * The role definitions can be found here: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+ */
 export const CommonRoleDefinitions = {
     storageBlobDataContributor: {
         name: "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
@@ -85,6 +89,12 @@ export const CommonRoleDefinitions = {
     } as RoleDefinition,
 } as const;
 
+/**
+ * Constructs the role id for a given subscription and role name id
+ *
+ * @param subscriptionId - Id for the subscription
+ * @param roleId - Name id for the role to be assigned (i.e CommonRoleDefinitions.storageBlobDataContributor.name)
+ */
 export function createRoleId(subscriptionId: string, roleDefinition: RoleDefinition): string {
     return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinition.name}`;
 }

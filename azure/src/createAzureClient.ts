@@ -9,12 +9,15 @@ import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeIte
 import { randomUUID } from 'crypto';
 import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";
-import * as types from '../index';
+import { AzExtClientContext, AzExtClientType, AzExtGenericClientInfo, AzExtGenericCredentials, AzExtPipelineResponse, AzExtRequestPrepareOptions, AzExtSubscriptionClientType, IGenericClientOptions } from './types';
 import { parseJson, removeBom } from './utils/parseJson';
 
-export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
+export { AzExtClientContext, AzExtClientType, AzExtGenericClientInfo, AzExtGenericCredentials, AzExtPipelineResponse, AzExtRequestPrepareOptions, AzExtSubscriptionClientType, IGenericClientOptions } from './types';
 
-export function parseClientContext(clientContext: InternalAzExtClientContext): ISubscriptionActionContext {
+/**
+ * Converts `AzExtClientContext` into a single object: `ISubscriptionActionContext`
+ */
+export function parseClientContext(clientContext: AzExtClientContext): ISubscriptionActionContext {
     if (Array.isArray(clientContext)) {
         const subscription = clientContext[1] instanceof AzExtTreeItem ? clientContext[1].subscription : clientContext[1];
         // Make sure to copy over just the subscription info and not any other extraneous properties
@@ -44,7 +47,12 @@ function getChallengeHandlerFromCredential(createCredentialsForScopes: (request:
     return getTokenForChallenge;
 }
 
-export function createAzureClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
+/**
+ * Creates an Azure client, ensuring best practices are followed. For example:
+ * 1. Adds extension-specific user agent
+ * 2. Uses resourceManagerEndpointUrl to support sovereigns
+ */
+export function createAzureClient<T extends ServiceClient>(clientContext: AzExtClientContext, clientType: AzExtClientType<T>): T {
     const context = parseClientContext(clientContext);
     const client = new clientType(context.credentials, context.subscriptionId, {
         endpoint: context.environment.resourceManagerEndpointUrl,
@@ -66,7 +74,12 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
     return client;
 }
 
-export function createAzureSubscriptionClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtSubscriptionClientType<T>): T {
+/**
+ * Creates an Azure subscription client, ensuring best practices are followed. For example:
+ * 1. Adds extension-specific user agent
+ * 2. Uses resourceManagerEndpointUrl to support sovereigns
+ */
+export function createAzureSubscriptionClient<T extends ServiceClient>(clientContext: AzExtClientContext, clientType: AzExtSubscriptionClientType<T>): T {
     const context = parseClientContext(clientContext);
     const client = new clientType(context.credentials, {
         endpoint: context.environment.resourceManagerEndpointUrl
@@ -88,7 +101,12 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     return client;
 }
 
-export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<types.AzExtPipelineResponse> {
+/**
+ * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
+ * @param timeout The timeout in milliseconds
+ * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
+ */
+export async function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<AzExtPipelineResponse> {
     const request: PipelineRequest = createPipelineRequest({
         ...options,
         timeout
@@ -103,8 +121,14 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
 }
 
 
-export async function createGenericClient(context: IActionContext, clientInfo: types.AzExtGenericClientInfo | undefined, options?: types.IGenericClientOptions): Promise<ServiceClient> {
-    let credentials: types.AzExtGenericCredentials | undefined;
+/**
+ * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
+ * 1. Adds extension-specific user agent
+ * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
+ * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
+ */
+export async function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient> {
+    let credentials: AzExtGenericCredentials | undefined;
     let endpoint: string | undefined;
     if (clientInfo && 'credentials' in clientInfo) {
         credentials = clientInfo.credentials;
@@ -168,6 +192,13 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     return pipeline;
 }
 
+/**
+ * Replaces the usage of BasicAuthenticationCredentials for ServiceClients imported from @azure/core-pipelines
+ *
+ * @param client - The service client. This will typically be a generalClient
+ * @param userName - Username to be used with basic authentication login
+ * @param password - Password. Gets encoded before being set in the header
+ */
 export function addBasicAuthenticationCredentialsToClient(client: ServiceClient, userName: string, password: string): void {
     client.pipeline.addPolicy(new BasicAuthenticationCredentialsPolicy(userName, password), { phase: 'Serialize' });
 }
@@ -266,8 +297,8 @@ class AddEndpointPolicy implements PipelinePolicy {
 class StatusCodePolicy implements PipelinePolicy {
     public readonly name = 'StatusCodePolicy';
 
-    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<types.AzExtPipelineResponse> {
-        const response: types.AzExtPipelineResponse = await next(request);
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<AzExtPipelineResponse> {
+        const response: AzExtPipelineResponse = await next(request);
         if (response.status < 200 || response.status >= 300) {
             const errorMessage: string = response.bodyAsText ?
                 parseError(response.parsedBody || response.bodyAsText).message :

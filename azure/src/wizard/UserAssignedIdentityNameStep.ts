@@ -5,10 +5,10 @@
 
 import { AzureWizardPromptStep, randomUtils, validationUtils } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from '../types';
 import { createManagedServiceIdentityClient } from '../clients';
 
-export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+export class UserAssignedIdentityNameStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     public async prompt(context: T): Promise<void> {
         let suggestedName: string | undefined;
         const rgName: string | undefined = context.resourceGroup?.name ?? context.newResourceGroupName;
@@ -58,7 +58,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
         return !isNameAvailable ? vscode.l10n.t('User-assigned identity with name "{0}" already exists in resource group "{1}".', identityName, rgName) : undefined;
     }
 
-    static async isNameAvailable(context: types.IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean> {
+    static async isNameAvailable(context: IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean> {
         try {
             const client = await createManagedServiceIdentityClient(context);
             return !await client.userAssignedIdentities.get(rgName, identityName);
@@ -67,7 +67,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
         }
     }
 
-    static async tryGenerateRelatedName(context: types.IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
+    static async tryGenerateRelatedName(context: IResourceGroupWizardContext, rgName: string): Promise<string | undefined> {
         const newName: string = `${rgName}-identities-${randomUtils.getRandomHexString(6)}`;
         const isNameAvailable: boolean = await UserAssignedIdentityNameStep.isNameAvailable(context, rgName, newName);
         return isNameAvailable ? newName : undefined;

@@ -6,7 +6,6 @@
 import { addExtensionValueToMask, AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtTreeItem, AzureWizardPromptStep, GenericTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, nonNullProp, nonNullValue, registerEvent, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as semver from 'semver';
 import { commands, Disposable, Extension, extensions, l10n, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
-import * as types from '../../index';
 import { AzureAccountExtensionApi, AzureLoginStatus, AzureResourceFilter } from '../azure-account.api';
 import { getIconPath } from './IconPath';
 import { SubscriptionTreeItemBase } from './SubscriptionTreeItemBase';
@@ -25,7 +24,10 @@ const extensionOpenCommand: string = 'extension.open';
 type AzureAccountResult = AzureAccountExtensionApi | 'notInstalled' | 'needsUpdate';
 const minAccountExtensionVersion: string = '0.9.0';
 
-export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem implements types.AzureAccountTreeItemBase {
+/**
+ * A tree item for an Azure Account, which will display subscriptions. For Azure-centered extensions, this will be at the root of the tree.
+ */
+export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem {
     public static contextValue: string = 'azureextensionui.azureAccount';
     public readonly contextValue: string = AzureAccountTreeItemBase.contextValue;
     public readonly label: string = 'Azure';
@@ -38,6 +40,11 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     private _subscriptionTreeItems: SubscriptionTreeItemBase[] | undefined;
     private _testAccount: AzureAccountExtensionApi | undefined;
 
+    /**
+     * Azure Account Tree Item
+     * @param parent The parent of this node or undefined if it's the root of the tree.
+     * @param testAccount Unofficial api for testing
+     */
     constructor(parent?: AzExtParentTreeItem, testAccount?: AzureAccountExtensionApi) {
         super(parent);
         this._testAccount = testAccount;
@@ -45,6 +52,10 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
     }
 
     //#region Methods implemented by base class
+    /**
+     * Implement this to create a subscription tree item under this Azure Account node
+     * @param root Contains basic information about the subscription - should be passed in to the constructor of `SubscriptionTreeItemBase`
+     */
     public abstract createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItemBase | Promise<SubscriptionTreeItemBase>;
     //#endregion
 
@@ -164,6 +175,10 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
         return typeof azureAccount !== 'string' && azureAccount.status === 'LoggedIn';
     }
 
+    /**
+     * If user is logged in and only has one subscription selected, adds that to the wizardContext and returns undefined
+     * Else, returns a prompt step for a subscription
+     */
     public async getSubscriptionPromptStep(context: Partial<ISubscriptionActionContext> & IActionContext): Promise<AzureWizardPromptStep<ISubscriptionActionContext> | undefined> {
         const subscriptionNodes: SubscriptionTreeItemBase[] = await this.ensureSubscriptionTreeItems(context);
         if (subscriptionNodes.length === 1) {

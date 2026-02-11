@@ -6,7 +6,7 @@
 import type { ResourceGroup } from '@azure/arm-resources';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from '../types';
 import { createResourcesClient } from '../clients';
 import { uiUtils } from '../utils/uiUtils';
 import { LocationListStep } from './LocationListStep';
@@ -21,7 +21,7 @@ export const resourceGroupNamingRules: IAzureNamingRules = {
     invalidCharsRegExp: /[^a-zA-Z0-9\.\_\-\(\)]/
 };
 
-export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> implements types.ResourceGroupListStep<T> {
+export class ResourceGroupListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     private _suppressCreate: boolean | undefined;
 
     public constructor(suppressCreate?: boolean) {
@@ -29,7 +29,11 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         this._suppressCreate = suppressCreate;
     }
 
-    public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
+    /**
+     * Used to get existing resource groups. By passing in the context, we can ensure that Azure is only queried once for the entire wizard
+     * @param wizardContext The context of the wizard.
+     */
+    public static async getResourceGroups<T extends IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
             const client = await createResourcesClient(wizardContext);
             wizardContext.resourceGroupsTask = uiUtils.listAllIterator(client.resourceGroups.list());
@@ -38,7 +42,11 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
         return await wizardContext.resourceGroupsTask;
     }
 
-    public static async isNameAvailable<T extends types.IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean> {
+    /**
+     * Checks existing resource groups in the wizard's subscription to see if the name is available.
+     * @param wizardContext The context of the wizard.
+     */
+    public static async isNameAvailable<T extends IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const resourceGroupsTask: Promise<ResourceGroup[]> = ResourceGroupListStep.getResourceGroups(wizardContext);
         return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
     }

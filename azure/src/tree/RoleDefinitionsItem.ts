@@ -8,13 +8,16 @@ import type { Identity } from "@azure/arm-msi";
 import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
-import * as types from '../../index';
+import { ParsedAzureResourceGroupId, ParsedAzureResourceId } from '../types';
 import { createAuthorizationManagementClient, createSubscriptionsClient } from "../clients";
 import { createPortalUri } from "../utils/createPortalUri";
 import { parseAzureResourceGroupId, parseAzureResourceId } from "../utils/parseAzureResourceId";
 import { uiUtils } from "../utils/uiUtils";
 import { getAzureIconPath } from "./IconPath";
 
+/**
+ * creates all RoleDefinitionsItem for an entire managed identity object
+ */
 export async function createRoleDefinitionsItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity, parentResourceId: string): Promise<RoleDefinitionsItem[]> {
     const subContext = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription;
     const authClient = await createAuthorizationManagementClient([context, subContext]);
@@ -103,8 +106,8 @@ export class RoleDefinitionsItem implements TreeElementBase {
             withDescription?: boolean
         }): Promise<RoleDefinitionsItem> {
 
-        let parsedScopeId: types.ParsedAzureResourceId | undefined;
-        let parsedAzureResourceGroupId: types.ParsedAzureResourceGroupId | undefined;
+        let parsedScopeId: ParsedAzureResourceId | undefined;
+        let parsedAzureResourceGroupId: ParsedAzureResourceGroupId | undefined;
         let label: string;
         let iconPath: TreeItemIconPath;
         let subscriptionId: string | undefined;
@@ -152,7 +155,7 @@ export class RoleDefinitionsItem implements TreeElementBase {
         });
     }
 
-    private static getRoleDefinitionsResourceLabel(parsedScopeId: types.ParsedAzureResourceId): string {
+    private static getRoleDefinitionsResourceLabel(parsedScopeId: ParsedAzureResourceId): string {
         const scopeId: string = parsedScopeId.rawId;
 
         if (parsedScopeId.provider.startsWith('Microsoft.DurableTask')) {
@@ -198,6 +201,9 @@ export class RoleDefinitionsItem implements TreeElementBase {
 }
 
 // v1.5 implementation of RoleDefinitionsItem that uses RoleDefinitionsItem in the constructor
+/**
+ * Requires a RoleDefinitionsItem as a data model in its constructor. Used for v1.5 API versions of the extensions
+ */
 export class RoleDefinitionsTreeItem extends AzExtParentTreeItem {
     public label: string;
     public static contextValue: string = 'azureRoleDefinitions';

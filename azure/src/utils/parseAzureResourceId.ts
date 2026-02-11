@@ -4,9 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { ParsedAzureResourceGroupId, ParsedAzureResourceId } from '../types';
 
-export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
+export function parseAzureResourceId(id: string): ParsedAzureResourceId {
     // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
     const matches: RegExpMatchArray | null = id.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/(.*)\/(.*)/i);
 
@@ -27,7 +27,7 @@ export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
  * Parses the `subscriptionId` and `resourceGroup` off of an Azure Resource Group Id
  * (also compatible with generic Azure Resource Ids)
  */
-export function parseAzureResourceGroupId(id: string): types.ParsedAzureResourceGroupId {
+export function parseAzureResourceGroupId(id: string): ParsedAzureResourceGroupId {
     // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec, no-useless-escape
     const matches: RegExpMatchArray | null = id.match(/\/subscriptions\/(.*)\/resourceGroups\/([^\/]*)/i);
 

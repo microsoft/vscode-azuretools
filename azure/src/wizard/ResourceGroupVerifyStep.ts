@@ -6,12 +6,15 @@
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityOutput, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress, TreeItemCollapsibleState } from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from '../types';
 import { createResourcesClient } from '../clients';
 import { ext } from '../extensionVariables';
 
 // See for more background: https://github.com/microsoft/vscode-azuretools/pull/1992#issue-3034841865
-export class ResourceGroupVerifyStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+export class ResourceGroupVerifyStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    /**
+     * 95
+     */
     public priority: number = 95;
     public stepName: string = 'resourceGroupVerifyStep';
 

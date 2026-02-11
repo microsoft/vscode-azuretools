@@ -5,6 +5,9 @@
 
 import { IAzExtOutputChannel, registerUIExtensionVariables, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { ExtensionContext, l10n } from "vscode";
+import { IAzureUtilsExtensionVariables } from './types';
+
+export { IAzureUtilsExtensionVariables } from './types';
 
 class UninitializedExtensionVariables implements UIExtensionVariables {
     private _error: Error = new Error(l10n.t('"registerAzureUtilsExtensionVariables" must be called before using the @microsoft/vscode-azext-azureutils package.'));
@@ -24,9 +27,9 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
 export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
 
 /**
- * Call this to register common variables used throughout the AppService package.
+ * Call this to register common variables used throughout the UI package.
  */
-export function registerAzureUtilsExtensionVariables(extVars: UIExtensionVariables): void {
+export function registerAzureUtilsExtensionVariables(extVars: IAzureUtilsExtensionVariables): void {
     if (ext === extVars) {
         // already registered
         return;

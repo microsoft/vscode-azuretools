@@ -6,18 +6,21 @@
 import type { SkuName } from '@azure/arm-storage';
 import { AzureWizardExecuteStepWithActivityOutput, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
-import * as types from '../../index';
+import { INewStorageAccountDefaults, IStorageAccountWizardContext } from '../types';
 import { createStorageClient } from '../clients';
 import { storageProvider } from '../constants';
 import { LocationListStep } from './LocationListStep';
 
-export class StorageAccountCreateStep<T extends types.IStorageAccountWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> implements types.StorageAccountCreateStep<T> {
+export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
     stepName: string = 'StorageAccountCreateStep';
+    /**
+     * 130
+     */
     public priority: number = 130;
 
-    private readonly _defaults: types.INewStorageAccountDefaults;
+    private readonly _defaults: INewStorageAccountDefaults;
 
-    public constructor(defaults: types.INewStorageAccountDefaults) {
+    public constructor(defaults: INewStorageAccountDefaults) {
         super();
         this._defaults = defaults;
     }

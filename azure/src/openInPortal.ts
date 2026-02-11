@@ -3,10 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../index';
 import { AzExtTreeItem, isAzExtTreeItem, ISubscriptionContext, openUrl } from '@microsoft/vscode-azext-utils';
+import { OpenInPortalOptions } from './types';
 
-export async function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: types.OpenInPortalOptions): Promise<void> {
+/**
+ * Combines the root.environment.portalLink and id to open the resource in the portal.
+ *
+ * NOTE: If root is a tree item, it will find the subscription ancestor and get environment.portalLink from there
+ */
+export async function openInPortal(root: ISubscriptionContext | AzExtTreeItem, id: string, options?: OpenInPortalOptions): Promise<void> {
     root = isAzExtTreeItem(root) ? root.subscription : root;
 
     const queryPrefix: string = (options?.queryPrefix) ? `?${options.queryPrefix}` : '';

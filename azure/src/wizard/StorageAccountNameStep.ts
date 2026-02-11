@@ -6,13 +6,13 @@
 import type { StorageManagementClient } from '@azure/arm-storage';
 import { AzureNameStep } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { IStorageAccountWizardContext } from '../types';
 import { createStorageClient } from '../clients';
 import { storageProviderType } from '../constants';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 import { storageAccountNamingRules } from './StorageAccountListStep';
 
-export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext> extends AzureNameStep<T> {
+export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
         const client = await createStorageClient(wizardContext);
 

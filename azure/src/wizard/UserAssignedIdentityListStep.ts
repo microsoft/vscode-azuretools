@@ -6,7 +6,7 @@
 import type { Identity } from '@azure/arm-msi';
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from '../types';
 import { createManagedServiceIdentityClient } from '../clients';
 import { IdentityProvider, UserAssignedIdentityResourceType } from '../constants';
 import { uiUtils } from '../utils/uiUtils';
@@ -15,7 +15,7 @@ import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { UserAssignedIdentityCreateStep } from './UserAssignedIdentityCreateStep';
 import { UserAssignedIdentityNameStep } from './UserAssignedIdentityNameStep';
 
-export class UserAssignedIdentityListStep<T extends types.IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
+export class UserAssignedIdentityListStep<T extends IResourceGroupWizardContext> extends AzureWizardPromptStep<T> {
     private _suppressCreate: boolean | undefined;
 
     public constructor(suppressCreate?: boolean) {
