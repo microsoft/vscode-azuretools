@@ -28,7 +28,7 @@ class UninitializedExtensionVariables implements UIExtensionVariables {
 export let ext: UIExtensionVariables = new UninitializedExtensionVariables();
 
 /**
- * Call this to register common variables used throughout the UI package.
+ * Call this to register common variables used throughout the azureutils package.
  */
 export function registerAzureUtilsExtensionVariables(extVars: IAzureUtilsExtensionVariables): void {
     if (ext === extVars) {
