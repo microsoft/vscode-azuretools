@@ -11,6 +11,7 @@ import type { ResourceManagementClient as PRMC } from '@azure/arm-resources-prof
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { StorageManagementClient as SMC } from '@azure/arm-storage';
 import type { StorageManagementClient as PSMC } from '@azure/arm-storage-profile-2020-09-01-hybrid';
+import type { AzExtClientType } from '../index';
 import { createAzureClient, createAzureSubscriptionClient, InternalAzExtClientContext, parseClientContext } from './createAzureClient';
 
 export type CommonAuthorizationManagementClient = AMC | PAMC;
@@ -24,7 +25,7 @@ export async function createStorageClient(context: InternalAzExtClientContext): 
     if (parseClientContext(context).isCustomCloud) {
         return createAzureClient(context, (await import('@azure/arm-storage-profile-2020-09-01-hybrid')).StorageManagementClient);
     } else {
-        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient);
+        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient as unknown as AzExtClientType<SMC>);
     }
 }
 
@@ -37,7 +38,7 @@ export async function createResourcesClient(context: InternalAzExtClientContext)
 }
 
 export async function createManagedServiceIdentityClient(context: InternalAzExtClientContext): Promise<ManagedServiceIdentityClient> {
-    return createAzureClient(context, (await import('@azure/arm-msi')).ManagedServiceIdentityClient);
+    return createAzureClient(context, (await import('@azure/arm-msi')).ManagedServiceIdentityClient as unknown as AzExtClientType<ManagedServiceIdentityClient>);
 }
 
 export async function createAuthorizationManagementClient(context: InternalAzExtClientContext): Promise<CommonAuthorizationManagementClient> {
