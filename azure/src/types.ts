@@ -40,6 +40,7 @@ export interface IResourceGroupWizardContext extends ILocationWizardContext, IRe
      * Internal value indicating the last resource group name checked with `ResourceGroupVerifyStep`.
      * This name does not indicate a successful outcome from the verification step, it only indicates that the check has taken place.
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _lastResourceGroupNameVerified?: string;
 
     /**

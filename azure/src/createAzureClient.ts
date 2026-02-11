@@ -5,7 +5,7 @@
 
 import { ServiceClient } from '@azure/core-client';
 import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
-import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";

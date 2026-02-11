@@ -6,7 +6,7 @@
 import type { NetworkRuleSet, StorageAccount } from '@azure/arm-storage';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp, openUrl } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { AzExtLocation, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from '../types';
+import { AzExtLocation, INewStorageAccountDefaults, IStorageAccountFilters, IStorageAccountWizardContext } from '../types';
 import { createStorageClient } from '../clients';
 import { storageProvider, storageProviderType } from '../constants';
 import { uiUtils } from '../utils/uiUtils';
