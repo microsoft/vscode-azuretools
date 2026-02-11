@@ -10,7 +10,6 @@ export default defineConfig([
     azExtEslintRecommendedTypeChecked,
     lazyImportRuleConfig([
         '@azure/*',
-        '@microsoft/vscode-azext-github',
         'simple-git',
         'ws',
         '!@azure/core-rest-pipeline', // Small
