@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type { RoleDefinition } from "@azure/arm-authorization";
-import { Identity } from "@azure/arm-msi";
+import type { Identity } from "@azure/arm-msi";
 import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscriptionContext, GenericTreeItem, IActionContext, ISubscriptionContext, TreeElementBase, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";

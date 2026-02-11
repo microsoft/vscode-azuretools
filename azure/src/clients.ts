@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AuthorizationManagementClient } from '@azure/arm-authorization';
-import { ManagedServiceIdentityClient } from '@azure/arm-msi';
+import type { AuthorizationManagementClient } from '@azure/arm-authorization';
+import type { ManagedServiceIdentityClient } from '@azure/arm-msi';
 import type { ResourceManagementClient } from '@azure/arm-resources';
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { StorageManagementClient } from '@azure/arm-storage';
