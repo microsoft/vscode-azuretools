@@ -434,7 +434,7 @@ export declare class UserAssignedIdentityNameStep<T extends IResourceGroupWizard
 
 export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStep<T> {
     /**
-     * 140
+     * 101
      */
     public priority: number;
     public constructor();
@@ -443,7 +443,7 @@ export declare class UserAssignedIdentityCreateStep<T extends IResourceGroupWiza
     public shouldExecute(wizardContext: T): boolean;
 }
 
-export declare class RoleAssignmentExecuteStep<T extends IResourceGroupWizardContext, TKey extends keyof T> extends AzureWizardExecuteStep<T> {
+export declare class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<IResourceGroupWizardContext & Partial<ExecuteActivityContext>> {
     /**
      * 900
      */

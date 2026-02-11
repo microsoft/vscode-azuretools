@@ -57,6 +57,9 @@ export async function createRoleDefinitionsItems(context: IActionContext, subscr
     return roleDefinitionsItems;
 }
 
+/**
+ * should not be created directly; use `createRoleDefinitionsItems` instead
+ */
 export class RoleDefinitionsItem implements TreeElementBase {
     public id: string;
     public label: string;
