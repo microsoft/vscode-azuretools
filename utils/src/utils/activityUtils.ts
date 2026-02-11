@@ -6,6 +6,11 @@
 import * as types from '../../index';
 import { ActivityChildType } from '../index';
 
+/**
+ * Adds a new activity child after the last info child in the `activityChildren` array.
+ * If no info child already exists, the new child is prepended to the front of the array.
+ * (This utility function is useful for keeping the info children grouped at the front of the list)
+ */
 export function prependOrInsertAfterLastInfoChild(context: Partial<types.ExecuteActivityContext>, infoChild: types.ActivityInfoChild): void {
     if (!context.activityChildren) {
         return;

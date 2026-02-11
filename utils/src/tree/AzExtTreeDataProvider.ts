@@ -18,6 +18,9 @@ import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
+/**
+ * Tree Data Provider for an *Az*ure *Ext*ension
+ */
 export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider, Disposable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();

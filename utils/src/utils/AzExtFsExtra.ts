@@ -7,6 +7,9 @@ import * as path from 'path';
 import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from '../parseError';
 
+/**
+ * Registers a namespace that leverages vscode.workspace.fs API to access the file system
+ */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace AzExtFsExtra {
     export function isVirtualWorkspace(): boolean {

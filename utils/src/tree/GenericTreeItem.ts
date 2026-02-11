@@ -7,6 +7,9 @@ import * as types from '../../index';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
+/**
+ * A convenience class used for very basic tree items
+ */
 export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeItem {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isGenericTreeItem = true;

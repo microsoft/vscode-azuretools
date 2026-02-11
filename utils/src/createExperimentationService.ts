@@ -11,6 +11,16 @@ import { ext } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';
 import { registerTelemetryHandler } from './index';
 
+/**
+ * Call this to create the experimentation service adapter
+ * @param ctx The extension context
+ * @param targetPopulation Can be Team, Internal, Insiders, or Public. The definitions are somewhat subjective but generally:
+ * Team is the devs and test team.
+ * Internal is Microsoft
+ * Insiders is anyone installing alpha builds
+ * Public is everyone
+ * NOTE: if unspecified, this will be "Team" if the extension is running in the Development Host, "Insiders" if the extension version contains "alpha", otherwise "Public"
+ */
 export async function createExperimentationService(ctx: vscode.ExtensionContext, targetPopulation?: tas.TargetPopulation): Promise<IExperimentationServiceAdapter> {
     const result: ExperimentationServiceAdapter = new ExperimentationServiceAdapter();
     const { extensionId, extensionVersion } = getPackageInfo(ctx);

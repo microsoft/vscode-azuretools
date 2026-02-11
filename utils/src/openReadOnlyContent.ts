@@ -29,6 +29,11 @@ function getContentProvider(): ReadOnlyContentProvider {
     return _cachedContentProvider;
 }
 
+/**
+ * Opens a read-only editor to display json content
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
+ * @param data The data to stringify and display
+ */
 export async function openReadOnlyJson(node: { label: string, fullId: string }, data: unknown): Promise<void> {
     let tab: string = '	';
     const config: WorkspaceConfiguration = workspace.getConfiguration('editor');
@@ -46,26 +51,51 @@ export async function openReadOnlyJson(node: { label: string, fullId: string }, 
     await openReadOnlyContent(node, content, '.json');
 }
 
+/**
+ * Stash a read-only editor so it can be opened by its uri later.
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
+ * @param content The content to display
+ * @param fileExtension The file extension
+ */
 export async function stashReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string): Promise<ReadOnlyContent> {
     const contentProvider = getContentProvider();
     return await contentProvider.stashReadOnlyContent(node, content, fileExtension);
 }
 
+/**
+ * Stash a read-only editor so it can be opened by its uri later.
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and a random id will be generated to uniquely identify this file
+ * @param content The content to display
+ * @param fileExtension The file extension
+ */
 export function stashReadOnlyContentSync(node: { label: string }, content: string, fileExtension: string): ReadOnlyContent {
     const contentProvider = getContentProvider();
     return contentProvider.stashReadOnlyContentSync(node, content, fileExtension);
 }
 
+/**
+ * Opens a read-only editor to display content
+ * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
+ * @param content The content to display
+ * @param fileExtension The file extension
+ * @param options Options for showing the text document
+ */
 export async function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent> {
     const contentProvider = getContentProvider();
     return await contentProvider.openReadOnlyContent(node, content, fileExtension, options);
 }
 
+/**
+ * Disposes all the read-only contents stashed in memory.
+ */
 export async function disposeReadOnlyContents(): Promise<void> {
     const contentProvider = getContentProvider();
     contentProvider.disposeAll();
 }
 
+/**
+ * Disposes the read-only content stashed in memory matching the specified uri.
+ */
 export async function disposeReadOnlyContent(uri: Uri): Promise<void> {
     const contentProvider = getContentProvider();
     contentProvider.dispose(uri);

@@ -47,6 +47,11 @@ export function resetUsernameMask(): void {
     _usernameMask = undefined;
 }
 
+/**
+ * Add an extension-wide value to mask for all commands
+ * This will apply to telemetry and "Report Issue", but _not_ VS Code UI (i.e. the error notification or output channel)
+ * IMPORTANT: For the most sensitive information, `callWithMaskHandling` should be used instead
+ */
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
     const extValuesToMask: string[] = getExtValuesToMask();
     for (const v of values) {
@@ -71,6 +76,9 @@ export function addValuesToMaskFromAzureId(context: IActionContext, id: string |
     }
 }
 
+/**
+ * Used to mask values in error messages to protect user's confidential information from displaying in output and telemetry
+ */
 export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueToMask: string): Promise<T> {
     try {
         return await callback();
@@ -87,8 +95,11 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
 
 /**
  * Best effort to mask all data that could potentially identify a user
- * @param lessAggressive If set to true, the most aggressive masking will be skipped
- * @param getUsername To be used ONLY by test code. Function used to get the username.
+ *
+ * @param unknownArg Any unknown value.  This value will be cast to a string and then masked before returning.
+ * @param actionValuesToMask An array of strings indicating additional values to mask.
+ * @param lessAggressive A boolean value that defaults to false.  If set to true, the most aggressive masking will be skipped.
+ * @param getUsername To be used ONLY by test code.  Function used to get the username.
  */
 export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false, getUsername = () => os.userInfo().username): string {
     let data = String(unknownArg);

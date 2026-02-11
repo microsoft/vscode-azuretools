@@ -7,6 +7,11 @@ import * as vscode from 'vscode';
 import * as types from "../../index";
 import { AzureWizardPromptStep } from "./AzureWizardPromptStep";
 
+/**
+ * @param key The context key that will be used to retrieve the value for comparison
+ * @param options (Optional) The options to pass when creating the prompt step
+ * ex: 'Please confirm by re-entering the previous value.'
+ */
 export class ConfirmPreviousInputStep extends AzureWizardPromptStep<types.IActionContext> {
     constructor(private readonly key: string, private readonly options?: types.IConfirmInputOptions) {
         super();

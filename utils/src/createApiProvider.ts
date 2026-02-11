@@ -14,6 +14,10 @@ function isAzureExtensionApiFactory(maybeAzureExtensionApiFactory: AzureExtensio
     return (<AzureExtensionApiFactory>maybeAzureExtensionApiFactory).createApi !== undefined;
 }
 
+/**
+ * Wraps an Azure Extension's API in a very basic provider that adds versioning.
+ * Multiple APIs with different versions can be supplied, but ideally a single backwards-compatible API is all that's necessary.
+ */
 export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExtensionApi)[]): apiUtils.AzureExtensionApiProvider {
     for (const azExt of azExts) {
         if (!semver.valid(azExt.apiVersion)) {

@@ -5,10 +5,18 @@
 
 import { crypto } from '../node/crypto';
 
+/**
+ * @param values
+ * @returns a sorted, unique string of values separated by `;`
+ */
 export function createContextValue(values: string[]): string {
     return Array.from(new Set(values)).sort().join(';');
 }
 
+/**
+ * @param values
+ * @returns a sorted, universally unique string of values separated by `;`
+ */
 export function createUniversallyUniqueContextValue(values: string[]): string {
     return createContextValue(values) + `;${crypto.randomUUID()}`;
 }

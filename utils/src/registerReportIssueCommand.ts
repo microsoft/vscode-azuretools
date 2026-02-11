@@ -30,6 +30,9 @@ export function cacheIssueForCommand(issue: IReportableIssue): void {
     }
 }
 
+/**
+ * Registers a command that will prompt users with a list of issues they can report from that session of VS Code
+ */
 export function registerReportIssueCommand(commandId: string): void {
     cachedIssues = [];
     registerCommand(commandId, async (context: types.IActionContext) => {

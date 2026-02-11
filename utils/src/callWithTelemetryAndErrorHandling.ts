@@ -56,6 +56,9 @@ function initContext(callbackId: string): [number, types.IActionContext] {
     return [start, context];
 }
 
+/**
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
+ */
 export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: types.IActionContext) => T): T | undefined {
     const [start, context] = initContext(callbackId);
 
@@ -69,6 +72,9 @@ export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, cal
     }
 }
 
+/**
+ * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
+ */
 export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: types.IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
     const [start, context] = initContext(callbackId);
 
@@ -86,14 +92,26 @@ const onActionStartHandlers: { [id: number]: types.OnActionStartHandler } = {};
 const errorHandlers: { [id: number]: types.ErrorHandler } = {};
 const telemetryHandlers: { [id: number]: types.TelemetryHandler } = {};
 
+/**
+ * Register a handler to run right after an `IActionContext` is created and before the action starts
+ * NOTE: If more than one handler is registered, they are run in an arbitrary order.
+ */
 export function registerOnActionStartHandler(handler: types.OnActionStartHandler): Disposable {
     return registerHandler(handler, onActionStartHandlers);
 }
 
+/**
+ * Register a handler to run after a callback errors out, but before the default error handling.
+ * NOTE: If more than one handler is registered, they are run in an arbitrary order.
+ */
 export function registerErrorHandler(handler: types.ErrorHandler): Disposable {
     return registerHandler(handler, errorHandlers);
 }
 
+/**
+ * Register a handler to run after a callback finishes, but before the default telemetry handling.
+ * NOTE: If more than one handler is registered, they are run in an arbitrary order.
+ */
 export function registerTelemetryHandler(handler: types.TelemetryHandler): Disposable {
     return registerHandler(handler, telemetryHandlers);
 }

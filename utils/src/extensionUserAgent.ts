@@ -18,6 +18,11 @@ function getExtensionUserAgent(): string {
     return `${extensionName}/${extensionVersion}`;
 }
 
+/**
+ * Retrieves a user agent string specific to the VS Code extension, of the form `${extensionName}/${extensionVersion}`,
+ * and appends it to the given user agent string, if it isn't already in the string. Passing in no existingUserAgent
+ * will return just the extension portion to use in a user agent.
+ */
 export function appendExtensionUserAgent(existingUserAgent?: string): string {
     const extensionUserAgent: string = getExtensionUserAgent();
 

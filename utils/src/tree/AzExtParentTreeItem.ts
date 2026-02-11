@@ -15,6 +15,12 @@ import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 import { runWithLoadingNotification } from './runWithLoadingNotification';
 import { loadMoreLabel } from './treeConstants';
 
+/**
+ * Base class for all parent tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
+ * This provides more value than `TreeItem` (provided by `vscode`)
+ *
+ * NOTE: *Impl methods are not meant to be called directly - just implemented.
+ */
 export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types.AzExtParentTreeItem, IAzExtParentTreeItemInternal {
     //#region Properties implemented by base class
     public childTypeLabel?: string;

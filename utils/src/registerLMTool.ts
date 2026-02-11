@@ -10,6 +10,11 @@ import { isUserCancelledError } from './errors';
 import { ext } from './extensionVariables';
 import { parseError } from './parseError';
 
+/**
+ * Registers a language model tool, wrapping it with telemetry and error handling
+ * @param name The name of the tool. Must match what is in package.json.
+ * @param tool The tool itself
+ */
 export function registerLMTool<T>(name: string, tool: types.AzExtLMTool<T>): void {
     const vscodeTool: vscode.LanguageModelTool<T> = {
         invoke: async (options, token) => {

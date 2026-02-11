@@ -27,6 +27,9 @@ export enum ActivityOutputType {
     All = 'all',
 }
 
+/**
+ * A wizard that links several user input steps together
+ */
 export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
     public title: string | undefined;
     public confirmationViewProperties: types.ConfirmationViewProperty[] = [];

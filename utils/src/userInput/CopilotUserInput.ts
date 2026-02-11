@@ -9,6 +9,10 @@ import * as types from '../../index';
 import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
 import { InvalidCopilotResponseError } from '../errors';
 
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ * This class is meant to only be used for copilot input scenerios
+ */
 export class CopilotUserInput implements types.IAzureUserInput {
     private readonly _vscode: typeof vscodeTypes;
     private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;

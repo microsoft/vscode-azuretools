@@ -16,6 +16,11 @@ export class UserCancelledError extends Error {
     }
 }
 
+/**
+ * Checks if the given error is a UserCancelledError.
+ *
+ * Note: only works with errors created by versions >=1.1.1 of this package.
+ */
 export function isUserCancelledError(error: unknown): error is UserCancelledError {
     return !!error &&
         typeof error === 'object' &&

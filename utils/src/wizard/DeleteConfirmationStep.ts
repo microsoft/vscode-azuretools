@@ -7,6 +7,10 @@ import * as types from "../../index";
 import { DialogResponses } from "../DialogResponses";
 import { AzureWizardPromptStep } from "./AzureWizardPromptStep";
 
+/**
+ * @param message Message to display in the confirmation modal
+ * ex: `Are you sure you want to delete function app "{0}"?`
+ */
 export class DeleteConfirmationStep extends AzureWizardPromptStep<types.IActionContext> {
 
     public constructor(private readonly message: string) { super(); }

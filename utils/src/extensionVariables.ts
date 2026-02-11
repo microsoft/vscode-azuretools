@@ -37,6 +37,9 @@ class UninitializedExtensionVariables implements types.UIExtensionVariables, IIn
  */
 export let ext: IInternalExtensionVariables = new UninitializedExtensionVariables();
 
+/**
+ * Call this to register common variables used throughout the UI package.
+ */
 export function registerUIExtensionVariables(extVars: types.UIExtensionVariables): void {
     if (ext === extVars) {
         // already registered

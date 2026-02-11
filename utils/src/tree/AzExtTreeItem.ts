@@ -12,6 +12,12 @@ import { settingUtils } from '../utils/settingUtils';
 import { IAzExtParentTreeItemInternal, IAzExtTreeDataProviderInternal } from "./InternalInterfaces";
 import { isAzExtParentTreeItem } from './isAzExtTreeItem';
 
+/**
+ * Base class for all tree items in an *Az*ure *ext*ension, even if those resources aren't actually in Azure.
+ * This provides more value than `TreeItem` (provided by `vscode`)
+ *
+ * NOTE: *Impl methods are not meant to be called directly - just implemented.
+ */
 export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isAzExtTreeItem = true;

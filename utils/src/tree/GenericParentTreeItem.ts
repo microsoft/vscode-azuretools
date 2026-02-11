@@ -22,6 +22,9 @@ interface GenericParentTreeItemOptions {
     loadMoreChildrenImpl?(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
 }
 
+/**
+ * A convenience class used for very basic parent tree items
+ */
 export class GenericParentTreeItem extends AzExtParentTreeItem implements types.GenericParentTreeItem {
     public childTypeLabel?: string;
     public contextValue: string;

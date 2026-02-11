@@ -6,10 +6,21 @@
 import { Event, LogLevel, LogOutputChannel, OutputChannel, ViewColumn, window, workspace, WorkspaceConfiguration } from "vscode";
 import * as types from '../index';
 
+/**
+ * Create a new AzExtLogOutputChannel
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ */
 export function createAzExtLogOutputChannel(name: string): types.IAzExtLogOutputChannel {
     return new AzExtLogOutputChannel(name);
 }
 
+/**
+ * Create a new AzExtOutputChannel with the given name and the extensionPrefix.
+ *
+ * @param name Human-readable string which will be used to represent the channel in the UI.
+ * @param extensionPrefix The configuration prefix for the extension, used to access the enableOutputTimestamps setting
+ */
 export function createAzExtOutputChannel(name: string, extensionPrefix: string): types.IAzExtOutputChannel {
     const outputChannel = new AzExtOutputChannel(name);
     outputChannel.extensionPrefix = extensionPrefix;

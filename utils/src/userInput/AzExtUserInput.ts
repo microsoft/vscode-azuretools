@@ -13,6 +13,9 @@ import { showQuickPick } from './showQuickPick';
 import { showWarningMessage } from './showWarningMessage';
 import { showWorkspaceFolderPick } from './showWorkspaceFolderPick';
 
+/**
+ * Wrapper class of several `vscode.window` methods that handle user input.
+ */
 export class AzExtUserInput implements types.IAzureUserInput {
     public wizard?: IInternalAzureWizard;
     private _onDidFinishPromptEmitter: EventEmitter<types.PromptResult>;

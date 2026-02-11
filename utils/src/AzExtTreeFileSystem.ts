@@ -11,6 +11,9 @@ import { nonNullProp } from "./utils/nonNull";
 
 const unsupportedError: Error = new Error(l10n.t('This operation is not supported.'));
 
+/**
+ * A virtual file system based around {@link AzExtTreeFileSystemItem} that only supports viewing/editing single files.
+ */
 export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSystemItem> implements FileSystemProvider {
 
     private readonly itemCache: Map<string, TItem> = new Map<string, TItem>();
