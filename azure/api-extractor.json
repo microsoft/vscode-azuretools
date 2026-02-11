@@ -416,6 +416,15 @@
             },
             "tsdoc-param-tag-missing-hyphen": {
                 "logLevel": "none"
+            },
+            "tsdoc-escape-right-brace": {
+                "logLevel": "none"
+            },
+            "tsdoc-malformed-inline-tag": {
+                "logLevel": "none"
+            },
+            "tsdoc-characters-after-block-tag": {
+                "logLevel": "none"
             }
             // "tsdoc-link-tag-unescaped-text": {
             //   "logLevel": "warning",

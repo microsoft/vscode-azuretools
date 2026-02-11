@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+export type * from './azure-account.api';
 export * from './clients';
 export { CommonRoleDefinitions, createRoleId, IdentityProvider, UserAssignedIdentityResourceType } from './constants';
 export * from './createAzureClient';
