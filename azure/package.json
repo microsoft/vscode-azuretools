@@ -24,6 +24,7 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/azure/README.md",
     "scripts": {
+        "api-extractor": "api-extractor run",
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
@@ -57,6 +58,7 @@
     "devDependencies": {
         "@azure/core-auth": "^1.10.1",
         "@azure/core-paging": "^1.6.2",
+        "@microsoft/api-extractor": "^7.56.3",
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
         "@types/node": "22.x",
         "@types/semver": "^7.7.1",
