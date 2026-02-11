@@ -36,20 +36,21 @@
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "^3.0.0",
-        "@vscode/extension-telemetry": "^1.4.0",
-        "dayjs": "^1.11.2",
-        "html-to-text": "^9.0.0",
-        "semver": "^7.3.7",
+        "@microsoft/vscode-azureresources-api": "^3.1.0",
+        "@vscode/extension-telemetry": "^1.5.0",
+        "dayjs": "^1.11.19",
+        "html-to-text": "^9.0.5",
+        "semver": "^7.7.4",
         "vscode-tas-client": "^0.1.84"
     },
     "peerDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
     "devDependencies": {
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.6",
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
+        "@types/html-to-text": "^9.0.4",
         "@types/node": "22.x",
-        "@types/semver": "^7.3.9",
+        "@types/semver": "^7.7.1",
         "@types/vscode": "1.105.0",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*"

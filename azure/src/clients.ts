@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AuthorizationManagementClient } from '@azure/arm-authorization';
-import { ManagedServiceIdentityClient } from '@azure/arm-msi';
+import type { AuthorizationManagementClient } from '@azure/arm-authorization';
+import type { ManagedServiceIdentityClient } from '@azure/arm-msi';
 import type { ResourceManagementClient } from '@azure/arm-resources';
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions';
 import type { StorageManagementClient } from '@azure/arm-storage';
+import type { AzExtClientType } from '../index';
 import { createAzureClient, createAzureSubscriptionClient, InternalAzExtClientContext, parseClientContext } from './createAzureClient';
 
 // Lazy-load @azure packages to improve startup performance.
@@ -17,7 +18,7 @@ export async function createStorageClient(context: InternalAzExtClientContext): 
     if (parseClientContext(context).isCustomCloud) {
         return <StorageManagementClient><unknown>createAzureClient(context, (await import('@azure/arm-storage-profile-2020-09-01-hybrid')).StorageManagementClient);
     } else {
-        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient);
+        return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient as unknown as AzExtClientType<StorageManagementClient>);
     }
 }
 
@@ -30,7 +31,7 @@ export async function createResourcesClient(context: InternalAzExtClientContext)
 }
 
 export async function createManagedServiceIdentityClient(context: InternalAzExtClientContext): Promise<ManagedServiceIdentityClient> {
-    return createAzureClient(context, (await import('@azure/arm-msi')).ManagedServiceIdentityClient);
+    return createAzureClient(context, (await import('@azure/arm-msi')).ManagedServiceIdentityClient as unknown as AzExtClientType<ManagedServiceIdentityClient>);
 }
 
 export async function createAuthorizationManagementClient(context: InternalAzExtClientContext): Promise<AuthorizationManagementClient> {

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceGroup, ResourceManagementClient } from '@azure/arm-resources';
+import type { ResourceGroup } from '@azure/arm-resources';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
@@ -31,7 +31,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
     public static async getResourceGroups<T extends types.IResourceGroupWizardContext>(wizardContext: T): Promise<ResourceGroup[]> {
         if (wizardContext.resourceGroupsTask === undefined) {
-            const client: ResourceManagementClient = await createResourcesClient(wizardContext);
+            const client = await createResourcesClient(wizardContext);
             wizardContext.resourceGroupsTask = uiUtils.listAllIterator(client.resourceGroups.list());
         }
 
