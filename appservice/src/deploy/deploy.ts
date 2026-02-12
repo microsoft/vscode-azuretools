@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan } from '@azure/arm-appservice';
 import { AzureWizard, AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { l10n } from 'vscode';
 import { ParsedSite } from '../SiteClient';
@@ -15,7 +14,7 @@ import { createDeployExecuteSteps } from './wizard/createDeployWizard';
  */
 export async function deploy(site: ParsedSite, fsPath: string, context: IDeployContext, optionalSteps: AzureWizardExecuteStep<IDeployContext>[] = []): Promise<void> {
     const client = await site.createClient(context);
-    const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
+    const aspPromise = client.getAppServicePlan();
 
     const innerContext: InnerDeployContext = Object.assign(context, { site, fsPath, client, aspPromise });
     const title: string = site.isSlot ? l10n.t('Deploying to slot "{0}"', site.fullName) : l10n.t('Deploying to app "{0}"', site.fullName);

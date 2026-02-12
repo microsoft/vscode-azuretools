@@ -6,7 +6,7 @@
 import type { ApplicationInsightsComponent } from '@azure/arm-appinsights';
 import type { AppServicePlan, Site, SkuDescription } from '@azure/arm-appservice';
 import type { Workspace } from '@azure/arm-operationalinsights';
-import { IResourceGroupWizardContext, IStorageAccountWizardContext } from '@microsoft/vscode-azext-azureutils';
+import type { IResourceGroupWizardContext, IStorageAccountWizardContext } from '@microsoft/vscode-azext-azureutils';
 import { AppKind, WebsiteOS } from './AppKind';
 import { DomainNameLabelScope } from './SiteDomainNameLabelScopeStep';
 

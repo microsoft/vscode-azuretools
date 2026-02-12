@@ -46,5 +46,5 @@ export async function getWebLocations(context: IAppServiceWizardContext): Promis
         url: `/subscriptions/${context.subscriptionId}/providers/Microsoft.Web/geoRegions?${queryString}`
     }));
 
-    return (<GeoRegionJsonResponse>result.parsedBody).value.map((l: GeoRegion) => nonNullProp(l, 'name'));
+    return (<GeoRegionJsonResponse>result.parsedBody).value.map((l) => nonNullProp(l, 'name'));
 }

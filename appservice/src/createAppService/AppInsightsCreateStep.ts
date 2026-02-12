@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ApplicationInsightsManagementClient } from '@azure/arm-appinsights';
-import type { ResourceGroup } from '@azure/arm-resources';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
@@ -44,7 +42,7 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
         const rgName: string = nonNullValueAndProp(context.resourceGroup, 'name');
 
         try {
-            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
+            const client = await createAppInsightsClient(context);
             context.appInsightsComponent = await client.components.get(rgName, newAppInsightsName);
             ext.outputChannel.appendLog(l10n.t('Found existing application insights "{0}".', newAppInsightsName));
             ext.outputChannel.appendLog(l10n.t('Using existing application insights "{0}".', newAppInsightsName));
@@ -59,8 +57,8 @@ export class AppInsightsCreateStep extends AzureWizardExecuteStepWithActivityOut
         const resourceLocation: AzExtLocation = await LocationListStep.getLocation(context);
         const appInsightsLocation = await getAppInsightsSupportedLocation(context, resourceLocation);
         if (appInsightsLocation) {
-            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
-            const rg: ResourceGroup = nonNullProp(context, 'resourceGroup');
+            const client = await createAppInsightsClient(context);
+            const rg = nonNullProp(context, 'resourceGroup');
             const rgName: string = nonNullProp(rg, 'name');
             const aiName: string = nonNullProp(context, 'newAppInsightsName');
 

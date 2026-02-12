@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
+import type { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 import { AzExtFsExtra } from "@microsoft/vscode-azext-utils";
 import { l10n } from "vscode";
 import { InnerDeployContext } from "../../IDeployContext";

@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IAzureUtilsExtensionVariables, registerAzureUtilsExtensionVariables } from "@microsoft/vscode-azext-azureutils";
-import { registerGitHubExtensionVariables } from "@microsoft/vscode-azext-github";
-import { IAzExtOutputChannel, IAzureUserInput, registerUIExtensionVariables, UIExtensionVariables } from "@microsoft/vscode-azext-utils";
+import { IAzExtOutputChannel, registerUIExtensionVariables, UIExtensionVariables } from "@microsoft/vscode-azext-utils";
 import { ExtensionContext, l10n } from "vscode";
 
-class UninitializedExtensionVariables implements UIExtensionVariables, IAzureUtilsExtensionVariables {
+class UninitializedExtensionVariables implements IAppServiceExtensionVariables {
     private _error: Error = new Error(l10n.t('"registerUIExtensionVariables" must be called before using the vscode-azureappservice package.'));
 
     public get context(): ExtensionContext {
@@ -16,10 +15,6 @@ class UninitializedExtensionVariables implements UIExtensionVariables, IAzureUti
     }
 
     public get outputChannel(): IAzExtOutputChannel {
-        throw this._error;
-    }
-
-    public get ui(): IAzureUserInput {
         throw this._error;
     }
 
@@ -49,5 +44,4 @@ export function registerAppServiceExtensionVariables(extVars: IAppServiceExtensi
     ext = extVars;
     registerUIExtensionVariables(extVars);
     registerAzureUtilsExtensionVariables(extVars);
-    registerGitHubExtensionVariables(extVars);
 }

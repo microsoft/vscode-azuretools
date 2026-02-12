@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ApplicationInsightsComponent } from '@azure/arm-appinsights';
 import { AzureWizardPromptStep } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
@@ -12,8 +11,8 @@ import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 export class AppInsightsNameStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
 
     public async isNameAvailable(context: IAppServiceWizardContext, name: string): Promise<boolean> {
-        const appInsightsComponents: ApplicationInsightsComponent[] = await AppInsightsListStep.getAppInsightsComponents(context);
-        return !appInsightsComponents.some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
+        const appInsightsComponents = await AppInsightsListStep.getAppInsightsComponents(context);
+        return !appInsightsComponents.some((ai) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
     }
 
     public async prompt(context: IAppServiceWizardContext): Promise<void> {

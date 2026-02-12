@@ -8,7 +8,7 @@ import type { WebSiteManagementClient } from '@azure/arm-appservice';
 import type { OperationalInsightsManagementClient } from '@azure/arm-operationalinsights';
 import type { ResourceGraphClient } from '@azure/arm-resourcegraph';
 import type { ResourceManagementClient } from '@azure/arm-resources';
-import { AzExtClientContext, AzExtClientType, createAzureClient, createAzureSubscriptionClient } from '@microsoft/vscode-azext-azureutils';
+import { AzExtClientContext, AzExtClientType, AzExtSubscriptionClientType, createAzureClient, createAzureSubscriptionClient } from '@microsoft/vscode-azext-azureutils';
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
@@ -19,7 +19,7 @@ export async function createWebSiteClient(context: AzExtClientContext): Promise<
 }
 
 export async function createAppInsightsClient(context: AzExtClientContext): Promise<ApplicationInsightsManagementClient> {
-    return createAzureClient(context, (await import('@azure/arm-appinsights')).ApplicationInsightsManagementClient);
+    return createAzureClient(context, (await import('@azure/arm-appinsights')).ApplicationInsightsManagementClient as unknown as AzExtClientType<ApplicationInsightsManagementClient>);
 }
 
 export async function createResourceClient(context: AzExtClientContext): Promise<ResourceManagementClient> {
@@ -27,9 +27,9 @@ export async function createResourceClient(context: AzExtClientContext): Promise
 }
 
 export async function createResourceGraphClient(context: AzExtClientContext): Promise<ResourceGraphClient> {
-    return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient);
+    return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient as unknown as AzExtSubscriptionClientType<ResourceGraphClient>);
 }
 
 export async function createOperationalInsightsManagementClient(context: AzExtClientContext): Promise<OperationalInsightsManagementClient> {
-    return createAzureClient(context, (await import('@azure/arm-operationalinsights')).OperationalInsightsManagementClient);
+    return createAzureClient(context, (await import('@azure/arm-operationalinsights')).OperationalInsightsManagementClient as unknown as AzExtClientType<OperationalInsightsManagementClient>);
 }

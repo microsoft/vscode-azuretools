@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ServiceClient } from '@azure/core-client';
 import { RestError, bearerTokenAuthenticationPolicy, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { AzExtServiceClientCredentials, IActionContext, IParsedError, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import { Server, Socket, createServer } from 'net';
 import { CancellationToken, Disposable, l10n } from 'vscode';
-import * as ws from 'ws';
+import type { WebSocket } from 'ws';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
 import { delay } from './utils/delay';
@@ -42,7 +41,7 @@ export class TunnelProxy {
     private _port: number;
     private _site: ParsedSite;
     private _server: Server;
-    private _openSockets: ws.WebSocket[];
+    private _openSockets: WebSocket[];
     private _isSsh: boolean;
     private _credentials: AzExtServiceClientCredentials;
 
@@ -67,7 +66,7 @@ export class TunnelProxy {
     }
 
     public dispose(): void {
-        this._openSockets.forEach((tunnelSocket: ws.WebSocket) => {
+        this._openSockets.forEach((tunnelSocket: WebSocket) => {
             tunnelSocket.close();
         });
         this._server.close();
@@ -79,7 +78,7 @@ export class TunnelProxy {
      */
     private async pingApp(context: IActionContext): Promise<void> {
         ext.outputChannel.appendLog('[Tunnel] Pinging app default url...');
-        const client: ServiceClient = await createGenericClient(context, undefined);
+        const client = await createGenericClient(context, undefined);
         let statusCode: number | undefined;
         try {
             const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({ method: 'GET', url: this._site.defaultHostUrl }));
@@ -95,7 +94,7 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
-        const client: ServiceClient = await createGenericClient(context, undefined);
+        const client = await createGenericClient(context, undefined);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
             scopes: [],
             credential: this._credentials
@@ -161,6 +160,8 @@ export class TunnelProxy {
     }
 
     private async setupTunnelServer(bearerToken: string, token: CancellationToken): Promise<void> {
+        const ws = await import('ws');
+
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void): void => {
             const listener: Disposable = token.onCancellationRequested(() => {
                 reject(new UserCancelledError('setupTunnelServer'));
@@ -169,7 +170,7 @@ export class TunnelProxy {
 
             this._server.on('connection', (socket: Socket) => {
                 socket.pause(); // Pause while making the connection
-                const tunnelSocket: ws.WebSocket = new ws.WebSocket(
+                const tunnelSocket = new ws.WebSocket(
                     `wss://${this._site.kuduHostName}/AppServiceTunnel/Tunnel.ashx`,
                     {
                         headers: {
