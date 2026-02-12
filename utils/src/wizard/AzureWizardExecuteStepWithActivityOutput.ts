@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItemCollapsibleState } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { ExecuteActivityOutput } from '../types/activity';
 import { activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from '../constants';
 import { ActivityChildItem, ActivityChildType } from "../tree/v2/ActivityChildItem";
 import { createContextValue } from '../utils/contextUtils';
@@ -16,14 +17,14 @@ enum ActivityOutputState {
     Progress = 'progress',
 }
 
-export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.IActionContext> extends AzureWizardExecuteStep<T> {
+export abstract class AzureWizardExecuteStepWithActivityOutput<T extends IActionContext> extends AzureWizardExecuteStep<T> {
     abstract readonly stepName: string;
     protected abstract getTreeItemLabel(context: T): string;
     protected abstract getOutputLogSuccess(context: T): string;
     protected abstract getOutputLogFail(context: T): string;
     protected getOutputLogProgress?(context: T): string;
 
-    public createSuccessOutput(context: T): types.ExecuteActivityOutput {
+    public createSuccessOutput(context: T): ExecuteActivityOutput {
         return createExecuteActivityOutput(context, {
             outputType: ActivityOutputState.Success,
             stepName: this.stepName,
@@ -32,7 +33,7 @@ export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.I
         });
     }
 
-    public createProgressOutput(context: T): types.ExecuteActivityOutput {
+    public createProgressOutput(context: T): ExecuteActivityOutput {
         return createExecuteActivityOutput(context, {
             outputType: ActivityOutputState.Progress,
             stepName: this.stepName,
@@ -41,7 +42,7 @@ export abstract class AzureWizardExecuteStepWithActivityOutput<T extends types.I
         });
     }
 
-    public createFailOutput(context: T): types.ExecuteActivityOutput {
+    public createFailOutput(context: T): ExecuteActivityOutput {
         return createExecuteActivityOutput(context, {
             outputType: ActivityOutputState.Fail,
             stepName: this.stepName,
@@ -58,7 +59,7 @@ type ActivityOutputCreateOptions = {
     outputType: ActivityOutputState;
 };
 
-function createExecuteActivityOutput(_: types.IActionContext, options: ActivityOutputCreateOptions): types.ExecuteActivityOutput {
+function createExecuteActivityOutput(_: IActionContext, options: ActivityOutputCreateOptions): ExecuteActivityOutput {
     const activityType = options.outputType === ActivityOutputState.Success ? ActivityChildType.Success : options.outputType === ActivityOutputState.Fail ? ActivityChildType.Fail : ActivityChildType.Progress;
     const activityContext = options.outputType === ActivityOutputState.Success ? activitySuccessContext : options.outputType === ActivityOutputState.Fail ? activityFailContext : activityProgressContext;
     const contextValue = createContextValue([`${options.stepName}Item`, activityContext]);

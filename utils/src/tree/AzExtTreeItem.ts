@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { l10n, MarkdownString, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { ISubscriptionContext } from '../types/subscription';
+import type { IAzExtTreeItem, RunWithTemporaryDescriptionOptions, TreeItemIconPath } from '../types/treeItem';
 import { showContextValueSetting } from '../constants';
 import { NotImplementedError } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
@@ -18,7 +20,7 @@ import { isAzExtParentTreeItem } from './isAzExtTreeItem';
  *
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export abstract class AzExtTreeItem implements types.AzExtTreeItem {
+export abstract class AzExtTreeItem implements IAzExtTreeItem {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isAzExtTreeItem = true;
 
@@ -31,7 +33,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
 
     private _id?: string;
     private _description?: string;
-    private _iconPath?: types.TreeItemIconPath;
+    private _iconPath?: TreeItemIconPath;
     private _tooltip?: string;
     private _commandId?: string;
     //#endregion
@@ -45,7 +47,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     public isLoadingMore!: boolean;
     public readonly valuesToMask: string[] = [];
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    protected _subscription: types.ISubscriptionContext | undefined;
+    protected _subscription: ISubscriptionContext | undefined;
 
     private _temporaryDescription?: string;
     private _treeDataProvider: IAzExtTreeDataProviderInternal | undefined;
@@ -108,15 +110,15 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         return this.fullIdWithContext || this.fullId;
     }
 
-    public set iconPath(iconPath: types.TreeItemIconPath | undefined) {
+    public set iconPath(iconPath: TreeItemIconPath | undefined) {
         this._iconPath = iconPath;
     }
 
-    public get iconPath(): types.TreeItemIconPath | undefined {
+    public get iconPath(): TreeItemIconPath | undefined {
         return this._iconPath;
     }
 
-    public get effectiveIconPath(): types.TreeItemIconPath | undefined {
+    public get effectiveIconPath(): TreeItemIconPath | undefined {
         return this._temporaryDescription || this.isLoadingMore ? new ThemeIcon('loading~spin') : this.iconPath;
     }
 
@@ -156,7 +158,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         this._commandId = id;
     }
 
-    public get subscription(): types.ISubscriptionContext {
+    public get subscription(): ISubscriptionContext {
         const result = this._subscription ?? this.parent?.subscription;
         if (!result) {
             throw Error(l10n.t('No Azure subscription found for this tree item.'));
@@ -166,13 +168,13 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
     }
 
     //#region Methods implemented by base class
-    public refreshImpl?(context: types.IActionContext): Promise<void>;
+    public refreshImpl?(context: IActionContext): Promise<void>;
     public isAncestorOfImpl?(contextValue: string | RegExp): boolean;
-    public deleteTreeItemImpl?(deleteTreeItemImpl: types.IActionContext): Promise<void>;
+    public deleteTreeItemImpl?(deleteTreeItemImpl: IActionContext): Promise<void>;
     public resolveTooltip?(): Promise<string | MarkdownString>;
     //#endregion
 
-    public async refresh(context: types.IActionContext): Promise<void> {
+    public async refresh(context: IActionContext): Promise<void> {
         await this.treeDataProvider.refresh(context, this);
     }
 
@@ -196,7 +198,7 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         });
     }
 
-    public async deleteTreeItem(context: types.IActionContext): Promise<void> {
+    public async deleteTreeItem(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(context, l10n.t('Deleting...'), async () => {
             if (this.deleteTreeItemImpl) {
                 await this.deleteTreeItemImpl(context);
@@ -210,9 +212,9 @@ export abstract class AzExtTreeItem implements types.AzExtTreeItem {
         });
     }
 
-    public async runWithTemporaryDescription(context: types.IActionContext, description: string, callback: () => Promise<void>): Promise<void>
-    public async runWithTemporaryDescription(context: types.IActionContext, options: types.RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void>
-    public async runWithTemporaryDescription(context: types.IActionContext, options: string | types.RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void> {
+    public async runWithTemporaryDescription(context: IActionContext, description: string, callback: () => Promise<void>): Promise<void>
+    public async runWithTemporaryDescription(context: IActionContext, options: RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void>
+    public async runWithTemporaryDescription(context: IActionContext, options: string | RunWithTemporaryDescriptionOptions, callback: () => Promise<void>): Promise<void> {
         options = typeof options === 'string' ? { description: options } : options;
         this._temporaryDescription = options.description;
         try {

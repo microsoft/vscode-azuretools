@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { ConfirmationViewProperty, IWizardOptions } from '../types/wizard';
 import { crypto } from '../node/crypto';
 
-export abstract class AzureWizardPromptStep<T extends types.IActionContext> implements types.AzureWizardPromptStep<T> {
+export abstract class AzureWizardPromptStep<T extends IActionContext> {
     public hideStepCount: boolean = false;
     public supportsDuplicateSteps: boolean = false;
     public effectiveTitle: string | undefined;
@@ -23,11 +24,11 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
 
     public abstract prompt(wizardContext: T): Promise<void>;
 
-    public getSubWizard?(wizardContext: T): Promise<types.IWizardOptions<T> | undefined>;
+    public getSubWizard?(wizardContext: T): Promise<IWizardOptions<T> | undefined>;
     public undo?(wizardContext: T): void;
 
     public configureBeforePrompt?(wizardContext: T): void | Promise<void>;
-    public confirmationViewProperty?(wizardContext: T): types.ConfirmationViewProperty
+    public confirmationViewProperty?(wizardContext: T): ConfirmationViewProperty
     public abstract shouldPrompt(wizardContext: T): boolean;
 
     public reset(): void {

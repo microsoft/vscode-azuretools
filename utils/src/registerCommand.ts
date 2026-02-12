@@ -5,7 +5,9 @@
 
 import { unwrapArgs } from '@microsoft/vscode-azureresources-api';
 import { commands, Uri } from 'vscode';
-import * as types from '../index';
+import type { IActionContext } from './types/actionContext';
+import type { ResourceGroupsItem } from './pickTreeItem/quickPickAzureResource/tempTypes';
+import type { TreeElementBase } from './types/treeV2';
 import { callWithTelemetryAndErrorHandling } from './callWithTelemetryAndErrorHandling';
 import { ext } from './extensionVariables';
 import { parseError } from './parseError';
@@ -13,12 +15,12 @@ import { addTreeItemValuesToMask } from './tree/addTreeItemValuesToMask';
 import { AzExtTreeItem } from './tree/AzExtTreeItem';
 import { setAzureResourceIdTelemetryProperties } from './utils/AzureResourceIdTelemetry';
 
-function isTreeElementBase(object?: unknown): object is types.TreeElementBase {
+function isTreeElementBase(object?: unknown): object is TreeElementBase {
     return typeof object === 'object' && object !== null && 'getTreeItem' in object;
 }
 
 // if the firstArg has a resource property, it is a ResourceGroupsItem from the resource groups extension
-function isResourceGroupsItem(object?: unknown): object is types.ResourceGroupsItem {
+function isResourceGroupsItem(object?: unknown): object is ResourceGroupsItem {
     return typeof object === 'object' && object !== null && 'resource' in object;
 }
 
@@ -38,7 +40,7 @@ type Resource = {
  * The telemetry event for this command will be named telemetryId if specified, otherwise it defaults to the commandId
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
-export function registerCommand(commandId: string, callback: (context: types.IActionContext, ...args: unknown[]) => unknown, debounce?: number, telemetryId?: string): void {
+export function registerCommand(commandId: string, callback: (context: IActionContext, ...args: unknown[]) => unknown, debounce?: number, telemetryId?: string): void {
     let lastClickTime: number | undefined; /* Used for debounce */
     ext.context.subscriptions.push(commands.registerCommand(commandId, async (...args: unknown[]): Promise<unknown> => {
         if (debounce) { /* Only check for debounce if registered command specifies */
@@ -49,7 +51,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
         }
         return await callWithTelemetryAndErrorHandling(
             telemetryId || commandId,
-            async (context: types.IActionContext) => {
+            async (context: IActionContext) => {
                 if (args.length > 0) {
                     try {
                         await setTelemetryProperties(context, args);
@@ -74,7 +76,7 @@ function debounceCommand(debounce: number, lastClickTime?: number): boolean {
     return false;
 }
 
-async function setTelemetryProperties(context: types.IActionContext, args: unknown[]): Promise<void> {
+async function setTelemetryProperties(context: IActionContext, args: unknown[]): Promise<void> {
     const firstArg: unknown = args[0];
 
     if (firstArg instanceof Uri) {

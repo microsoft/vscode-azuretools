@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { EventEmitter } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
 import { AzExtParentTreeItem } from './AzExtParentTreeItem';
+import type { AzExtTreeDataProvider } from './AzExtTreeDataProvider';
 import type { AzExtTreeItem } from './AzExtTreeItem';
 import { CollapsibleStateTracker } from './CollapsibleStateTracker';
 
@@ -18,10 +19,10 @@ export interface IAzExtParentTreeItemInternal extends AzExtParentTreeItem {
     parent: IAzExtParentTreeItemInternal | undefined;
     treeDataProvider: IAzExtTreeDataProviderInternal;
     removeChildFromCache(node: AzExtTreeItem): void;
-    loadMoreChildren(context: types.IActionContext): Promise<void>;
+    loadMoreChildren(context: IActionContext): Promise<void>;
 }
 
-export interface IAzExtTreeDataProviderInternal extends types.AzExtTreeDataProvider {
+export interface IAzExtTreeDataProviderInternal extends AzExtTreeDataProvider {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem>;
     refreshUIOnly(treeItem: AzExtTreeItem | undefined): void;

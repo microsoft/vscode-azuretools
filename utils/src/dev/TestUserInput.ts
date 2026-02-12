@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import type * as vscodeTypes from 'vscode'; // `TestUserInput._vscode` should be used for anything that's not purely a type (e.g. instantiating a class)
-import type * as types from '../../index';
+import type { PromptResult } from '../types/userInput';
 
 export enum TestInput {
     /**
@@ -37,8 +37,8 @@ class GoBackError extends Error {
  * Wrapper class of several `vscode.window` methods that handle user input.
  * This class is meant to be used for testing in non-interactive mode.
  */
-export class TestUserInput implements types.TestUserInput {
-    private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
+export class TestUserInput {
+    private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<PromptResult>;
     private readonly _vscode: typeof vscodeTypes;
     private _inputs: (string | RegExp | TestInput)[] = [];
 
@@ -50,28 +50,28 @@ export class TestUserInput implements types.TestUserInput {
 
     constructor(vscode: typeof vscodeTypes) {
         this._vscode = vscode;
-        this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
+        this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<PromptResult>();
     }
 
     public static async create(): Promise<TestUserInput> {
         return new TestUserInput(await import('vscode'));
     }
 
-    public get onDidFinishPrompt(): vscodeTypes.Event<types.PromptResult> {
+    public get onDidFinishPrompt(): vscodeTypes.Event<PromptResult> {
         return this._onDidFinishPromptEmitter.event;
     }
 
     /**
      * An ordered array of inputs that will be used instead of interactively prompting in VS Code. RegExp is only applicable for QuickPicks and will pick the first input that matches the RegExp.
      */
-    public async runWithInputs<T>(inputs: (string | RegExp | types.TestInput)[], callback: () => Promise<T>): Promise<T> {
+    public async runWithInputs<T>(inputs: (string | RegExp | TestInput)[], callback: () => Promise<T>): Promise<T> {
         this.setInputs(inputs);
         const result: T = await callback();
         this.validateAllInputsUsed();
         return result;
     }
 
-    public setInputs(inputs: (string | RegExp | types.TestInput)[]): void {
+    public setInputs(inputs: (string | RegExp | TestInput)[]): void {
         this._inputs = <(string | RegExp | TestInput)[]>inputs;
     }
 
@@ -239,7 +239,9 @@ export class TestUserInput implements types.TestUserInput {
  * @param registerOnActionStartHandler The function defined in 'vscode-azureextensionui' for registering onActionStart handlers
  * @param callback The callback to run
  */
-export async function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | types.TestInput)[], registerOnActionStartHandler: types.registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T> {
+type registerOnActionStartHandlerType = (handler: (context: { callbackId: string; ui: Partial<TestUserInput>; }) => void) => vscodeTypes.Disposable;
+
+export async function runWithInputs<T>(callbackId: string, inputs: (string | RegExp | TestInput)[], registerOnActionStartHandler: registerOnActionStartHandlerType, callback: () => Promise<T>): Promise<T> {
     const testUserInput = await TestUserInput.create();
     testUserInput.setInputs(inputs);
     const disposable = registerOnActionStartHandler((context) => {

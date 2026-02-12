@@ -5,15 +5,15 @@
 
 import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as vscode from 'vscode';
-import * as types from '../../../index';
-import { PickSubscriptionWizardContext } from '../../../index';
+import type { IActionContext } from '../../types/actionContext';
+import type { PickSubscriptionWizardContext } from '../../types/pickExperience';
 import { NoResourceFoundError } from '../../errors';
 import { AzureWizard } from '../../wizard/AzureWizard';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 
 export async function subscriptionExperience(
-    context: types.IActionContext,
+    context: IActionContext,
     tdp: vscode.TreeDataProvider<ResourceGroupsItem>,
     options?: { selectBySubscriptionId?: string, showLoadingPrompt?: boolean }
 ): Promise<AzureSubscription> {

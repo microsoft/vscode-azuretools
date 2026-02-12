@@ -3,17 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { AzExtTreeItem } from './AzExtTreeItem';
 import { addValuesToMaskFromAzureId } from '../masking';
 
 /**
  * @param treeItemSource a string id used to track the tree item source in telemetry
  */
-export function addTreeItemValuesToMask(context: types.IActionContext, treeItem: types.AzExtTreeItem, treeItemSource: string): void {
+export function addTreeItemValuesToMask(context: IActionContext, treeItem: AzExtTreeItem, treeItemSource: string): void {
     addValuesToMaskFromAzureId(context, treeItem.fullId);
     context.telemetry.properties.treeItemSource = treeItemSource;
 
-    let tiToMask: types.AzExtTreeItem | undefined = treeItem;
+    let tiToMask: AzExtTreeItem | undefined = treeItem;
     while (tiToMask) {
         if (!tiToMask.suppressMaskLabel) {
             context.valuesToMask.push(tiToMask.label);

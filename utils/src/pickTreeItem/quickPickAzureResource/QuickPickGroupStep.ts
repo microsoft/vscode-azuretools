@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode';
 import { GenericQuickPickStep } from '../GenericQuickPickStep';
-import { AzureResourceQuickPickWizardContext, GroupQuickPickOptions } from '../../../index';
+import type { AzureResourceQuickPickWizardContext, GroupQuickPickOptions } from '../../types/pickExperience';
 import { parseContextValue } from '../../utils/contextUtils';
 import { PickFilter } from '../PickFilter';
 

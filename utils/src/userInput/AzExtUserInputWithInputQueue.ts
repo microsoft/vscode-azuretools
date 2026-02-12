@@ -4,12 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import { AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, AzureUserInputQueue, IAzureMessageOptions, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, PromptResult, type AzExtUserInputWithInputQueue as AzExtUserInputWithInputQueueType } from "../../";
+import type { AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, AzureUserInputQueue, IAzureMessageOptions, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, PromptResult } from "../types/userInput";
 import { UserCancelledError } from "../errors";
 import { AzExtUserInput, addStepTelemetry } from "./AzExtUserInput";
 import { IInternalActionContext } from "./IInternalActionContext";
 
-export class AzExtUserInputWithInputQueue implements AzExtUserInputWithInputQueueType {
+export class AzExtUserInputWithInputQueue implements IAzureUserInput {
     private _context: IInternalActionContext;
     private _inputsQueue: AzureUserInputQueue;
     private _onDidFinishPromptEmitter: vscode.EventEmitter<PromptResult>;

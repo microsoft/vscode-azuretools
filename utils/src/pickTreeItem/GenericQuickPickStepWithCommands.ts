@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
+import type { QuickPickWizardContext, GenericQuickPickOptions } from '../types/pickExperience';
+import type { IWizardOptions } from '../types/wizard';
 import * as vscode from 'vscode';
 import { getLastNode } from './getLastNode';
 import { GenericQuickPickStep } from './GenericQuickPickStep';
 
-export abstract class GenericQuickPickStepWithCommands<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
+export abstract class GenericQuickPickStepWithCommands<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends GenericQuickPickStep<TContext, TOptions> {
 
     // provide support for picking command tree items, and running the command within the wizard
-    public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
+    public async getSubWizard(wizardContext: TContext): Promise<IWizardOptions<TContext> | undefined> {
         const lastPick = getLastNode(wizardContext);
         const treeItem = await this.treeDataProvider.getTreeItem(lastPick);
         if (treeItem.command) {

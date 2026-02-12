@@ -5,16 +5,18 @@
 
 import * as vscode from 'vscode';
 import * as hTypes from '../../../hostapi';
-import * as types from '../../../index';
+import type { ExecuteActivityContext, ActivityTask, ActivityChildItemOptions, ActivityChildItemBase } from '../../types/activity';
+import type { IParsedError } from '../../types/extension';
+import type { IActionContext } from '../../types/actionContext';
 import { activityErrorContext, activityFailContext, activityFailIcon } from '../../constants';
 import { crypto } from '../../node/crypto';
 import { ResourceGroupsItem } from '../../pickTreeItem/quickPickAzureResource/tempTypes';
 import { ActivityChildItem, ActivityChildType } from '../../tree/v2/ActivityChildItem';
 import { ActivityBase, ActivityStatus } from "../Activity";
 
-export class ExecuteActivity<TContext extends types.ExecuteActivityContext = types.ExecuteActivityContext> extends ActivityBase<void> {
+export class ExecuteActivity<TContext extends ExecuteActivityContext = ExecuteActivityContext> extends ActivityBase<void> {
 
-    public constructor(protected readonly context: TContext, task: types.ActivityTask<void>) {
+    public constructor(protected readonly context: TContext, task: ActivityTask<void>) {
         super(task, {
             attributes: context.activityAttributes,
             callbackId: context.callbackId,
@@ -67,11 +69,11 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
     }
 
     private _errorItemId: string = crypto.randomUUID();
-    public errorState(error: types.IParsedError): hTypes.ActivityTreeItemOptions {
+    public errorState(error: IParsedError): hTypes.ActivityTreeItemOptions {
         return {
             label: this.label,
             getChildren: (_parent: ResourceGroupsItem) => {
-                const errorItemOptions: types.ActivityChildItemOptions = {
+                const errorItemOptions: ActivityChildItemOptions = {
                     id: this._errorItemId,
                     label: error.message,
                     contextValue: activityErrorContext,
@@ -80,7 +82,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
 
                 if (this.context.activityChildren) {
                     // Operate on a copied array to ensure the operation remains idempotent
-                    const activityChildren: types.ActivityChildItemBase[] = this.context.activityChildren.slice();
+                    const activityChildren: ActivityChildItemBase[] = this.context.activityChildren.slice();
                     this.appendErrorItemToActivityChildren(activityChildren, errorItemOptions);
                     return activityChildren;
                 }
@@ -99,9 +101,9 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         };
     }
 
-    private appendErrorItemToActivityChildren(activityChildren: types.ActivityChildItemBase[], errorItemOptions: types.ActivityChildItemOptions): void {
+    private appendErrorItemToActivityChildren(activityChildren: ActivityChildItemBase[], errorItemOptions: ActivityChildItemOptions): void {
         // Honor any error suppression flag
-        if ((this.context as unknown as types.IActionContext).errorHandling?.suppressDisplay) {
+        if ((this.context as unknown as IActionContext).errorHandling?.suppressDisplay) {
             return;
         }
 
@@ -112,7 +114,7 @@ export class ExecuteActivity<TContext extends types.ExecuteActivityContext = typ
         }
 
         // Check if the last activity child was a parent fail item; if so, attach the actual error to it for additional user context
-        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as types.ActivityChildItemBase['getChildren'];
+        const previousGetChildrenImpl = lastActivityChild?.getChildren?.bind(lastActivityChild) as ActivityChildItemBase['getChildren'];
         if (
             lastActivityChild &&
             previousGetChildrenImpl &&

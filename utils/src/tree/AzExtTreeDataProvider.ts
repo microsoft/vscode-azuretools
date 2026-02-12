@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CancellationToken, Disposable, Event, EventEmitter, l10n, ThemeIcon, TreeItem, TreeView } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { IFindTreeItemContext, ITreeItemPickerContext } from '../types/treeItem';
 import { callWithTelemetryAndErrorHandling } from '../callWithTelemetryAndErrorHandling';
 import { NoResourceFoundError, UserCancelledError } from '../errors';
 import { parseError } from '../parseError';
@@ -21,7 +22,7 @@ import { loadMoreLabel } from './treeConstants';
 /**
  * Tree Data Provider for an *Az*ure *Ext*ension
  */
-export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, types.AzExtTreeDataProvider, Disposable {
+export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, Disposable {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public _onTreeItemCreateEmitter: EventEmitter<AzExtTreeItem> = new EventEmitter<AzExtTreeItem>();
     private _onDidChangeTreeDataEmitter: EventEmitter<AzExtTreeItem | undefined> = new EventEmitter<AzExtTreeItem | undefined>();
@@ -29,7 +30,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     private readonly _loadMoreCommandId: string;
     private readonly _rootTreeItem: AzExtParentTreeItem;
-    private readonly _findTreeItemTasks: Map<string, Promise<types.AzExtTreeItem | undefined>> = new Map<string, Promise<types.AzExtTreeItem | undefined>>();
+    private readonly _findTreeItemTasks: Map<string, Promise<AzExtTreeItem | undefined>> = new Map<string, Promise<AzExtTreeItem | undefined>>();
 
     constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string) {
         this._loadMoreCommandId = loadMoreCommandId;
@@ -88,7 +89,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
-            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
+            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
                 context.errorHandling.forceIncludeInReportIssueCommand = true;
@@ -143,7 +144,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
     }
 
-    public async refresh(context: types.IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
+    public async refresh(context: IActionContext, treeItem?: AzExtTreeItem): Promise<void> {
         treeItem ??= this._rootTreeItem;
 
         if (treeItem.refreshImpl && !treeItem.hasBeenDeleted) {
@@ -161,7 +162,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         this._onDidChangeTreeDataEmitter.fire(undefined);
     }
 
-    public async loadMore(treeItem: AzExtParentTreeItem, context: types.IActionContext): Promise<void> {
+    public async loadMore(treeItem: AzExtParentTreeItem, context: IActionContext): Promise<void> {
         treeItem.isLoadingMore = true;
         try {
             this.refreshUIOnly(treeItem);
@@ -172,9 +173,9 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
     }
 
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
-    public async showTreeItemPicker<T extends types.AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: types.ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T | T[]> {
+    public async showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: ITreeItemPickerContext & { canPickMany: true }, startingTreeItem?: AzExtTreeItem): Promise<T[]>;
+    public async showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T>;
+    public async showTreeItemPicker<T extends AzExtTreeItem>(expectedContextValues: string | (string | RegExp)[] | RegExp, context: ITreeItemPickerContext, startingTreeItem?: AzExtTreeItem): Promise<T | T[]> {
         if (!Array.isArray(expectedContextValues)) {
             expectedContextValues = [expectedContextValues];
         }
@@ -203,14 +204,14 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent;
     }
 
-    public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IFindTreeItemContext): Promise<T | undefined> {
-        let result: types.AzExtTreeItem | undefined;
+    public async findTreeItem<T extends AzExtTreeItem>(fullId: string, context: IFindTreeItemContext): Promise<T | undefined> {
+        let result: AzExtTreeItem | undefined;
 
-        const existingTask: Promise<types.AzExtTreeItem | undefined> | undefined = this._findTreeItemTasks.get(fullId);
+        const existingTask: Promise<AzExtTreeItem | undefined> | undefined = this._findTreeItemTasks.get(fullId);
         if (existingTask) {
             result = await existingTask;
         } else {
-            const newTask: Promise<types.AzExtTreeItem | undefined> = context.loadAll ?
+            const newTask: Promise<AzExtTreeItem | undefined> = context.loadAll ?
                 runWithLoadingNotification(context, cancellationToken => this.findTreeItemInternal(fullId, context, cancellationToken)) :
                 this.findTreeItemInternal(fullId, context);
             this._findTreeItemTasks.set(fullId, newTask);
@@ -236,7 +237,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     /**
      * Wrapped by `findTreeItem` to ensure only one find is happening per `fullId` at a time
      */
-    private async findTreeItemInternal(fullId: string, context: types.IFindTreeItemContext, cancellationToken?: CancellationToken): Promise<types.AzExtTreeItem | undefined> {
+    private async findTreeItemInternal(fullId: string, context: IFindTreeItemContext, cancellationToken?: CancellationToken): Promise<AzExtTreeItem | undefined> {
         let treeItem: AzExtParentTreeItem = this._rootTreeItem;
 
         outerLoop: while (true) {

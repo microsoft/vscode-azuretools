@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Event, EventEmitter, MessageItem, Uri, WorkspaceFolder } from 'vscode';
-import * as types from '../../index';
+import type { AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, IAzureMessageOptions, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, PromptResult } from '../types/userInput';
 import { UserCancelledError } from '../errors';
 import { IInternalActionContext, IInternalAzureWizard } from './IInternalActionContext';
 import { showInputBox } from './showInputBox';
@@ -16,18 +16,18 @@ import { showWorkspaceFolderPick } from './showWorkspaceFolderPick';
 /**
  * Wrapper class of several `vscode.window` methods that handle user input.
  */
-export class AzExtUserInput implements types.IAzureUserInput {
+export class AzExtUserInput implements IAzureUserInput {
     public wizard?: IInternalAzureWizard;
-    private _onDidFinishPromptEmitter: EventEmitter<types.PromptResult>;
+    private _onDidFinishPromptEmitter: EventEmitter<PromptResult>;
     private _context: IInternalActionContext;
     private _isPrompting: boolean = false;
 
-    public constructor(context: IInternalActionContext, onDidFinishPromptEmitter?: EventEmitter<types.PromptResult>) {
+    public constructor(context: IInternalActionContext, onDidFinishPromptEmitter?: EventEmitter<PromptResult>) {
         this._context = context;
-        this._onDidFinishPromptEmitter = onDidFinishPromptEmitter ?? new EventEmitter<types.PromptResult>();
+        this._onDidFinishPromptEmitter = onDidFinishPromptEmitter ?? new EventEmitter<PromptResult>();
     }
 
-    public get onDidFinishPrompt(): Event<types.PromptResult> {
+    public get onDidFinishPrompt(): Event<PromptResult> {
         return this._onDidFinishPromptEmitter.event;
     }
 
@@ -35,7 +35,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         return this._isPrompting;
     }
 
-    public async showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
+    public async showQuickPick<TPick extends IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: IAzureQuickPickOptions): Promise<TPick | TPick[]> {
         addStepTelemetry(this._context, options.stepName, 'quickPick', options.placeHolder);
         if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
             throw new UserCancelledError();
@@ -50,7 +50,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
     }
 
-    public async showInputBox(options: types.AzExtInputBoxOptions): Promise<string> {
+    public async showInputBox(options: AzExtInputBoxOptions): Promise<string> {
         addStepTelemetry(this._context, options.stepName, 'inputBox', options.prompt);
         if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
             throw new UserCancelledError();
@@ -68,7 +68,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
     }
 
-    public async showOpenDialog(options: types.AzExtOpenDialogOptions): Promise<Uri[]> {
+    public async showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]> {
         addStepTelemetry(this._context, options.stepName, 'openDialog', options.title);
         if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
             throw new UserCancelledError();
@@ -83,7 +83,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
     }
 
-    public async showWorkspaceFolderPick(options: types.AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder> {
+    public async showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder> {
         addStepTelemetry(this._context, options.stepName, 'WorkspaceFolderPick', options.placeHolder);
         if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
             throw new UserCancelledError();
@@ -99,13 +99,13 @@ export class AzExtUserInput implements types.IAzureUserInput {
     }
 
     public async showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    public async showWarningMessage<T extends MessageItem>(message: string, options: types.IAzureMessageOptions, ...items: T[]): Promise<T>;
+    public async showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
         let stepName: string | undefined;
         const firstArg: unknown = args[0];
         if (typeof firstArg === 'object' && firstArg && 'stepName' in firstArg) {
-            stepName = (<Partial<types.IAzureMessageOptions>>firstArg).stepName;
+            stepName = (<Partial<IAzureMessageOptions>>firstArg).stepName;
         }
 
         addStepTelemetry(this._context, stepName, 'warningMessage', message);

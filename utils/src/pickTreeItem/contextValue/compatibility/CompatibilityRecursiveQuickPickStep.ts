@@ -5,28 +5,32 @@
 
 import { isWrapper, Wrapper } from "@microsoft/vscode-azureresources-api";
 import * as vscode from "vscode";
-import * as types from "../../../../index";
+import type { QuickPickWizardContext, ContextValueFilterQuickPickOptions } from "../../../types/pickExperience";
+import type { IActionContext } from "../../../types/actionContext";
+import type { IWizardOptions } from "../../../types/wizard";
+import type { IAzureQuickPickItem } from "../../../types/userInput";
+import type { ITreeItemPickerContext } from "../../../types/treeItem";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
 import { getLastNode } from "../../getLastNode";
 import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 
-type CreateCallback<TNode = unknown> = (context: types.IActionContext) => TNode | Promise<TNode>;
+type CreateCallback<TNode = unknown> = (context: IActionContext) => TNode | Promise<TNode>;
 
 type CreateOptions<TNode = unknown> = {
     label?: string;
     callback: CreateCallback<TNode>;
 }
 
-interface CompatibilityRecursiveQuickPickOptions extends types.ContextValueFilterQuickPickOptions {
+interface CompatibilityRecursiveQuickPickOptions extends ContextValueFilterQuickPickOptions {
     create?: CreateOptions;
 }
 
 /**
- * Recursive step which is compatible which adds create picks based if the node has {@link types.CompatibleQuickPickOptions.createChild quickPickOptions.createChild} defined.
+ * Recursive step which is compatible which adds create picks based if the node has {@link CompatibilityRecursiveQuickPickOptions.create quickPickOptions.createChild} defined.
  */
-export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPickWizardContext & types.ITreeItemPickerContext> extends CompatibilityContextValueQuickPickStep<TContext, CompatibilityRecursiveQuickPickOptions> {
+export class CompatibilityRecursiveQuickPickStep<TContext extends QuickPickWizardContext & ITreeItemPickerContext> extends CompatibilityContextValueQuickPickStep<TContext, CompatibilityRecursiveQuickPickOptions> {
 
     protected override async promptInternal(wizardContext: TContext): Promise<unknown> {
 
@@ -49,7 +53,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             label: lastPickedItemTi.createNewLabel ?? vscode.l10n.t('$(plus) Create new {0}...', lastPickedItemTi.childTypeLabel!)
         } : undefined;
 
-        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
+        const picks = await this.getPicks(wizardContext) as IAzureQuickPickItem<unknown>[];
 
         if (picks.length === 1 && this.pickOptions.skipIfOne && typeof picks[0].data !== 'function') {
             return picks[0].data;
@@ -68,7 +72,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                 const createdTreeItem = await callback?.(wizardContext) as AzExtTreeItem;
 
                 // convert created AzExtTreeItem to a BranchDataItem so the wizard can get its children in the next step
-                const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
+                const picks = await this.getPicks(wizardContext) as IAzureQuickPickItem<unknown>[];
                 const createdPick = picks.find((pick) => {
                     return (pick.data as Wrapper).unwrap<AzExtTreeItem>().fullId === createdTreeItem.fullId;
                 });
@@ -84,7 +88,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         }
     }
 
-    public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
+    public async getSubWizard(wizardContext: TContext): Promise<IWizardOptions<TContext> | undefined> {
         const lastPickedItem = getLastNode(wizardContext);
 
         if (!lastPickedItem) {
@@ -110,8 +114,8 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
         }
     }
 
-    protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
-        const picks: types.IAzureQuickPickItem<unknown | CreateCallback>[] = [];
+    protected override async getPicks(wizardContext: TContext): Promise<IAzureQuickPickItem<unknown>[]> {
+        const picks: IAzureQuickPickItem<unknown | CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
         } catch (error) {
@@ -126,10 +130,10 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             picks.push(this.getCreatePick(this.pickOptions.create));
         }
 
-        return picks as types.IAzureQuickPickItem<unknown>[];
+        return picks as IAzureQuickPickItem<unknown>[];
     }
 
-    private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {
+    private getCreatePick(options: CreateOptions): IAzureQuickPickItem<CreateCallback> {
         return {
             label: options.label || vscode.l10n.t('$(add) Create...'),
             data: options.callback,

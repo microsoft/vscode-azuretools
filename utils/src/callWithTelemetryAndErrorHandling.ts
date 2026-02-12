@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Disposable, l10n, MessageItem, TelemetryTrustedValue, window } from 'vscode';
-import * as types from '../index';
+import type { IActionContext, IHandlerContext, OnActionStartHandler, ErrorHandler, TelemetryHandler, IErrorHandlerContext, AzExtErrorButton } from './types/actionContext';
+import type { IParsedError } from './types/extension';
 import { DialogResponses } from './DialogResponses';
 import { ext } from './extensionVariables';
 import { getRedactedLabel, maskUserInfo } from './masking';
@@ -16,9 +17,9 @@ import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
 
-function initContext(callbackId: string): [number, types.IActionContext] {
+function initContext(callbackId: string): [number, IActionContext] {
     const start: number = Date.now();
-    const context: types.IActionContext = {
+    const context: IActionContext = {
         telemetry: {
             properties: {
                 isActivationEvent: 'false',
@@ -44,7 +45,7 @@ function initContext(callbackId: string): [number, types.IActionContext] {
     };
     context.ui = new AzExtUserInput(context);
 
-    const handlerContext: types.IHandlerContext = Object.assign(context, { callbackId });
+    const handlerContext: IHandlerContext = Object.assign(context, { callbackId });
     for (const handler of Object.values(onActionStartHandlers)) {
         try {
             handler(handlerContext);
@@ -59,7 +60,7 @@ function initContext(callbackId: string): [number, types.IActionContext] {
 /**
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
-export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: types.IActionContext) => T): T | undefined {
+export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, callback: (context: IActionContext) => T): T | undefined {
     const [start, context] = initContext(callbackId);
 
     try {
@@ -75,7 +76,7 @@ export function callWithTelemetryAndErrorHandlingSync<T>(callbackId: string, cal
 /**
  * NOTE: If the environment variable `DEBUGTELEMETRY` is set to a non-empty, non-zero value, then telemetry will not be sent. If the value is 'verbose' or 'v', telemetry will be displayed in the console window.
  */
-export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: types.IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
+export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, callback: (context: IActionContext) => T | PromiseLike<T>): Promise<T | undefined> {
     const [start, context] = initContext(callbackId);
 
     try {
@@ -88,15 +89,15 @@ export async function callWithTelemetryAndErrorHandling<T>(callbackId: string, c
     }
 }
 
-const onActionStartHandlers: { [id: number]: types.OnActionStartHandler } = {};
-const errorHandlers: { [id: number]: types.ErrorHandler } = {};
-const telemetryHandlers: { [id: number]: types.TelemetryHandler } = {};
+const onActionStartHandlers: { [id: number]: OnActionStartHandler } = {};
+const errorHandlers: { [id: number]: ErrorHandler } = {};
+const telemetryHandlers: { [id: number]: TelemetryHandler } = {};
 
 /**
  * Register a handler to run right after an `IActionContext` is created and before the action starts
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.
  */
-export function registerOnActionStartHandler(handler: types.OnActionStartHandler): Disposable {
+export function registerOnActionStartHandler(handler: OnActionStartHandler): Disposable {
     return registerHandler(handler, onActionStartHandlers);
 }
 
@@ -104,7 +105,7 @@ export function registerOnActionStartHandler(handler: types.OnActionStartHandler
  * Register a handler to run after a callback errors out, but before the default error handling.
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.
  */
-export function registerErrorHandler(handler: types.ErrorHandler): Disposable {
+export function registerErrorHandler(handler: ErrorHandler): Disposable {
     return registerHandler(handler, errorHandlers);
 }
 
@@ -112,7 +113,7 @@ export function registerErrorHandler(handler: types.ErrorHandler): Disposable {
  * Register a handler to run after a callback finishes, but before the default telemetry handling.
  * NOTE: If more than one handler is registered, they are run in an arbitrary order.
  */
-export function registerTelemetryHandler(handler: types.TelemetryHandler): Disposable {
+export function registerTelemetryHandler(handler: TelemetryHandler): Disposable {
     return registerHandler(handler, telemetryHandlers);
 }
 
@@ -128,9 +129,9 @@ function registerHandler<T>(handler: T, handlers: { [id: string]: T }): Disposab
     };
 }
 
-function handleError(context: types.IActionContext, callbackId: string, error: unknown): void {
+function handleError(context: IActionContext, callbackId: string, error: unknown): void {
     let rethrow: boolean = false;
-    const errorContext: types.IErrorHandlerContext = Object.assign(context, { error, callbackId });
+    const errorContext: IErrorHandlerContext = Object.assign(context, { error, callbackId });
     try {
         for (const handler of Object.values(errorHandlers)) {
             try {
@@ -141,7 +142,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         }
 
         // The original error data
-        const unMaskedErrorData: types.IParsedError = parseError(errorContext.error);
+        const unMaskedErrorData: IParsedError = parseError(errorContext.error);
 
         // A copy of the error data after masking private user information as much as possible
         const maskedErrorMessage = maskUserInfo(unMaskedErrorData.message, context.valuesToMask);
@@ -208,7 +209,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
             }
 
             // don't wait
-            void window.showErrorMessage(notificationMessage, ...items).then(async (result: MessageItem | types.AzExtErrorButton | undefined) => {
+            void window.showErrorMessage(notificationMessage, ...items).then(async (result: MessageItem | AzExtErrorButton | undefined) => {
                 if (result === DialogResponses.reportAnIssue) {
                     await reportAnIssue(issue);
                 } else if (result && 'callback' in result) {
@@ -231,8 +232,8 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
     }
 }
 
-function handleTelemetry(context: types.IActionContext, callbackId: string, start: number): void {
-    const handlerContext: types.IHandlerContext = Object.assign(context, { callbackId });
+function handleTelemetry(context: IActionContext, callbackId: string, start: number): void {
+    const handlerContext: IHandlerContext = Object.assign(context, { callbackId });
     try {
         for (const handler of Object.values(telemetryHandlers)) {
             try {
@@ -268,11 +269,11 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
     }
 }
 
-function shouldSendTelemtry(context: types.IActionContext): boolean {
+function shouldSendTelemtry(context: IActionContext): boolean {
     return !context.telemetry.suppressAll && !(context.telemetry.suppressIfSuccessful && context.telemetry.properties.result === 'Succeeded');
 }
 
-function sendHandlerFailedEvent(context: types.IHandlerContext, handlerName: string) {
+function sendHandlerFailedEvent(context: IHandlerContext, handlerName: string) {
     // Errors in our handler logic should not be shown to the user
     try {
         if (shouldSendTelemtry(context)) {
@@ -284,6 +285,6 @@ function sendHandlerFailedEvent(context: types.IHandlerContext, handlerName: str
     }
 }
 
-function getTelemetryEventName(context: types.IHandlerContext): string {
+function getTelemetryEventName(context: IHandlerContext): string {
     return context.telemetry.eventVersion ? `${context.callbackId}V${context.telemetry.eventVersion}` : context.callbackId;
 }

@@ -5,7 +5,7 @@
 
 import * as os from 'os';
 import * as vscode from 'vscode';
-import * as types from '../index';
+import type { IParsedError } from './types/extension';
 import { getPackageInfo } from "./getPackageInfo";
 import { openUrl } from './utils/openUrl';
 
@@ -16,7 +16,7 @@ export const maxUrlLength: number = 2000;
 
 export interface IReportableIssue {
     callbackId: string;
-    error: types.IParsedError;
+    error: IParsedError;
     issueProperties: { [key: string]: string | undefined };
     time: number;
 }

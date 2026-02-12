@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { ProviderResult, TreeItem } from "vscode";
-import * as types from '../../../index';
+import type { ActivityChildItemBase, ActivityChildItemOptions } from '../../types/activity';
 import { crypto } from '../../node/crypto';
 
 export enum ActivityChildType {
@@ -16,7 +16,7 @@ export enum ActivityChildType {
     Command = 'command',
 }
 
-export class ActivityChildItem implements types.ActivityChildItemBase {
+export class ActivityChildItem implements ActivityChildItemBase {
     readonly id: string;
     label: string;
     contextValue: string;
@@ -24,7 +24,7 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
     description?: string;
     stepId?: string;
 
-    constructor(readonly options: types.ActivityChildItemOptions) {
+    constructor(readonly options: ActivityChildItemOptions) {
         this.id = options.id ?? crypto.randomUUID();
         this.label = options.label;
         this.activityType = options.activityType;
@@ -50,5 +50,5 @@ export class ActivityChildItem implements types.ActivityChildItemBase {
         };
     }
 
-    getChildren?(): ProviderResult<types.ActivityChildItemBase[]>;
+    getChildren?(): ProviderResult<ActivityChildItemBase[]>;
 }

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
+import type { IGenericTreeItemOptions } from '../types/treeItem';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
 /**
  * A convenience class used for very basic tree items
  */
-export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeItem {
+export class GenericTreeItem extends AzExtTreeItem {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly _isGenericTreeItem = true;
     public label: string;
@@ -18,7 +18,7 @@ export class GenericTreeItem extends AzExtTreeItem implements types.GenericTreeI
 
     private _includeInTreeItemPicker: boolean;
 
-    constructor(parent: IAzExtParentTreeItemInternal | undefined, options: types.IGenericTreeItemOptions) {
+    constructor(parent: IAzExtParentTreeItemInternal | undefined, options: IGenericTreeItemOptions) {
         super(parent);
         this.label = options.label;
         this.contextValue = options.contextValue;

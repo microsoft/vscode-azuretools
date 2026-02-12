@@ -6,7 +6,8 @@
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import * as vscode from 'vscode';
-import * as types from '../index';
+import type { IActionContext } from './types/actionContext';
+import type { IAzureQuickPickItem } from './types/userInput';
 import { registerCommand } from "./registerCommand";
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { nonNullValue } from './utils/nonNull';
@@ -35,7 +36,7 @@ export function cacheIssueForCommand(issue: IReportableIssue): void {
  */
 export function registerReportIssueCommand(commandId: string): void {
     cachedIssues = [];
-    registerCommand(commandId, async (context: types.IActionContext) => {
+    registerCommand(commandId, async (context: IActionContext) => {
         context.errorHandling.suppressDisplay = true;
         context.errorHandling.suppressReportIssue = true;
 
@@ -43,7 +44,7 @@ export function registerReportIssueCommand(commandId: string): void {
         if (cachedIssues.length === 0) {
             await reportAnIssue(undefined);
         } else {
-            const picks: types.IAzureQuickPickItem<IReportableIssue | undefined>[] = cachedIssues.reverse().map(i => {
+            const picks: IAzureQuickPickItem<IReportableIssue | undefined>[] = cachedIssues.reverse().map(i => {
                 return {
                     label: i.error.message,
                     description: i.error.errorType,

@@ -5,7 +5,7 @@
 
 import assert from 'assert';
 import * as os from 'os';
-import { IParsedError } from '../index';
+import { IParsedError } from '../src';
 import { UserCancelledError } from '../src/errors';
 import { parseError } from '../src/parseError';
 

@@ -4,11 +4,11 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import * as types from '../../../index';
+import type { TreeElementBase, TreeElementStateModel, TreeElementWithId } from '../../types/treeV2';
 import { createGenericElement } from './createGenericElement';
 
-export class TreeElementStateManager<TElement extends types.TreeElementWithId = types.TreeElementWithId> implements vscode.Disposable {
-    private readonly store: Record<string, types.TreeElementStateModel | undefined> = {};
+export class TreeElementStateManager<TElement extends TreeElementWithId = TreeElementWithId> implements vscode.Disposable {
+    private readonly store: Record<string, TreeElementStateModel | undefined> = {};
     private readonly disposables: vscode.Disposable[] = [];
     private readonly onDidUpdateStateEmitter = new vscode.EventEmitter<string>();
     private readonly onDidUpdateStateEvent: vscode.Event<string> = this.onDidUpdateStateEmitter.event;
@@ -83,7 +83,7 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
         });
     }
 
-    private async runWithTemporaryChild<T = void>(id: string, child: types.TreeElementBase, callback: () => Promise<T>): Promise<T> {
+    private async runWithTemporaryChild<T = void>(id: string, child: TreeElementBase, callback: () => Promise<T>): Promise<T> {
         this.update(id, {
             ...this.getState(id),
             temporaryChildren: [child, ...(this.getState(id).temporaryChildren ?? [])],
@@ -101,7 +101,7 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
         return result;
     }
 
-    private applyStateToTreeItem(state: Partial<types.TreeElementStateModel>, treeItem: vscode.TreeItem): vscode.TreeItem {
+    private applyStateToTreeItem(state: Partial<TreeElementStateModel>, treeItem: vscode.TreeItem): vscode.TreeItem {
 
         if (state.temporaryDescription) {
             treeItem.description = state.temporaryDescription;
@@ -127,14 +127,14 @@ export class TreeElementStateManager<TElement extends types.TreeElementWithId = 
         return this.applyStateToTreeItem(state, { ...treeItem });
     }
 
-    private getState(id: string): Partial<types.TreeElementStateModel> {
+    private getState(id: string): Partial<TreeElementStateModel> {
         return this.store[id] ?? {};
     }
 
     /**
      * @param suppressRefresh If true, an onDidUpdateStateEvent will not be fired.
      */
-    private update(id: string, state: Partial<types.TreeElementStateModel>, suppressRefresh?: boolean): void {
+    private update(id: string, state: Partial<TreeElementStateModel>, suppressRefresh?: boolean): void {
         this.store[id] = { ...this.getState(id), ...state };
         if (!suppressRefresh) {
             this.onDidUpdateStateEmitter.fire(id);

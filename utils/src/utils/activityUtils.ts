@@ -3,15 +3,15 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
-import { ActivityChildType } from '../index';
+import type { ExecuteActivityContext, ActivityInfoChild } from '../types/activity';
+import { ActivityChildType } from '../tree/v2/ActivityChildItem';
 
 /**
  * Adds a new activity child after the last info child in the `activityChildren` array.
  * If no info child already exists, the new child is prepended to the front of the array.
  * (This utility function is useful for keeping the info children grouped at the front of the list)
  */
-export function prependOrInsertAfterLastInfoChild(context: Partial<types.ExecuteActivityContext>, infoChild: types.ActivityInfoChild): void {
+export function prependOrInsertAfterLastInfoChild(context: Partial<ExecuteActivityContext>, infoChild: ActivityInfoChild): void {
     if (!context.activityChildren) {
         return;
     }

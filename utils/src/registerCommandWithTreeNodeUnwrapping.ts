@@ -4,7 +4,8 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { unwrapArgs } from '@microsoft/vscode-azureresources-api';
-import type { IActionContext, TreeNodeCommandCallback } from '../index';
+import type { IActionContext } from './types/actionContext';
+import type { TreeNodeCommandCallback } from './types/actionContext';
 import { registerCommand } from './registerCommand';
 
 /**

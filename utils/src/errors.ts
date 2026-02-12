@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ITreeItemPickerContext } from "..";
+import type { ITreeItemPickerContext } from "./types/treeItem";
 
 export class UserCancelledError extends Error {
     // eslint-disable-next-line @typescript-eslint/naming-convention

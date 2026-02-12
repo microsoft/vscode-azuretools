@@ -3,14 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
+import type { QuickPickWizardContext, ContextValueFilterQuickPickOptions } from '../../types/pickExperience';
+import type { IWizardOptions } from '../../types/wizard';
 import { ContextValueQuickPickStep } from './ContextValueQuickPickStep';
 import { getLastNode } from '../getLastNode';
 
-export class RecursiveQuickPickStep<TContext extends types.QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, types.ContextValueFilterQuickPickOptions> {
+export class RecursiveQuickPickStep<TContext extends QuickPickWizardContext> extends ContextValueQuickPickStep<TContext, ContextValueFilterQuickPickOptions> {
     hideStepCount: boolean = true;
 
-    public async getSubWizard(wizardContext: TContext): Promise<types.IWizardOptions<TContext> | undefined> {
+    public async getSubWizard(wizardContext: TContext): Promise<IWizardOptions<TContext> | undefined> {
         const lastPickedItem = getLastNode(wizardContext);
 
         if (!lastPickedItem) {

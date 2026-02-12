@@ -4,28 +4,29 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeItemCollapsibleState } from "vscode";
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { TreeItemIconPath } from '../types/treeItem';
 import { AzExtParentTreeItem } from "./AzExtParentTreeItem";
 import { AzExtTreeItem } from "./AzExtTreeItem";
 import { IAzExtParentTreeItemInternal } from "./InternalInterfaces";
 
-interface GenericParentTreeItemOptions {
+export interface GenericParentTreeItemOptions {
     childTypeLabel?: string;
     contextValue: string;
-    iconPath?: types.TreeItemIconPath;
+    iconPath?: TreeItemIconPath;
     id?: string;
     initialCollapsibleState?: TreeItemCollapsibleState;
     label: string;
     suppressMaskLabel?: boolean;
 
     compareChildrenImpl?(item1: AzExtTreeItem, item2: AzExtTreeItem): number;
-    loadMoreChildrenImpl?(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
+    loadMoreChildrenImpl?(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
 }
 
 /**
  * A convenience class used for very basic parent tree items
  */
-export class GenericParentTreeItem extends AzExtParentTreeItem implements types.GenericParentTreeItem {
+export class GenericParentTreeItem extends AzExtParentTreeItem {
     public childTypeLabel?: string;
     public contextValue: string;
     public label: string;
@@ -46,7 +47,7 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
         this.compareChildrenImpl = options.compareChildrenImpl ?? (() => 0);
     }
 
-    public loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         // Save and run off the saved tree item constructor options since we cannot assign the value directly during initialization
         // (Abstract class inheritance requires loadMoreChildrenImpl definition be immediately defined)
         return this.options.loadMoreChildrenImpl?.(clearCache, context) ?? Promise.resolve([]);

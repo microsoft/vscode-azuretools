@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../../index';
+import type { IActionContext } from '../../../types/actionContext';
+import type { QuickPickWizardContext, CompatibilityPickResourceExperienceOptions } from '../../../types/pickExperience';
+import type { ISubscriptionContext } from '../../../types/subscription';
+import type { ITreeItemPickerContext } from '../../../types/treeItem';
 import * as vscode from 'vscode';
 import { ResourceGroupsItem } from '../../quickPickAzureResource/tempTypes';
 import { azureResourceExperience, InternalAzureResourceExperienceOptions } from '../azureResourceExperience';
@@ -23,7 +26,7 @@ export namespace PickTreeItemWithCompatibility {
     /**
      * Provides compatibility for the legacy `pickAppResource` Resource Groups API
      */
-    export async function resource<TPick extends types.AzExtTreeItem>(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: types.CompatibilityPickResourceExperienceOptions): Promise<TPick> {
+    export async function resource<TPick extends AzExtTreeItem>(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options: CompatibilityPickResourceExperienceOptions): Promise<TPick> {
         const { resourceTypes, childItemFilter } = options;
         (context as InternalAzureResourceExperienceOptions).v1Compatibility = true;
         return azureResourceExperience(context, tdp, resourceTypes ? Array.isArray(resourceTypes) ? resourceTypes : [resourceTypes] : undefined, childItemFilter);
@@ -32,7 +35,7 @@ export namespace PickTreeItemWithCompatibility {
     /**
      * Returns `ISubscriptionContext` instead of `ApplicationSubscription` for compatibility.
      */
-    export async function subscription(context: types.IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<types.ISubscriptionContext> {
+    export async function subscription(context: IActionContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>): Promise<ISubscriptionContext> {
         const applicationSubscription = await subscriptionExperience(context, tdp);
 
         if (isAzExtTreeItem(applicationSubscription)) {
@@ -45,8 +48,8 @@ export namespace PickTreeItemWithCompatibility {
     /**
      * Helper to provide compatibility for `AzExtParentTreeItem.showTreeItemPicker`.
      */
-    export async function showTreeItemPicker<TPick extends types.AzExtTreeItem>(context: types.ITreeItemPickerContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<TPick> {
-        const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext & types.ITreeItemPickerContext>[] = [
+    export async function showTreeItemPicker<TPick extends AzExtTreeItem>(context: ITreeItemPickerContext, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, expectedContextValues: string | RegExp | (string | RegExp)[], startingTreeItem?: AzExtTreeItem): Promise<TPick> {
+        const promptSteps: AzureWizardPromptStep<QuickPickWizardContext & ITreeItemPickerContext>[] = [
             new CompatibilityRecursiveQuickPickStep(tdp, {
                 contextValueFilter: {
                     include: expectedContextValues,
@@ -55,7 +58,7 @@ export namespace PickTreeItemWithCompatibility {
             }),
         ];
 
-        const wizardContext: types.QuickPickWizardContext & types.ITreeItemPickerContext = {
+        const wizardContext: QuickPickWizardContext & ITreeItemPickerContext = {
             ...context,
             pickedNodes: startingTreeItem ? [startingTreeItem] : [],
         };

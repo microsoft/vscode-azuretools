@@ -4,21 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import type { QuickPickWizardContext, GenericQuickPickOptions } from '../types/pickExperience';
+import type { IAzureQuickPickItem, IAzureQuickPickOptions } from '../types/userInput';
 import { AzureWizardPromptStep } from '../wizard/AzureWizardPromptStep';
 import { PickFilter } from './PickFilter';
 import { getLastNode } from './getLastNode';
 
-export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
+export abstract class GenericQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends GenericQuickPickOptions> extends AzureWizardPromptStep<TContext> {
     public readonly supportsDuplicateSteps = true;
 
-    protected readonly promptOptions: types.IAzureQuickPickOptions;
+    protected readonly promptOptions: IAzureQuickPickOptions;
     protected readonly abstract pickFilter: PickFilter<vscode.TreeItem>;
 
     public constructor(
         protected readonly treeDataProvider: vscode.TreeDataProvider<unknown>,
         protected readonly pickOptions: TOptions,
-        promptOptions?: types.IAzureQuickPickOptions
+        promptOptions?: IAzureQuickPickOptions
     ) {
         super();
         this.promptOptions = {
@@ -57,7 +58,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         return selected.data;
     }
 
-    protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+    protected async getPicks(wizardContext: TContext): Promise<IAzureQuickPickItem<unknown>[]> {
         const lastPickedItem: unknown | undefined = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
@@ -79,7 +80,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
             promptChoices = finalChoices;
         }
 
-        const picks: types.IAzureQuickPickItem<unknown>[] = [];
+        const picks: IAzureQuickPickItem<unknown>[] = [];
         for (const choice of promptChoices) {
             picks.push(await this.getQuickPickItem(...choice));
         }
@@ -87,7 +88,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         return picks;
     }
 
-    protected async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
+    protected async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<IAzureQuickPickItem<unknown>> {
         return {
             label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
             description: item.description as string,

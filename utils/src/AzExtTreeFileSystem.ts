@@ -5,7 +5,8 @@
 
 import { ParsedUrlQuery, parse as parseQuery, stringify as stringifyQuery } from "querystring";
 import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, l10n, window } from "vscode";
-import * as types from '../index';
+import type { IActionContext } from './types/actionContext';
+import type { AzExtTreeFileSystemItem, AzExtItemChangeEvent, AzExtItemQuery, AzExtItemUriParts } from './types/treeFileSystem';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { nonNullProp } from "./utils/nonNull";
 
@@ -14,7 +15,7 @@ const unsupportedError: Error = new Error(l10n.t('This operation is not supporte
 /**
  * A virtual file system based around {@link AzExtTreeFileSystemItem} that only supports viewing/editing single files.
  */
-export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSystemItem> implements FileSystemProvider {
+export abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSystemItem> implements FileSystemProvider {
 
     private readonly itemCache: Map<string, TItem> = new Map<string, TItem>();
 
@@ -28,9 +29,9 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         return this._emitter.event;
     }
 
-    public abstract statImpl(context: types.IActionContext, item: TItem, originalUri: Uri): Promise<FileStat>;
-    public abstract readFileImpl(context: types.IActionContext, item: TItem, originalUri: Uri): Promise<Uint8Array>;
-    public abstract writeFileImpl(context: types.IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
+    public abstract statImpl(context: IActionContext, item: TItem, originalUri: Uri): Promise<FileStat>;
+    public abstract readFileImpl(context: IActionContext, item: TItem, originalUri: Uri): Promise<Uint8Array>;
+    public abstract writeFileImpl(context: IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
     public abstract getFilePath(item: TItem): string;
 
     public async showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
@@ -93,7 +94,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
      * Uses a simple buffer to group events that occur within a few milliseconds of each other
      * Adapted from https://github.com/microsoft/vscode-extension-samples/blob/master/fsprovider-sample/src/fileSystemProvider.ts
      */
-    public fireSoon(...events: types.AzExtItemChangeEvent<TItem>[]): void {
+    public fireSoon(...events: AzExtItemChangeEvent<TItem>[]): void {
         this._bufferedEvents.push(...events.map(e => {
             return {
                 type: e.type,
@@ -114,12 +115,12 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         );
     }
 
-    protected findItem(query: types.AzExtItemQuery): TItem | undefined {
+    protected findItem(query: AzExtItemQuery): TItem | undefined {
         return this.itemCache.get(query.id);
     }
 
     private getUriFromItem(item: TItem): Uri {
-        const data: types.AzExtItemUriParts = {
+        const data: AzExtItemUriParts = {
             filePath: this.getFilePath(item),
             query: {
                 id: item.id
@@ -130,7 +131,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         return Uri.parse(`${this.scheme}:///${filePath}?${query}`);
     }
 
-    protected async lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
+    protected async lookup(context: IActionContext, uri: Uri): Promise<TItem> {
         const item: TItem | undefined = this.findItem(this.getQueryFromUri(uri));
         if (!item) {
             context.telemetry.suppressAll = true;
@@ -142,7 +143,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         }
     }
 
-    private getQueryFromUri(uri: Uri): types.AzExtItemQuery {
+    private getQueryFromUri(uri: Uri): AzExtItemQuery {
         const query: ParsedUrlQuery = parseQuery(uri.query);
         const id: string | string[] = nonNullProp(query, 'id');
         if (typeof id === 'string') {

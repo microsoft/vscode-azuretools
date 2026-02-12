@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { TelemetryTrustedValue } from "vscode";
-import { IActionContext } from "../..";
+import type { IActionContext } from "../types/actionContext";
 
 /**
  * Verifies that the given resourceId is a valid Azure resource ID and sets telemetry properties for the resourceId as a TrustedTelemetryValue property.

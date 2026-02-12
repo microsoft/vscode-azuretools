@@ -4,23 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import * as types from '../../../index';
+import type { AzureResourceQuickPickWizardContext, ContextValueFilter, PickExperienceContext } from '../../types/pickExperience';
 import { QuickPickAzureSubscriptionStep } from '../quickPickAzureResource/QuickPickAzureSubscriptionStep';
 import { QuickPickGroupStep } from '../quickPickAzureResource/QuickPickGroupStep';
 import { QuickPickAzureResourceStep } from '../quickPickAzureResource/QuickPickAzureResourceStep';
 import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
-import { AzureResourceQuickPickWizardContext } from '../../../index';
 import { ResourceGroupsItem } from '../quickPickAzureResource/tempTypes';
 import { CompatibilityRecursiveQuickPickStep } from '../contextValue/compatibility/CompatibilityRecursiveQuickPickStep';
 import { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 import { runQuickPickWizard } from '../runQuickPickWizard';
 
-export interface InternalAzureResourceExperienceOptions extends types.PickExperienceContext {
+export interface InternalAzureResourceExperienceOptions extends PickExperienceContext {
     v1Compatibility?: boolean;
 }
 
-export async function azureResourceExperience<TPick>(context: InternalAzureResourceExperienceOptions, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: types.ContextValueFilter): Promise<TPick> {
+export async function azureResourceExperience<TPick>(context: InternalAzureResourceExperienceOptions, tdp: vscode.TreeDataProvider<ResourceGroupsItem>, resourceTypes?: AzExtResourceType | AzExtResourceType[], childItemFilter?: ContextValueFilter): Promise<TPick> {
     const promptSteps: AzureWizardPromptStep<AzureResourceQuickPickWizardContext>[] = [
         new QuickPickAzureSubscriptionStep(tdp),
         new QuickPickGroupStep(tdp, {

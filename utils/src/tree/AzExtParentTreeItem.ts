@@ -5,7 +5,9 @@
 
 import { isNullOrUndefined } from 'util';
 import { commands, l10n, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { IAzureQuickPickItem } from '../types/userInput';
+import type { IAzExtParentTreeItem, ICreateChildImplContext, IInvalidTreeItemOptions, ILoadingTreeContext, ITreeItemPickerContext, TreeItemIconPath } from '../types/treeItem';
 import { NoResourceFoundError, NotImplementedError, UserCancelledError } from '../errors';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
@@ -21,7 +23,7 @@ import { loadMoreLabel } from './treeConstants';
  *
  * NOTE: *Impl methods are not meant to be called directly - just implemented.
  */
-export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types.AzExtParentTreeItem, IAzExtParentTreeItemInternal {
+export abstract class AzExtParentTreeItem extends AzExtTreeItem implements IAzExtParentTreeItem, IAzExtParentTreeItemInternal {
     //#region Properties implemented by base class
     public childTypeLabel?: string;
     public autoSelectInTreeItemPicker?: boolean;
@@ -39,7 +41,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     private _loadMoreChildrenTask: Promise<void> | undefined;
     private _initChildrenTask: Promise<void> | undefined;
 
-    public async getCachedChildren(context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public async getCachedChildren(context: IActionContext): Promise<AzExtTreeItem[]> {
         if (this._clearCache) {
             this._initChildrenTask = this.loadMoreChildren(context);
         }
@@ -57,17 +59,17 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
     }
 
     //#region Methods implemented by base class
-    public abstract loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]>;
+    public abstract loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]>;
     public abstract hasMoreChildrenImpl(): boolean;
-    public createChildImpl?(context: types.ICreateChildImplContext): Promise<AzExtTreeItem>;
-    public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[], context: types.IActionContext): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
+    public createChildImpl?(context: ICreateChildImplContext): Promise<AzExtTreeItem>;
+    public pickTreeItemImpl?(expectedContextValues: (string | RegExp)[], context: IActionContext): AzExtTreeItem | undefined | Promise<AzExtTreeItem | undefined>;
     //#endregion
 
     public clearCache(): void {
         this._clearCache = true;
     }
 
-    public async createChild<T extends types.AzExtTreeItem>(context: types.IActionContext & Partial<types.ICreateChildImplContext>): Promise<T> {
+    public async createChild<T extends AzExtTreeItem>(context: IActionContext & Partial<ICreateChildImplContext>): Promise<T> {
         if (this.createChildImpl) {
             context.telemetry.properties.advancedCreation = String(!!context.advancedCreation);
 
@@ -105,7 +107,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return item1.label.localeCompare(item2.label);
     }
 
-    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext): Promise<AzExtTreeItem | AzExtTreeItem[]> {
+    public async pickChildTreeItem(expectedContextValues: (string | RegExp)[], context: ITreeItemPickerContext): Promise<AzExtTreeItem | AzExtTreeItem[]> {
         if (this.pickTreeItemImpl) {
             const children: AzExtTreeItem[] = await this.getCachedChildren(context);
             const pickedItem: AzExtTreeItem | undefined = await this.pickTreeItemImpl(expectedContextValues, context);
@@ -131,7 +133,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
             if (error instanceof AutoSelectError) {
                 getTreeItem = error.data;
             } else if (error instanceof CanPickManyError) {
-                const result: types.IAzureQuickPickItem<GetTreeItemFunction>[] = (await context.ui.showQuickPick(error.picks, { placeHolder, stepName, canPickMany: true }));
+                const result: IAzureQuickPickItem<GetTreeItemFunction>[] = (await context.ui.showQuickPick(error.picks, { placeHolder, stepName, canPickMany: true }));
                 return await Promise.all(result.map(async pick => await pick.data()));
             } else {
                 throw error;
@@ -164,7 +166,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
     }
 
-    public async loadMoreChildren(context: types.IActionContext): Promise<void> {
+    public async loadMoreChildren(context: IActionContext): Promise<void> {
         if (this._loadMoreChildrenTask) {
             await this._loadMoreChildrenTask;
         } else {
@@ -177,7 +179,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
     }
 
-    public async loadAllChildren(context: types.ILoadingTreeContext): Promise<AzExtTreeItem[]> {
+    public async loadAllChildren(context: ILoadingTreeContext): Promise<AzExtTreeItem[]> {
         context.loadingMessage ||= l10n.t('Loading "{0}"...', this.label);
         await runWithLoadingNotification(context, async (cancellationToken) => {
             do {
@@ -250,7 +252,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         return treeItems;
     }
 
-    private async loadMoreChildrenInternal(context: types.IActionContext): Promise<void> {
+    private async loadMoreChildrenInternal(context: IActionContext): Promise<void> {
         try {
             if (this._clearCache) {
                 // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
@@ -276,12 +278,12 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
         }
     }
 
-    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: types.ITreeItemPickerContext & Partial<types.ICreateChildImplContext>): Promise<types.IAzureQuickPickItem<GetTreeItemFunction>[]> {
+    private async getQuickPicks(expectedContextValues: (string | RegExp)[], context: ITreeItemPickerContext & Partial<ICreateChildImplContext>): Promise<IAzureQuickPickItem<GetTreeItemFunction>[]> {
         let children: AzExtTreeItem[] = await this.getCachedChildren(context);
         children = children.filter((ti: AzExtTreeItem) => ti.includeInTreePicker(expectedContextValues));
 
         let autoSelectInTreeItemPicker: boolean | undefined = this.autoSelectInTreeItemPicker;
-        const picks: types.IAzureQuickPickItem<GetTreeItemFunction>[] = children.map((ti: AzExtTreeItem) => {
+        const picks: IAzureQuickPickItem<GetTreeItemFunction>[] = children.map((ti: AzExtTreeItem) => {
             if (ti instanceof GenericTreeItem) {
                 // Don't auto-select a command tree item
                 autoSelectInTreeItemPicker = false;
@@ -353,14 +355,14 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
 
 type GetTreeItemFunction = () => Promise<AzExtTreeItem>;
 
-export class InvalidTreeItem extends AzExtParentTreeItem implements types.InvalidTreeItem {
+export class InvalidTreeItem extends AzExtParentTreeItem {
     public readonly contextValue: string;
     public readonly label: string;
     public readonly data?: unknown;
 
     private _error: unknown;
 
-    constructor(parent: AzExtParentTreeItem, error: unknown, options: types.IInvalidTreeItemOptions) {
+    constructor(parent: AzExtParentTreeItem, error: unknown, options: IInvalidTreeItemOptions) {
         super(parent);
         this.label = options.label;
         this._error = error;
@@ -374,7 +376,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         return randomUtils.getRandomHexString(16);
     }
 
-    public get iconPath(): types.TreeItemIconPath {
+    public get iconPath(): TreeItemIconPath {
         return new ThemeIcon('warning');
     }
 
@@ -401,8 +403,8 @@ class AutoSelectError extends Error {
 }
 
 class CanPickManyError extends Error {
-    public readonly picks: types.IAzureQuickPickItem<GetTreeItemFunction>[];
-    constructor(picks: types.IAzureQuickPickItem<GetTreeItemFunction>[]) {
+    public readonly picks: IAzureQuickPickItem<GetTreeItemFunction>[];
+    constructor(picks: IAzureQuickPickItem<GetTreeItemFunction>[]) {
         super();
         this.picks = picks;
     }

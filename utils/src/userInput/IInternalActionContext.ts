@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CancellationToken } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { IAzureUserInput } from '../types/userInput';
 
-export interface IInternalActionContext extends types.IActionContext {
-    ui: types.IAzureUserInput & { wizard?: IInternalAzureWizard, isPrompting?: boolean, isTesting?: boolean };
+export interface IInternalActionContext extends IActionContext {
+    ui: IAzureUserInput & { wizard?: IInternalAzureWizard, isPrompting?: boolean, isTesting?: boolean };
 }
 
 export interface IInternalAzureWizard {

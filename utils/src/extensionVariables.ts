@@ -5,24 +5,25 @@
 
 import assert from 'assert';
 import { commands, ExtensionContext, l10n } from "vscode";
-import * as types from "../index";
+import type { UIExtensionVariables, IAzExtOutputChannel } from "./types/extension";
+import type { IErrorHandlerContext } from "./types/actionContext";
 import { registerErrorHandler } from './callWithTelemetryAndErrorHandling';
 import { createTelemetryReporter, IInternalTelemetryReporter } from './createTelemetryReporter';
 import { parseError } from './parseError';
 
-interface IInternalExtensionVariables extends types.UIExtensionVariables {
+interface IInternalExtensionVariables extends UIExtensionVariables {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     _internalReporter: IInternalTelemetryReporter;
 }
 
-class UninitializedExtensionVariables implements types.UIExtensionVariables, IInternalExtensionVariables {
+class UninitializedExtensionVariables implements UIExtensionVariables, IInternalExtensionVariables {
     private _error: Error = new Error(l10n.t('"registerUIExtensionVariables" must be called before using the @microsoft/vscode-azext-utils package.'));
 
     public get context(): ExtensionContext {
         throw this._error;
     }
 
-    public get outputChannel(): types.IAzExtOutputChannel {
+    public get outputChannel(): IAzExtOutputChannel {
         throw this._error;
     }
 
@@ -40,7 +41,7 @@ export let ext: IInternalExtensionVariables = new UninitializedExtensionVariable
 /**
  * Call this to register common variables used throughout the UI package.
  */
-export function registerUIExtensionVariables(extVars: types.UIExtensionVariables): void {
+export function registerUIExtensionVariables(extVars: UIExtensionVariables): void {
     if (ext === extVars) {
         // already registered
         return;
@@ -59,7 +60,7 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
  * Long-standing issue that is pretty common for all Azure calls, but can be fixed with a simple reload of VS Code
  * https://github.com/microsoft/vscode-azure-account/issues/53
  */
-async function handleEntryNotFound(context: types.IErrorHandlerContext): Promise<void> {
+async function handleEntryNotFound(context: IErrorHandlerContext): Promise<void> {
     if (parseError(context.error).message === 'Entry not found in cache.') {
         context.error = new Error(l10n.t('Your VS Code window must be reloaded to perform this action.'));
         context.errorHandling.suppressReportIssue = true;

@@ -6,7 +6,8 @@
 import { apiUtils, AzureExtensionApi, GetApiOptions } from '@microsoft/vscode-azureresources-api';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import { AzureExtensionApiFactory, IActionContext } from '../index';
+import type { IActionContext } from './types/actionContext';
+import type { AzureExtensionApiFactory } from './types/extension';
 import { callWithTelemetryAndErrorHandlingSync } from './callWithTelemetryAndErrorHandling';
 import { getPackageInfo } from './getPackageInfo';
 

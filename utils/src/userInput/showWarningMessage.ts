@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { l10n, MessageItem, MessageOptions, window } from 'vscode';
-import * as types from '../../index';
+import type { IAzureMessageOptions } from '../types/userInput';
 import { DialogResponses } from '../DialogResponses';
 import { GoBackError, UserCancelledError } from '../errors';
 import { openUrl } from '../utils/openUrl';
@@ -14,7 +14,7 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, options: MessageOptions, ...items: T[]): Promise<T>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, ...args: any[]): Promise<T> {
-    const learnMoreLink: string | undefined = args[0] && (<types.IAzureMessageOptions>args[0]).learnMoreLink;
+    const learnMoreLink: string | undefined = args[0] && (<IAzureMessageOptions>args[0]).learnMoreLink;
     if (learnMoreLink) {
         args.push(DialogResponses.learnMore);
     }

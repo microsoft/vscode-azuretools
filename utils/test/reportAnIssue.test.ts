@@ -5,7 +5,7 @@
 
 import assert from 'assert';
 import { env } from 'vscode';
-import { IParsedError } from '..';
+import { IParsedError } from '../src';
 import { getReportAnIssueLink, maxUrlLength } from '../src/reportAnIssue';
 
 suite('getReportAnIssueLink', () => {

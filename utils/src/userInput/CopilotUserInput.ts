@@ -5,7 +5,7 @@
 
 import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
-import * as types from '../../index';
+import type { AzExtWorkspaceFolderPickOptions, IAzureQuickPickItem, IAzureUserInput, PromptResult } from '../types/userInput';
 import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
 import { InvalidCopilotResponseError } from '../errors';
 
@@ -13,15 +13,15 @@ import { InvalidCopilotResponseError } from '../errors';
  * Wrapper class of several `vscode.window` methods that handle user input.
  * This class is meant to only be used for copilot input scenerios
  */
-export class CopilotUserInput implements types.IAzureUserInput {
+export class CopilotUserInput implements IAzureUserInput {
     private readonly _vscode: typeof vscodeTypes;
-    private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<types.PromptResult>;
+    private readonly _onDidFinishPromptEmitter: vscodeTypes.EventEmitter<PromptResult>;
     private readonly _relevantContext: string | undefined;
     public getLoadingView: undefined | (() => vscodeTypes.WebviewPanel | undefined);
 
     constructor(vscode: typeof vscodeTypes, relevantContext?: string, getLoadingView?: () => vscodeTypes.WebviewPanel | undefined) {
         this._vscode = vscode;
-        this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
+        this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<PromptResult>();
         this._relevantContext = relevantContext;
         this.getLoadingView = getLoadingView;
     }
@@ -49,7 +49,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         throw new InvalidCopilotResponseError();
     }
 
-    public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
+    public async showWorkspaceFolderPick(_options: AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
         const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
         const response = await doCopilotInteraction(primaryPrompt);
         const pick = (workspace.workspaceFolders ?? []).find(folder => {
@@ -89,11 +89,11 @@ export class CopilotUserInput implements types.IAzureUserInput {
         throw new InvalidCopilotResponseError();
     }
 
-    public get onDidFinishPrompt(): vscodeTypes.Event<types.PromptResult> {
+    public get onDidFinishPrompt(): vscodeTypes.Event<PromptResult> {
         return this._onDidFinishPromptEmitter.event;
     }
 
-    public async showQuickPick<T extends types.IAzureQuickPickItem<unknown>>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
+    public async showQuickPick<T extends IAzureQuickPickItem<unknown>>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
         let primaryPrompt: string;
         const resolvedItems: T[] = await Promise.resolve(items);
         const jsonItems: string[] = resolvedItems.map(item => JSON.stringify(item));

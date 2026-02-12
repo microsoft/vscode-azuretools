@@ -4,19 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Progress } from 'vscode';
-import * as types from '../../index';
+import type { IActionContext } from '../types/actionContext';
+import type { ExecuteActivityContext, ExecuteActivityOutput } from '../types/activity';
+import type { AzureWizardExecuteStepOptions } from '../types/wizard';
 
-export abstract class AzureWizardExecuteStep<T extends types.IActionContext & Partial<types.ExecuteActivityContext>> implements types.AzureWizardExecuteStep<T> {
+export abstract class AzureWizardExecuteStep<T extends IActionContext & Partial<ExecuteActivityContext>> {
     public id?: string;
-    public options: types.AzureWizardExecuteStepOptions = {};
+    public options: AzureWizardExecuteStepOptions = {};
 
     public abstract priority: number;
     public configureBeforeExecute?(wizardContext: T): void | Promise<void>;
     public abstract execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void>;
     public abstract shouldExecute(wizardContext: T): boolean;
-    public addExecuteSteps?(wizardContext: T): types.AzureWizardExecuteStep<T>[] | Promise<types.AzureWizardExecuteStep<T>[]>;
+    public addExecuteSteps?(wizardContext: T): AzureWizardExecuteStep<T>[] | Promise<AzureWizardExecuteStep<T>[]>;
 
-    public createSuccessOutput?(context: T): types.ExecuteActivityOutput;
-    public createFailOutput?(context: T): types.ExecuteActivityOutput;
-    public createProgressOutput?(context: T): types.ExecuteActivityOutput;
+    public createSuccessOutput?(context: T): ExecuteActivityOutput;
+    public createFailOutput?(context: T): ExecuteActivityOutput;
+    public createProgressOutput?(context: T): ExecuteActivityOutput;
 }

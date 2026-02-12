@@ -5,7 +5,7 @@
 
 import * as assert from "assert";
 import { Event, MessageItem, QuickPickItem, Uri, WorkspaceFolder } from "vscode";
-import { AgentInputBoxOptions, AgentQuickPickItem, AgentQuickPickOptions, AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, IAzureAgentInput, IAzureMessageOptions, IAzureQuickPickOptions, IAzureUserInput, PromptResult } from "..";
+import { AgentInputBoxOptions, AgentQuickPickItem, AgentQuickPickOptions, AzExtInputBoxOptions, AzExtOpenDialogOptions, AzExtWorkspaceFolderPickOptions, IAzureAgentInput, IAzureMessageOptions, IAzureQuickPickOptions, IAzureUserInput, PromptResult } from "../src";
 
 class MockAzureUserInput implements IAzureUserInput {
     onDidFinishPrompt: Event<PromptResult>;

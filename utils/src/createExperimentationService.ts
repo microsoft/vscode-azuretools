@@ -5,7 +5,8 @@
 
 import * as vscode from 'vscode';
 import * as tas from 'vscode-tas-client';
-import { IActionContext, IExperimentationServiceAdapter } from '../index';
+import type { IActionContext } from './types/actionContext';
+import type { IExperimentationServiceAdapter } from './types/extension';
 import { IInternalTelemetryReporter } from './createTelemetryReporter';
 import { ext } from './extensionVariables';
 import { getPackageInfo } from './getPackageInfo';

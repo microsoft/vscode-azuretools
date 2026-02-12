@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as types from '../../index';
+import type { UIExtensionVariables } from '../types/extension';
 import { createAzExtOutputChannel } from '../AzExtOutputChannel';
 import { registerUIExtensionVariables } from '../extensionVariables';
 
@@ -11,7 +11,7 @@ import { registerUIExtensionVariables } from '../extensionVariables';
  * Performs setup necessary for running tests that use extension variables
  * @returns The registered extension variables
  */
-export function testGlobalSetup(): types.UIExtensionVariables {
+export function testGlobalSetup(): UIExtensionVariables {
     const extVars = {
         context: {
             extension: {

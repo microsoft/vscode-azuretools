@@ -5,7 +5,8 @@
 
 import { CancellationTokenSource, EventEmitter } from "vscode";
 import * as hTypes from '../../hostapi';
-import * as types from '../../index';
+import type { ActivityAttributes, ActivityTask } from '../types/activity';
+import type { IParsedError } from '../types/extension';
 import { crypto } from '../node/crypto';
 import { parseError } from "../parseError";
 import { dateTimeUtils } from "../utils/dateTimeUtils";
@@ -19,7 +20,7 @@ export enum ActivityStatus {
 }
 
 type ActivityBaseOptions = {
-    attributes?: types.ActivityAttributes;
+    attributes?: ActivityAttributes;
     callbackId?: string;
     hasChildren?: boolean;
 };
@@ -44,10 +45,10 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     private _startTime: Date | undefined;
     private _endTime: Date | undefined;
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    protected _attributes: types.ActivityAttributes | undefined;
+    protected _attributes: ActivityAttributes | undefined;
 
-    public error?: types.IParsedError;
-    public readonly task: types.ActivityTask<R>;
+    public error?: IParsedError;
+    public readonly task: ActivityTask<R>;
     public readonly id: string;
     public readonly cancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
     public readonly hasChildren?: boolean;
@@ -56,9 +57,9 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
     abstract initialState(): hTypes.ActivityTreeItemOptions;
     abstract successState(): hTypes.ActivityTreeItemOptions;
     abstract progressState(): hTypes.ActivityTreeItemOptions;
-    abstract errorState(error?: types.IParsedError): hTypes.ActivityTreeItemOptions;
+    abstract errorState(error?: IParsedError): hTypes.ActivityTreeItemOptions;
 
-    public get attributes(): types.ActivityAttributes | undefined {
+    public get attributes(): ActivityAttributes | undefined {
         return this._attributes;
     }
 
@@ -70,7 +71,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
         return this._endTime;
     }
 
-    public constructor(task: types.ActivityTask<R>, options?: ActivityBaseOptions) {
+    public constructor(task: ActivityTask<R>, options?: ActivityBaseOptions) {
         this.id = crypto.randomUUID();
         this.task = task;
         this._attributes = options?.attributes;

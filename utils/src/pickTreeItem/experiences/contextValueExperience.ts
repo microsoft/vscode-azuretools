@@ -3,14 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../../index';
+import type { IActionContext } from '../../types/actionContext';
+import type { ContextValueFilter, QuickPickWizardContext } from '../../types/pickExperience';
 import * as vscode from 'vscode';
 import { RecursiveQuickPickStep } from '../contextValue/RecursiveQuickPickStep';
 import { AzureWizardPromptStep } from '../../wizard/AzureWizardPromptStep';
 import { runQuickPickWizard } from '../runQuickPickWizard';
 
-export async function contextValueExperience<TPick>(context: types.IActionContext, tdp: vscode.TreeDataProvider<unknown>, contextValueFilter: types.ContextValueFilter): Promise<TPick> {
-    const promptSteps: AzureWizardPromptStep<types.QuickPickWizardContext>[] = [
+export async function contextValueExperience<TPick>(context: IActionContext, tdp: vscode.TreeDataProvider<unknown>, contextValueFilter: ContextValueFilter): Promise<TPick> {
+    const promptSteps: AzureWizardPromptStep<QuickPickWizardContext>[] = [
         new RecursiveQuickPickStep(tdp, {
             contextValueFilter: contextValueFilter,
             skipIfOne: false,

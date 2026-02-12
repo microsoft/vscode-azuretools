@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Disposable, InputBox, InputBoxOptions, QuickInputButton, QuickInputButtons, window } from 'vscode';
-import * as types from '../../index';
+import type { AzExtInputBoxOptions } from '../types/userInput';
+import type { IParsedError } from '../types/extension';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
 import { parseError } from '../parseError';
@@ -15,7 +16,7 @@ import { IInternalActionContext } from './IInternalActionContext';
 
 export type InputBoxValidationResult = Awaited<ReturnType<Required<InputBoxOptions>['validateInput']>>;
 
-export async function showInputBox(context: IInternalActionContext, options: types.AzExtInputBoxOptions): Promise<string> {
+export async function showInputBox(context: IInternalActionContext, options: AzExtInputBoxOptions): Promise<string> {
     const disposables: Disposable[] = [];
     try {
         const inputBox: InputBox = createInputBox(context, options);
@@ -50,7 +51,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                             inputBox.validationMessage = asyncValidationResult;
                         }
                     } catch (e) {
-                        const pe: types.IParsedError = parseError(e);
+                        const pe: IParsedError = parseError(e);
                         reject(pe.message);
                     }
 
@@ -76,7 +77,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
     }
 }
 
-function createInputBox(context: IInternalActionContext, options: types.AzExtInputBoxOptions): InputBox {
+function createInputBox(context: IInternalActionContext, options: AzExtInputBoxOptions): InputBox {
     const inputBox: InputBox = window.createInputBox();
 
     const wizard = context.ui.wizard;

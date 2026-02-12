@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { Memento } from 'vscode';
-import * as types from '../index';
+import * as types from '../src';
 import { createQuickPickItems } from '../src/userInput/showQuickPick';
 import { randomUtils } from '../src/utils/randomUtils';
 

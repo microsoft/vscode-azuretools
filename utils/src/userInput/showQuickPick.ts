@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Disposable, l10n, Memento, QuickInputButton, QuickInputButtons, QuickPick, QuickPickItemKind, window } from 'vscode';
-import * as types from '../../index';
+import type { IAzureQuickPickItem, IAzureQuickPickOptions } from '../types/userInput';
 import { AzExtQuickInputButtons } from '../constants';
 import { GoBackError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
@@ -14,7 +14,7 @@ import { randomUtils } from '../utils/randomUtils';
 import { IInternalActionContext } from './IInternalActionContext';
 
 // Picks are shown in given order, except higher priority items and recently used are moved to the top, and items are grouped if requiested
-export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
+export async function showQuickPick<TPick extends IAzureQuickPickItem<unknown>>(context: IInternalActionContext, picks: TPick[] | Promise<TPick[]>, options: IAzureQuickPickOptions): Promise<TPick | TPick[]> {
     const disposables: Disposable[] = [];
     try {
         const quickPick: QuickPick<TPick> = createQuickPick(context, options);
@@ -93,7 +93,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
     }
 }
 
-export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, options: types.IAzureQuickPickOptions): QuickPick<TPick> {
+export function createQuickPick<TPick extends IAzureQuickPickItem<unknown>>(context: IInternalActionContext, options: IAzureQuickPickOptions): QuickPick<TPick> {
     const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
 
     const wizard = context.ui.wizard;
@@ -130,7 +130,7 @@ export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>
     return quickPick;
 }
 
-async function getRecentlyUsedKey(options: types.IAzureQuickPickOptions): Promise<string | undefined> {
+async function getRecentlyUsedKey(options: IAzureQuickPickOptions): Promise<string | undefined> {
     let recentlyUsedKey: string | undefined;
     const unhashedKey: string | undefined = options.id || options.placeHolder;
     if (unhashedKey && !options.canPickMany) {
@@ -141,7 +141,7 @@ async function getRecentlyUsedKey(options: types.IAzureQuickPickOptions): Promis
 }
 
 // Exported for testing. globalState should be undefined except for testing.
-export async function createQuickPickItems<TPick extends types.IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions, groups: QuickPickGroup[], recentlyUsedKey: string | undefined, globalState: Memento | undefined = undefined): Promise<TPick[]> {
+export async function createQuickPickItems<TPick extends IAzureQuickPickItem<unknown>>(picks: TPick[] | Promise<TPick[]>, options: IAzureQuickPickOptions, groups: QuickPickGroup[], recentlyUsedKey: string | undefined, globalState: Memento | undefined = undefined): Promise<TPick[]> {
     picks = await picks;
     globalState ??= ext.context.globalState;
 
@@ -168,7 +168,7 @@ export async function createQuickPickItems<TPick extends types.IAzureQuickPickIt
     }
 }
 
-async function bumpHighPriorityAndRecentlyUsed<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], globalState: Memento, suppressPersistance: boolean, recentlyUsedKey: string | undefined): Promise<T[]> {
+async function bumpHighPriorityAndRecentlyUsed<T extends IAzureQuickPickItem<unknown>>(picks: T[], globalState: Memento, suppressPersistance: boolean, recentlyUsedKey: string | undefined): Promise<T[]> {
     const recentlyUsedValue: string | undefined = (suppressPersistance || !recentlyUsedKey) ? undefined : globalState.get(recentlyUsedKey);
     let recentlyUsedIndex: number = -1;
     if (recentlyUsedValue) {
@@ -193,8 +193,8 @@ async function bumpHighPriorityAndRecentlyUsed<T extends types.IAzureQuickPickIt
     return stableSortPicks(picks, recentlyUsedIndex);
 }
 
-function stableSortPicks<T extends types.IAzureQuickPickItem<unknown>>(picks: T[], recentlyUsedIndex: number): T[] {
-    function getPriorityAsNumber(pick: types.IAzureQuickPickItem<unknown>, index: number): number {
+function stableSortPicks<T extends IAzureQuickPickItem<unknown>>(picks: T[], recentlyUsedIndex: number): T[] {
+    function getPriorityAsNumber(pick: IAzureQuickPickItem<unknown>, index: number): number {
         switch (pick.priority) {
             case 'highest':
                 return recentlyUsedIndex === index ? 0 : 1;
@@ -215,8 +215,8 @@ function stableSortPicks<T extends types.IAzureQuickPickItem<unknown>>(picks: T[
     return sortedPicks;
 }
 
-function getGroupedPicks<TPick extends types.IAzureQuickPickItem<unknown>>(groups: QuickPickGroup[]): TPick[] {
-    let picks: types.IAzureQuickPickItem<unknown>[] = [];
+function getGroupedPicks<TPick extends IAzureQuickPickItem<unknown>>(groups: QuickPickGroup[]): TPick[] {
+    let picks: IAzureQuickPickItem<unknown>[] = [];
     if (shouldDisplayGroups(groups)) {
         for (const group of groups) {
             if (!group.name) {
@@ -243,10 +243,10 @@ function shouldDisplayGroups(groups: QuickPickGroup[]): boolean {
 type QuickPickGroup = {
     name?: string;
     isCollapsed?: boolean;
-    picks: types.IAzureQuickPickItem<unknown>[]
+    picks: IAzureQuickPickItem<unknown>[]
 }
 
-async function getRecentlyUsedValue(item: types.IAzureQuickPickItem<unknown>): Promise<string> {
+async function getRecentlyUsedValue(item: IAzureQuickPickItem<unknown>): Promise<string> {
     return await randomUtils.getPseudononymousStringHash(item.id || item.label);
 }
 

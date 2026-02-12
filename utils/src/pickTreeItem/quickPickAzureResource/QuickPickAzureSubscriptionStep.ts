@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureResourceQuickPickWizardContext, AzureSubscriptionQuickPickOptions, SkipIfOneQuickPickOptions } from '../../../index';
+import type { AzureResourceQuickPickWizardContext, AzureSubscriptionQuickPickOptions, SkipIfOneQuickPickOptions } from '../../types/pickExperience';
 import { GenericQuickPickStepWithCommands } from '../GenericQuickPickStepWithCommands';
 import { PickFilter } from '../PickFilter';
 import { ResourceGroupsItem, SubscriptionItem } from './tempTypes';

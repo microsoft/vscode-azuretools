@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { isArray } from "util";
-import { IAzureNamingRules, IRelatedNameWizardContext } from "../../index";
+import type { IAzureNamingRules, IRelatedNameWizardContext } from "../types/wizard";
 import { AzureWizardPromptStep } from "./AzureWizardPromptStep";
 
 export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends AzureWizardPromptStep<T> {

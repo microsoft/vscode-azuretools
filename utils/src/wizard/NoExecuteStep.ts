@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext } from '../..';
+import type { IActionContext } from '../types/actionContext';
 import { UserCancelledError } from '../errors';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 

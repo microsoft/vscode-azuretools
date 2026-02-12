@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { teardown } from 'mocha';
 import { Disposable } from 'vscode';
-import { ErrorHandler } from '..';
+import { ErrorHandler } from '../src';
 import { callWithTelemetryAndErrorHandling, registerErrorHandler, registerTelemetryHandler } from '../src/callWithTelemetryAndErrorHandling';
 
 suite('registerHandler', () => {

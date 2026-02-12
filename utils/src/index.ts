@@ -3,6 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// Type definitions
+export * from './types/actionContext';
+export * from './types/userInput';
+export * from './types/subscription';
+export * from './types/treeItem';
+export * from './types/treeFileSystem';
+export * from './types/activity';
+export * from './types/wizard';
+export * from './types/pickExperience';
+export * from './types/extension';
+export * from './types/treeV2';
+export * from './types/agentInput';
 export * from './activityLog/activities/ExecuteActivity';
 export * from './activityLog/Activity';
 export { createAzExtLogOutputChannel, createAzExtOutputChannel } from './AzExtOutputChannel';
@@ -29,9 +41,12 @@ export * from './pickTreeItem/experiences/compatibility/PickTreeItemWithCompatib
 export * from './pickTreeItem/experiences/contextValueExperience';
 export * from './pickTreeItem/experiences/subscriptionExperience';
 export * from './pickTreeItem/GenericQuickPickStep';
+export * from './pickTreeItem/GenericQuickPickStepWithCommands';
+export * from './pickTreeItem/PickFilter';
 export * from './pickTreeItem/quickPickAzureResource/QuickPickAzureResourceStep';
 export * from './pickTreeItem/quickPickAzureResource/QuickPickAzureSubscriptionStep';
 export * from './pickTreeItem/quickPickAzureResource/QuickPickGroupStep';
+export * from './pickTreeItem/quickPickAzureResource/tempTypes';
 export * from './pickTreeItem/runQuickPickWizard';
 export * from './registerCommand';
 export * from './registerCommandWithTreeNodeUnwrapping';

@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import * as types from '../../../index';
+import type { GenericElementOptions, TreeElementBase } from '../../types/treeV2';
 
 /**
  * Creates a generic element.
@@ -13,7 +13,7 @@ import * as types from '../../../index';
  *
  * If `options.commandArgs` is not set, then it will be set to the item itself.
  */
-export function createGenericElement(options: types.GenericElementOptions): types.TreeElementBase {
+export function createGenericElement(options: GenericElementOptions): TreeElementBase {
     let commandArgs = options.commandArgs;
     const item = {
         id: options.id,

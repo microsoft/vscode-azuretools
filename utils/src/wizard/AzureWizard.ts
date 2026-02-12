@@ -6,7 +6,9 @@
 import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import { ProgressLocation } from 'vscode';
-import * as types from '../../index';
+import type { ExecuteActivityContext, ExecuteActivityOutput } from '../types/activity';
+import type { IParsedError } from '../types/extension';
+import type { AzureWizardExecuteStepOptions, ConfirmationViewProperty, IWizardOptions } from '../types/wizard';
 import { ExecuteActivity } from '../activityLog/activities/ExecuteActivity';
 import { GoBackError, UserCancelledError } from '../errors';
 import { ext } from '../extensionVariables';
@@ -30,9 +32,9 @@ export enum ActivityOutputType {
 /**
  * A wizard that links several user input steps together
  */
-export class AzureWizard<T extends (IInternalActionContext & Partial<types.ExecuteActivityContext>)> implements types.AzureWizard<T>, IInternalAzureWizard {
+export class AzureWizard<T extends (IInternalActionContext & Partial<ExecuteActivityContext>)> implements IInternalAzureWizard {
     public title: string | undefined;
-    public confirmationViewProperties: types.ConfirmationViewProperty[] = [];
+    public confirmationViewProperties: ConfirmationViewProperty[] = [];
     private readonly _promptSteps: AzureWizardPromptStep<T>[];
     private readonly _executeSteps: AzureWizardExecuteStep<T>[];
     private readonly _finishedPromptSteps: AzureWizardPromptStep<T>[] = [];
@@ -45,7 +47,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
     public currentStepId: string | undefined;
 
-    public constructor(context: T, options: types.IWizardOptions<T>) {
+    public constructor(context: T, options: IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
         this._promptSteps = (<AzureWizardPromptStep<T>[]>options.promptSteps || []).reverse();
         this._promptSteps.forEach(s => { s.effectiveTitle = options.title; });
@@ -145,7 +147,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                             this.confirmationViewProperties.push(step.confirmationViewProperty(this._context));
                         }
                     } catch (err) {
-                        const pe: types.IParsedError = parseError(err);
+                        const pe: IParsedError = parseError(err);
                         if (pe.errorType === 'GoBackError') { // Use `errorType` instead of `instanceof` so that tests can also hit this case
                             const goBackError = err as GoBackError;
                             if (goBackError.numberOfStepsToGoBack) {
@@ -191,7 +193,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     if (this._context.ui.wizard?.cancellationToken.isCancellationRequested) {
                         throw new UserCancelledError();
                     }
-                    const subWizard: types.IWizardOptions<T> | void = await step.getSubWizard(this._context);
+                    const subWizard: IWizardOptions<T> | void = await step.getSubWizard(this._context);
                     if (subWizard) {
                         this.addSubWizard(step, subWizard);
                     }
@@ -237,12 +239,12 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     continue;
                 }
 
-                const progressOutput: types.ExecuteActivityOutput | undefined = step.createProgressOutput?.(this._context);
+                const progressOutput: ExecuteActivityOutput | undefined = step.createProgressOutput?.(this._context);
                 if (progressOutput) {
                     this.displayActivityOutput(progressOutput, step.options);
                 }
 
-                let output: types.ExecuteActivityOutput | undefined;
+                let output: ExecuteActivityOutput | undefined;
                 try {
                     this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
                     await step.execute(this._context, internalProgress);
@@ -269,7 +271,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                     // if execute steps are added during execution, we need to sort them again
                     if (step.addExecuteSteps) {
-                        const newSteps: types.AzureWizardExecuteStep<T>[] = await step.addExecuteSteps(this._context) ?? [];
+                        const newSteps: AzureWizardExecuteStep<T>[] = await step.addExecuteSteps(this._context) ?? [];
                         steps.push(...newSteps);
                         steps = steps.sort((a, b) => b.priority - a.priority);
                     }
@@ -281,7 +283,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         });
     }
 
-    private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
+    private displayActivityOutput(output: ExecuteActivityOutput, options: AzureWizardExecuteStepOptions): void {
         if (output.item &&
             options.suppressActivityOutput !== ActivityOutputType.Item &&
             options.suppressActivityOutput !== ActivityOutputType.All
@@ -304,7 +306,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
             const WizardActivity = this._context.wizardActivity ?? ExecuteActivity;
 
             const activity = new WizardActivity(
-                this._context as types.ExecuteActivityContext,
+                this._context as ExecuteActivityContext,
                 async (activityProgress) => {
                     if (this._context.suppressNotification) {
                         await task(activityProgress, activity.cancellationTokenSource.token);
@@ -368,7 +370,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
         return step;
     }
 
-    private addSubWizard(step: AzureWizardPromptStep<T>, subWizard: types.IWizardOptions<T>): void {
+    private addSubWizard(step: AzureWizardPromptStep<T>, subWizard: IWizardOptions<T>): void {
         step.hasSubWizard = true;
 
         if (subWizard.promptSteps) {
@@ -388,7 +390,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     }
 }
 
-function getEffectiveStepId<T extends IInternalActionContext>(step: types.AzureWizardPromptStep<T> | types.AzureWizardExecuteStep<T>): string {
+function getEffectiveStepId<T extends IInternalActionContext>(step: AzureWizardPromptStep<T> | AzureWizardExecuteStep<T>): string {
     return step.id || step.constructor.name;
 }
 

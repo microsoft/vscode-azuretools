@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import * as types from '../../../index';
-import { AzureResourceQuickPickWizardContext } from '../../../index';
+import type { AzureResourceQuickPickOptions, AzureResourceQuickPickWizardContext } from '../../types/pickExperience';
+import type { IAzureQuickPickItem, IAzureQuickPickOptions } from '../../types/userInput';
 import { setAzureResourceIdTelemetryProperties } from '../../utils/AzureResourceIdTelemetry';
 import { parseContextValue } from '../../utils/contextUtils';
 import { GenericQuickPickStep } from '../GenericQuickPickStep';
 import { PickFilter } from '../PickFilter';
 import { AzureResourceItem, ResourceGroupsItem } from './tempTypes';
 
-export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, types.AzureResourceQuickPickOptions> {
+export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResourceQuickPickWizardContext, AzureResourceQuickPickOptions> {
 
-    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: types.AzureResourceQuickPickOptions, promptOptions?: types.IAzureQuickPickOptions) {
+    public constructor(tdp: vscode.TreeDataProvider<ResourceGroupsItem>, options?: AzureResourceQuickPickOptions, promptOptions?: IAzureQuickPickOptions) {
         super(tdp, options ?? {}, {
             placeHolder: vscode.l10n.t('Select resource'),
             ...promptOptions,
@@ -43,7 +43,7 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
 
     protected readonly pickFilter: PickFilter = new AzureResourcePickFilter(this.pickOptions);
 
-    protected override async getQuickPickItem(element: AzureResourceItem, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
+    protected override async getQuickPickItem(element: AzureResourceItem, item: vscode.TreeItem): Promise<IAzureQuickPickItem<unknown>> {
         return {
             ...await super.getQuickPickItem(element, item),
             description: element.resource.resourceGroup,
@@ -53,7 +53,7 @@ export class QuickPickAzureResourceStep extends GenericQuickPickStep<AzureResour
 
 class AzureResourcePickFilter implements PickFilter {
 
-    constructor(private readonly pickOptions: types.AzureResourceQuickPickOptions) { }
+    constructor(private readonly pickOptions: AzureResourceQuickPickOptions) { }
 
     isFinalPick(node: vscode.TreeItem): boolean {
         // If childItemFilter is defined, this cannot be a direct pick

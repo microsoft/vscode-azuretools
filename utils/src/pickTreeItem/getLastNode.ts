@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as types from '../../index';
+import type { QuickPickWizardContext } from '../types/pickExperience';
 
-export function getLastNode<TNode = unknown>(context: types.QuickPickWizardContext): TNode | undefined {
+export function getLastNode<TNode = unknown>(context: QuickPickWizardContext): TNode | undefined {
     return context.pickedNodes.at(-1) as TNode | undefined;
 }

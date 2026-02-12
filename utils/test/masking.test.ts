@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as types from '../index';
+import * as types from '../src';
 import { addExtensionValueToMask, addValuesToMaskFromAzureId, callWithMaskHandling, maskUserInfo, resetUsernameMask } from '../src/masking';
 import { parseError } from '../src/parseError';
 import { randomUtils } from '../src/utils/randomUtils';

@@ -7,7 +7,7 @@
 
 import * as htmlToText from 'html-to-text';
 import * as vscode from 'vscode';
-import { IParsedError } from '../index';
+import type { IParsedError } from './types/extension';
 import { isUserCancelledError } from './errors';
 import { parseJson } from './utils/parseJson';
 

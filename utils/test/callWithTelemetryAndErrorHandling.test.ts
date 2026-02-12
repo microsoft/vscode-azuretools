@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { IActionContext } from '..';
+import { IActionContext } from '../src';
 import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync } from '../src/callWithTelemetryAndErrorHandling';
 import { assertThrowsAsync } from './assertThrowsAsync';
 

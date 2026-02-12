@@ -3,17 +3,28 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as types from '../../index';
 import { TestUserInput } from './TestUserInput';
 
-export async function createTestActionContext(): Promise<types.TestActionContext> {
+export interface TestActionContext {
+    telemetry: {
+        properties: { [key: string]: string | undefined; };
+        measurements: { [key: string]: number | undefined; };
+    };
+    errorHandling: {
+        issueProperties: {};
+    };
+    valuesToMask: string[];
+    ui: TestUserInput;
+}
+
+export async function createTestActionContext(): Promise<TestActionContext> {
     return { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, valuesToMask: [], ui: await TestUserInput.create() };
 }
 
 /**
  * Similar to `createTestActionContext` but with some extra logging
  */
-export async function runWithTestActionContext(callbackId: string, callback: (context: types.TestActionContext) => Promise<void>): Promise<void> {
+export async function runWithTestActionContext(callbackId: string, callback: (context: TestActionContext) => Promise<void>): Promise<void> {
     const context = await createTestActionContext();
     const start: number = Date.now();
     try {

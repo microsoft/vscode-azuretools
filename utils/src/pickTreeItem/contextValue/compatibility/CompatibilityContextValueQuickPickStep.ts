@@ -5,7 +5,7 @@
 
 import { isWrapper } from "@microsoft/vscode-azureresources-api";
 import { l10n, TreeItem } from "vscode";
-import * as types from "../../../../index";
+import type { QuickPickWizardContext, ContextValueFilterQuickPickOptions } from "../../../types/pickExperience";
 import { AzExtParentTreeItem } from "../../../tree/AzExtParentTreeItem";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
@@ -16,7 +16,7 @@ import { ContextValuePickFilter, ContextValueQuickPickStep } from "../ContextVal
 /**
  * Provides compatability with {@link AzExtParentTreeItem.pickTreeItemImpl}
  */
-export class CompatibilityContextValueQuickPickStep<TContext extends types.QuickPickWizardContext, TOptions extends types.ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TContext, TOptions> {
+export class CompatibilityContextValueQuickPickStep<TContext extends QuickPickWizardContext, TOptions extends ContextValueFilterQuickPickOptions> extends ContextValueQuickPickStep<TContext, TOptions> {
 
     public override async prompt(wizardContext: TContext): Promise<void> {
         this.setCustomPlaceholder(wizardContext);
