@@ -43,7 +43,7 @@
         "@azure/core-rest-pipeline": "^1.22.2",
         "@azure/storage-blob": "^12.31.0",
         "@microsoft/vscode-azext-azureutils": "^4.0.1",
-        "@microsoft/vscode-azext-github": "^2.0.0",
+        "@microsoft/vscode-azext-github": "^2.0.1",
         "@microsoft/vscode-azext-utils": "^4.0.4",
         "dayjs": "^1.11.19",
         "fs-extra": "^11.3.3",
