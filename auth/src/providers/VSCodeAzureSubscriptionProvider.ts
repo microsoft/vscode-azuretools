@@ -55,9 +55,11 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         const actuallyFired = super.fireRefreshSuggestedIfNeeded(evtArgs);
 
         if (actuallyFired && evtArgs.reason === 'sessionChange') {
-            // Clear just the account cache--tenants and subscriptions are probably still valid,
-            // but the session change event may been have fired due to account sign out
+            // Clear all caches--the session change event may have been fired due to account sign out,
+            // so tenants and subscriptions may also be stale
             this.accountCache.clear();
+            this.tenantCache.clear();
+            this.subscriptionCache.clear();
         }
 
         return actuallyFired;

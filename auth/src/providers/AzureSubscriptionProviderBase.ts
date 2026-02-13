@@ -70,8 +70,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
-        if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
-            // Suppress and/or debounce events to avoid flooding
+        if (evtArgs.reason !== 'sessionChange' &&
+            (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce)) {
+            // Suppress and/or debounce events to avoid flooding, but never suppress session change events
             return false;
         }
 
