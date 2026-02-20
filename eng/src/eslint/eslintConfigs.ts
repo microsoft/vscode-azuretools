@@ -88,6 +88,7 @@ export const azExtTestRules: EslintConfig = {
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
         '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in test files
+        '@typescript-eslint/no-unsafe-argument': 'off', // Allow unsafe arguments in test files (goes with any)
         '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files (goes with any)
         '@typescript-eslint/no-unsafe-member-access': 'off', // Allow unsafe member access in test files (goes with any)
         '@typescript-eslint/no-unused-expressions': 'off', // Allow unused expressions in test files (e.g., for chai 'expect' statements)
