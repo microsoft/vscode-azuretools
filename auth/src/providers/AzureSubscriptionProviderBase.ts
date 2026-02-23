@@ -331,7 +331,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const credential: TokenCredential = {
             getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
                 this.silenceRefreshEvents();
-                const session = await getSessionFromVSCode(scopes, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                const tenantId = options?.tenantId || tenant.tenantId;
+                let session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                if (!session) {
+                    // Silent token acquisition failed — fall back to interactive auth
+                    session = await getSessionFromVSCode(scopes, tenantId, { createIfNone: true, account: tenant.account });
+                }
                 if (!session) {
                     throw new NotSignedInError();
                 }
