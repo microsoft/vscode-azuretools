@@ -3,6 +3,11 @@
     "compilerOptions": {
         "outDir": "dist/esm",
         "rootDir": ".",
-        "declaration": false
+        "declaration": false,
+        "paths": {
+            "vscode-jsonrpc/node": [
+                "./node_modules/vscode-jsonrpc/lib/node/main"
+            ]
+        }
     },
 }
