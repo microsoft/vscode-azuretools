@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { CheckNameAvailabilityResult, StorageManagementClient } from '@azure/arm-storage';
+import type { StorageManagementClient } from '@azure/arm-storage';
 import { AzureNameStep } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
@@ -14,7 +14,7 @@ import { storageAccountNamingRules } from './StorageAccountListStep';
 
 export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
-        const client: StorageManagementClient = await createStorageClient(wizardContext);
+        const client = await createStorageClient(wizardContext);
 
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newStorageAccountName = (await wizardContext.ui.showInputBox({
@@ -42,7 +42,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
             return vscode.l10n.t("The name can only contain lowercase letters and numbers.");
         } else {
-            const nameAvailabilityResult: CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: storageProviderType });
+            const nameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: storageProviderType });
             if (!nameAvailabilityResult.nameAvailable) {
                 return nameAvailabilityResult.message;
             } else {

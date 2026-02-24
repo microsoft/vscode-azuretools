@@ -12,6 +12,7 @@ import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
+import { ExtendedEnvironment } from '../utils/configuredAzureEnv';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 import { NotSignedInError } from '../utils/NotSignedInError';
 import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
@@ -86,6 +87,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
             {
                 id: 'test-account-id',
                 label: 'test-account',
+                environment: new ExtendedEnvironment(azureEnv.Environment.AzureCloud, false),
             }
         ]);
     }

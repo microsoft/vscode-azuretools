@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SlotConfigNamesResource, StringDictionary } from '@azure/arm-appservice';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon, l10n } from 'vscode';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
@@ -88,7 +87,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     }
 
     public async rename(context: IActionContext): Promise<void> {
-        const settings: StringDictionary = await this.parent.ensureSettings(context);
+        const settings = await this.parent.ensureSettings(context);
 
         const client = await this.parent.clientProvider.createClient(context);
         const oldKey: string = this._key;
@@ -117,7 +116,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public async toggleSlotSetting(context: IActionContext): Promise<void> {
         const client = await this.parent.clientProvider.createClient(context);
         if (client.updateSlotConfigurationNames && client.listSlotConfigurationNames) {
-            const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
+            const slotSettings = await client.listSlotConfigurationNames();
             slotSettings.appSettingNames ??= [];
             const slotSettingIndex: number = slotSettings.appSettingNames.findIndex((value: string) => { return value === this._key; });
 
@@ -137,7 +136,7 @@ export class AppSettingTreeItem extends AzExtTreeItem {
     public async refreshImpl(context: IActionContext): Promise<void> {
         const client = await this.parent.clientProvider.createClient(context);
         if (client.listSlotConfigurationNames) {
-            const slotSettings: SlotConfigNamesResource = await client.listSlotConfigurationNames();
+            const slotSettings = await client.listSlotConfigurationNames();
             if (slotSettings.appSettingNames?.find((value: string) => { return value === this._key; })) {
                 this.description = l10n.t('Slot Setting');
             } else {

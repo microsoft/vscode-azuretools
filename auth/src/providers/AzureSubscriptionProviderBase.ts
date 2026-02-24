@@ -195,7 +195,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.log('Fetching accounts...');
             this.silenceRefreshEvents();
 
-            const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            const environment = getConfiguredAzureEnv();
+
+            const results = (await vscode.authentication.getAccounts(getConfiguredAuthProviderId())).map(account => {
+                return {
+                    ...account,
+                    environment,
+                };
+            });
 
             if (results.length === 0) {
                 this.log('No accounts found');
@@ -307,7 +314,6 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     name: subscription.displayName!,
                     subscriptionId: subscription.subscriptionId!,
                     /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     tenantId: subscription.tenantId || tenant.tenantId, // In rare cases, a subscription may be listed but come from a different tenant
                     account: tenant.account,
                 });
@@ -329,11 +335,13 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @returns A {@link SubscriptionClient}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
      */
     protected async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+        // Credential ignores requested scopes and always uses default scopes (managementEndpointUrl),
+        // matching the scope used during signIn(). This avoids a refresh token round-trip that can
+        // fail when MSAL has stale cache entries for a different scope.
         const credential: TokenCredential = {
-            getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
+            getToken: async (_scopes: string | string[], options?: GetTokenOptions) => {
                 this.silenceRefreshEvents();
-                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                const session = await getSessionFromVSCode(scopes, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                const session = await getSessionFromVSCode(undefined, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
                 if (!session) {
                     throw new NotSignedInError();
                 }

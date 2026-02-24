@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { NetworkRuleSet, StorageAccount, StorageManagementClient } from '@azure/arm-storage';
+import type { NetworkRuleSet, StorageAccount } from '@azure/arm-storage';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp, openUrl } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
@@ -67,12 +67,12 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
     }
 
     public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
-        const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
+        const storageClient = await createStorageClient(wizardContext);
         return !!(await storageClient.storageAccounts.checkNameAvailability({ name, type: storageProviderType })).nameAvailable;
     }
 
     public async prompt(wizardContext: T): Promise<void> {
-        const client: StorageManagementClient = await createStorageClient(wizardContext);
+        const client = await createStorageClient(wizardContext);
 
         const quickPickOptions: IAzureQuickPickOptions = { placeHolder: 'Select a storage account.', id: `StorageAccountListStep/${wizardContext.subscriptionId}` };
         const picksTask: Promise<IAzureQuickPickItem<StorageAccount | undefined>[]> = this.getQuickPicks(wizardContext, uiUtils.listAllIterator(client.storageAccounts.list()));
