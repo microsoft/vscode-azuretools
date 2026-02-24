@@ -195,7 +195,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.log('Fetching accounts...');
             this.silenceRefreshEvents();
 
-            const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            const environment = getConfiguredAzureEnv();
+
+            const results = (await vscode.authentication.getAccounts(getConfiguredAuthProviderId())).map(account => {
+                return {
+                    ...account,
+                    environment,
+                };
+            });
 
             if (results.length === 0) {
                 this.log('No accounts found');

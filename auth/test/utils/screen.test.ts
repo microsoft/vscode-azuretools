@@ -44,17 +44,14 @@ suite('(unit) screen()', () => {
     });
 
     suite('tenants', () => {
-        // Just to satisfy the `AzureTenant` interface
-        const account: any = {};
-
         test('screens normal display names', () => {
-            assert.strictEqual(screen({ tenantId: '1', displayName: 'Contoso', account }), 'C***o');
-            assert.strictEqual(screen({ tenantId: '2', displayName: 'My Tenant', account }), 'M***t');
+            assert.strictEqual(screen({ tenantId: '1', displayName: 'Contoso' }), 'C***o');
+            assert.strictEqual(screen({ tenantId: '2', displayName: 'My Tenant' }), 'M***t');
         });
 
         test('screens short display names', () => {
-            assert.strictEqual(screen({ tenantId: '3', displayName: 'AB', account }), '3');
-            assert.strictEqual(screen({ tenantId: '4', displayName: 'A', account }), '4');
+            assert.strictEqual(screen({ tenantId: '3', displayName: 'AB' }), '3');
+            assert.strictEqual(screen({ tenantId: '4', displayName: 'A' }), '4');
         });
     });
 
