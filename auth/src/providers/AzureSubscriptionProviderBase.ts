@@ -328,27 +328,10 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @returns A {@link SubscriptionClient}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
      */
     protected async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+        // Credential ignores requested scopes and always uses default scopes (managementEndpointUrl),
+        // matching the scope used during signIn(). This avoids a refresh token round-trip that can
+        // fail when MSAL has stale cache entries for a different scope.
         const credential: TokenCredential = {
-            getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
-                this.silenceRefreshEvents();
-                const session = await getSessionFromVSCode(scopes, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
-                if (!session) {
-                    throw new NotSignedInError();
-                }
-                return {
-                    token: session.accessToken,
-                    expiresOnTimestamp: tryGetTokenExpiration(session),
-                };
-            }
-        };
-
-        // Internal credential for the SubscriptionClient used to list tenants and subscriptions.
-        // Uses default scopes (managementEndpointUrl) rather than passing through the ARM SDK's
-        // requested scopes (resourceManagerEndpointUrl). This ensures the token comes directly
-        // from the MSAL access token cache (same scope as signIn()), avoiding a refresh token
-        // round-trip that can fail in some cases
-        // these cases are not well-known
-        const internalCredential: TokenCredential = {
             getToken: async (_scopes: string | string[], options?: GetTokenOptions) => {
                 this.silenceRefreshEvents();
                 const session = await getSessionFromVSCode(undefined, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
@@ -365,7 +348,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         armSubs ??= await import('@azure/arm-resources-subscriptions');
 
         return {
-            client: new armSubs.SubscriptionClient(internalCredential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
+            client: new armSubs.SubscriptionClient(credential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
             credential: credential,
             authentication: {
                 getSession: async () => {
