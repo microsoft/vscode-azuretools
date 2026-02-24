@@ -17,7 +17,7 @@ const domainRegex = /^(?<domain>[^.]+)(?<safeTld>\.com(\..*)?|\.net|\.org|\.co\.
  * @param accountOrTenant The account or tenant to screen the label / display name of
  * @returns The screened label / display name
  */
-export function screen(accountOrTenant: AzureAccount | AzureTenant): string {
+export function screen(accountOrTenant: Pick<AzureAccount, 'id' | 'label'> | Pick<AzureTenant, 'tenantId' | 'displayName'>): string {
     if ('label' in accountOrTenant && !!accountOrTenant.label) {
         const match = accountLabelRegex.exec(accountOrTenant.label);
         if (match?.groups?.email && match.groups.domain) {

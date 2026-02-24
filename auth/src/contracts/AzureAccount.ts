@@ -4,8 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
+import type { ExtendedEnvironment } from '../utils/configuredAzureEnv';
 
 /**
  * A shortcut type for {@link vscode.AuthenticationSessionAccountInformation}
  */
-export type AzureAccount = Readonly<vscode.AuthenticationSessionAccountInformation>;
+export type AzureAccount = Readonly<vscode.AuthenticationSessionAccountInformation> & {
+    readonly environment: ExtendedEnvironment;
+};

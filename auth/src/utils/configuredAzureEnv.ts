@@ -17,7 +17,7 @@ enum CloudEnvironmentSettingValue {
     Custom = 'custom',
 }
 
-class ExtendedEnvironment extends azureEnv.Environment {
+export class ExtendedEnvironment extends azureEnv.Environment {
     public constructor(parameters: azureEnv.EnvironmentParameters, public readonly isCustomCloud: boolean) {
         super(parameters);
         // The Environment constructor only copies required properties. Copy all remaining
