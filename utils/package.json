@@ -26,7 +26,7 @@
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc -p ./",
-        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module commonjs --moduleResolution node --declaration false",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --max-warnings 0",
         "test": "vscode-test",
         "package": "npm pack",

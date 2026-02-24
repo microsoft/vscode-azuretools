@@ -4,10 +4,6 @@
         "outDir": "dist/esm",
         "rootDir": ".",
         "declaration": false,
-        "paths": {
-            "vscode-jsonrpc/node": [
-                "./node_modules/vscode-jsonrpc/lib/node/main"
-            ]
-        }
+        "skipLibCheck": true
     },
 }
