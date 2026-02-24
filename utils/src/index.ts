@@ -9,6 +9,7 @@ export { createAzExtLogOutputChannel, createAzExtOutputChannel } from './AzExtOu
 export * from './AzExtTreeFileSystem';
 export * from './callWithTelemetryAndErrorHandling';
 export { activityErrorContext, activityFailContext, activityFailIcon, activityInfoContext, activityInfoIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from './constants';
+export * from './copilot/copilot';
 export * from './createApiProvider';
 export { createExperimentationService } from './createExperimentationService';
 export * from './dev/TestActionContext';
@@ -56,6 +57,7 @@ export * from './utils/activityUtils';
 export * from './utils/AzExtFsExtra';
 export * from './utils/AzureResourceIdTelemetry';
 export * from './utils/contextUtils';
+export * from './utils/copilotUtils';
 export * from './utils/credentialUtils';
 export * from './utils/dateTimeUtils';
 export * from './utils/findFreePort';

@@ -44,14 +44,13 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
             async (context: types.IActionContext) => {
                 let injectedContext: Partial<types.IActionContext> | undefined;
                 if (args.length > 0) {
-                    const metadata = args[args.length - 1];
+                    const metadata = args.find(
+                        (arg) => arg && typeof arg === "object" && "__injectedContext" in arg
+                    );
 
-                    // Look for our metadata object at the end
-                    if (metadata && typeof metadata === "object" && "__injectedContext" in metadata) {
-                        injectedContext = metadata.__injectedContext as types.IActionContext;
-
-                        // remove only the metadata
-                        args.pop();
+                    if (metadata) {
+                        injectedContext = (metadata as Record<string, unknown>).__injectedContext as types.IActionContext;
+                        args.splice(args.indexOf(metadata), 1); // remove only the metadata
                     }
 
                     try {

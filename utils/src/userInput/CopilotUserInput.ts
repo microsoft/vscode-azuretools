@@ -5,7 +5,7 @@
 import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
 import * as types from '../../index';
-import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doCopilotInteraction } from '../copilot/copilot';
+import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doGithubCopilotInteraction } from '../copilot/copilot';
 import { InvalidCopilotResponseError } from '../errors';
 
 export class CopilotUserInput implements types.IAzureUserInput {
@@ -23,7 +23,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T> {
         const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
-        const response = await doCopilotInteraction(primaryPrompt);
+        const response = await doGithubCopilotInteraction(primaryPrompt);
 
         const pick = items.find(
             item => {
@@ -46,7 +46,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
         const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
-        const response = await doCopilotInteraction(primaryPrompt);
+        const response = await doGithubCopilotInteraction(primaryPrompt);
         const pick = (workspace.workspaceFolders ?? []).find(folder => {
             return folder.name === response;
         });
@@ -63,7 +63,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         if (options.prompt) {
             try {
                 const primaryPrompt: string = createPrimaryPromptForInputBox(options.prompt, this._relevantContext);
-                const response = await doCopilotInteraction(primaryPrompt);
+                const response = await doGithubCopilotInteraction(primaryPrompt);
                 const jsonResponse: string = JSON.parse(response) as string;
                 this._onDidFinishPromptEmitter.fire({ value: jsonResponse });
                 return jsonResponse;
@@ -98,7 +98,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         try {
             if (options.canPickMany) {
                 primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
-                const response = await doCopilotInteraction(primaryPrompt);
+                const response = await doGithubCopilotInteraction(primaryPrompt);
                 const jsonResponse: T[] = JSON.parse(response) as T[];
                 const picks = resolvedItems.filter(item => {
                     return jsonResponse.some(resp => JSON.stringify(resp.label) === JSON.stringify(item.label) &&
@@ -113,8 +113,8 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
                 return picks;
             } else {
-                primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, options.placeHolder, this._relevantContext);
-                const response = await doCopilotInteraction(primaryPrompt);
+                primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, options.placeHolder);
+                const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
                 const jsonResponse: T = JSON.parse(response) as T;
                 const pick = resolvedItems.find(item => {
                     return JSON.stringify(item.label) === JSON.stringify(jsonResponse.label) &&

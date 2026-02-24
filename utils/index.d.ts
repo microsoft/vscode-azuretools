@@ -2928,4 +2928,21 @@ export declare function runWithInputs<T>(callbackId: string, inputs: (string | R
  */
 export declare function testGlobalSetup(): UIExtensionVariables;
 
+/**
+ * Disposes of copilot session created by `CopilotUserInput`
+ * Should be called after commands using `CopilotUserInput` to prevent any lingering copilot sessions
+ */
+export function disposeCopilotSession(): Promise<void>;
+
+/**
+ * Checks if the context is using `CopilotUserInput`
+ */
+export function isCopilotUserInput(context: IActionContext): boolean;
+
+/**
+ * When setting the ui to `CopilotUserInput`, call this function so that the context can be properly identified
+ * @param context The context to mark as using `CopilotUserInput`
+ */
+export function markAsCopilotUserInput(context: IActionContext): void;
+
 // #endregion
