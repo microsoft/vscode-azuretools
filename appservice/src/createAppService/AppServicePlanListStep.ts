@@ -105,13 +105,13 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         const epWsOsMap = new Map<string, boolean>();
         if (epWsPlans.length > 0) {
             const client: WebSiteManagementClient = await createWebSiteClient(context);
-            const results = await Promise.all(epWsPlans.map(async (plan) => {
+            const results = await Promise.allSettled(epWsPlans.map(async (plan) => {
                 const epPlan = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
                 return { id: plan.id, isLinux: !!epPlan?.reserved };
             }));
             for (const result of results) {
-                if (result.id) {
-                    epWsOsMap.set(result.id, result.isLinux);
+                if (result.status === 'fulfilled' && result.value.id) {
+                    epWsOsMap.set(result.value.id, result.value.isLinux);
                 }
             }
         }
