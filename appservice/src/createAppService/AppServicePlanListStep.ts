@@ -99,6 +99,23 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
         }
 
         let hasFilteredLocations: boolean = false;
+
+        // Pre-fetch OS info for all EP/WS plans in parallel (they don't have OS in their `kind`)
+        const epWsPlans = plans.filter(plan => plan.sku && (plan.sku.family === 'EP' || plan.sku.family === 'WS'));
+        const epWsOsMap = new Map<string, boolean>();
+        if (epWsPlans.length > 0) {
+            const client: WebSiteManagementClient = await createWebSiteClient(context);
+            const results = await Promise.all(epWsPlans.map(async (plan) => {
+                const epPlan = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
+                return { id: plan.id, isLinux: !!epPlan?.reserved };
+            }));
+            for (const result of results) {
+                if (result.id) {
+                    epWsOsMap.set(result.id, result.isLinux);
+                }
+            }
+        }
+
         for (const plan of plans) {
             const isNewSiteLinux: boolean = context.newSiteOS === WebsiteOS.linux;
             let isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
@@ -106,9 +123,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             if (plan.sku && (plan.sku.family === 'EP' || plan.sku.family === 'WS')) {
                 // elastic premium plans and workflow standard plans do not have the os in the kind, so we have to check the "reserved" property
                 // also, the "reserved" property is always "false" in the list of plans returned above. We have to perform a separate get on each plan
-                const client: WebSiteManagementClient = await createWebSiteClient(context);
-                const epPlan: AppServicePlan | undefined = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
-                isPlanLinux = !!epPlan?.reserved;
+                isPlanLinux = epWsOsMap.get(plan.id ?? '') ?? false;
             }
 
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases
