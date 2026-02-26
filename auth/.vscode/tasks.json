@@ -7,7 +7,7 @@
             "command": "npm",
             "args": [
                 "run",
-                "build:esm",
+                "build",
                 "--",
                 "--watch",
             ],

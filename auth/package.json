@@ -13,19 +13,16 @@
     ],
     "exports": {
         ".": {
-            "import": "./dist/esm/src/index.js",
-            "require": "./dist/cjs/src/index.js",
-            "types": "./dist/esm/src/index.d.ts"
+            "require": "./dist/src/index.js",
+            "types": "./dist/src/index.d.ts"
         },
         "./azdo": {
-            "import": "./dist/esm/src/providers/AzureDevOpsSubscriptionProvider.js",
-            "require": "./dist/cjs/src/providers/AzureDevOpsSubscriptionProvider.js",
-            "types": "./dist/esm/src/providers/AzureDevOpsSubscriptionProvider.d.ts"
+            "require": "./dist/src/providers/AzureDevOpsSubscriptionProvider.js",
+            "types": "./dist/src/providers/AzureDevOpsSubscriptionProvider.d.ts"
         }
     },
-    "module": "dist/esm/src/index.js",
-    "main": "dist/cjs/src/index.js",
-    "types": "dist/esm/src/index.d.ts",
+    "main": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -36,11 +33,9 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/auth/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
-        "build:esm": "tsc -p ./",
-        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build": "tsc -p ./",
         "lint": "eslint --max-warnings 0",
-        "test": "mocha",
+        "test": "vscode-test",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
@@ -51,7 +46,9 @@
         "@azure/core-auth": "^1.10.1",
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.13",
         "@types/node": "22.x",
-        "@types/vscode": "1.106.0"
+        "@types/vscode": "1.106.0",
+        "@vscode/test-cli": "^0.0.12",
+        "@vscode/test-electron": "^2.5.2"
     },
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^2.1.0",

@@ -274,7 +274,16 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
             const allTenants: AzureTenant[] = [];
 
+            const skippedTenantIds = new Set([
+                '1a092f68-5741-455a-8057-2acdb897a850',
+                '72c61220-5d18-4721-8c0d-cff030dba0c9',
+            ]);
+
             for await (const tenant of client.tenants.list({ abortSignal: getSignalForToken(options.token) })) {
+                if (tenant.tenantId && skippedTenantIds.has(tenant.tenantId)) {
+                    this.logForAccount(account, `Skipping tenant ${tenant.tenantId} (hardcoded skip list)`);
+                    continue;
+                }
                 allTenants.push({
                     ...tenant,
                     tenantId: tenant.tenantId!, // eslint-disable-line @typescript-eslint/no-non-null-assertion -- This is never null in practice

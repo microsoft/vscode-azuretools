@@ -13,5 +13,18 @@
             ],
             "type": "node"
         },
+        {
+            "name": "Run Perf Profiler",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--profile=Default",
+                "--extensionDevelopmentPath=${workspaceFolder}/test/perf/test-extension"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: build"
+        }
     ]
 }

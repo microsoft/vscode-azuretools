@@ -1,0 +1,20 @@
+{
+    "name": "azureauth-perf",
+    "displayName": "Azure Auth Perf Profiler",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.106.0"
+    },
+    "main": "./extension.js",
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "azureAuthPerf.runProfile",
+                "title": "Azure Auth Perf: Run Subscription Listing Profile"
+            }
+        ]
+    }
+}

@@ -66,6 +66,23 @@ function formScopesArg(scopeOrListOrRequest?: string | string[] | vscode.Authent
 }
 
 /**
+ * A single recorded `vscode.authentication.getSession` call timing.
+ */
+export interface GetSessionTiming {
+    tenantId: string | undefined;
+    elapsed: number;
+    silent: boolean;
+    createIfNone: boolean;
+}
+
+/**
+ * Accumulated timings for all `vscode.authentication.getSession` calls.
+ * Read this array to see how long each underlying VS Code auth call took.
+ * Call `getSessionFromVSCodeTimings.length = 0` to reset.
+ */
+export const getSessionFromVSCodeTimings: GetSessionTiming[] = [];
+
+/**
  * Wraps {@link vscode.authentication.getSession} and handles:
  * * Passing the configured auth provider id
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
@@ -77,5 +94,13 @@ function formScopesArg(scopeOrListOrRequest?: string | string[] | vscode.Authent
  * @returns An authentication session if available, or undefined if there are no sessions
  */
 export async function getSessionFromVSCode(scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-    return await vscode.authentication.getSession(getConfiguredAuthProviderId(), formScopesArg(scopeOrListOrRequest, tenantId), options);
+    const providerId = getConfiguredAuthProviderId();
+    const scopes = formScopesArg(scopeOrListOrRequest, tenantId);
+    const start = performance.now();
+    try {
+        return await vscode.authentication.getSession(providerId, scopes, options);
+    } finally {
+        const elapsed = performance.now() - start;
+        getSessionFromVSCodeTimings.push({ tenantId, elapsed, silent: !!options?.silent, createIfNone: !!(options as Record<string, unknown>)?.createIfNone });
+    }
 }
