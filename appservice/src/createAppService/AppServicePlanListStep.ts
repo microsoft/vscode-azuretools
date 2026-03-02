@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { AppServicePlan } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep, ResourceGroupListStep, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
@@ -27,7 +27,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
 
     public static async getPlans(context: IAppServiceWizardContext): Promise<AppServicePlan[]> {
         if (context.plansTask === undefined) {
-            const client: WebSiteManagementClient = await createWebSiteClient(context);
+            const client = await createWebSiteClient(context);
             context.plansTask = uiUtils.listAllIterator(client.appServicePlans.list());
         }
 
@@ -35,7 +35,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
     }
 
     public static async isNameAvailable(context: IAppServiceWizardContext, name: string, resourceGroupName: string): Promise<boolean> {
-        const plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(context);
+        const plans = await AppServicePlanListStep.getPlans(context);
         return !plans.some(plan =>
             nonNullProp(plan, 'resourceGroup').toLowerCase() === resourceGroupName.toLowerCase() &&
             nonNullProp(plan, 'name').toLowerCase() === name.toLowerCase()
@@ -87,7 +87,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             }]
             : [];
 
-        let plans: AppServicePlan[] = await AppServicePlanListStep.getPlans(context);
+        let plans = await AppServicePlanListStep.getPlans(context);
         const famFilter: RegExp | undefined = context.planSkuFamilyFilter;
         if (famFilter) {
             plans = plans.filter(plan => !plan.sku?.family || famFilter.test(plan.sku.family));
@@ -106,7 +106,7 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             if (plan.sku && (plan.sku.family === 'EP' || plan.sku.family === 'WS')) {
                 // elastic premium plans and workflow standard plans do not have the os in the kind, so we have to check the "reserved" property
                 // also, the "reserved" property is always "false" in the list of plans returned above. We have to perform a separate get on each plan
-                const client: WebSiteManagementClient = await createWebSiteClient(context);
+                const client = await createWebSiteClient(context);
                 const epPlan: AppServicePlan | undefined = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
                 isPlanLinux = !!epPlan?.reserved;
             }

@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { ParsedSite } from '../SiteClient';
 import { TunnelProxy } from '../TunnelProxy';
 import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
-import { AzExtGenericCredentials } from '@microsoft/vscode-azext-azureutils';
+import type { AzExtGenericCredentials } from '@microsoft/vscode-azext-azureutils';
 
 const remoteDebugLink: string = 'https://aka.ms/appsvc-remotedebug';
 

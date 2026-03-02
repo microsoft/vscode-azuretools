@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan, SiteConfigResource } from "@azure/arm-appservice";
+import type { AppServicePlan, SiteConfigResource } from "@azure/arm-appservice";
 import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, randomUtils } from "@microsoft/vscode-azext-utils";
 import { l10n, Progress } from "vscode";
 import { InnerDeployContext } from "../IDeployContext";
@@ -50,7 +50,7 @@ export abstract class DeployExecuteStepBase extends AzureWizardExecuteStep<Inner
     public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const client = context.client;
         this.progress = progress;
-        const config: SiteConfigResource = await client.getSiteConfig();
+        const config = await client.getSiteConfig();
         const startingDeployment = l10n.t('Starting deployment...');
         progress.report({ message: startingDeployment });
         // We use the AppServicePlan in a few places, but we don't want to delay deployment, so start the promise now and save as a const
@@ -96,7 +96,7 @@ async function setDeploymentTelemetry(context: InnerDeployContext, config: SiteC
             // ignore
         });
     aspPromise.then(
-        (plan: AppServicePlan | undefined) => {
+        (plan) => {
             if (plan) {
                 context.telemetry.properties.planStatus = String(plan.status);
                 context.telemetry.properties.planKind = String(plan.kind);

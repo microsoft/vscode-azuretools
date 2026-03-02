@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SkuDescription } from '@azure/arm-appservice';
-import { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
+import type { SkuDescription } from '@azure/arm-appservice';
+import type { AzExtLocation } from '@microsoft/vscode-azext-azureutils';
 import { AzureWizardPromptStep, IAzureQuickPickItem } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AppServicePlan, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { AppServicePlan } from '@azure/arm-appservice';
 import { AzExtLocation, LocationListStep } from '@microsoft/vscode-azext-azureutils';
 import { ActivityChildItem, ActivityChildType, activityErrorContext, activityFailContext, activityFailIcon, ActivityOutputType, AzureWizardExecuteStepWithActivityOutput, createContextValue, ExecuteActivityContext, ExecuteActivityOutput, nonNullProp, nonNullValue, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
@@ -30,8 +30,8 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
         const rgName: string = nonNullProp(nonNullValue(context.resourceGroup, 'name'), 'name');
 
         try {
-            const client: WebSiteManagementClient = await createWebSiteClient(context);
-            const existingPlan: AppServicePlan | undefined = await tryGetAppServicePlan(client, rgName, newPlanName);
+            const client = await createWebSiteClient(context);
+            const existingPlan = await tryGetAppServicePlan(client, rgName, newPlanName);
 
             if (existingPlan) {
                 context.plan = existingPlan;
@@ -50,7 +50,7 @@ export class AppServicePlanCreateStep extends AzureWizardExecuteStepWithActivity
         const rgName: string = nonNullValueAndProp(context.resourceGroup, 'name');
 
         try {
-            const client: WebSiteManagementClient = await createWebSiteClient(context);
+            const client = await createWebSiteClient(context);
             context.plan = await client.appServicePlans.beginCreateOrUpdateAndWait(rgName, newPlanName, await getNewPlan(context));
         } catch (e) {
             const pError = parseError(e);

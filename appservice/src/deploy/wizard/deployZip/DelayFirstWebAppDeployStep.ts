@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AppServicePlan } from '@azure/arm-appservice';
 import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { InnerDeployContext } from '../../IDeployContext';
 
@@ -23,7 +22,7 @@ export class DelayFirstWebAppDeployStep extends AzureWizardExecuteStep<InnerDepl
                     resolve();
                 }
 
-                const asp: AppServicePlan | undefined = await context.aspPromise;
+                const asp = await context.aspPromise;
                 if (!asp?.sku?.tier || asp.sku.tier.toLowerCase() !== 'basic') {
                     resolve();
                 }

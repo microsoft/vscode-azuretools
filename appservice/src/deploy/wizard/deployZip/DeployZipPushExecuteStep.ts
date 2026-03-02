@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { RequestBodyType } from "@azure/core-rest-pipeline";
-import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
+import type { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 import { publisherName } from "../../../constants";
 import { InnerDeployContext } from "../../IDeployContext";
 import { runWithZipStream } from "../../runWithZipStream";

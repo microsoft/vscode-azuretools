@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Site } from "@azure/arm-appservice";
+import type { Site } from "@azure/arm-appservice";
 import { RequestBodyType, createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, AzExtRequestPrepareOptions, createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { publisherName } from "../../../constants";

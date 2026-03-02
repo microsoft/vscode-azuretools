@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StringDictionary } from '@azure/arm-appservice';
-import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
+import type { BlobServiceClient } from '@azure/storage-blob';
 import { IActionContext, parseError, randomUtils } from '@microsoft/vscode-azext-utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -34,10 +33,10 @@ export async function deployToStorageAccount(context: IDeployContext, fsPath: st
     const randomPart: string = randomUtils.getRandomHexString(32);
     const blobName: string = `${datePart}-${randomPart}.zip`;
 
-    const blobService: BlobServiceClient = await createBlobServiceClient(context, site);
+    const blobService = await createBlobServiceClient(context, site);
     const blobUrl: string = await createBlobFromZip(context, fsPath, site, blobService, blobName);
     const client = await site.createClient(context);
-    const appSettings: StringDictionary = await client.listApplicationSettings();
+    const appSettings = await client.listApplicationSettings();
     appSettings.properties = appSettings.properties ?? {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
@@ -51,11 +50,12 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
     const client = await site.createClient(context);
     // Use same storage account as AzureWebJobsStorage for deployments
     const azureWebJobsStorageKey: string = 'AzureWebJobsStorage';
-    const settings: StringDictionary = await client.listApplicationSettings();
+    const settings = await client.listApplicationSettings();
     let connectionString: string | undefined = settings.properties?.[azureWebJobsStorageKey];
     if (connectionString) {
+        const storageBlob = await import('@azure/storage-blob');
         try {
-            return BlobServiceClient.fromConnectionString(connectionString);
+            return storageBlob.BlobServiceClient.fromConnectionString(connectionString) as unknown as BlobServiceClient;
         } catch (error) {
             // EndpointSuffix was optional in the old sdk, but is required in the new sdk
             // https://github.com/microsoft/vscode-azurefunctions/issues/2360
@@ -66,7 +66,7 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
                     connectionString += separator;
                 }
                 connectionString += `${endpointSuffix}=${AzureCloudStorageEndpointSuffix}${separator}`;
-                return BlobServiceClient.fromConnectionString(connectionString);
+                return storageBlob.BlobServiceClient.fromConnectionString(connectionString) as unknown as BlobServiceClient;
             } else {
                 throw error;
             }
@@ -78,12 +78,12 @@ async function createBlobServiceClient(context: IActionContext, site: ParsedSite
 
 async function createBlobFromZip(context: IActionContext, fsPath: string, site: ParsedSite, blobService: BlobServiceClient, blobName: string): Promise<string> {
     const containerName: string = 'function-releases';
-    const containerClient: ContainerClient = blobService.getContainerClient(containerName);
+    const containerClient = blobService.getContainerClient(containerName);
     if (!await containerClient.exists()) {
         await containerClient.create();
     }
 
-    const blobClient: BlockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
 
     await runWithZipStream(context, {
         fsPath, site, callback: async zipStream => {
@@ -97,13 +97,15 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, site: 
         context.telemetry.measurements.blobSize = Number(r.contentLength);
     });
 
-    if (blobService.credential instanceof StorageSharedKeyCredential) {
+    const storageBlob = await import('@azure/storage-blob');
+
+    if (blobService.credential instanceof storageBlob.StorageSharedKeyCredential) {
         const url: URL = new URL(blobClient.url);
-        url.search = generateBlobSASQueryParameters(
+        url.search = storageBlob.generateBlobSASQueryParameters(
             {
                 containerName,
                 blobName,
-                permissions: BlobSASPermissions.parse('r'),
+                permissions: storageBlob.BlobSASPermissions.parse('r'),
                 startsOn: dayjs().utc().subtract(5, 'minute').toDate(),
                 expiresOn: dayjs().utc().add(10, 'year').toDate()
             },

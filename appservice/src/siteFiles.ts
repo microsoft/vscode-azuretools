@@ -6,7 +6,7 @@
 import { RestError, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
-import retry from 'p-retry';
+import { AbortError, default as retry } from 'p-retry';
 import { ParsedSite } from './SiteClient';
 
 export interface ISiteFile {
@@ -94,7 +94,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, url: str
                         const parsedError: IParsedError = parseError(error);
                         if (!(badGateway.test(parsedError.message) || serviceUnavailable.test(parsedError.message))) {
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                            throw new retry.AbortError(error);
+                            throw new AbortError(error);
                         }
                         throw error;
                     }

@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AbortController } from '@azure/abort-controller';
 import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, callWithTelemetryAndErrorHandling, parseError } from '@microsoft/vscode-azext-utils';
@@ -58,7 +57,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
                 const genericClient = await createGenericClient(streamContext, undefined);
 
 
-                const abortController: AbortController = new AbortController();
+                const abortController = new AbortController();
                 const headers = createHttpHeaders({ Authorization: `Bearer ${bearerToken}` });
                 const logsResponse: AzExtPipelineResponse = await genericClient.sendRequest(createPipelineRequest({
                     headers,

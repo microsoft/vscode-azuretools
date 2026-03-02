@@ -3,4 +3,15 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { azExtEslintRecommendedTypeChecked as default } from '@microsoft/vscode-azext-eng/eslint'; // Other configurations exist
+import { azExtEslintRecommendedTypeChecked, lazyImportRuleConfig } from '@microsoft/vscode-azext-eng/eslint'; // Other configurations exist
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+    azExtEslintRecommendedTypeChecked,
+    lazyImportRuleConfig([
+        '@azure/*',
+        'simple-git',
+        'ws',
+        '!@azure/core-rest-pipeline', // Small
+    ]),
+]);

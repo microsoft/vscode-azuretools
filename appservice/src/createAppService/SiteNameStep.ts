@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResourceNameAvailability, Site, WebSiteManagementClient } from '@azure/arm-appservice';
+import type { WebSiteManagementClient } from '@azure/arm-appservice';
 import { createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtLocation, AzExtPipelineResponse, AzExtRequestPrepareOptions, LocationListStep, ResourceGroupListStep, StorageAccountListStep, createGenericClient, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
 import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, nonNullValue, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
@@ -154,7 +154,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
     }
 
     private async asyncValidateGlobalCNA(client: WebSiteManagementClient, name: string): Promise<string | undefined> {
-        const nameAvailability: ResourceNameAvailability = await client.checkNameAvailability(name, 'Site');
+        const nameAvailability = await client.checkNameAvailability(name, 'Site');
         if (!nameAvailability.nameAvailable) {
             return nameAvailability.message;
         } else {
@@ -220,7 +220,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
 
         try {
             const rgName: string = nonNullValue(resourceGroupName, vscode.l10n.t('Internal Error: A resource group name must be provided to verify unique site ID.'));
-            const site: Site = await client.webApps.get(rgName, siteName);
+            const site = await client.webApps.get(rgName, siteName);
             if (site) {
                 return vscode.l10n.t('A site with name "{0}" already exists in resource group "{1}".', siteName, rgName);
             }

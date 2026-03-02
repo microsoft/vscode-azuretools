@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SiteConfigResource } from "@azure/arm-appservice";
 import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import { ScmType } from "../../ScmType";
@@ -23,7 +22,7 @@ import { WaitForDeploymentToCompleteStep } from "./deployZip/WaitForDeploymentTo
 
 export async function createDeployExecuteSteps(context: InnerDeployContext): Promise<AzureWizardExecuteStep<InnerDeployContext>[]> {
     const executeSteps: AzureWizardExecuteStep<InnerDeployContext>[] = [];
-    const config: SiteConfigResource = await context.client.getSiteConfig();
+    const config = await context.client.getSiteConfig();
 
     if (context.stopAppBeforeDeploy) {
         executeSteps.push(new StopAppBeforeDeployExecuteStep(), new StartAppAfterDeployExecuteStep());

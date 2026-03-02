@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ApplicationInsightsComponent, ApplicationInsightsManagementClient } from "@azure/arm-appinsights";
+import type { ApplicationInsightsComponent } from "@azure/arm-appinsights";
 import { LocationListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
@@ -32,7 +32,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
 
     public static async getAppInsightsComponents(context: IAppServiceWizardContext): Promise<ApplicationInsightsComponent[]> {
         if (context.appInsightsTask === undefined) {
-            const client: ApplicationInsightsManagementClient = await createAppInsightsClient(context);
+            const client = await createAppInsightsClient(context);
             context.appInsightsTask = uiUtils.listAllIterator(client.components.list());
         }
 

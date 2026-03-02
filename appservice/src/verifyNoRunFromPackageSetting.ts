@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StringDictionary } from "@azure/arm-appservice";
 import { IActionContext } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { ext } from "./extensionVariables";
@@ -14,7 +13,7 @@ export async function verifyNoRunFromPackageSetting(context: IActionContext, sit
     let updateSettings: boolean = false;
     const runFromPackageSettings: string[] = ['WEBSITE_RUN_FROM_PACKAGE', 'WEBSITE_RUN_FROM_ZIP'];
     const client = await site.createClient(context);
-    const applicationSettings: StringDictionary = await client.listApplicationSettings();
+    const applicationSettings = await client.listApplicationSettings();
     for (const settingName of runFromPackageSettings) {
         if (applicationSettings.properties?.[settingName]) {
             delete applicationSettings.properties[settingName];

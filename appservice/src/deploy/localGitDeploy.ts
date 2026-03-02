@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { User } from '@azure/arm-appservice';
 import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
-import simpleGit, { type GitError, Options, SimpleGit, StatusResult } from 'simple-git';
+import type { GitError, Options, StatusResult } from 'simple-git';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
@@ -26,15 +25,17 @@ type LocalGitOptions = {
 };
 
 export async function localGitDeploy(site: ParsedSite, options: LocalGitOptions, context: IActionContext): Promise<void> {
+    const { simpleGit } = await import('simple-git');
+
     const client = await site.createClient(context);
-    const publishCredentials: User = await client.getWebAppPublishCredential();
+    const publishCredentials = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
     const publishingUserName: string = nonNullProp(publishCredentials, 'publishingUserName');
 
     await callWithMaskHandling(
         async (): Promise<void> => {
             const remote: string = `https://${encodeURIComponent(publishingUserName)}:${encodeURIComponent(publishingPassword)}@${site.gitUrl}`;
-            const localGit: SimpleGit = simpleGit(options.fsPath);
+            const localGit = simpleGit(options.fsPath);
             let status: StatusResult;
             try {
                 status = await localGit.status();
