@@ -1,0 +1,115 @@
+parameters:
+  # The name of the package to publish.
+  # This is regex matched against .vsix files found in the build artifact.
+  - name: packageToPublish
+    type: string
+
+  # The intended package version to publish.
+  # This is used to verify the version in package.json matches the version to publish to avoid publishing the wrong package/version
+  - name: publishVersion
+    type: string
+
+  # When true, skips the deployment job that actually publishes the package
+  - name: dryRun
+    type: boolean
+    default: false
+
+  # In the build artifacts, the name of the artifact containing the package to publish
+  - name: artifactName
+    type: string
+    default: Build Root
+
+  # The service connection that VSCE will use to publish the extension
+  - name: releaseServiceConnection
+    type: string
+
+  # Set to the AzDO environment used for enforcing approval before the release runs
+  - name: releaseApprovalEnvironment
+    type: string
+    default: ""
+
+  # The pool to use for releases
+  - name: releasePool
+    type: object
+    default:
+      name: VSEngSS-MicroBuild2022-1ES
+      image: server2022-microbuildVS2022-1es
+      os: windows
+
+resources:
+  repositories:
+    - repository: MicroBuildTemplate
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+      ref: refs/heads/release
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.Publish.yml@MicroBuildTemplate
+  parameters:
+    pool: ${{ parameters.releasePool }}
+    stages:
+      - stage: ReleaseStage
+        displayName: Release extension
+        jobs:
+          - job: Publish
+            displayName: Publish extension
+            # TODO: not working, `jobs.job` doesn't support `environment`, only `jobs.deployment` does
+            # ${{ if ne(parameters.releaseApprovalEnvironment, '') }}:
+            #   environment: ${{ parameters.releaseApprovalEnvironment }}
+            templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+                - input: pipelineArtifact
+                  pipeline: build
+                  targetPath: "$(System.DefaultWorkingDirectory)"
+                  artifactName: "${{ parameters.artifactName }}"
+            steps:
+              - checkout: none
+
+              - task: NodeTool@0
+                displayName: "\U0001F449 Using Node.js"
+                inputs:
+                  versionSpec: 22.x
+
+              - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
+                parameters:
+                  vsixName: ${{ parameters.packageToPublish }}
+                  publishVersion: ${{ parameters.publishVersion }}
+
+              - template: azdo-pipelines/templates/set-release-build-number.yml@azExtTemplates
+                parameters:
+                  packageToPublish: ${{ parameters.packageToPublish }}
+                  publishVersion: ${{ parameters.publishVersion }}
+                  dryRun: ${{ parameters.dryRun }}
+
+              # Publish the package to VS Marketplace
+              - ${{ if eq(parameters.dryRun, false) }}:
+                  - task: AzureCLI@2
+                    displayName: "\U0001F449 Publish VSIXs to Marketplace"
+                    inputs:
+                      azureSubscription: ${{ parameters.releaseServiceConnection }}
+                      scriptType: pscore
+                      scriptLocation: inlineScript
+                      inlineScript: |
+                        $vsixList = @('$(vsixListJson)' | ConvertFrom-Json)
+
+                        # Publish each of the found VSIXs, automatically adding the enabled API proposals argument as well
+                        foreach ($vsix in $vsixList) {
+                            Set-Location $vsix.directory
+
+                            $commandLine = "npx @vscode/vsce@latest publish --azure-credential --packagePath $($vsix.vsixName) --manifestPath $($vsix.manifestName) --signaturePath $($vsix.signatureName)"
+                            if ($vsix.proposedApis -ne $null -and $vsix.proposedApis.Count -gt 0) {
+                                $commandLine += " --allow-proposed-apis $($vsix.proposedApis -join ' ')"
+                            }
+
+                            Write-Output "Publishing VSIX: $($vsix.vsixName) with command:"
+                            Write-Output "    $($commandLine)"
+
+                            # Execute the publish command line
+                            # Invoke-Expression $commandLine # TODO: temporarily disabled for testing
+                            # if ($LASTEXITCODE -ne 0) {
+                            #     Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
+                            #     exit 1
+                            # }
+                        }
