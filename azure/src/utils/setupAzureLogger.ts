@@ -6,6 +6,11 @@
 import { AzureLogger, AzureLogLevel, setLogLevel } from "@azure/logger";
 import * as vscode from "vscode";
 
+/**
+ * Pipe Azure SDK logs into the provided log output channel using the @azure/logger package.
+ *
+ * @param logOutputChannel - log output channel to pipe logs into
+ */
 export function setupAzureLogger(logOutputChannel: vscode.LogOutputChannel): vscode.Disposable {
     const logLevelMap: Record<vscode.LogLevel, AzureLogLevel | undefined> = {
         // passing undefined to AzureLogger.setLogLevel disables logging

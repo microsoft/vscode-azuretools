@@ -9,8 +9,14 @@ import type { Environment } from '@azure/ms-rest-azure-env';
 import type { ReadStream } from 'fs';
 import type { CancellationToken, Event, Progress, Terminal } from 'vscode';
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export interface AzureAccountExtensionApi {
     readonly apiVersion: string;
     readonly status: AzureLoginStatus;
@@ -27,6 +33,9 @@ export interface AzureAccountExtensionApi {
     createCloudShell(os: 'Linux' | 'Windows'): CloudShell;
 }
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export interface AzureSession {
     readonly environment: Environment;
     readonly userId: string;
@@ -38,21 +47,36 @@ export interface AzureSession {
     readonly credentials2: TokenCredential;
 }
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export interface AzureSubscription {
     readonly session: AzureSession;
     readonly subscription: Subscription;
 }
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export type AzureResourceFilter = AzureSubscription;
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export type CloudShellStatus = 'Connecting' | 'Connected' | 'Disconnected';
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export interface UploadOptions {
     contentLength?: number;
     progress?: Progress<{ message?: string; increment?: number }>;
     token?: CancellationToken;
 }
 
+/**
+ * @deprecated The Azure Account extension is deprecated.
+ */
 export interface CloudShell {
     readonly status: CloudShellStatus;
     readonly onStatusChanged: Event<CloudShellStatus>;

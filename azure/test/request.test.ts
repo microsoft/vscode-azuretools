@@ -6,8 +6,7 @@
 import { createTestActionContext } from '@microsoft/vscode-azext-utils';
 import * as assert from 'assert';
 import * as http from 'http';
-import * as types from '../index';
-import { sendRequestWithTimeout } from '../src/createAzureClient';
+import { type AzExtPipelineResponse, sendRequestWithTimeout } from '../src/createAzureClient';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 type ResponseData = { statusCode: number; contentType?: string; body?: string; } | ((response: http.ServerResponse) => void);
@@ -17,7 +16,7 @@ suite('request', () => {
     let server: http.Server;
     let testResponses: ResponseData[] = [];
 
-    async function sendTestRequest(...responses: ResponseData[]): Promise<types.AzExtPipelineResponse> {
+    async function sendTestRequest(...responses: ResponseData[]): Promise<AzExtPipelineResponse> {
         testResponses = responses;
         return await sendRequestWithTimeout(await createTestActionContext(), { method: 'GET', url, allowInsecureConnection: true }, 2000, undefined);
     }

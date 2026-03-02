@@ -6,7 +6,7 @@
 import { type ManagedServiceIdentityClient } from '@azure/arm-msi';
 import { AzureWizardExecuteStepWithActivityOutput, nonNullProp, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createManagedServiceIdentityClient } from '../clients';
 import { storageProvider } from '../constants';
 import { LocationListStep } from './LocationListStep';
@@ -20,8 +20,11 @@ import { UserAssignedIdentityNameStep } from './UserAssignedIdentityNameStep';
  * But since we are appending "-identities" to the resource group name and that has the same constraints and a 90 character limit,
  * we don't need to do any verification
  **/
-export class UserAssignedIdentityCreateStep<T extends types.IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
-    // We should create this immediately after the resource group is created
+export class UserAssignedIdentityCreateStep<T extends IResourceGroupWizardContext> extends AzureWizardExecuteStepWithActivityOutput<T> {
+    /**
+     * We should create this immediately after the resource group is created
+     * 101
+     */
     public priority: number = 101;
     public stepName: string = 'UserAssignedIdentityCreateStep';
 

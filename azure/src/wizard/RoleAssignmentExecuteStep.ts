@@ -6,33 +6,56 @@
 import { AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, nonNullValueAndProp, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
 import { l10n, Progress } from 'vscode';
-import * as types from '../../index';
+import { IResourceGroupWizardContext } from './resourceGroupWizardTypes';
 import { createAuthorizationManagementClient } from '../clients';
 
 export interface Role {
+    /**
+     * The scope of the operation or resource. Valid scopes are: subscription (format:
+     *    '/subscriptions/{subscriptionId}'), resource group (format:
+     *    '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}', or resource (format:
+     *    '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/[{parentResourcePath}/]{resourceType}/{resourceName}'
+     */
     scopeId: string | undefined;
+    /**
+     * The role definition id of the role to assign. This can be created using `createRoleId`
+     */
     roleDefinitionId: string;
+    /**
+     *  The name of the role definition to assign
+     */
     roleDefinitionName: string;
 }
 
-export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> {
+export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<IResourceGroupWizardContext & Partial<ExecuteActivityContext>> {
+    /**
+     * 900
+     */
     public priority: number;
 
-    public async execute(_wiardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>, _progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
+    public async execute(_wiardContext: IResourceGroupWizardContext & Partial<ExecuteActivityContext>, _progress: Progress<{ message?: string; increment?: number; }>): Promise<void> {
         // nothing should execute, but we need shouldExecute to be true so that addExecuteSteps is called
         return Promise.resolve(undefined);
     }
-    public shouldExecute(_wizardContext: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): boolean {
+    public shouldExecute(_wizardContext: IResourceGroupWizardContext & Partial<ExecuteActivityContext>): boolean {
         return true;
     }
 
     private roles: () => (Role[] | Promise<Role[]> | undefined);
+    /**
+    * @param getScopeId A function that returns the scope id for the role assignment.
+    * The scope ID is the Azure ID of the resource that we are granting access to such as a storage account.
+    * Example: `/subscriptions/xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/rgName/providers/Microsoft.Storage/storageAccounts/resourceName`
+    * This typically won't exist until _after_ the wizard executes and the resource is created, so we need to pass in a function that returns the ID.
+    * If the scope ID is undefined, the step will throw an error.
+    * @param roles An array of roles. Each role is an object and include the ARM role definition id and name of the role definition.
+    * */
     public constructor(roles: () => (Role[] | Promise<Role[]> | undefined), options?: { priority?: number }) {
         super();
         this.roles = roles;
         this.priority = options?.priority ?? 900;
     }
-    public async addExecuteSteps(_context: types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>): Promise<AzureWizardExecuteStep<types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[]> {
+    public async addExecuteSteps(_context: IResourceGroupWizardContext & Partial<ExecuteActivityContext>): Promise<AzureWizardExecuteStep<IResourceGroupWizardContext & Partial<ExecuteActivityContext>>[]> {
         const roles = await this.roles();
         const steps = [];
         for (const role of roles ?? []) {
@@ -43,7 +66,7 @@ export class RoleAssignmentExecuteStep extends AzureWizardExecuteStep<types.IRes
     }
 }
 
-class SingleRoleAssignmentExecuteStep<T extends types.IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStepWithActivityOutput<T> {
+class SingleRoleAssignmentExecuteStep<T extends IResourceGroupWizardContext & Partial<ExecuteActivityContext>> extends AzureWizardExecuteStepWithActivityOutput<T> {
     public priority: number;
     stepName: string = 'RoleAssignmentExecuteStep';
 

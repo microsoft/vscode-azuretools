@@ -3,8 +3,6 @@
     "compilerOptions": {
         "outDir": "dist/esm",
         "rootDir": ".",
-        "declaration": false,
         "strict": true,
-        "skipLibCheck": true, // TODO: webpack typings issue
     },
 }

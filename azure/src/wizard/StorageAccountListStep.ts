@@ -6,11 +6,11 @@
 import type { NetworkRuleSet, StorageAccount } from '@azure/arm-storage';
 import { AzureWizardPromptStep, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp, openUrl } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import * as types from '../../index';
+import { INewStorageAccountDefaults, IStorageAccountWizardContext } from './storageWizardTypes';
 import { createStorageClient } from '../clients';
 import { storageProvider, storageProviderType } from '../constants';
 import { uiUtils } from '../utils/uiUtils';
-import { LocationListStep } from './LocationListStep';
+import { AzExtLocation, LocationListStep } from './LocationListStep';
 import { ResourceGroupListStep } from './ResourceGroupListStep';
 import { StorageAccountCreateStep } from './StorageAccountCreateStep';
 import { StorageAccountNameStep } from './StorageAccountNameStep';
@@ -22,51 +22,35 @@ export const storageAccountNamingRules: IAzureNamingRules = {
     lowercaseOnly: true
 };
 
-export enum StorageAccountKind {
-    Storage = 'Storage',
-    StorageV2 = 'StorageV2',
-    BlobStorage = 'BlobStorage',
-    BlockBlobStorage = 'BlockBlobStorage'
+export { StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from './storageWizardTypes';
+import { StorageAccountKind, StorageAccountPerformance, StorageAccountReplication } from './storageWizardTypes';
+
+export interface IStorageAccountFilters {
+    kind?: StorageAccountKind[];
+    performance?: StorageAccountPerformance[];
+    replication?: StorageAccountReplication[];
+
+    /**
+     * If specified, a 'learn more' option will be displayed to explain why some storage accounts were filtered
+     */
+    learnMoreLink?: string;
 }
 
-export enum StorageAccountPerformance {
-    Standard = 'Standard',
-    Premium = 'Premium'
-}
-
-export enum StorageAccountReplication {
-    /**
-     * Locally redundant storage
-     */
-    LRS = 'LRS',
+export class StorageAccountListStep<T extends IStorageAccountWizardContext> extends AzureWizardPromptStep<T> {
+    private readonly _newAccountDefaults: INewStorageAccountDefaults;
+    private readonly _filters: IStorageAccountFilters;
 
     /**
-     * Zone-redundant storage
+     * @param createOptions Default options to use when creating a Storage Account
+     * @param filterOptions Optional filters used when listing Storage Accounts
      */
-    ZRS = 'ZRS',
-
-    /**
-     * Geo-redundant storage
-     */
-    GRS = 'GRS',
-
-    /**
-     * Read-access geo-redundant storage
-     */
-    RAGRS = 'RAGRS'
-}
-
-export class StorageAccountListStep<T extends types.IStorageAccountWizardContext> extends AzureWizardPromptStep<T> implements types.StorageAccountListStep<T> {
-    private readonly _newAccountDefaults: types.INewStorageAccountDefaults;
-    private readonly _filters: types.IStorageAccountFilters;
-
-    public constructor(newAccountDefaults: types.INewStorageAccountDefaults, filters?: types.IStorageAccountFilters) {
+    public constructor(newAccountDefaults: INewStorageAccountDefaults, filters?: IStorageAccountFilters) {
         super();
         this._newAccountDefaults = newAccountDefaults;
         this._filters = filters ?? {};
     }
 
-    public static async isNameAvailable<T extends types.IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
+    public static async isNameAvailable<T extends IStorageAccountWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const storageClient = await createStorageClient(wizardContext);
         return !!(await storageClient.storageAccounts.checkNameAvailability({ name, type: storageProviderType })).nameAvailable;
     }
@@ -113,7 +97,7 @@ export class StorageAccountListStep<T extends types.IStorageAccountWizardContext
         const performanceRegExp: RegExp = new RegExp(`^${convertFilterToPattern(this._filters.performance)}_.*$`, 'i');
         const replicationRegExp: RegExp = new RegExp(`^.*_${convertFilterToPattern(this._filters.replication)}$`, 'i');
 
-        let location: types.AzExtLocation | undefined;
+        let location: AzExtLocation | undefined;
         if (LocationListStep.hasLocation(wizardContext)) {
             location = await LocationListStep.getLocation(wizardContext, storageProvider);
         }
