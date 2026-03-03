@@ -2,35 +2,26 @@
 *  Copyright (c) Microsoft Corporation. All rights reserved.
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
-
+import { CopilotClient, CopilotSession } from "@github/copilot-sdk";
 import * as vscode from "vscode";
-import { InvalidCopilotResponseError } from "../errors";
 
-const languageModelPreference: { vendor: "copilot", family: string }[] = [
-    // not yet seen/available
-    // { vendor: "copilot", family: "gpt-4-turbo-preview" },
-    // seen/available
-    { vendor: "copilot", family: "gpt-4o" },
-    { vendor: "copilot", family: "gpt-4-turbo" },
-    { vendor: "copilot", family: "gpt-4" },
-    { vendor: "copilot", family: "gpt-3.5-turbo" },
-];
+let client: CopilotClient | undefined;
+let session: CopilotSession | undefined;
 
-async function selectMostPreferredLm(): Promise<vscode.LanguageModelChat | undefined> {
-    const lms = await vscode.lm.selectChatModels({ vendor: "copilot" });
-    const lmsInPreferredOrder = (lms || [])
-        .filter((lm) => languageModelPreference.some((pref) => pref.family === lm.family && pref.vendor === lm.vendor))
-        .sort((a, b) => languageModelPreference.findIndex((pref) => pref.family === a.family && pref.vendor === a.vendor) - languageModelPreference.findIndex((pref) => pref.family === b.family && pref.vendor === b.vendor));
-    return lmsInPreferredOrder?.at(0);
-}
+export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
+    return `
+        Task: choose one pick.
 
-export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], relevantContext?: string): string {
-    return `The User is asking you to choose an item based on the following information:
-        1. Choose from this list of picks ${picks.join(", ")}.
-        2. You must choose one item from the list
-        3. Use information from this context, if available, to make your decision: ${relevantContext ? relevantContext : "No context available"}
-        4. If there is an option to skipForNow, you can choose that option.
-        Respond with a JSON object of the pick you have chosen. Do not respond in a conversational tone, only JSON. `;
+        Input:
+        picks: ${JSON.stringify(picks)}
+        placeholder: ${placeholder ?? null}
+
+        Rules:
+        - If the picks represent container image tags, always prefer the newest available image tag.
+
+        Output:
+        Return ONLY the JSON object with fields "label" and "description".
+        `;
 }
 
 export function createPrimaryPromptToGetPickManyQuickPickInput(picks: string[], relevantContext?: string): string {
@@ -63,35 +54,61 @@ export function createPrimaryPromptForWorkspaceFolderPick(folders: readonly vsco
         Respond with the workspace folder you have chosen. Do not respond in a conversational tone. `;
 }
 
-export async function doCopilotInteraction(primaryPrompt: string): Promise<string> {
-    let messages: vscode.LanguageModelChatMessage[] = [];
-    const lm: vscode.LanguageModelChat | undefined = await selectMostPreferredLm();
+export async function doGithubCopilotInteraction(primaryPrompt: string, relevantContext?: string): Promise<string> {
+    const session = await getCopilotSession(relevantContext);
+    const response = await session.sendAndWait({
+        prompt: primaryPrompt,
+        mode: "immediate"
+    });
 
-    messages = [
-        new vscode.LanguageModelChatMessage(vscode.LanguageModelChatMessageRole.User, primaryPrompt)
-    ];
-
-    if (lm !== undefined) {
-        const chatRequestOptions = { justification: `Access to Copilot for the @azure agent.` };
-        const request = await lm.sendRequest(messages, chatRequestOptions);
-        const fragments: string[] = [];
-        try {
-            // Consume the stream and collect fragments
-            for await (const fragment of request.text) {
-                fragments.push(fragment);
-            }
-
-            // Combine fragments into a single string
-            const responseText = fragments.join("");
-            const cleanedResponse = extractJsonString(responseText);
-            return cleanedResponse;
-        } catch {
-            throw new InvalidCopilotResponseError();
-        }
-    }
-    return "";
+    return response?.data.content || '';
 }
 
-function extractJsonString(raw: string): string {
-    return raw.replace(/```json\s*|```/g, '').trim();
+export async function getCopilotSession(relevantContext?: string): Promise<CopilotSession> {
+    if (session) {
+        return session;
+    }
+
+    client = new CopilotClient();
+    session = await client.createSession();
+    const activityChildren = extractActivityChildren(relevantContext || '');
+    const subscriptionId = relevantContext ? extractSubscriptionIdFromContext(relevantContext) : undefined;
+
+    await session.sendAndWait({
+        mode: "immediate",
+        prompt: `Picker. Choose one. Never explain your reasoning. Never use markdown. Output: {"label":"X","description":"Y"}
+
+            Rules (priority)
+            1. Match activityChildren "Use X" → pick X
+            2. Match subscriptionId → pick.data /subscriptions/{id}
+            3. Else skipForNow
+
+            Context: ${JSON.stringify({ activityChildren, subscriptionId, relevantContext })}`
+    });
+
+    return session;
+}
+
+export async function disposeCopilotSession(): Promise<void> {
+    if (client) {
+        await client.stop();
+        client = undefined;
+        session = undefined;
+    }
+}
+
+function extractSubscriptionIdFromContext(context: string): string | undefined {
+    const regex = /https:\/\/management\.azure\.com\/subscriptions\/([0-9a-fA-F-]{36})/;
+    const match = context.match(regex);
+    return match ? match[1] : undefined;
+}
+
+function extractActivityChildren(context: string): string | undefined {
+    try {
+        const activityLog = JSON.parse(context) as { children?: unknown };
+        const children = activityLog.children;
+        return JSON.stringify(children);
+    } catch {
+        return undefined;
+    }
 }
