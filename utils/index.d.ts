@@ -2943,6 +2943,6 @@ export function isCopilotUserInput(context: IActionContext): boolean;
  * When setting the ui to `CopilotUserInput`, call this function so that the context can be properly identified
  * @param context The context to mark as using `CopilotUserInput`
  */
-export function markAsCopilotUserInput(context: IActionContext): void;
+export function markAsCopilotUserInput(context: IActionContext, relevantContext?: string, getLoadingView?: () => vscode.WebviewPanel | undefined): void;
 
 // #endregion
