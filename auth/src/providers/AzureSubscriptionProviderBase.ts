@@ -163,7 +163,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                                     }
                                     // Don't rethrow--skip tenants that fail for other reasons
                                     // (e.g., locked account) so remaining tenants can still be listed
-                                    this.logForTenant(tenant, `Skipping account+tenant due to error: ${err}`);
+                                    this.warnForTenant(tenant, `Skipping account+tenant due to error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
                                 }
                             }));
                         }
@@ -173,7 +173,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             return;
                         }
                         // Log and skip accounts that fail for other reasons (e.g., locked account)
-                        this.logForAccount(account, `Skipping account due to error: ${err}`);
+                        this.warnForAccount(account, `Skipping account due to error: ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`);
                     }
                 }));
             }
@@ -395,6 +395,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
     protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
         this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected warnForAccount(account: AzureAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(account)}] ${message}`);
+    }
+
+    protected warnForTenant(tenant: TenantIdAndAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
     }
 
     protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
