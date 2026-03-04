@@ -161,7 +161,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                                         this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
                                         return;
                                     }
-                                    throw err;
+                                    // Don't rethrow--skip tenants that fail for other reasons
+                                    // (e.g., locked account) so remaining tenants can still be listed
+                                    this.logForTenant(tenant, `Skipping account+tenant due to error: ${err}`);
                                 }
                             }));
                         }
@@ -170,6 +172,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             this.logForAccount(account, 'Skipping account because it is not signed in');
                             return;
                         }
+                        // Log and skip accounts that fail for other reasons (e.g., locked account)
+                        this.logForAccount(account, `Skipping account due to error: ${err}`);
                     }
                 }));
             }
