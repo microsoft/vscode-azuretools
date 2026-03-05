@@ -5,6 +5,7 @@
 
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import { inspect } from 'util';
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
@@ -161,7 +162,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                                         this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
                                         return;
                                     }
-                                    throw err;
+                                    // Don't rethrow--skip tenants that fail for other reasons
+                                    // (e.g., locked account) so remaining tenants can still be listed
+                                    this.errorForTenant(tenant, 'Skipping account+tenant due to error', err);
                                 }
                             }));
                         }
@@ -170,6 +173,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             this.logForAccount(account, 'Skipping account because it is not signed in');
                             return;
                         }
+                        // Log and skip accounts that fail for other reasons (e.g., locked account)
+                        this.errorForAccount(account, 'Skipping account due to error', err);
                     }
                 }));
             }
@@ -391,6 +396,32 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
     protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
         this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected warnForAccount(account: AzureAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(account)}] ${message}`);
+    }
+
+    protected warnForTenant(tenant: TenantIdAndAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected errorForAccount(account: AzureAccount, message: string, err: unknown): void {
+        this.logger?.error(`[auth] [account: ${screen(account)}] ${message}`);
+        if (err instanceof Error) {
+            this.logger?.error(err);
+        } else {
+            this.logger?.error(`[auth] [account: ${screen(account)}] ${inspect(err)}`);
+        }
+    }
+
+    protected errorForTenant(tenant: TenantIdAndAccount, message: string, err: unknown): void {
+        this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        if (err instanceof Error) {
+            this.logger?.error(err);
+        } else {
+            this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${inspect(err)}`);
+        }
     }
 
     protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
