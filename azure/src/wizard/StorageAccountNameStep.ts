@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { StorageManagementClient } from '@azure/arm-storage';
 import { AzureNameStep } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
-import { createStorageClient } from '../clients';
+import { createStorageClient, CommonStorageManagementClient } from '../clients';
 import { storageProviderType } from '../constants';
 import { ResourceGroupListStep, resourceGroupNamingRules } from './ResourceGroupListStep';
 import { storageAccountNamingRules } from './StorageAccountListStep';
@@ -35,7 +34,7 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         return await ResourceGroupListStep.isNameAvailable(wizardContext, name);
     }
 
-    private async validateStorageAccountName(client: StorageManagementClient, name: string): Promise<string | undefined> {
+    private async validateStorageAccountName(client: CommonStorageManagementClient, name: string): Promise<string | undefined> {
         name = name.trim();
         if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
             return vscode.l10n.t('The name must be between {0} and {1} characters.', storageAccountNamingRules.minLength, storageAccountNamingRules.maxLength);
