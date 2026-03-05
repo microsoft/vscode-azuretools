@@ -1,9 +1,5 @@
 // @ts-check
 const vscode = require('vscode');
-// Use require() — NOT dynamic import() — so the debugger can resolve sourcemaps
-// at module load time. This is critical for breakpoint binding.
-const { InstrumentedSubscriptionProvider } = require('../../../dist/test/perf/InstrumentedSubscriptionProvider');
-const { getSessionFromVSCodeTimings } = require('../../../dist/src/utils/getSessionFromVSCode');
 
 /**
  * Minimal extension for profiling Azure subscription listing performance.
@@ -33,6 +29,12 @@ function activate(context) {
 }
 
 async function runProfile() {
+    // Dynamic import so the extension activates fast — the compiled TS
+    // is in dist/esm/ relative to the auth package root.
+    const { InstrumentedSubscriptionProvider } = await import(
+        '../../../dist/esm/test/perf/InstrumentedSubscriptionProvider.js'
+    );
+
     const provider = new InstrumentedSubscriptionProvider(output);
 
     // ── Step 1: Sign in ──────────────────────────────────────────────
@@ -59,37 +61,35 @@ async function runProfile() {
     // ── Step 2: Warm-up run (ignore timings) ─────────────────────────
     output.info('');
     output.info('Warm-up run (timings discarded)...');
-    getSessionFromVSCodeTimings.length = 0;
     try {
         await provider.getAvailableSubscriptions({ noCache: true, filter: false });
     } catch (err) {
         output.warn(`Warm-up had an error (continuing anyway): ${err}`);
     }
 
-    // ── Step 3: Cold profiled runs (noCache) ────────────────────────
-    const coldRuns = 5;
+    // ── Step 3: Profiled runs ────────────────────────────────────────
+    const runs = 3;
     /** @type {number[]} */
-    const coldTimes = [];
+    const e2eTimes = [];
 
-    for (let i = 0; i < coldRuns; i++) {
+    for (let i = 0; i < runs; i++) {
         output.info('');
         output.info(`═══════════════════════════════════════════════════════`);
-        output.info(`  Cold Run ${i + 1}/${coldRuns} (noCache)`);
+        output.info(`  Run ${i + 1}/${runs} (cold, noCache)`);
         output.info(`═══════════════════════════════════════════════════════`);
 
         provider.tracker.reset();
-        getSessionFromVSCodeTimings.length = 0;
         const start = performance.now();
 
         try {
             const subs = await provider.getAvailableSubscriptions({ noCache: true, filter: false });
             const elapsed = performance.now() - start;
-            coldTimes.push(elapsed);
+            e2eTimes.push(elapsed);
 
             output.info(`Returned ${subs.length} subscriptions in ${Math.round(elapsed)}ms`);
         } catch (err) {
             const elapsed = performance.now() - start;
-            coldTimes.push(elapsed);
+            e2eTimes.push(elapsed);
             output.error(`Failed after ${Math.round(elapsed)}ms: ${err}`);
         }
 
@@ -103,85 +103,17 @@ async function runProfile() {
         for (const [phase, data] of Object.entries(summary)) {
             output.info(`  ${phase}: ${Math.round(data.totalMs)}ms total (${data.count} call(s))`);
         }
-
-        // Print vscode.authentication.getSession timings
-        output.info('');
-        output.info('  ── vscode.authentication.getSession calls ──');
-        for (const t of getSessionFromVSCodeTimings) {
-            const tenant = t.tenantId ? t.tenantId.substring(0, 8) + '…' : '(default)';
-            const mode = t.createIfNone ? 'createIfNone' : t.silent ? 'silent' : 'default';
-            output.info(`    ${Math.round(t.elapsed)}ms  tenant=${tenant}  mode=${mode}`);
-        }
-        output.info(`  Total getSession calls: ${getSessionFromVSCodeTimings.length}, total time: ${Math.round(getSessionFromVSCodeTimings.reduce((a, b) => a + b.elapsed, 0))}ms`);
-    }
-
-    // ── Step 4: Warm profiled runs (cached) ──────────────────────────
-    const warmRuns = 5;
-    /** @type {number[]} */
-    const warmTimes = [];
-
-    for (let i = 0; i < warmRuns; i++) {
-        output.info('');
-        output.info(`═══════════════════════════════════════════════════════`);
-        output.info(`  Warm Run ${i + 1}/${warmRuns} (cached)`);
-        output.info(`═══════════════════════════════════════════════════════`);
-
-        provider.tracker.reset();
-        getSessionFromVSCodeTimings.length = 0;
-        const start = performance.now();
-
-        try {
-            const subs = await provider.getAvailableSubscriptions({ filter: false });
-            const elapsed = performance.now() - start;
-            warmTimes.push(elapsed);
-
-            output.info(`Returned ${subs.length} subscriptions in ${Math.round(elapsed)}ms`);
-        } catch (err) {
-            const elapsed = performance.now() - start;
-            warmTimes.push(elapsed);
-            output.error(`Failed after ${Math.round(elapsed)}ms: ${err}`);
-        }
-
-        // Print detailed report
-        output.info('');
-        output.info(provider.tracker.formatReport());
-
-        // Print summary
-        output.info('');
-        const summary = provider.tracker.getSummary();
-        for (const [phase, data] of Object.entries(summary)) {
-            output.info(`  ${phase}: ${Math.round(data.totalMs)}ms total (${data.count} call(s))`);
-        }
-
-        // Print vscode.authentication.getSession timings
-        output.info('');
-        output.info('  ── vscode.authentication.getSession calls ──');
-        for (const t of getSessionFromVSCodeTimings) {
-            const tenant = t.tenantId ? t.tenantId.substring(0, 8) + '…' : '(default)';
-            const mode = t.createIfNone ? 'createIfNone' : t.silent ? 'silent' : 'default';
-            output.info(`    ${Math.round(t.elapsed)}ms  tenant=${tenant}  mode=${mode}`);
-        }
-        output.info(`  Total getSession calls: ${getSessionFromVSCodeTimings.length}, total time: ${Math.round(getSessionFromVSCodeTimings.reduce((a, b) => a + b.elapsed, 0))}ms`);
     }
 
     // ── Final summary ────────────────────────────────────────────────
     output.info('');
     output.info('═══════════════════════════════════════════════════════');
-    output.info('  Cold Runs Variance Summary');
+    output.info('  Variance Summary');
     output.info('═══════════════════════════════════════════════════════');
-    output.info(`  Runs: ${coldTimes.map(t => `${Math.round(t)}ms`).join(', ')}`);
-    output.info(`  Min:  ${Math.round(Math.min(...coldTimes))}ms`);
-    output.info(`  Max:  ${Math.round(Math.max(...coldTimes))}ms`);
-    output.info(`  Avg:  ${Math.round(coldTimes.reduce((a, b) => a + b, 0) / coldTimes.length)}ms`);
-
-    output.info('');
-    output.info('═══════════════════════════════════════════════════════');
-    output.info('  Warm Runs (Cached) Variance Summary');
-    output.info('═══════════════════════════════════════════════════════');
-    output.info(`  Runs: ${warmTimes.map(t => `${Math.round(t)}ms`).join(', ')}`);
-    output.info(`  Min:  ${Math.round(Math.min(...warmTimes))}ms`);
-    output.info(`  Max:  ${Math.round(Math.max(...warmTimes))}ms`);
-    output.info(`  Avg:  ${Math.round(warmTimes.reduce((a, b) => a + b, 0) / warmTimes.length)}ms`);
+    output.info(`  Runs: ${e2eTimes.map(t => `${Math.round(t)}ms`).join(', ')}`);
+    output.info(`  Min:  ${Math.round(Math.min(...e2eTimes))}ms`);
+    output.info(`  Max:  ${Math.round(Math.max(...e2eTimes))}ms`);
+    output.info(`  Avg:  ${Math.round(e2eTimes.reduce((a, b) => a + b, 0) / e2eTimes.length)}ms`);
 
     provider.dispose();
 

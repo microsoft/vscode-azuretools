@@ -11,8 +11,8 @@ import type { AzureSubscription } from '../../src/contracts/AzureSubscription';
 import type { TenantIdAndAccount } from '../../src/contracts/AzureSubscriptionProvider';
 import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions } from '../../src/contracts/AzureSubscriptionProviderRequestOptions';
 import type { AzureTenant } from '../../src/contracts/AzureTenant';
-import { VSCodeAzureSubscriptionProvider } from '../../src/providers/VSCodeAzureSubscriptionProvider.js';
-import { instrumentCredential, PerfTracker } from './SubscriptionListingPerf.js';
+import { VSCodeAzureSubscriptionProvider } from '../../src/providers/VSCodeAzureSubscriptionProvider';
+import { instrumentCredential, PerfTracker } from './SubscriptionListingPerf';
 
 /**
  * An instrumented version of {@link VSCodeAzureSubscriptionProvider} that records

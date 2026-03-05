@@ -21,9 +21,6 @@
                 "--profile=Default",
                 "--extensionDevelopmentPath=${workspaceFolder}/test/perf/test-extension"
             ],
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
-            ],
             "preLaunchTask": "npm: build"
         }
     ]
