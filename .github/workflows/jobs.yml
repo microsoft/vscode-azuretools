@@ -5,6 +5,10 @@ on:
         required: false
         type: string
         default: "."
+      use_no_optional:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   Build:
@@ -21,7 +25,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
-      - run: npm ci --no-optional
+      - run: npm ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
 
       # Lint
       - run: npm run lint
