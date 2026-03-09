@@ -155,7 +155,7 @@ export async function waitForDeploymentToComplete(context: IActionContext & Part
                 } else if (latestDeployment.id === expectedId) {
                     deployment = latestDeployment;
                     permanentId = latestDeployment.id;
-                } else if (latestDeployment.status == null) {
+                } else if (latestDeployment.status === undefined || latestDeployment.status === null) {
                     // it is possible that the Kudu instance gets recycled in which case, the response of calling latest would be an empty {}
                     throw new Error(l10n.t('Failed to retrieve deployment status.'));
                 }
