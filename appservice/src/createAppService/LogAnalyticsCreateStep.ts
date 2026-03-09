@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtLocation, getResourceGroupFromId, LocationListStep, uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { AzureWizardExecuteStep, ExecuteActivityContext, nonNullProp, nonNullValueAndProp } from "@microsoft/vscode-azext-utils";
+import { AzureWizardExecuteStepWithActivityOutput, ExecuteActivityContext, nonNullProp, nonNullValueAndProp } from "@microsoft/vscode-azext-utils";
 import { l10n, Progress } from "vscode";
 import { createOperationalInsightsManagementClient } from "../utils/azureClients";
 import { getAppInsightsSupportedLocation } from "./getAppInsightsSupportedLocation";
 import { IAppServiceWizardContext } from "./IAppServiceWizardContext";
 
-export class LogAnalyticsCreateStep extends AzureWizardExecuteStep<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
+export class LogAnalyticsCreateStep extends AzureWizardExecuteStepWithActivityOutput<IAppServiceWizardContext & Partial<ExecuteActivityContext>> {
     public priority: number = 134;
     public stepName = 'LogAnalyticsCreateStep';
     private _usedExistingLaw: boolean = false;

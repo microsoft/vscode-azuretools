@@ -118,9 +118,8 @@ export class DeploymentTreeItem extends AzExtTreeItem {
             });
         });
 
-        let data: string = '';
-        for (const logEntry of logEntries) {
-            data += this.formatLogEntry(logEntry);
+        // Fetch all log entry details in parallel instead of sequentially
+        const detailResults = await Promise.all(logEntries.map(async (logEntry) => {
             let detailedLogEntries: KuduModels.LogEntry[] = [];
             await retryKuduCall(context, 'getLogEntryDetails', async () => {
                 await ignore404Error(context, async () => {
@@ -129,7 +128,12 @@ export class DeploymentTreeItem extends AzExtTreeItem {
                     }
                 });
             });
+            return { logEntry, detailedLogEntries };
+        }));
 
+        let data: string = '';
+        for (const { logEntry, detailedLogEntries } of detailResults) {
+            data += this.formatLogEntry(logEntry);
             for (const detailedEntry of detailedLogEntries) {
                 data += this.formatLogEntry(detailedEntry);
             }
