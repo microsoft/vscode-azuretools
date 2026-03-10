@@ -483,7 +483,12 @@ function maybeImproveSignInError(err: unknown, tenantId: string | undefined): un
                 tenantHint,
             ),
         );
-        improved.stack = err.stack;
+        // Preserve the improved error's own stack and message, but retain the
+        // original error for diagnostics.
+        (improved as any).cause = err;
+        if (err.stack && improved.stack) {
+            improved.stack += `\nCaused by: ${err.stack}`;
+        }
         return improved;
     }
 
