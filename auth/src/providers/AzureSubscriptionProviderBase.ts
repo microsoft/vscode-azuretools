@@ -387,15 +387,15 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected log(message: string): void {
-        this.logger?.debug(`[auth] ${message}`);
+        this.logger?.info(`[auth] ${message}`);
     }
 
     protected logForAccount(account: AzureAccount, message: string): void {
-        this.logger?.debug(`[auth] [account: ${screen(account)}] ${message}`);
+        this.logger?.info(`[auth] [account: ${screen(account)}] ${message}`);
     }
 
     protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        this.logger?.info(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
     }
 
     protected warnForAccount(account: AzureAccount, message: string): void {
