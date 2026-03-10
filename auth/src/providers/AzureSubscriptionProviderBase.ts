@@ -96,16 +96,21 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.silenceRefreshEvents();
         }
 
-        const session = await getSessionFromVSCode(
-            undefined,
-            tenant?.tenantId,
-            {
-                account: tenant?.account,
-                clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
-                createIfNone: prompt,
-                silent: !prompt,
-            }
-        );
+        let session: vscode.AuthenticationSession | undefined;
+        try {
+            session = await getSessionFromVSCode(
+                undefined,
+                tenant?.tenantId,
+                {
+                    account: tenant?.account,
+                    clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
+                    createIfNone: prompt,
+                    silent: !prompt,
+                }
+            );
+        } catch (err) {
+            throw maybeImproveSignInError(err, tenant?.tenantId);
+        }
 
         if (prompt) {
             // Interactive sign in can take a while, so silence events for a bit longer
@@ -452,4 +457,38 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         this.logger?.error(`[auth] Error occurred: ${err}`);
         throw err;
     }
+}
+
+/**
+ * Inspects an error thrown during sign-in and returns a more user-friendly
+ * error when possible (e.g. native broker errors), otherwise returns the
+ * original error unchanged.
+ */
+function maybeImproveSignInError(err: unknown, tenantId: string | undefined): unknown {
+    if (!(err instanceof Error)) {
+        return err;
+    }
+
+    const message = err.message;
+
+    // The native MSAL broker surfaces opaque "platform_broker_error" messages
+    // that don't tell the user what went wrong. Re-wrap with actionable text.
+    if (message.includes('platform_broker_error')) {
+        const tenantHint = tenantId
+            ? vscode.l10n.t(' for tenant "{0}"', tenantId)
+            : '';
+        const improved = new Error(
+            vscode.l10n.t(
+                'Sign-in failed{0}. The tenant may have expired or is no longer valid. Please verify the tenant is still active and try again.',
+                tenantHint,
+            ),
+            { cause: err },
+        );
+        if (err.stack && improved.stack) {
+            improved.stack += `\nCaused by: ${err.stack}`;
+        }
+        return improved;
+    }
+
+    return err;
 }
