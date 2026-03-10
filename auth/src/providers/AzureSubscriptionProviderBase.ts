@@ -482,10 +482,8 @@ function maybeImproveSignInError(err: unknown, tenantId: string | undefined): un
                 'Sign-in failed{0}. The tenant may have expired or is no longer valid. Please verify the tenant is still active and try again.',
                 tenantHint,
             ),
+            { cause: err },
         );
-        // Preserve the improved error's own stack and message, but retain the
-        // original error for diagnostics.
-        (improved as any).cause = err;
         if (err.stack && improved.stack) {
             improved.stack += `\nCaused by: ${err.stack}`;
         }
