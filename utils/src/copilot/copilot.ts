@@ -2,11 +2,16 @@
 *  Copyright (c) Microsoft Corporation. All rights reserved.
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
-import { CopilotClient, CopilotSession } from "@github/copilot-sdk";
+
+import type { CopilotClient, CopilotSession } from "@github/copilot-sdk";
 import * as vscode from "vscode";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
+
+async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
+    return await import("@github/copilot-sdk");
+}
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
     return `
@@ -69,6 +74,7 @@ export async function getCopilotSession(relevantContext?: string): Promise<Copil
         return session;
     }
 
+    const { CopilotClient } = await loadCopilotSdk();
     client = new CopilotClient();
     session = await client.createSession();
     const activityChildren = extractActivityChildren(relevantContext || '');
@@ -98,7 +104,7 @@ export async function disposeCopilotSession(): Promise<void> {
 }
 
 function extractSubscriptionIdFromContext(context: string): string | undefined {
-    const regex = /https:\/\/management\.azure\.com\/subscriptions\/([0-9a-fA-F-]{36})/;
+    const regex = /https:\/\/management\.[^/]+\/subscriptions\/([0-9a-fA-F-]{36})/;
     const match = context.match(regex);
     return match ? match[1] : undefined;
 }
