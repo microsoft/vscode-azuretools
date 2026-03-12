@@ -78,6 +78,7 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         const options: AgentInputBoxOptions = {
             prompt,
             placeHolder,
+            value: context.newResourceGroupName ?? context.resourceGroup?.name,
             validateInput: (name: string): string | undefined => this.validateSiteName(context, name),
             asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(context, client, name),
             agentMetadata: agentMetadata
