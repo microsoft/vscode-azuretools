@@ -75,10 +75,15 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             siteNamingRules.maxLength = 32;
         }
 
+        const defaultNameCandidate: string | undefined = context.newResourceGroupName ?? context.resourceGroup?.name;
+        const defaultValue: string | undefined = defaultNameCandidate && !this.validateSiteName(context, defaultNameCandidate)
+            ? defaultNameCandidate
+            : undefined;
+
         const options: AgentInputBoxOptions = {
             prompt,
             placeHolder,
-            value: context.newResourceGroupName ?? context.resourceGroup?.name,
+            value: defaultValue,
             validateInput: (name: string): string | undefined => this.validateSiteName(context, name),
             asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(context, client, name),
             agentMetadata: agentMetadata
