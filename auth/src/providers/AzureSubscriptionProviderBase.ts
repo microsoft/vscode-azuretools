@@ -5,6 +5,7 @@
 
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import { inspect } from 'util';
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
@@ -95,16 +96,21 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.silenceRefreshEvents();
         }
 
-        const session = await getSessionFromVSCode(
-            undefined,
-            tenant?.tenantId,
-            {
-                account: tenant?.account,
-                clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
-                createIfNone: prompt,
-                silent: !prompt,
-            }
-        );
+        let session: vscode.AuthenticationSession | undefined;
+        try {
+            session = await getSessionFromVSCode(
+                undefined,
+                tenant?.tenantId,
+                {
+                    account: tenant?.account,
+                    clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
+                    createIfNone: prompt,
+                    silent: !prompt,
+                }
+            );
+        } catch (err) {
+            throw maybeImproveSignInError(err, tenant?.tenantId);
+        }
 
         if (prompt) {
             // Interactive sign in can take a while, so silence events for a bit longer
@@ -161,7 +167,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                                         this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
                                         return;
                                     }
-                                    throw err;
+                                    // Don't rethrow--skip tenants that fail for other reasons
+                                    // (e.g., locked account) so remaining tenants can still be listed
+                                    this.errorForTenant(tenant, 'Skipping account+tenant due to error', err);
                                 }
                             }));
                         }
@@ -170,6 +178,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             this.logForAccount(account, 'Skipping account because it is not signed in');
                             return;
                         }
+                        // Log and skip accounts that fail for other reasons (e.g., locked account)
+                        this.errorForAccount(account, 'Skipping account due to error', err);
                     }
                 }));
             }
@@ -382,15 +392,41 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected log(message: string): void {
-        this.logger?.debug(`[auth] ${message}`);
+        this.logger?.info(`[auth] ${message}`);
     }
 
     protected logForAccount(account: AzureAccount, message: string): void {
-        this.logger?.debug(`[auth] [account: ${screen(account)}] ${message}`);
+        this.logger?.info(`[auth] [account: ${screen(account)}] ${message}`);
     }
 
     protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        this.logger?.info(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected warnForAccount(account: AzureAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(account)}] ${message}`);
+    }
+
+    protected warnForTenant(tenant: TenantIdAndAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected errorForAccount(account: AzureAccount, message: string, err: unknown): void {
+        this.logger?.error(`[auth] [account: ${screen(account)}] ${message}`);
+        if (err instanceof Error) {
+            this.logger?.error(err);
+        } else {
+            this.logger?.error(`[auth] [account: ${screen(account)}] ${inspect(err)}`);
+        }
+    }
+
+    protected errorForTenant(tenant: TenantIdAndAccount, message: string, err: unknown): void {
+        this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        if (err instanceof Error) {
+            this.logger?.error(err);
+        } else {
+            this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${inspect(err)}`);
+        }
     }
 
     protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
@@ -421,4 +457,38 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         this.logger?.error(`[auth] Error occurred: ${err}`);
         throw err;
     }
+}
+
+/**
+ * Inspects an error thrown during sign-in and returns a more user-friendly
+ * error when possible (e.g. native broker errors), otherwise returns the
+ * original error unchanged.
+ */
+function maybeImproveSignInError(err: unknown, tenantId: string | undefined): unknown {
+    if (!(err instanceof Error)) {
+        return err;
+    }
+
+    const message = err.message;
+
+    // The native MSAL broker surfaces opaque "platform_broker_error" messages
+    // that don't tell the user what went wrong. Re-wrap with actionable text.
+    if (message.includes('platform_broker_error')) {
+        const tenantHint = tenantId
+            ? vscode.l10n.t(' for tenant "{0}"', tenantId)
+            : '';
+        const improved = new Error(
+            vscode.l10n.t(
+                'Sign-in failed{0}. The tenant may have expired or is no longer valid. Please verify the tenant is still active and try again.',
+                tenantHint,
+            ),
+            { cause: err },
+        );
+        if (err.stack && improved.stack) {
+            improved.stack += `\nCaused by: ${err.stack}`;
+        }
+        return improved;
+    }
+
+    return err;
 }
