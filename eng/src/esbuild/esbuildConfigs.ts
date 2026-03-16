@@ -207,9 +207,9 @@ export interface DualBundleConfig {
  * @param esm (Optional, default: false) True if the ESM configs should be returned
  * @param telemetry (Optional, default: true) True if the telemetry config should be included
  * @returns
- * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + telemetry config
- * - else if `--watch` is passed as an argument, returns the dev config + telemetry config
- * - else, returns the prod config + telemetry config
+ * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
+ * - else if `--watch` is passed as an argument, returns the dev config + optional telemetry config
+ * - else, returns the prod config + optional telemetry config
  */
 export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): DualBundleConfig {
     let extensionConfig: EsbuildConfig;
