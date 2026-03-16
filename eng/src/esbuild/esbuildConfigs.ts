@@ -54,6 +54,8 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
  */
 export const extensionEsbuildConfig: EsbuildConfig = {
     ...baseEsbuildConfig,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    external: [...baseEsbuildConfig.external!, './extension-telemetry.bundle.js'],
     mainFields: ['module', 'main'], // Use the 'module' field in package.json to get ESM versions of dependencies when available
     keepNames: true,
     entryPoints: [{
@@ -96,7 +98,7 @@ export const extensionEsbuildConfig: EsbuildConfig = {
         },
     ],
     alias: {
-        '@vscode/extension-telemetry': './dist/extension-telemetry.bundle.js',
+        '@vscode/extension-telemetry': './extension-telemetry.bundle.js',
     },
 };
 
