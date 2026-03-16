@@ -133,6 +133,7 @@ export const azExtEsbuildConfigDebug: EsbuildConfig = {
 // #endregion
 
 // #region ESM configs - Here be dragons
+// NOTE: ESM extensions must set `"type": "module"` in their package.json for these configs to work correctly.
 
 /**
  * For ESM builds, a banner is needed to create the 'require' function, since not all of our dependencies are available as ESM
