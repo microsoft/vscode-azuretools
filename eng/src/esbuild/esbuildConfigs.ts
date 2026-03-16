@@ -54,6 +54,7 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
  */
 export const extensionEsbuildConfig: EsbuildConfig = {
     ...baseEsbuildConfig,
+    external: [...(baseEsbuildConfig.external ?? []), './extension-telemetry.bundle.js'],
     mainFields: ['module', 'main'], // Use the 'module' field in package.json to get ESM versions of dependencies when available
     keepNames: true,
     entryPoints: [{
@@ -96,7 +97,7 @@ export const extensionEsbuildConfig: EsbuildConfig = {
         },
     ],
     alias: {
-        '@vscode/extension-telemetry': './dist/extension-telemetry.bundle.js',
+        '@vscode/extension-telemetry': './extension-telemetry.bundle.js',
     },
 };
 
@@ -197,28 +198,32 @@ export interface DualBundleConfig {
     /**
      * Config for building the telemetry bundle
      */
-    telemetryConfig: EsbuildConfig;
+    telemetryConfig?: EsbuildConfig;
 }
 
 /**
  * Auto-selects the appropriate esbuild config based on environment variables and command line args
- * @param esm (Optional) True if the ESM configs should be returned
+ * @param esm (Optional, default: false) True if the ESM configs should be returned
+ * @param telemetry (Optional, default: true) True if the telemetry config should be included
  * @returns
- * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + telemetry config
- * - else if `--watch` is passed, returns the dev config + telemetry config
- * - else, returns the prod config + telemetry config
+ * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
+ * - else if `--watch` is passed as an argument, returns the dev config + optional telemetry config
+ * - else, returns the prod config + optional telemetry config
  */
-export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
+export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): DualBundleConfig {
     let extensionConfig: EsbuildConfig;
+    let telemetryConfig: EsbuildConfig | undefined;
     if (isAutoDebug) {
-        extensionConfig = !!esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+        extensionConfig = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
     } else if (isAutoWatch) {
-        extensionConfig = !!esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
+        extensionConfig = esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
     } else {
-        extensionConfig = !!esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
+        extensionConfig = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }
 
-    const telemetryConfig = !!esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
+    if (telemetry) {
+        telemetryConfig = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
+    }
 
     return { extensionConfig, telemetryConfig, };
 }
@@ -238,7 +243,9 @@ export function autoSelectEsbuildConfig(esm?: boolean): DualBundleConfig {
  */
 export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
     // Build telemetry bundle first (needed because the extension bundle depends on it)
-    await build(configs.telemetryConfig);
+    if (!!configs.telemetryConfig) {
+        await build(configs.telemetryConfig);
+    }
 
     // Build (or watch) the extension bundle next
     if (isAutoWatch) {
