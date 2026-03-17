@@ -3,10 +3,12 @@ on:
   schedule:
     - cron: 0 5 * * * # 10:00pm PT
   workflow_dispatch:
+  workflow_call:
     inputs:
       days:
         description: 'Number of days of inactivity before locking a closed issue (default: 28)'
         required: false
+        type: string
         default: '28'
 
 permissions:
@@ -17,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Lock Inactive Closed Issues
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
-          DAYS: ${{ github.event.inputs.days || '28' }}
+          DAYS: ${{ inputs.days || '28' }}
         with:
           script: |
             const days = parseInt(process.env.DAYS);
