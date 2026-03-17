@@ -27,7 +27,7 @@
   "Creating slot \"{0}\"...": "Creating slot \"{0}\"...",
   "The slot name \"{0}\" is not available.": "The slot name \"{0}\" is not available.",
   "The slot name must be at least {0} characters.": "The slot name must be at least {0} characters.",
-  "The combined site name and slot name must be fewer than {0} characters.": "The combined site name and slot name must be fewer than {0} characters.",
+  "The combined site name and slot name must be {0} characters or fewer.": "The combined site name and slot name must be {0} characters or fewer.",
   "The name can only contain letters, numbers, or hyphens.": "The name can only contain letters, numbers, or hyphens.",
   "Don't clone configuration from an existing slot": "Don't clone configuration from an existing slot",
   "Choose a configuration source.": "Choose a configuration source.",

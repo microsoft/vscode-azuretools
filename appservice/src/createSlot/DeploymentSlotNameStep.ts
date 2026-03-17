@@ -41,12 +41,12 @@ export class DeploymentSlotNameStep extends AzureWizardPromptStep<ICreateSlotCon
 async function validateSlotName(value: string, client: ServiceClient, site: ParsedSite): Promise<string | undefined> {
     value = value.trim();
     // Can not have "production" as a slot name, but checkNameAvailability doesn't validate that
-    if (value === 'production') {
+    if (value.toLowerCase() === 'production') {
         return l10n.t('The slot name "{0}" is not available.', value);
     } else if (value.length < slotNamingRules.minLength) {
         return l10n.t('The slot name must be at least {0} characters.', slotNamingRules.minLength);
     } else if (value.length + site.siteName.length > slotNamingRules.maxLength) {
-        return l10n.t('The combined site name and slot name must be fewer than {0} characters.', slotNamingRules.maxLength);
+        return l10n.t('The combined site name and slot name must be {0} characters or fewer.', slotNamingRules.maxLength);
     } else if (slotNamingRules.invalidCharsRegExp.test(value)) {
         return l10n.t("The name can only contain letters, numbers, or hyphens.");
     } else {
