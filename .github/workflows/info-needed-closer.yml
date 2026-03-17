@@ -42,8 +42,8 @@ jobs:
                   repo: context.repo.repo,
                   username,
                 });
-                // 'admin' and 'write' both grant write access
-                const result = data.permission === 'admin' || data.permission === 'write';
+                // 'admin', 'maintain', and 'write' all grant write access
+                const result = data.permission === 'admin' || data.permission === 'maintain' || data.permission === 'write';
                 permissionCache[username] = result;
                 return result;
               } catch (err) {
