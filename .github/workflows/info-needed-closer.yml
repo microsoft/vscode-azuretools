@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Close Info Needed Issues
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           DAYS: ${{ github.event.inputs.days || '14' }}
         with:
