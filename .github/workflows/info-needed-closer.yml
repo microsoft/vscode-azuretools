@@ -11,6 +11,7 @@ on:
 
 permissions:
   issues: write
+  contents: read
 
 jobs:
   main:
@@ -28,8 +29,29 @@ jobs:
 
             core.info(`Closing issues with 'info-needed' label inactive for more than ${days} days (cutoff: ${cutoffDate.toISOString()})`);
 
-            // Users with these author associations have write access to the repo
-            const writeAccessAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+            // Cache of permission lookups to avoid redundant API calls for the same user
+            const permissionCache = {};
+
+            async function hasWriteAccess(username) {
+              if (permissionCache[username] !== undefined) {
+                return permissionCache[username];
+              }
+              try {
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username,
+                });
+                // 'admin' and 'write' both grant write access
+                const result = data.permission === 'admin' || data.permission === 'write';
+                permissionCache[username] = result;
+                return result;
+              } catch (err) {
+                // User is not a collaborator or permission lookup failed
+                permissionCache[username] = false;
+                return false;
+              }
+            }
 
             // Fetch all open issues with the 'info-needed' label
             const issues = await github.paginate(github.rest.issues.listForRepo, {
@@ -77,12 +99,13 @@ jobs:
               }
 
               // Only close if the last comment was made by someone with write access
-              if (!writeAccessAssociations.includes(lastComment.author_association)) {
-                core.info(`Issue #${issue.number}: last comment by ${lastComment.user?.login} (association: ${lastComment.author_association}) does not have write access, skipping`);
+              const commenter = lastComment.user?.login;
+              if (!commenter || !(await hasWriteAccess(commenter))) {
+                core.info(`Issue #${issue.number}: last comment by ${commenter} does not have write access, skipping`);
                 continue;
               }
 
-              core.info(`Closing issue #${issue.number}: last write-access comment by ${lastComment.user?.login} on ${lastComment.created_at}`);
+              core.info(`Closing issue #${issue.number}: last write-access comment by ${commenter} on ${lastComment.created_at}`);
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
