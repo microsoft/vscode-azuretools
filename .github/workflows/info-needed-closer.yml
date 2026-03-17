@@ -8,6 +8,13 @@ on:
         description: 'Number of days without activity before closing (default: 14)'
         required: false
         default: '14'
+  workflow_call:
+    inputs:
+      days:
+        description: 'Number of days without activity before closing (default: 14)'
+        required: false
+        type: string
+        default: '14'
 
 permissions:
   issues: write
@@ -20,7 +27,7 @@ jobs:
       - name: Close Info Needed Issues
         uses: actions/github-script@v8
         env:
-          DAYS: ${{ github.event.inputs.days || '14' }}
+          DAYS: ${{ inputs.days || '14' }}
         with:
           script: |
             const days = parseInt(process.env.DAYS);

@@ -8,6 +8,13 @@ on:
         description: 'Number of days of inactivity before locking a closed issue (default: 28)'
         required: false
         default: '28'
+  workflow_call:
+    inputs:
+      days:
+        description: 'Number of days of inactivity before locking a closed issue (default: 28)'
+        required: false
+        type: string
+        default: '28'
 
 permissions:
   issues: write
@@ -19,7 +26,7 @@ jobs:
       - name: Lock Inactive Closed Issues
         uses: actions/github-script@v8
         env:
-          DAYS: ${{ github.event.inputs.days || '28' }}
+          DAYS: ${{ inputs.days || '28' }}
         with:
           script: |
             const days = parseInt(process.env.DAYS);
