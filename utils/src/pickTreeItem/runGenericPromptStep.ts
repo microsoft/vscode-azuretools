@@ -8,9 +8,9 @@ import { AzureWizard } from '../wizard/AzureWizard';
 
 export async function runGenericPromptStep(context: types.PickExperienceContext, wizardOptions?: types.IWizardOptions<types.AzureResourceQuickPickWizardContext>): Promise<void> {
     const wizard = new AzureWizard(context, {
-        hideStepCount: true,
-        showLoadingPrompt: wizardOptions?.showLoadingPrompt ?? true,
-        ...wizardOptions
+        ...wizardOptions,
+        hideStepCount: wizardOptions?.hideStepCount ?? true,
+        showLoadingPrompt: wizardOptions?.showLoadingPrompt ?? true
     });
 
     await wizard.prompt();

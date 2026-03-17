@@ -36,7 +36,7 @@
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@github/copilot-sdk": "0.1.19",
+        "@github/copilot-sdk": "0.1.32",
         "@microsoft/vscode-azureresources-api": "^3.1.0",
         "@vscode/extension-telemetry": "^1.5.0",
         "dayjs": "^1.11.19",

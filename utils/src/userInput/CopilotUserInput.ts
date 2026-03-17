@@ -24,7 +24,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T> {
         const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
-        const response = await doGithubCopilotInteraction(primaryPrompt);
+        const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
 
         const pick = items.find(
             item => {
@@ -47,7 +47,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
         const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
-        const response = await doGithubCopilotInteraction(primaryPrompt);
+        const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
         const pick = (workspace.workspaceFolders ?? []).find(folder => {
             return folder.name === response;
         });
@@ -64,7 +64,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         if (options.prompt) {
             try {
                 const primaryPrompt: string = createPrimaryPromptForInputBox(options.prompt, this._relevantContext);
-                const response = await doGithubCopilotInteraction(primaryPrompt);
+                const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
                 const jsonResponse: string = JSON.parse(response) as string;
                 this._onDidFinishPromptEmitter.fire({ value: jsonResponse });
                 return jsonResponse;
@@ -99,7 +99,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         try {
             if (options.canPickMany) {
                 primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
-                const response = await doGithubCopilotInteraction(primaryPrompt);
+                const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
                 const jsonResponse: T[] = JSON.parse(response) as T[];
                 const picks = resolvedItems.filter(item => {
                     return jsonResponse.some(resp => JSON.stringify(resp.label) === JSON.stringify(item.label) &&

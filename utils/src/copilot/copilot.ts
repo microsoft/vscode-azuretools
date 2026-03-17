@@ -4,13 +4,18 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type { CopilotClient, CopilotSession } from "@github/copilot-sdk";
-import * as vscode from "vscode";
+import type * as vscode from "vscode";
+import { InvalidCopilotResponseError } from "../errors";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
 
 async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
     return await import("@github/copilot-sdk");
+}
+
+function getCopilotCliPath(): string {
+    return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
 }
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
@@ -66,7 +71,11 @@ export async function doGithubCopilotInteraction(primaryPrompt: string, relevant
         mode: "immediate"
     });
 
-    return response?.data.content || '';
+    if (!response || !response.data) {
+        throw new InvalidCopilotResponseError();
+    }
+
+    return response?.data.content;
 }
 
 export async function getCopilotSession(relevantContext?: string): Promise<CopilotSession> {
@@ -75,8 +84,10 @@ export async function getCopilotSession(relevantContext?: string): Promise<Copil
     }
 
     const { CopilotClient } = await loadCopilotSdk();
-    client = new CopilotClient();
-    session = await client.createSession();
+    client = new CopilotClient({ cliPath: getCopilotCliPath() });
+    session = await client.createSession({
+        onPermissionRequest: () => ({ kind: "approved" })
+    });
     const activityChildren = extractActivityChildren(relevantContext || '');
     const subscriptionId = relevantContext ? extractSubscriptionIdFromContext(relevantContext) : undefined;
 
