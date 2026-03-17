@@ -28,23 +28,18 @@ jobs:
 
             core.info(`Locking closed issues with no activity since ${cutoffDate.toISOString()} (${days} days)`);
 
-            // Fetch all closed, unlocked issues
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'closed',
+            // Fetch all closed, unlocked issues (search API supports is:unlocked to skip already-locked issues)
+            const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:closed is:unlocked`,
               per_page: 100,
             });
 
-            core.info(`Found ${issues.length} closed issue(s) to evaluate`);
+            core.info(`Found ${issues.length} closed unlocked issue(s) to evaluate`);
 
             let lockedCount = 0;
 
             for (const issue of issues) {
-              // Skip already locked issues and pull requests
-              if (issue.locked) {
-                continue;
-              }
+              // Skip pull requests (search may return them if the query matches)
               if (issue.pull_request) {
                 continue;
               }
