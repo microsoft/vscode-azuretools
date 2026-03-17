@@ -3,11 +3,6 @@ on:
   schedule:
     - cron: 0 5 * * * # 10:00pm PT
   workflow_dispatch:
-    inputs:
-      days:
-        description: 'Number of days of inactivity before locking a closed issue (default: 28)'
-        required: false
-        default: '28'
   workflow_call:
     inputs:
       days:

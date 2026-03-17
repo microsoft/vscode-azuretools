@@ -3,11 +3,6 @@ on:
   schedule:
     - cron: 30 5 * * * # 10:30pm PT
   workflow_dispatch:
-    inputs:
-      days:
-        description: 'Number of days without activity before closing (default: 14)'
-        required: false
-        default: '14'
   workflow_call:
     inputs:
       days:
