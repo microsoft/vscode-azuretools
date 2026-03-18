@@ -13,7 +13,7 @@
     ],
     "module": "dist/esm/src/index.js",
     "main": "dist/cjs/src/index.js",
-    "types": "index.d.ts",
+    "types": "dist/esm/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
