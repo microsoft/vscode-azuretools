@@ -9,7 +9,7 @@ import { AzExtParentTreeItem, AzExtTreeItem, createGenericElement, createSubscri
 import { AzExtResourceType, AzureSubscription, getAzExtResourceType } from "@microsoft/vscode-azureresources-api";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 import * as types from '../../index';
-import { createAuthorizationManagementClient, createSubscriptionsClient } from "../clients";
+import { createAuthorizationManagementClient, createSubscriptionsClient, isProfileAuthorizationManagementClient } from "../clients";
 import { createPortalUri } from "../utils/createPortalUri";
 import { parseAzureResourceGroupId, parseAzureResourceId } from "../utils/parseAzureResourceId";
 import { uiUtils } from "../utils/uiUtils";
@@ -18,6 +18,11 @@ import { getAzureIconPath } from "./IconPath";
 export async function createRoleDefinitionsItems(context: IActionContext, subscription: AzureSubscription | ISubscriptionContext, msi: Identity, parentResourceId: string): Promise<RoleDefinitionsItem[]> {
     const subContext = isAzureSubscription(subscription) ? createSubscriptionContext(subscription) : subscription;
     const authClient = await createAuthorizationManagementClient([context, subContext]);
+
+    if (isProfileAuthorizationManagementClient(authClient)) {
+        throw new Error('TODO: no can do boss');
+    }
+
     const roleAssignment = await uiUtils.listAllIterator(authClient.roleAssignments.listForSubscription());
     // filter the role assignments to only show the ones that are assigned to the msi
     const roleAssignments = roleAssignment.filter((ra) => ra.principalId === msi.principalId);

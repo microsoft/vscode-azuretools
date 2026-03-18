@@ -5,12 +5,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { AuthorizationManagementClient, type RoleDefinition } from '@azure/arm-authorization';
-import { Identity, ManagedServiceIdentityClient } from '@azure/arm-msi';
+import type { AuthorizationManagementClient, RoleDefinition } from '@azure/arm-authorization';
+import type { Identity, ManagedServiceIdentityClient } from '@azure/arm-msi';
 import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
-import { type StorageManagementClient } from '@azure/arm-storage';
+import type { StorageManagementClient } from '@azure/arm-storage';
 import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
