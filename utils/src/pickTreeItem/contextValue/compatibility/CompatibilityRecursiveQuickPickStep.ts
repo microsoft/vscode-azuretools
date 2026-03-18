@@ -9,6 +9,7 @@ import * as types from "../../../../index";
 import { NoResourceFoundError, UserCancelledError } from "../../../errors";
 import { AzExtTreeItem } from "../../../tree/AzExtTreeItem";
 import { isAzExtParentTreeItem, isAzExtTreeItem } from "../../../tree/isAzExtTreeItem";
+import { IInternalActionContext } from "../../../userInput/IInternalActionContext";
 import { getLastNode } from "../../getLastNode";
 import { CompatibilityContextValueQuickPickStep } from './CompatibilityContextValueQuickPickStep';
 
@@ -65,19 +66,31 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
 
                 // context passed to callback must have the same `ui` as the wizardContext
                 // to prevent the wizard from being cancelled unexpectedly
-                const createdTreeItem = await callback?.(wizardContext) as AzExtTreeItem;
+                //
+                // Suppress the outer wizard's loading quick pick during the create callback.
+                // Without this, the "Loading..." placeholder re-appears after each inner wizard
+                // prompt resolves (via onDidFinishPrompt) and stays visible during the execute
+                // phase when no other quick pick overlays it.
+                const internalContext = wizardContext as unknown as IInternalActionContext;
+                const previousSuppressLoadingPrompt = internalContext.suppressLoadingPrompt;
+                internalContext.suppressLoadingPrompt = true;
+                try {
+                    const createdTreeItem = await callback?.(wizardContext) as AzExtTreeItem;
 
-                // convert created AzExtTreeItem to a BranchDataItem so the wizard can get its children in the next step
-                const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
-                const createdPick = picks.find((pick) => {
-                    return (pick.data as Wrapper).unwrap<AzExtTreeItem>().fullId === createdTreeItem.fullId;
-                });
+                    // convert created AzExtTreeItem to a BranchDataItem so the wizard can get its children in the next step
+                    const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
+                    const createdPick = picks.find((pick) => {
+                        return (pick.data as Wrapper).unwrap<AzExtTreeItem>().fullId === createdTreeItem.fullId;
+                    });
 
-                if (createdPick) {
-                    return createdPick.data;
+                    if (createdPick) {
+                        return createdPick.data;
+                    }
+
+                    throw new UserCancelledError();
+                } finally {
+                    internalContext.suppressLoadingPrompt = previousSuppressLoadingPrompt;
                 }
-
-                throw new UserCancelledError();
             }
 
             return selected.data;

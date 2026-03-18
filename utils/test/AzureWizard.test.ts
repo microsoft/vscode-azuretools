@@ -663,4 +663,97 @@ suite("AzureWizard tests", () => {
             { quickPick1: 'Pick 1', quickPick2: 'Pick 2', inputBox1: 'testValue2', subQuickPick1: 'Pick 3', execute1: 'executeValue1' }
         );
     });
+
+    test("showLoadingPrompt does not break normal wizard flow", async () => {
+        const testUserInput: TestUserInput = new TestUserInput(vscode);
+        const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
+
+        const wizard = new AzureWizard<ITestWizardContext>(context, {
+            promptSteps: [new QuickPickStep1(), new InputBoxStep1()],
+            executeSteps: [new ExecuteStep1()],
+            showLoadingPrompt: true,
+        });
+
+        await testUserInput.runWithInputs(['Pick 1', 'testValue'], async () => {
+            await wizard.prompt();
+        });
+        await wizard.execute();
+
+        assert.strictEqual(context.quickPick1, 'Pick 1');
+        assert.strictEqual(context.inputBox1, 'testValue');
+        assert.strictEqual(context.execute1, 'executeValue1');
+    });
+
+    test("suppressLoadingPrompt prevents loading prompt re-show without breaking wizard", async () => {
+        const testUserInput: TestUserInput = new TestUserInput(vscode);
+        const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
+
+        // Simulate what CompatibilityRecursiveQuickPickStep does:
+        // set suppressLoadingPrompt before a prompt step that triggers an inner wizard
+        const stepThatSuppresses = new class extends AzureWizardPromptStep<ITestWizardContext> {
+            async prompt(wizardContext: ITestWizardContext): Promise<void> {
+                // Set the flag like CompatibilityRecursiveQuickPickStep does before the create callback
+                wizardContext.suppressLoadingPrompt = true;
+                try {
+                    // Simulate inner wizard prompts (these would fire onDidFinishPrompt)
+                    wizardContext['innerResult'] = (await wizardContext.ui.showQuickPick(
+                        [{ label: 'Inner Pick 1' }, { label: 'Inner Pick 2' }],
+                        { placeHolder: 'Inner wizard pick' }
+                    )).label;
+                    wizardContext['innerInput'] = await wizardContext.ui.showInputBox({ prompt: 'Inner wizard input' });
+                } finally {
+                    wizardContext.suppressLoadingPrompt = false;
+                }
+            }
+            shouldPrompt(): boolean { return true; }
+        };
+
+        const wizard = new AzureWizard<ITestWizardContext>(context, {
+            promptSteps: [stepThatSuppresses, new QuickPickStep1()],
+            executeSteps: [new ExecuteStep1()],
+            showLoadingPrompt: true,
+        });
+
+        await testUserInput.runWithInputs(['Inner Pick 1', 'innerTestValue', 'Pick 2'], async () => {
+            await wizard.prompt();
+        });
+        await wizard.execute();
+
+        assert.strictEqual(context.innerResult, 'Inner Pick 1');
+        assert.strictEqual(context.innerInput, 'innerTestValue');
+        assert.strictEqual(context.quickPick1, 'Pick 2');
+        assert.strictEqual(context.execute1, 'executeValue1');
+        // Flag should be reset after the step completes
+        assert.strictEqual(context.suppressLoadingPrompt, false);
+    });
+
+    test("suppressLoadingPrompt is reset even if inner prompts throw", async () => {
+        const testUserInput: TestUserInput = new TestUserInput(vscode);
+        const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
+
+        const stepThatSuppressesAndFails = new class extends AzureWizardPromptStep<ITestWizardContext> {
+            async prompt(wizardContext: ITestWizardContext): Promise<void> {
+                wizardContext.suppressLoadingPrompt = true;
+                try {
+                    // Ensure suppressLoadingPrompt is reset even when the step throws
+                    throw new Error('simulated inner wizard failure');
+                } finally {
+                    wizardContext.suppressLoadingPrompt = false;
+                }
+            }
+            shouldPrompt(): boolean { return true; }
+        };
+
+        const wizard = new AzureWizard<ITestWizardContext>(context, {
+            promptSteps: [stepThatSuppressesAndFails],
+            showLoadingPrompt: true,
+        });
+
+        await assert.rejects(async () => {
+            await wizard.prompt();
+        }, /simulated inner wizard failure/);
+
+        // Flag must be reset even after failure
+        assert.strictEqual(context.suppressLoadingPrompt, false);
+    });
 });
