@@ -735,7 +735,7 @@ suite("AzureWizard tests", () => {
             async prompt(wizardContext: ITestWizardContext): Promise<void> {
                 wizardContext.suppressLoadingPrompt = true;
                 try {
-                    // This will throw because no inputs are provided for it
+                    // Ensure suppressLoadingPrompt is reset even when the step throws
                     throw new Error('simulated inner wizard failure');
                 } finally {
                     wizardContext.suppressLoadingPrompt = false;

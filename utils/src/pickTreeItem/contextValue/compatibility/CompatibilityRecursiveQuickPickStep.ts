@@ -71,6 +71,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                 // Without this, the "Loading..." placeholder re-appears after each inner wizard
                 // prompt resolves (via onDidFinishPrompt) and stays visible during the execute
                 // phase when no other quick pick overlays it.
+                const previousSuppressLoadingPrompt = (wizardContext as unknown as IInternalActionContext).suppressLoadingPrompt;
                 (wizardContext as unknown as IInternalActionContext).suppressLoadingPrompt = true;
                 try {
                     const createdTreeItem = await callback?.(wizardContext) as AzExtTreeItem;
@@ -87,7 +88,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
 
                     throw new UserCancelledError();
                 } finally {
-                    (wizardContext as unknown as IInternalActionContext).suppressLoadingPrompt = false;
+                    (wizardContext as unknown as IInternalActionContext).suppressLoadingPrompt = previousSuppressLoadingPrompt;
                 }
             }
 
