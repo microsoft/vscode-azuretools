@@ -7,9 +7,6 @@ import type { CopilotClient, CopilotSession } from "@github/copilot-sdk";
 import type * as vscode from "vscode";
 import { InvalidCopilotResponseError } from "../errors";
 
-let client: CopilotClient | undefined;
-let session: CopilotSession | undefined;
-
 async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
     return await import("@github/copilot-sdk");
 }
@@ -64,8 +61,7 @@ export function createPrimaryPromptForWorkspaceFolderPick(folders: readonly vsco
         Respond with the workspace folder you have chosen. Do not respond in a conversational tone. `;
 }
 
-export async function doGithubCopilotInteraction(primaryPrompt: string, relevantContext?: string): Promise<string> {
-    const session = await getCopilotSession(relevantContext);
+export async function sendCopilotInteraction(session: CopilotSession, primaryPrompt: string): Promise<string> {
     const response = await session.sendAndWait({
         prompt: primaryPrompt,
         mode: "immediate"
@@ -75,17 +71,13 @@ export async function doGithubCopilotInteraction(primaryPrompt: string, relevant
         throw new InvalidCopilotResponseError();
     }
 
-    return response?.data.content;
+    return response.data.content;
 }
 
-export async function getCopilotSession(relevantContext?: string): Promise<CopilotSession> {
-    if (session) {
-        return session;
-    }
-
+export async function createCopilotSession(relevantContext?: string): Promise<{ session: CopilotSession; client: CopilotClient }> {
     const { CopilotClient } = await loadCopilotSdk();
-    client = new CopilotClient({ cliPath: getCopilotCliPath() });
-    session = await client.createSession({
+    const client = new CopilotClient({ cliPath: getCopilotCliPath() });
+    const session = await client.createSession({
         onPermissionRequest: () => ({ kind: "approved" })
     });
     const activityChildren = extractActivityChildren(relevantContext || '');
@@ -103,15 +95,7 @@ export async function getCopilotSession(relevantContext?: string): Promise<Copil
             Context: ${JSON.stringify({ activityChildren, subscriptionId, relevantContext })}`
     });
 
-    return session;
-}
-
-export async function disposeCopilotSession(): Promise<void> {
-    if (client) {
-        await client.stop();
-        client = undefined;
-        session = undefined;
-    }
+    return { session, client };
 }
 
 function extractSubscriptionIdFromContext(context: string): string | undefined {

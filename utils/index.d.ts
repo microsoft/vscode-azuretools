@@ -2929,12 +2929,6 @@ export declare function runWithInputs<T>(callbackId: string, inputs: (string | R
 export declare function testGlobalSetup(): UIExtensionVariables;
 
 /**
- * Disposes of copilot session created by `CopilotUserInput`
- * Should be called after commands using `CopilotUserInput` to prevent any lingering copilot sessions
- */
-export function disposeCopilotSession(): Promise<void>;
-
-/**
  * Checks if the context is using `CopilotUserInput`
  */
 export function isCopilotUserInput(context: IActionContext): boolean;

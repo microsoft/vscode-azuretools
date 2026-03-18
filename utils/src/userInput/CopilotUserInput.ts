@@ -3,10 +3,11 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import type { CopilotClient, CopilotSession } from '@github/copilot-sdk';
 import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
 import * as types from '../../index';
-import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doGithubCopilotInteraction } from '../copilot/copilot';
+import { createCopilotSession, createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, sendCopilotInteraction } from '../copilot/copilot';
 import { InvalidCopilotResponseError } from '../errors';
 
 export class CopilotUserInput implements types.IAzureUserInput {
@@ -15,6 +16,10 @@ export class CopilotUserInput implements types.IAzureUserInput {
     private readonly _relevantContext: string | undefined;
     public getLoadingView: undefined | (() => vscodeTypes.WebviewPanel | undefined);
 
+    private _session: CopilotSession | undefined;
+    private _client: CopilotClient | undefined;
+    private _sessionPromise: Promise<CopilotSession> | undefined;
+
     constructor(vscode: typeof vscodeTypes, relevantContext?: string, getLoadingView?: () => vscodeTypes.WebviewPanel | undefined) {
         this._vscode = vscode;
         this._onDidFinishPromptEmitter = new this._vscode.EventEmitter<types.PromptResult>();
@@ -22,9 +27,34 @@ export class CopilotUserInput implements types.IAzureUserInput {
         this.getLoadingView = getLoadingView;
     }
 
+    private async getSession(): Promise<CopilotSession> {
+        if (this._session) {
+            return this._session;
+        }
+        // Avoid creating multiple sessions if called concurrently
+        if (!this._sessionPromise) {
+            this._sessionPromise = createCopilotSession(this._relevantContext).then(({ session, client }) => {
+                this._session = session;
+                this._client = client;
+                return session;
+            });
+        }
+        return this._sessionPromise;
+    }
+
+    public async dispose(): Promise<void> {
+        if (this._client) {
+            await this._client.stop();
+            this._client = undefined;
+            this._session = undefined;
+            this._sessionPromise = undefined;
+        }
+    }
+
     public async showWarningMessage<T extends vscodeTypes.MessageItem>(message: string, ...items: T[]): Promise<T> {
+        const session = await this.getSession();
         const primaryPrompt: string = createPrimaryPromptForWarningMessage(message, items);
-        const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
+        const response = await sendCopilotInteraction(session, primaryPrompt);
 
         const pick = items.find(
             item => {
@@ -46,8 +76,9 @@ export class CopilotUserInput implements types.IAzureUserInput {
     }
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
+        const session = await this.getSession();
         const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
-        const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
+        const response = await sendCopilotInteraction(session, primaryPrompt);
         const pick = (workspace.workspaceFolders ?? []).find(folder => {
             return folder.name === response;
         });
@@ -63,8 +94,9 @@ export class CopilotUserInput implements types.IAzureUserInput {
     public async showInputBox(options: vscodeTypes.InputBoxOptions): Promise<string> {
         if (options.prompt) {
             try {
+                const session = await this.getSession();
                 const primaryPrompt: string = createPrimaryPromptForInputBox(options.prompt, this._relevantContext);
-                const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
+                const response = await sendCopilotInteraction(session, primaryPrompt);
                 const jsonResponse: string = JSON.parse(response) as string;
                 this._onDidFinishPromptEmitter.fire({ value: jsonResponse });
                 return jsonResponse;
@@ -92,6 +124,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
     public async showQuickPick<T extends types.IAzureQuickPickItem<unknown>>(items: T[] | Thenable<T[]>, options: vscodeTypes.QuickPickOptions): Promise<T | T[]> {
         let primaryPrompt: string;
         const resolvedItems: T[] = await Promise.resolve(items);
+        const session = await this.getSession();
 
         // Clean up items to only include label and description
         const cleanedItems = this.cleanQuickPickItems(resolvedItems);
@@ -99,7 +132,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
         try {
             if (options.canPickMany) {
                 primaryPrompt = createPrimaryPromptToGetPickManyQuickPickInput(jsonItems, this._relevantContext);
-                const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
+                const response = await sendCopilotInteraction(session, primaryPrompt);
                 const jsonResponse: T[] = JSON.parse(response) as T[];
                 const picks = resolvedItems.filter(item => {
                     return jsonResponse.some(resp => JSON.stringify(resp.label) === JSON.stringify(item.label) &&
@@ -115,7 +148,7 @@ export class CopilotUserInput implements types.IAzureUserInput {
                 return picks;
             } else {
                 primaryPrompt = createPrimaryPromptToGetSingleQuickPickInput(jsonItems, options.placeHolder);
-                const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
+                const response = await sendCopilotInteraction(session, primaryPrompt);
                 const jsonResponse: T = JSON.parse(response) as T;
                 const pick = resolvedItems.find(item => {
                     return JSON.stringify(item.label) === JSON.stringify(jsonResponse.label) &&
