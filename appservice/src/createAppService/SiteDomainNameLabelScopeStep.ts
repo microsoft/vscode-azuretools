@@ -5,6 +5,7 @@
 
 import { AzureWizardPromptStep, IAzureQuickPickItem, openUrl } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
+import { AppKind } from './AppKind';
 import { IAppServiceWizardContext } from './IAppServiceWizardContext';
 
 export enum DomainNameLabelScope {
@@ -25,7 +26,9 @@ export class SiteDomainNameLabelScopeStep<T extends IAppServiceWizardContext> ex
             { label: vscode.l10n.t('Global default hostname'), description: vscode.l10n.t('Legacy'), data: undefined },
             { label: vscode.l10n.t('$(link-external) Learn more about unique default hostname'), data: learnMore },
         ];
-        const learnMoreUrl: string = 'https://aka.ms/AAu7lhs';
+        const learnMoreUrl: string = context.newSiteKind === AppKind.functionapp || context.newSiteKind === AppKind.workflowapp
+            ? 'https://aka.ms/AA108fh2'
+            : 'https://aka.ms/AAu7lhs';
 
         let result: DomainNameLabelScope | typeof learnMore | undefined;
         do {
