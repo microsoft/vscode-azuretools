@@ -8,6 +8,13 @@ import * as types from '../../index';
 
 export interface IInternalActionContext extends types.IActionContext {
     ui: types.IAzureUserInput & { wizard?: IInternalAzureWizard, isPrompting?: boolean, isTesting?: boolean };
+
+    /**
+     * When true, the outer wizard's "Loading..." quick pick will not be shown
+     * or re-shown. Used internally to prevent the loading placeholder from
+     * remaining visible during a nested create-child wizard execution.
+     */
+    suppressLoadingPrompt?: boolean;
 }
 
 export interface IInternalAzureWizard {
