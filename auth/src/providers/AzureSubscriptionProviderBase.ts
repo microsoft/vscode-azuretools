@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import { createSubscription, type SubscriptionContext } from '@azure/arm-resources-subscriptions/api';
+import { list as listSubscriptions } from '@azure/arm-resources-subscriptions/api/subscriptions';
+import { list as listTenants } from '@azure/arm-resources-subscriptions/api/tenants';
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import { inspect } from 'util';
 import * as vscode from 'vscode';
@@ -28,8 +30,6 @@ const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefr
 
 const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
 const SubscriptionListConcurrency = 5; // We will try to list subscriptions for at most 5 account+tenants in parallel
-
-let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
 
 /**
  * Base class for Azure subscription providers that use VS Code authentication.
@@ -280,11 +280,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             const startTime = Date.now();
             this.logForAccount(account, 'Fetching tenants for account...');
 
-            const { client } = await this.getSubscriptionClient({ account: account, tenantId: undefined });
+            const { context } = this.getSubscriptionContext({ account: account, tenantId: undefined });
 
             const allTenants: AzureTenant[] = [];
 
-            for await (const tenant of client.tenants.list({ abortSignal: getSignalForToken(options.token) })) {
+            for await (const tenant of listTenants(context, { abortSignal: getSignalForToken(options.token) })) {
                 allTenants.push({
                     ...tenant,
                     tenantId: tenant.tenantId!, // eslint-disable-line @typescript-eslint/no-non-null-assertion -- This is never null in practice
@@ -309,12 +309,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             const startTime = Date.now();
             this.logForTenant(tenant, 'Fetching subscriptions for account+tenant...');
 
-            const { client, credential, authentication } = await this.getSubscriptionClient(tenant);
+            const { context, credential, authentication } = this.getSubscriptionContext(tenant);
             const environment = getConfiguredAzureEnv();
 
             const allSubs: AzureSubscription[] = [];
 
-            for await (const subscription of client.subscriptions.list({ abortSignal: getSignalForToken(options.token) })) {
+            for await (const subscription of listSubscriptions(context, { abortSignal: getSignalForToken(options.token) })) {
                 allSubs.push({
                     authentication: authentication,
                     environment: environment,
@@ -339,12 +339,12 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     /**
-     * Gets a {@link SubscriptionClient} plus extras for the given account+tenant.
-     * @param tenant (Optional) The account+tenant to get a subscription client for. If not specified, the default account and home tenant
+     * Gets a {@link SubscriptionContext} plus extras for the given account+tenant.
+     * @param tenant (Optional) The account+tenant to get a subscription context for. If not specified, the default account and home tenant
      * will be used.
-     * @returns A {@link SubscriptionClient}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
+     * @returns A {@link SubscriptionContext}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
      */
-    protected async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    protected getSubscriptionContext(tenant: Partial<TenantIdAndAccount>): { context: SubscriptionContext, credential: TokenCredential, authentication: AzureAuthentication } {
         // Credential ignores requested scopes and always uses default scopes (managementEndpointUrl),
         // matching the scope used during signIn(). This avoids a refresh token round-trip that can
         // fail when MSAL has stale cache entries for a different scope.
@@ -362,10 +362,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             }
         };
 
-        armSubs ??= await import('@azure/arm-resources-subscriptions');
-
         return {
-            client: new armSubs.SubscriptionClient(credential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
+            context: createSubscription(credential),
             credential: credential,
             authentication: {
                 getSession: async () => {
