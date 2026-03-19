@@ -52,6 +52,7 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
+    const handleChallenge = getChallengeHandlerFromCredential(context.createCredentialsForScopes);
     addAzExtPipeline(
         context,
         client.pipeline,
@@ -61,9 +62,14 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
         new BearerChallengePolicy(
             async (challenge) => {
                 context.telemetry.properties.challenge = 'true';
-                const token = await getChallengeHandlerFromCredential(context.createCredentialsForScopes)(challenge);
-                context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
-                return token;
+                try {
+                    const token = await handleChallenge(challenge);
+                    context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
+                    return token;
+                } catch {
+                    context.telemetry.properties.challengeSuccess = 'false';
+                    return undefined;
+                }
             },
             context.environment.resourceManagerEndpointUrl,
         )
@@ -78,6 +84,7 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
+    const handleChallenge = getChallengeHandlerFromCredential(context.createCredentialsForScopes);
     addAzExtPipeline(
         context,
         client.pipeline,
@@ -87,9 +94,14 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
         new BearerChallengePolicy(
             async (challenge) => {
                 context.telemetry.properties.challenge = 'true';
-                const token = await getChallengeHandlerFromCredential(context.createCredentialsForScopes)(challenge);
-                context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
-                return token;
+                try {
+                    const token = await handleChallenge(challenge);
+                    context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
+                    return token;
+                } catch {
+                    context.telemetry.properties.challengeSuccess = 'false';
+                    return undefined;
+                }
             },
             context.environment.resourceManagerEndpointUrl,
         )

@@ -377,7 +377,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 },
                 endpoint,
             ),
-            { phase: 'Sign' },
+            { phase: 'Sign', afterPolicies: ['bearerTokenAuthenticationPolicy'] },
         );
 
         return {
