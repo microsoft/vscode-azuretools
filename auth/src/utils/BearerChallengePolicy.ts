@@ -12,9 +12,10 @@ export function getDefaultScopeFromEndpoint(endpoint?: string): string {
     return `${base}/.default`;
 }
 
+const challengeRetriedRequests = new WeakSet<PipelineRequest>();
+
 export class BearerChallengePolicy implements PipelinePolicy {
     public readonly name = 'BearerChallengePolicy';
-    private readonly challengeRetryHeader = 'x-azext-challenge-retry';
 
     public constructor(
         private readonly getTokenForChallenge: (request: vscode.AuthenticationWwwAuthenticateRequest) => Promise<string | undefined>,
@@ -24,11 +25,11 @@ export class BearerChallengePolicy implements PipelinePolicy {
     public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         const initial = await next(request);
 
-        if (initial.status === 401 && !request.headers.get(this.challengeRetryHeader)) {
+        if (initial.status === 401 && !challengeRetriedRequests.has(request)) {
             const header = initial.headers.get('WWW-Authenticate') || initial.headers.get('www-authenticate');
             if (header) {
                 const scopes = [getDefaultScopeFromEndpoint(this.endpoint)];
-                request.headers.set(this.challengeRetryHeader, '1');
+                challengeRetriedRequests.add(request);
 
                 const token = await this.getTokenForChallenge({ wwwAuthenticate: header, fallbackScopes: scopes });
                 if (token) {
