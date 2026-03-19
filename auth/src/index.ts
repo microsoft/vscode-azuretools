@@ -12,6 +12,7 @@ export * from './contracts/AzureTenant';
 // The `AzureDevOpsSubscriptionProvider` is intentionally not exported, it must be imported from `'@microsoft/vscode-azext-azureauth/azdo'`
 export * from './providers/AzureSubscriptionProviderBase';
 export * from './providers/VSCodeAzureSubscriptionProvider';
+export * from './utils/BearerChallengePolicy';
 export * from './utils/configuredAzureEnv';
 export * from './utils/dedupeSubscriptions';
 export * from './utils/getMetricsForTelemetry';

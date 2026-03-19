@@ -5,6 +5,7 @@
 
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import { BearerChallengePolicy } from '../utils/BearerChallengePolicy';
 import { inspect } from 'util';
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
@@ -364,8 +365,23 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         armSubs ??= await import('@azure/arm-resources-subscriptions');
 
+        const endpoint = getConfiguredAzureEnv().resourceManagerEndpointUrl;
+        const client = new armSubs.SubscriptionClient(credential, { endpoint });
+
+        client.pipeline.addPolicy(
+            new BearerChallengePolicy(
+                async (challenge) => {
+                    this.silenceRefreshEvents();
+                    const session = await getSessionFromVSCode(challenge, tenant.tenantId, { createIfNone: true, account: tenant.account });
+                    return session?.accessToken;
+                },
+                endpoint,
+            ),
+            { phase: 'Sign' },
+        );
+
         return {
-            client: new armSubs.SubscriptionClient(credential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
+            client,
             credential: credential,
             authentication: {
                 getSession: async () => {
