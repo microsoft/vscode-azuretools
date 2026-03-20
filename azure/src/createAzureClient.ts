@@ -45,6 +45,25 @@ function getChallengeHandlerFromCredential(createCredentialsForScopes: (request:
     return getTokenForChallenge;
 }
 
+function createBearerChallengePolicy(context: ISubscriptionActionContext): BearerChallengePolicy {
+    const handleChallenge = getChallengeHandlerFromCredential(context.createCredentialsForScopes);
+    return new BearerChallengePolicy(
+        async (challenge) => {
+            context.telemetry.properties.challenge = 'true';
+            try {
+                const token = await handleChallenge(challenge);
+                context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
+                return token;
+            } catch (err) {
+                context.telemetry.properties.challengeSuccess = 'false';
+                context.telemetry.properties.challengeError = parseError(err).message;
+                throw err;
+            }
+        },
+        context.environment.resourceManagerEndpointUrl,
+    );
+}
+
 export function createAzureClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
     const context = parseClientContext(clientContext);
     const client = new clientType(context.credentials, context.subscriptionId, {
@@ -52,27 +71,13 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
-    const handleChallenge = getChallengeHandlerFromCredential(context.createCredentialsForScopes);
     addAzExtPipeline(
         context,
         client.pipeline,
         context.environment.resourceManagerEndpointUrl,
         undefined,
         undefined,
-        new BearerChallengePolicy(
-            async (challenge) => {
-                context.telemetry.properties.challenge = 'true';
-                try {
-                    const token = await handleChallenge(challenge);
-                    context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
-                    return token;
-                } catch {
-                    context.telemetry.properties.challengeSuccess = 'false';
-                    return undefined;
-                }
-            },
-            context.environment.resourceManagerEndpointUrl,
-        )
+        createBearerChallengePolicy(context)
     );
     return client;
 }
@@ -84,27 +89,13 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     });
 
     context.telemetry.properties.subscriptionId = context.subscriptionId;
-    const handleChallenge = getChallengeHandlerFromCredential(context.createCredentialsForScopes);
     addAzExtPipeline(
         context,
         client.pipeline,
         context.environment.resourceManagerEndpointUrl,
         undefined,
         undefined,
-        new BearerChallengePolicy(
-            async (challenge) => {
-                context.telemetry.properties.challenge = 'true';
-                try {
-                    const token = await handleChallenge(challenge);
-                    context.telemetry.properties.challengeSuccess = token ? 'true' : 'false';
-                    return token;
-                } catch {
-                    context.telemetry.properties.challengeSuccess = 'false';
-                    return undefined;
-                }
-            },
-            context.environment.resourceManagerEndpointUrl,
-        )
+        createBearerChallengePolicy(context)
     );
     return client;
 }
