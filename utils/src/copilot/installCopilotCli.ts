@@ -4,18 +4,17 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { composeArgs, spawnStreamAsync, withArg } from "@microsoft/vscode-processutils";
-import * as cp from "child_process";
-import * as path from "path";
 import { Writable } from "stream";
 import * as vscode from "vscode";
 import { ext } from "../extensionVariables";
 
 export async function isCopilotCliInstalled(): Promise<boolean> {
-    return new Promise<boolean>((resolve) => {
-        cp.exec('copilot --version', (error) => {
-            resolve(!error);
-        });
-    });
+    try {
+        await spawnStreamAsync('copilot', composeArgs(withArg('--version'))(), {});
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 export async function ensureCopilotCliInstalled(): Promise<boolean> {
@@ -38,7 +37,7 @@ export async function ensureCopilotCliInstalled(): Promise<boolean> {
                 ext.outputChannel.appendLog(vscode.l10n.t('Failed to install GitHub Copilot CLI: {0}', errorMessage));
                 const docLink: vscode.MessageItem = { title: vscode.l10n.t('Installation Guide') };
                 const result = await vscode.window.showErrorMessage(
-                    vscode.l10n.t('Failed to install GitHub Copilot CLI automatically. Please install it manually.'),
+                    vscode.l10n.t('Failed to install GitHub Copilot CLI automatically. Please install it manually and rerun the command.'),
                     docLink,
                 );
                 if (result === docLink) {
@@ -52,8 +51,25 @@ export async function ensureCopilotCliInstalled(): Promise<boolean> {
 }
 
 export async function installCopilotCli(): Promise<void> {
-    const installCommand = getInstallCopilotCliCommand();
+    const installCommand = await getInstallCopilotCliCommand();
+    const npmFallbackCommand = ['npm', 'install', '-g', '@github/copilot'];
     ext.outputChannel.show();
+
+    try {
+        await runInstallCommand(installCommand);
+    } catch (error) {
+        if (installCommand[0] === 'npm') {
+            throw error;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        ext.outputChannel.appendLog(vscode.l10n.t('Installation via "{0}" failed: {1}', installCommand[0], errorMessage));
+        ext.outputChannel.appendLog(vscode.l10n.t('Falling back to npm...'));
+        await runInstallCommand(npmFallbackCommand);
+    }
+}
+
+async function runInstallCommand(installCommand: string[]): Promise<void> {
     ext.outputChannel.appendLog(vscode.l10n.t('Installing GitHub Copilot CLI via "{0}"...', installCommand.join(' ')));
 
     const outputStream = new Writable({
@@ -70,16 +86,20 @@ export async function installCopilotCli(): Promise<void> {
     });
 }
 
-function getInstallCopilotCliCommand(): string[] {
+async function getInstallCopilotCliCommand(): Promise<string[]> {
     switch (process.platform) {
-        case 'win32': {
-            const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || '', 'AppData', 'Local');
-            const wingetPath = path.join(localAppData, 'Microsoft', 'WindowsApps', 'winget.exe');
-            return [wingetPath, 'install', 'GitHub.Copilot'];
-        }
+        case 'win32':
+            return ['winget', 'install', 'GitHub.Copilot'];
         case 'darwin': {
-            const brewPath = process.arch === 'arm64' ? '/opt/homebrew/bin/brew' : '/usr/local/bin/brew';
-            return [brewPath, 'install', 'copilot-cli'];
+            try {
+                await spawnStreamAsync('brew', composeArgs(withArg('--version'))(), {});
+                return ['brew', 'install', 'copilot-cli'];
+            } catch {
+                ext.outputChannel.appendLog(
+                    vscode.l10n.t('Homebrew is not installed. For more installation options, visit: {0}', 'https://aka.ms/githubCopilotCLIInstallation'),
+                );
+                return ['npm', 'install', '-g', '@github/copilot'];
+            }
         }
         default:
             return ['npm', 'install', '-g', '@github/copilot'];
