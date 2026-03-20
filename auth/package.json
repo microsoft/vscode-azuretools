@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureauth",
     "author": "Microsoft Corporation",
-    "version": "6.0.0-alpha.5",
+    "version": "6.0.0-alpha.6",
     "description": "Azure authentication helpers for Visual Studio Code",
     "tags": [
         "azure",
@@ -55,6 +55,7 @@
     },
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^2.1.0",
+        "@azure/core-rest-pipeline": "^1.22.2",
         "@azure/identity": "^4.13.0",
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
