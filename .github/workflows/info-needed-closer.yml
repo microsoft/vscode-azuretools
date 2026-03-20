@@ -6,10 +6,10 @@ on:
   workflow_call:
     inputs:
       days:
-        description: 'Number of days without activity before closing (default: 14)'
+        description: "Number of days without activity before closing (default: 14)"
         required: false
         type: string
-        default: '14'
+        default: "14"
 
 permissions:
   issues: write
@@ -78,18 +78,24 @@ jobs:
                 continue;
               }
 
-              // Fetch only the most recent comment for the issue
+              // The listComments endpoint returns comments in ascending chronological
+              // order and does not support sort/direction params. Use the issue's
+              // comment count to jump directly to the last page.
+              if (issue.comments === 0) {
+                core.info(`Issue #${issue.number}: no comments, skipping`);
+                continue;
+              }
+
               const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
                 per_page: 1,
-                sort: 'created',
-                direction: 'desc',
+                page: issue.comments, // Jump to the last page (with per_page=1), to get the last comment directly
               });
 
               if (comments.length === 0) {
-                core.info(`Issue #${issue.number}: no comments, skipping`);
+                core.info(`Issue #${issue.number}: could not fetch last comment, skipping`);
                 continue;
               }
 
