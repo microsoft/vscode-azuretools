@@ -225,6 +225,7 @@ export function lazyImportRuleConfig(patterns: string[]): EslintConfig {
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const ignoresConfig: EslintConfig = globalIgnores([
+    'coverage/**',
     'node_modules/**',
     'out/**',
     'dist/**',
@@ -233,8 +234,6 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     '.vscode-test.mjs',
     'esbuild*.mjs',
     'eslint.config.mjs',
-    'main.js',
-    'main.mjs',
     '**/test/testProjects/**'
 ]);
 
