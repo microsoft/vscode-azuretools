@@ -234,6 +234,8 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     '.vscode-test.mjs',
     'esbuild*.mjs',
     'eslint.config.mjs',
+    'main.js',
+    'main.mjs',
     '**/test/testProjects/**'
 ]);
 
