@@ -262,9 +262,12 @@ async function getAllLocations(wizardContext: types.ILocationWizardContext): Pro
     const cacheKey = `${wizardContext.subscriptionId}|${includeExtended}`;
 
     return allLocationsCache.getOrLoad(cacheKey, async () => {
+        ext.outputChannel.appendLog(`Cache miss for all locations (key: "${cacheKey}"). Fetching from API...`);
         const client = await createSubscriptionsClient(wizardContext);
         const locations = await uiUtils.listAllIterator<Location>(client.subscriptions.listLocations(wizardContext.subscriptionId, { includeExtendedLocations: includeExtended }));
-        return locations.filter((l): l is types.AzExtLocation => !!(l.id && l.name && l.displayName));
+        const filtered = locations.filter((l): l is types.AzExtLocation => !!(l.id && l.name && l.displayName));
+        ext.outputChannel.appendLog(`Fetched and cached ${filtered.length} locations for subscription "${wizardContext.subscriptionId}".`);
+        return filtered;
     });
 }
 
@@ -272,13 +275,16 @@ async function getProviderLocations(wizardContext: types.ILocationWizardContext,
     const cacheKey = `${wizardContext.subscriptionId}|${provider.toLowerCase()}|${resourceType.toLowerCase()}`;
 
     return providerLocationCache.getOrLoad(cacheKey, async () => {
+        ext.outputChannel.appendLog(`Cache miss for provider locations (key: "${cacheKey}"). Fetching from API...`);
         const rgClient = await createResourcesClient(wizardContext);
         const providerData = await rgClient.providers.get(provider);
         const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());
         if (!resourceTypeData) {
             throw new ProviderResourceTypeNotFoundError(providerData, resourceType);
         }
-        return nonNullProp(resourceTypeData, 'locations');
+        const locations = nonNullProp(resourceTypeData, 'locations');
+        ext.outputChannel.appendLog(`Fetched and cached ${locations.length} locations for provider "${provider}/${resourceType}".`);
+        return locations;
     });
 }
 
