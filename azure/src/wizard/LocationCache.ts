@@ -59,7 +59,15 @@ export class LocationCache<T> {
         }
 
         const gen = this.generation;
-        const promise = Promise.resolve().then(loader).then(data => {
+
+        let loaderPromise: Promise<T>;
+        try {
+            loaderPromise = loader();
+        } catch (err) {
+            return Promise.reject(err);
+        }
+
+        const promise = loaderPromise.then(data => {
             if (this.generation === gen) {
                 this.cache.set(key, { data, storedAt: this.now() });
             }
