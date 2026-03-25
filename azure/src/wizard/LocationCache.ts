@@ -64,7 +64,7 @@ export class LocationCache<T> {
         try {
             loaderPromise = loader();
         } catch (err) {
-            return Promise.reject(err);
+            return Promise.reject(err instanceof Error ? err : new Error(String(err)));
         }
 
         const promise = loaderPromise.then(data => {
