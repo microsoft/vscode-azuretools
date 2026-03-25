@@ -202,39 +202,29 @@ export declare class LocationListStep<T extends ILocationWizardContext> extends 
 }
 
 /**
- * A simple cache for location data that deduplicates in-flight requests.
+ * A simple cache that deduplicates in-flight requests.
  *
  * Currently backed by an in-memory Map. Designed so the backing store can be
  * swapped to persistent storage (e.g. `vscode.Memento` / globalState) in the
  * future to survive across VS Code restarts with a longer TTL (e.g. 7 days).
  */
-export declare class LocationCache {
+export declare class LocationCache<T> {
     /**
      * @param ttlMs Optional time-to-live in milliseconds. When omitted, entries
      * never expire (suitable for in-memory caches that reset on extension
      * deactivation). Set this when switching to persistent storage.
+     * @param now Clock function used for TTL checks. Override in tests to avoid
+     * real timers.
      */
-    constructor(ttlMs?: number);
+    constructor(ttlMs?: number, now?: () => number);
     /**
      * Get a value from the cache, or fetch it if missing/expired.
      * Concurrent calls with the same key share a single in-flight request.
      */
-    getOrLoad<T>(key: string, loader: () => Promise<T>): Promise<T>;
-    /** Remove all entries (e.g. on sign-out or subscription change) */
+    getOrLoad(key: string, loader: () => Promise<T>): Promise<T>;
+    /** Remove all cached entries. */
     clear(): void;
 }
-
-/**
- * Module-level cache for subscription locations, shared across all wizard instances
- * within the same extension activation. Keyed by `subscriptionId|includeExtended`.
- */
-export declare const subscriptionLocationsCache: LocationCache;
-
-/**
- * Module-level cache for provider resource-type locations, shared across all wizard instances
- * within the same extension activation. Keyed by `subscriptionId|provider|resourceType`.
- */
-export declare const providerLocationsCache: LocationCache;
 
 /**
  * Checks to see if providers (i.e. 'Microsoft.Web') are registered and registers them if they're not

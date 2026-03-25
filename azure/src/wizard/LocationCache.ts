@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * A simple cache for location data that deduplicates in-flight requests.
+ * A simple cache that deduplicates in-flight requests.
  *
  * Currently backed by an in-memory Map. Designed so the backing store can be
  * swapped to persistent storage (e.g. `vscode.Memento` / globalState) in the
@@ -17,40 +17,52 @@ interface CacheEntry<T> {
     storedAt: number;
 }
 
-export class LocationCache {
-    private readonly cache = new Map<string, CacheEntry<unknown>>();
+export class LocationCache<T> {
+    private readonly cache = new Map<string, CacheEntry<T>>();
 
     /**
      * In-flight promises keyed the same way as the cache.
      * Ensures concurrent callers share the same request instead of firing duplicates.
      */
-    private readonly inflight = new Map<string, Promise<unknown>>();
+    private readonly inflight = new Map<string, Promise<T>>();
+
+    /**
+     * Monotonically increasing counter incremented on each {@link clear} call.
+     * In-flight requests captured before a clear will see a stale generation
+     * and skip writing their result back into the cache.
+     */
+    private generation = 0;
 
     /**
      * @param ttlMs Optional time-to-live in milliseconds. When omitted, entries
      * never expire (suitable for in-memory caches that reset on extension
      * deactivation). Set this when switching to persistent storage.
+     * @param now Clock function used for TTL checks. Override in tests to avoid
+     * real timers.
      */
-    constructor(private readonly ttlMs?: number) { }
+    constructor(private readonly ttlMs?: number, private readonly now: () => number = Date.now) { }
 
     /**
      * Get a value from the cache, or fetch it if missing/expired.
      * Concurrent calls with the same key share a single in-flight request.
      */
-    async getOrLoad<T>(key: string, loader: () => Promise<T>): Promise<T> {
-        const cached = this.cache.get(key) as CacheEntry<T> | undefined;
+    getOrLoad(key: string, loader: () => Promise<T>): Promise<T> {
+        const cached = this.cache.get(key);
         if (cached && !this.isExpired(cached)) {
-            return cached.data;
+            return Promise.resolve(cached.data);
         }
 
         // Check for an in-flight request we can piggy-back on
-        const existing = this.inflight.get(key) as Promise<T> | undefined;
+        const existing = this.inflight.get(key);
         if (existing) {
             return existing;
         }
 
-        const promise = loader().then(data => {
-            this.cache.set(key, { data, storedAt: Date.now() });
+        const gen = this.generation;
+        const promise = Promise.resolve().then(loader).then(data => {
+            if (this.generation === gen) {
+                this.cache.set(key, { data, storedAt: this.now() });
+            }
             this.inflight.delete(key);
             return data;
         }).catch(err => {
@@ -62,21 +74,13 @@ export class LocationCache {
         return promise;
     }
 
-    /** Remove all entries (e.g. on sign-out or subscription change) */
+    /** Remove all cached entries. */
     clear(): void {
         this.cache.clear();
-        // Don't clear inflight — let pending requests finish naturally
+        this.generation++;
     }
 
-    private isExpired(entry: CacheEntry<unknown>): boolean {
-        return this.ttlMs !== undefined && (Date.now() - entry.storedAt) > this.ttlMs;
+    private isExpired(entry: CacheEntry<T>): boolean {
+        return this.ttlMs !== undefined && (this.now() - entry.storedAt) > this.ttlMs;
     }
 }
-
-/**
- * Module-level caches shared across all wizard instances within the same
- * extension activation. Keyed by subscription ID (+ provider info for
- * provider locations).
- */
-export const subscriptionLocationsCache = new LocationCache();
-export const providerLocationsCache = new LocationCache();

@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { LocationCache } from '../src/wizard/LocationCache';
 
 suite('LocationCache', () => {
-    let cache: LocationCache;
+    let cache: LocationCache<string[]>;
 
     setup(() => {
         cache = new LocationCache();
@@ -81,28 +81,48 @@ suite('LocationCache', () => {
         assert.strictEqual(callCount, 2, 'loader should be called again after clear');
     });
 
-    test('expired entries are refreshed', async () => {
-        // Use a very short TTL
-        const shortCache = new LocationCache(1);
+    test('clear prevents in-flight requests from repopulating the cache', async () => {
+        let resolve: (value: string[]) => void;
+        const loader = () => new Promise<string[]>(r => { resolve = r; });
+
+        const p1 = cache.getOrLoad('key1', loader);
+
+        // Clear while the request is still in-flight
+        cache.clear();
+
+        // Resolve the stale request
+        resolve!(['stale']);
+        await p1;
+
+        // The stale result should NOT have been cached, so a new loader fires
+        let callCount = 0;
+        await cache.getOrLoad('key1', async () => { callCount++; return ['fresh']; });
+        assert.strictEqual(callCount, 1, 'loader should be called because stale result was not cached');
+    });
+
+    test('expired entries are refreshed (injectable clock)', async () => {
+        let time = 1000;
+        const clock = () => time;
+        const ttlCache = new LocationCache<string[]>(100, clock);
+
         let callCount = 0;
         const loader = async () => {
             callCount++;
             return [`result-${callCount}`];
         };
 
-        const result1 = await shortCache.getOrLoad('key1', loader);
+        const result1 = await ttlCache.getOrLoad('key1', loader);
         assert.deepStrictEqual(result1, ['result-1']);
 
-        // Wait for expiry
-        await new Promise(r => setTimeout(r, 10));
+        // Advance past TTL
+        time = 1200;
 
-        const result2 = await shortCache.getOrLoad('key1', loader);
+        const result2 = await ttlCache.getOrLoad('key1', loader);
         assert.deepStrictEqual(result2, ['result-2']);
         assert.strictEqual(callCount, 2, 'loader should be called again after expiry');
     });
 
     test('entries without TTL never expire', async () => {
-        // Default constructor has no TTL
         let callCount = 0;
 
         await cache.getOrLoad('key1', async () => { callCount++; return ['eastus']; });
@@ -150,5 +170,15 @@ suite('LocationCache', () => {
 
         assert.deepStrictEqual(result, ['eastus']);
         assert.strictEqual(callCount, 2);
+    });
+
+    test('synchronous throw from loader is handled', async () => {
+        const loader = (): Promise<string[]> => { throw new Error('sync boom'); };
+
+        await assert.rejects(() => cache.getOrLoad('key1', loader), /sync boom/);
+
+        // Cache should not be poisoned
+        const result = await cache.getOrLoad('key1', async () => ['eastus']);
+        assert.deepStrictEqual(result, ['eastus']);
     });
 });
