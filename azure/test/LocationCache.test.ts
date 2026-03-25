@@ -14,15 +14,15 @@ suite('LocationCache', () => {
     });
 
     test('returns data from loader on cache miss', async () => {
-        const result = await cache.getOrLoad('key1', async () => ['eastus', 'westus']);
+        const result = await cache.getOrLoad('key1', () => Promise.resolve(['eastus', 'westus']));
         assert.deepStrictEqual(result, ['eastus', 'westus']);
     });
 
     test('returns cached data on subsequent calls without calling loader again', async () => {
         let callCount = 0;
-        const loader = async () => {
+        const loader = () => {
             callCount++;
-            return ['eastus'];
+            return Promise.resolve(['eastus']);
         };
 
         const result1 = await cache.getOrLoad('key1', loader);
@@ -34,11 +34,11 @@ suite('LocationCache', () => {
     });
 
     test('uses separate entries for different keys', async () => {
-        await cache.getOrLoad('sub1|false', async () => ['eastus']);
-        await cache.getOrLoad('sub2|false', async () => ['westus']);
+        await cache.getOrLoad('sub1|false', () => Promise.resolve(['eastus']));
+        await cache.getOrLoad('sub2|false', () => Promise.resolve(['westus']));
 
-        const result1 = await cache.getOrLoad('sub1|false', async () => { throw new Error('should not call'); });
-        const result2 = await cache.getOrLoad('sub2|false', async () => { throw new Error('should not call'); });
+        const result1 = await cache.getOrLoad('sub1|false', () => Promise.reject(new Error('should not call')));
+        const result2 = await cache.getOrLoad('sub2|false', () => Promise.reject(new Error('should not call')));
 
         assert.deepStrictEqual(result1, ['eastus']);
         assert.deepStrictEqual(result2, ['westus']);
@@ -67,9 +67,9 @@ suite('LocationCache', () => {
 
     test('clear removes all cached entries', async () => {
         let callCount = 0;
-        const loader = async () => {
+        const loader = () => {
             callCount++;
-            return ['eastus'];
+            return Promise.resolve(['eastus']);
         };
 
         await cache.getOrLoad('key1', loader);
@@ -96,7 +96,7 @@ suite('LocationCache', () => {
 
         // The stale result should NOT have been cached, so a new loader fires
         let callCount = 0;
-        await cache.getOrLoad('key1', async () => { callCount++; return ['fresh']; });
+        await cache.getOrLoad('key1', () => { callCount++; return Promise.resolve(['fresh']); });
         assert.strictEqual(callCount, 1, 'loader should be called because stale result was not cached');
     });
 
@@ -106,9 +106,9 @@ suite('LocationCache', () => {
         const ttlCache = new LocationCache<string[]>(100, clock);
 
         let callCount = 0;
-        const loader = async () => {
+        const loader = () => {
             callCount++;
-            return [`result-${callCount}`];
+            return Promise.resolve([`result-${callCount}`]);
         };
 
         const result1 = await ttlCache.getOrLoad('key1', loader);
@@ -125,19 +125,19 @@ suite('LocationCache', () => {
     test('entries without TTL never expire', async () => {
         let callCount = 0;
 
-        await cache.getOrLoad('key1', async () => { callCount++; return ['eastus']; });
-        await cache.getOrLoad('key1', async () => { callCount++; return ['westus']; });
+        await cache.getOrLoad('key1', () => { callCount++; return Promise.resolve(['eastus']); });
+        await cache.getOrLoad('key1', () => { callCount++; return Promise.resolve(['westus']); });
 
         assert.strictEqual(callCount, 1);
     });
 
     test('loader error does not poison the cache', async () => {
         let shouldFail = true;
-        const loader = async () => {
+        const loader = () => {
             if (shouldFail) {
-                throw new Error('network error');
+                return Promise.reject(new Error('network error'));
             }
-            return ['eastus'];
+            return Promise.resolve(['eastus']);
         };
 
         await assert.rejects(() => cache.getOrLoad('key1', loader), /network error/);
@@ -162,8 +162,8 @@ suite('LocationCache', () => {
 
     test('after error, a new loader call succeeds', async () => {
         let callCount = 0;
-        const failLoader = async () => { callCount++; throw new Error('fail'); };
-        const okLoader = async () => { callCount++; return ['eastus']; };
+        const failLoader = () => { callCount++; return Promise.reject(new Error('fail')); };
+        const okLoader = () => { callCount++; return Promise.resolve(['eastus']); };
 
         await assert.rejects(() => cache.getOrLoad('key1', failLoader), /fail/);
         const result = await cache.getOrLoad('key1', okLoader);
@@ -178,7 +178,7 @@ suite('LocationCache', () => {
         await assert.rejects(() => cache.getOrLoad('key1', loader), /sync boom/);
 
         // Cache should not be poisoned
-        const result = await cache.getOrLoad('key1', async () => ['eastus']);
+        const result = await cache.getOrLoad('key1', () => Promise.resolve(['eastus']));
         assert.deepStrictEqual(result, ['eastus']);
     });
 });
