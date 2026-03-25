@@ -12,6 +12,7 @@ import { createResourcesClient, createSubscriptionsClient } from '../clients';
 import { resourcesProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { uiUtils } from '../utils/uiUtils';
+import { providerLocationsCache, subscriptionLocationsCache } from './LocationCache';
 
 /* eslint-disable @typescript-eslint/naming-convention */
 interface ILocationWizardContextInternal extends types.ILocationWizardContext {
@@ -254,19 +255,28 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
 }
 
 async function getAllLocations(wizardContext: types.ILocationWizardContext): Promise<types.AzExtLocation[]> {
-    const client = await createSubscriptionsClient(wizardContext);
-    const locations = await uiUtils.listAllIterator<Location>(client.subscriptions.listLocations(wizardContext.subscriptionId, { includeExtendedLocations: wizardContext.includeExtendedLocations }));
-    return locations.filter((l): l is types.AzExtLocation => !!(l.id && l.name && l.displayName));
+    const includeExtended = !!wizardContext.includeExtendedLocations;
+    const cacheKey = `${wizardContext.subscriptionId}|${includeExtended}`;
+
+    return subscriptionLocationsCache.getOrLoad(cacheKey, async () => {
+        const client = await createSubscriptionsClient(wizardContext);
+        const locations = await uiUtils.listAllIterator<Location>(client.subscriptions.listLocations(wizardContext.subscriptionId, { includeExtendedLocations: includeExtended }));
+        return locations.filter((l): l is types.AzExtLocation => !!(l.id && l.name && l.displayName));
+    });
 }
 
 async function getProviderLocations(wizardContext: types.ILocationWizardContext, provider: string, resourceType: string): Promise<string[]> {
-    const rgClient = await createResourcesClient(wizardContext);
-    const providerData = await rgClient.providers.get(provider);
-    const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());
-    if (!resourceTypeData) {
-        throw new ProviderResourceTypeNotFoundError(providerData, resourceType);
-    }
-    return nonNullProp(resourceTypeData, 'locations');
+    const cacheKey = `${wizardContext.subscriptionId}|${provider.toLowerCase()}|${resourceType.toLowerCase()}`;
+
+    return providerLocationsCache.getOrLoad(cacheKey, async () => {
+        const rgClient = await createResourcesClient(wizardContext);
+        const providerData = await rgClient.providers.get(provider);
+        const resourceTypeData = providerData.resourceTypes?.find(rt => rt.resourceType?.toLowerCase() === resourceType.toLowerCase());
+        if (!resourceTypeData) {
+            throw new ProviderResourceTypeNotFoundError(providerData, resourceType);
+        }
+        return nonNullProp(resourceTypeData, 'locations');
+    });
 }
 
 function compareLocation(l1: types.AzExtLocation, l2: types.AzExtLocation): number {
