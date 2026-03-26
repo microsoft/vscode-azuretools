@@ -20,7 +20,8 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         wizardContext.newStorageAccountName = (await wizardContext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter the name of the new storage account.',
-            validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
+            validateInput: (value: string): string | undefined => this.validateStorageAccountNameSync(value),
+            asyncValidationTask: async (value: string): Promise<string | undefined> => await this.validateStorageAccountNameAvailability(client, value)
         })).trim();
 
         wizardContext.relatedNameTask ??= this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
@@ -35,19 +36,28 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
         return await ResourceGroupListStep.isNameAvailable(wizardContext, name);
     }
 
-    private async validateStorageAccountName(client: StorageManagementClient, name: string): Promise<string | undefined> {
+    private validateStorageAccountNameSync(name: string): string | undefined {
         name = name.trim();
         if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
             return vscode.l10n.t('The name must be between {0} and {1} characters.', storageAccountNamingRules.minLength, storageAccountNamingRules.maxLength);
         } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
             return vscode.l10n.t("The name can only contain lowercase letters and numbers.");
-        } else {
-            const nameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: storageProviderType });
-            if (!nameAvailabilityResult.nameAvailable) {
-                return nameAvailabilityResult.message;
-            } else {
-                return undefined;
-            }
         }
+        return undefined;
+    }
+
+    private async validateStorageAccountNameAvailability(client: StorageManagementClient, name: string): Promise<string | undefined> {
+        name = name.trim();
+        if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
+            return undefined;
+        } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
+            return undefined;
+        }
+
+        const nameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: storageProviderType });
+        if (!nameAvailabilityResult.nameAvailable) {
+            return nameAvailabilityResult.message;
+        }
+        return undefined;
     }
 }
