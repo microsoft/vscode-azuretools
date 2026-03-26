@@ -3,10 +3,15 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { composeArgs, spawnStreamAsync, withArg } from "@microsoft/vscode-processutils";
+import { type CommandLineArgs, composeArgs, spawnStreamAsync, withArg } from "@microsoft/vscode-processutils";
 import { Writable } from "stream";
 import * as vscode from "vscode";
 import { ext } from "../extensionVariables";
+
+interface InstallCommand {
+    command: string;
+    args: CommandLineArgs;
+}
 
 export async function isCopilotCliInstalled(): Promise<boolean> {
     try {
@@ -52,25 +57,25 @@ export async function ensureCopilotCliInstalled(): Promise<boolean> {
 
 export async function installCopilotCli(): Promise<void> {
     const installCommand = await getInstallCopilotCliCommand();
-    const npmFallbackCommand = ['npm', 'install', '-g', '@github/copilot'];
+    const npmFallbackCommand: InstallCommand = { command: 'npm', args: composeArgs(withArg('install', '-g', '@github/copilot'))() };
     ext.outputChannel.show();
 
     try {
         await runInstallCommand(installCommand);
     } catch (error) {
-        if (installCommand[0] === 'npm') {
+        if (installCommand.command === 'npm') {
             throw error;
         }
 
         const errorMessage = error instanceof Error ? error.message : String(error);
-        ext.outputChannel.appendLog(vscode.l10n.t('Installation via "{0}" failed: {1}', installCommand[0], errorMessage));
+        ext.outputChannel.appendLog(vscode.l10n.t('Installation via "{0}" failed: {1}', installCommand.command, errorMessage));
         ext.outputChannel.appendLog(vscode.l10n.t('Falling back to npm...'));
         await runInstallCommand(npmFallbackCommand);
     }
 }
 
-async function runInstallCommand(installCommand: string[]): Promise<void> {
-    ext.outputChannel.appendLog(vscode.l10n.t('Installing GitHub Copilot CLI via "{0}"...', installCommand.join(' ')));
+async function runInstallCommand(installCommand: InstallCommand): Promise<void> {
+    ext.outputChannel.appendLog(vscode.l10n.t('Installing GitHub Copilot CLI via "{0}"...', installCommand.command));
 
     const outputStream = new Writable({
         write(chunk, _encoding, callback) {
@@ -79,29 +84,29 @@ async function runInstallCommand(installCommand: string[]): Promise<void> {
         },
     });
 
-    await spawnStreamAsync(installCommand[0], composeArgs(withArg(...installCommand.slice(1)))(), {
+    await spawnStreamAsync(installCommand.command, installCommand.args, {
         shell: true,
         stdOutPipe: outputStream,
         stdErrPipe: outputStream,
     });
 }
 
-async function getInstallCopilotCliCommand(): Promise<string[]> {
+async function getInstallCopilotCliCommand(): Promise<InstallCommand> {
     switch (process.platform) {
         case 'win32':
-            return ['winget', 'install', 'GitHub.Copilot'];
+            return { command: 'winget', args: composeArgs(withArg('install', 'GitHub.Copilot'))() };
         case 'darwin': {
             try {
                 await spawnStreamAsync('brew', composeArgs(withArg('--version'))(), {});
-                return ['brew', 'install', 'copilot-cli'];
+                return { command: 'brew', args: composeArgs(withArg('install', 'copilot-cli'))() };
             } catch {
                 ext.outputChannel.appendLog(
                     vscode.l10n.t('Homebrew is not installed. For more installation options, visit: {0}', 'https://aka.ms/githubCopilotCLIInstallation'),
                 );
-                return ['npm', 'install', '-g', '@github/copilot'];
+                return { command: 'npm', args: composeArgs(withArg('install', '-g', '@github/copilot'))() };
             }
         }
         default:
-            return ['npm', 'install', '-g', '@github/copilot'];
+            return { command: 'npm', args: composeArgs(withArg('install', '-g', '@github/copilot'))() };
     }
 }
