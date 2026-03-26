@@ -9,6 +9,7 @@ import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/A
 import type { RefreshSuggestedEvent, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, getCoalescenceKey, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import type { AzureTenant } from '../contracts/AzureTenant';
+import { CustomCloudConfigurationSection } from '../utils/configuredAzureEnv';
 import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
 import { CaselessMap } from '../utils/map/CaselessMap';
 import { TwoKeyCaselessMap } from '../utils/map/TwoKeyCaselessMap';
@@ -45,6 +46,12 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         this.configChangeListener ??= vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
                 this.fireRefreshSuggestedIfNeeded({ reason: 'subscriptionFilterChange' });
+            } else if (e.affectsConfiguration(CustomCloudConfigurationSection)) {
+                this.accountCache.clear();
+                this.tenantCache.clear();
+                this.subscriptionCache.clear();
+                this.log('Cleared all caches due to cloud environment change');
+                this.fireRefreshSuggestedIfNeeded({ reason: 'cloudChange' });
             }
         });
 
