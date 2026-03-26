@@ -24,7 +24,7 @@ import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError'
 import { screen } from '../utils/screen';
 import { tryGetTokenExpiration } from '../utils/tryGetTokenExpiration';
 
-const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
+const EventDebounce = 2 * 1000; // 2 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
 
 const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
