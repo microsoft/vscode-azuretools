@@ -16,6 +16,7 @@ import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
 
 const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
+const SovereignCloudConfigSection = 'microsoft-sovereign-cloud';
 
 /**
  * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
@@ -32,9 +33,11 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
     private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>(); // Key is from getOptionsCoalescenceKey
 
     private configChangeListener: vscode.Disposable | undefined;
+    private cloudChangeListener: vscode.Disposable | undefined;
 
     public override dispose(): void {
         this.configChangeListener?.dispose();
+        this.cloudChangeListener?.dispose();
         super.dispose();
     }
 
@@ -45,6 +48,13 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         this.configChangeListener ??= vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
                 this.fireRefreshSuggestedIfNeeded({ reason: 'subscriptionFilterChange' });
+            }
+        });
+
+        this.cloudChangeListener ??= vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration(SovereignCloudConfigSection)) {
+                this.clearAllCaches();
+                this.fireRefreshSuggestedIfNeeded({ reason: 'cloudChange' });
             }
         });
 
@@ -61,6 +71,17 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
         }
 
         return actuallyFired;
+    }
+
+    /**
+     * Clears all cached accounts, tenants, and subscriptions. Used when the
+     * entire Azure environment changes (e.g. sovereign cloud switch).
+     */
+    private clearAllCaches(): void {
+        this.accountCache.clear();
+        this.tenantCache.clear();
+        this.subscriptionCache.clear();
+        this.log('Cleared all caches due to cloud environment change');
     }
 
     /**

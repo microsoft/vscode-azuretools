@@ -124,5 +124,5 @@ export interface RefreshSuggestedEvent {
     /**
      * The reason a refresh was suggested.
      */
-    reason: 'sessionChange' | 'subscriptionFilterChange';
+    reason: 'sessionChange' | 'subscriptionFilterChange' | 'cloudChange';
 }
