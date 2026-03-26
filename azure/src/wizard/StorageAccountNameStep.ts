@@ -47,14 +47,15 @@ export class StorageAccountNameStep<T extends types.IStorageAccountWizardContext
     }
 
     private async validateStorageAccountNameAvailability(client: StorageManagementClient, name: string): Promise<string | undefined> {
-        name = name.trim();
-        if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {
-            return undefined;
-        } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
+        // Reuse the synchronous validator to keep validation rules centralized.
+        const syncValidationResult: string | undefined = this.validateStorageAccountNameSync(name);
+        if (syncValidationResult !== undefined) {
+            // The sync validator will surface the error message; skip availability check.
             return undefined;
         }
 
-        const nameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: storageProviderType });
+        const trimmedName: string = name.trim();
+        const nameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name: trimmedName, type: storageProviderType });
         if (!nameAvailabilityResult.nameAvailable) {
             return nameAvailabilityResult.message;
         }
