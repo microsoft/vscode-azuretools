@@ -72,7 +72,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
-        if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
+        // subscriptionFilterChange is an explicit user action and must never be suppressed,
+        // otherwise re-selecting a subscription shortly after unselecting one gets swallowed
+        // by the debounce/silence window that the first refresh triggered.
+        if (evtArgs.reason !== 'subscriptionFilterChange' &&
+            (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce)) {
             // Suppress and/or debounce events to avoid flooding
             return false;
         }
