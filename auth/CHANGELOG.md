@@ -1,10 +1,39 @@
 # Change Log
 
+## 6.0.0-alpha.8 - 2026-03-27
+
+* [#2248](https://github.com/microsoft/vscode-azuretools/pull/2248) Watch sovereign cloud config and fire `onRefreshSuggested`
+
+## 6.0.0-alpha.7 - 2026-03-27
+
+* [#2246](https://github.com/microsoft/vscode-azuretools/pull/2246) Reduce auth event debounce from 5s to 2s
+* [#2245](https://github.com/microsoft/vscode-azuretools/pull/2245) Ensure `subscriptionFilterChange` events are not suppressed during debounce
+* [#2235](https://github.com/microsoft/vscode-azuretools/pull/2235) npm audit fix in all package subfolders
+
+## 6.0.0-alpha.6 - 2026-03-20
+
+* [#2231](https://github.com/microsoft/vscode-azuretools/pull/2231) Add BearerChallengePolicy for MFA step-up challenges during subscription listing
+
+## 6.0.0-alpha.5 - 2026-03-11
+
+* [#2215](https://github.com/microsoft/vscode-azuretools/pull/2215) Improve error message for `platform_broker_error`
+* [#2214](https://github.com/microsoft/vscode-azuretools/pull/2214) Switch debug logs to info
+
+## 6.0.0-alpha.4 - 2026-03-11
+
+* [#2208](https://github.com/microsoft/vscode-azuretools/pull/2208) Skip failing tenants instead of aborting subscription listing
+
+## 6.0.0-alpha.3 - 2026-03-11
+
+* [#2198](https://github.com/microsoft/vscode-azuretools/pull/2198) Go back to overriding the sdk scopes
+* [#2200](https://github.com/microsoft/vscode-azuretools/pull/2200) Attach environment to account
+* [#2190](https://github.com/microsoft/vscode-azuretools/pull/2190) Updating dependencies
+
 ## 6.0.0-alpha.2 - 2026-02-09
 
-* Fix copy all optional properties in `ExtendedEnvironment` constructor
+* [#2186](https://github.com/microsoft/vscode-azuretools/pull/2186) Fix copy all optional properties in `ExtendedEnvironment` constructor
 
-## 6.0.0 - 2025-12-15
+## 6.0.0-alpha.1 - 2025-12-05
 
 * [#2119](https://github.com/microsoft/vscode-azuretools/pull/2119) Complete rewrite of the auth package. Adds caching, parallelization, and smarter filtering.
 
