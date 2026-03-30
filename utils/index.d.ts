@@ -2909,4 +2909,11 @@ export declare function runWithInputs<T>(callbackId: string, inputs: (string | R
  */
 export declare function testGlobalSetup(): UIExtensionVariables;
 
+/**
+ * Checks if the Copilot CLI is installed, and if not, prompts the user to install it.
+ * If the user agrees to install it, this will attempt to install the Copilot CLI automatically.
+ * If the installation fails, the user will be prompted to install it manually with a link to documentation.
+ */
+
+export declare function ensureCopilotCliInstalled(): Promise<boolean>;
 // #endregion
