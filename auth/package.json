@@ -56,7 +56,7 @@
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^2.1.0",
         "@azure/core-rest-pipeline": "^1.22.2",
-        "@azure/identity": "^4.13.0",
+        "@azure/identity": "^4.13.1",
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
     "publishConfig": {
