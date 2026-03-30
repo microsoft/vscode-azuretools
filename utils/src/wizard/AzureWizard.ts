@@ -120,7 +120,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     if (loadingQuickPick) {
                         disposables.push(loadingQuickPick?.onDidHide(() => {
                             // Avoid issuing cancels during tests - see: https://github.com/microsoft/vscode-azuretools/pull/1807
-                            if (!this._context.ui.isPrompting && !this._context.ui.isTesting) {
+                            if (!this._context.ui.isPrompting && !this._context.ui.isTesting && !this._context.suppressLoadingPrompt) {
                                 this._cancellationTokenSource.cancel();
                             }
                         }));
@@ -129,7 +129,9 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                     disposables.push(this._context.ui.onDidFinishPrompt((result) => {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         step!.prompted = true;
-                        loadingQuickPick?.show();
+                        if (!this._context.suppressLoadingPrompt) {
+                            loadingQuickPick?.show();
+                        }
                         if (typeof result.value === 'string' && !result.matchesDefault && this.currentStepId && !step?.supportsDuplicateSteps) {
                             this._cachedInputBoxValues[this.currentStepId] = result.value;
                         }

@@ -5,6 +5,7 @@
 
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import { BearerChallengePolicy } from '../utils/BearerChallengePolicy';
 import { inspect } from 'util';
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
@@ -23,7 +24,7 @@ import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError'
 import { screen } from '../utils/screen';
 import { tryGetTokenExpiration } from '../utils/tryGetTokenExpiration';
 
-const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
+const EventDebounce = 2 * 1000; // 2 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
 
 const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
@@ -71,7 +72,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
-        if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
+        // subscriptionFilterChange is an explicit user action and must never be suppressed,
+        // otherwise re-selecting a subscription shortly after unselecting one gets swallowed
+        // by the debounce/silence window that the first refresh triggered.
+        if (evtArgs.reason !== 'subscriptionFilterChange' &&
+            (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce)) {
             // Suppress and/or debounce events to avoid flooding
             return false;
         }
@@ -364,8 +369,23 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         armSubs ??= await import('@azure/arm-resources-subscriptions');
 
+        const endpoint = getConfiguredAzureEnv().resourceManagerEndpointUrl;
+        const client = new armSubs.SubscriptionClient(credential, { endpoint });
+
+        client.pipeline.addPolicy(
+            new BearerChallengePolicy(
+                async (challenge) => {
+                    this.silenceRefreshEvents();
+                    const session = await getSessionFromVSCode(challenge, tenant.tenantId, { createIfNone: true, account: tenant.account });
+                    return session?.accessToken;
+                },
+                endpoint,
+            ),
+            { phase: 'Sign', afterPolicies: ['bearerTokenAuthenticationPolicy'] },
+        );
+
         return {
-            client: new armSubs.SubscriptionClient(credential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
+            client,
             credential: credential,
             authentication: {
                 getSession: async () => {

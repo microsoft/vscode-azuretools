@@ -150,10 +150,12 @@ which can improve load times by deferring package loading until it is necessary.
 
 1. First do all of the above
 1. IMPORTANT! Ensure you are using `^4.0.4` of `@microsoft/vscode-azext-utils`!
-1. Update to at least `1.0.0-alpha.12` of this package (but prefer the latest alpha).
+1. Update to at least `1.0.0-alpha.14` of this package (but prefer the latest alpha).
 1. Rename your `main.js` to `main.mjs`, and change it according to the above sample PR. It will primarily have just an
    `await import` of the bundle, an `activate()`, and a `deactivate()`.
 1. Add a `module` field to `package.json`, referencing your `main.mjs`, and update `main` as well to reference the same.
+1. Add `"type": "module"` to your `package.json`. This is required for Node.js to treat `.mjs` files and dynamic
+   `import()` calls correctly in ESM extensions. **Without this, telemetry will not work!**
 1. In `esbuild.mjs`, pass `true` to `autoSelectEsbuildConfig()`.
 1. There may be other things that need to change--for example, the Container Tools extension launches the language servers
    in a separate process. The file extension changed for those. This is visible in the sample above in the changes to `extension.ts`.

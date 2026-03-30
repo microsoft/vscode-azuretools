@@ -18,7 +18,7 @@ export interface AzureSubscriptionProvider {
     /**
      * Fires when the list of available subscriptions may have changed, and a refresh is suggested.
      * The callback will be given a {@link RefreshSuggestedEvent} with more information.
-     * @note This will be fired at most every 5 seconds, to avoid flooding. It is also suppressed
+     * @note This will be fired at most every 2 seconds, to avoid flooding. It is also suppressed
      * during operations this provider is performing itself, such as during sign-in.
      */
     onRefreshSuggested: vscode.Event<RefreshSuggestedEvent>;
@@ -124,5 +124,5 @@ export interface RefreshSuggestedEvent {
     /**
      * The reason a refresh was suggested.
      */
-    reason: 'sessionChange' | 'subscriptionFilterChange';
+    reason: 'sessionChange' | 'subscriptionFilterChange' | 'cloudChange';
 }

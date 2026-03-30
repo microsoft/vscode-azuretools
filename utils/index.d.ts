@@ -2944,5 +2944,11 @@ export function isCopilotUserInput(context: IActionContext): boolean;
  * @param context The context to mark as using `CopilotUserInput`
  */
 export function markAsCopilotUserInput(context: IActionContext, relevantContext?: string, getLoadingView?: () => vscode.WebviewPanel | undefined): void;
+/**
+ * Checks if the Copilot CLI is installed, and if not, prompts the user to install it.
+ * If the user agrees to install it, this will attempt to install the Copilot CLI automatically.
+ * If the installation fails, the user will be prompted to install it manually with a link to documentation.
+ */
 
+export declare function ensureCopilotCliInstalled(): Promise<boolean>;
 // #endregion
