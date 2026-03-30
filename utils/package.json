@@ -42,8 +42,7 @@
         "dayjs": "^1.11.19",
         "html-to-text": "^9.0.5",
         "semver": "^7.7.4",
-        "vscode-tas-client": "^0.1.84",
-        "@github/copilot-sdk": "*"
+        "vscode-tas-client": "^0.1.84"
     },
     "peerDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0",
