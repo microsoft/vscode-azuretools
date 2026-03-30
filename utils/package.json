@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-utils",
     "author": "Microsoft Corporation",
-    "version": "4.0.5",
+    "version": "4.0.6",
     "description": "Common UI tools for developing Azure extensions for VS Code",
     "tags": [
         "azure",
@@ -45,7 +45,13 @@
         "vscode-tas-client": "^0.1.84"
     },
     "peerDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0"
+        "@azure/ms-rest-azure-env": "^2.0.0",
+        "@github/copilot-sdk": "0.1.32"
+    },
+    "peerDependenciesMeta": {
+        "@github/copilot-sdk": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
@@ -54,6 +60,7 @@
         "@types/semver": "^7.7.1",
         "@types/vscode": "1.105.0",
         "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*"
+        "@vscode/test-electron": "*",
+        "@github/copilot-sdk": "*"
     }
 }
