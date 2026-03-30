@@ -8,6 +8,7 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
+import type * as vscode from 'vscode';
 import type * as vscodeTypes from 'vscode';
 import { AuthenticationSession, AuthenticationWwwAuthenticateRequest, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogLevel, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { TargetPopulation } from 'vscode-tas-client';

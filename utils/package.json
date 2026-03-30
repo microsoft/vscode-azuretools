@@ -60,6 +60,7 @@
         "@types/semver": "^7.7.1",
         "@types/vscode": "1.105.0",
         "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*"
+        "@vscode/test-electron": "*",
+        "@github/copilot-sdk": "*"
     }
 }
