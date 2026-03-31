@@ -69,9 +69,5 @@
         "@types/yazl": "^2.4.2",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*"
-    },
-    "overrides": {
-        "serialize-javascript": ">=7.0.5",
-        "diff": ">=8.0.3"
     }
 }

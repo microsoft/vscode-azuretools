@@ -62,9 +62,5 @@
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",
         "@github/copilot-sdk": "*"
-    },
-    "overrides": {
-        "serialize-javascript": ">=7.0.5",
-        "diff": ">=8.0.3"
     }
 }

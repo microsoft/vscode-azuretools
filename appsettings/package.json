@@ -43,9 +43,5 @@
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
         "@types/node": "22.x",
         "@types/vscode": "1.105.0"
-    },
-    "overrides": {
-        "serialize-javascript": ">=7.0.5",
-        "diff": ">=8.0.3"
     }
 }
