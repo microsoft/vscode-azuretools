@@ -64,5 +64,9 @@
         "@types/vscode": "1.105.0",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*"
+    },
+    "overrides": {
+        "serialize-javascript": ">=7.0.5",
+        "diff": ">=8.0.3"
     }
 }

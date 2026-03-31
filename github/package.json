@@ -44,5 +44,9 @@
     "dependencies": {
         "@microsoft/vscode-azext-utils": "^4.0.4",
         "@octokit/rest": "^22.0.1"
+    },
+    "overrides": {
+        "serialize-javascript": ">=7.0.5",
+        "diff": ">=8.0.3"
     }
 }
