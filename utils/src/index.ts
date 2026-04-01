@@ -52,8 +52,6 @@ export * from './tree/v2/createGenericElement';
 export * from './tree/v2/TreeElementStateManager';
 export * from './userInput/AzExtUserInput';
 export * from './userInput/AzExtUserInputWithInputQueue';
-
-
 export * from './utils/activityUtils';
 export * from './utils/AzExtFsExtra';
 export * from './utils/AzureResourceIdTelemetry';
