@@ -1027,23 +1027,6 @@ export declare class AzExtUserInput implements IAzureUserInput {
 }
 
 /**
- * Wrapper class of several `vscode.window` methods that handle user input.
- * This class is meant to only be used for copilot input scenerios
- */
-
-export declare class CopilotUserInput implements IAzureUserInput {
-    constructor(vscode: typeof import('vscode'), relevantContext?: string, getLoadingView?: () => vscodeTypes.WebviewPanel | undefined);
-    onDidFinishPrompt: Event<PromptResult>;
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions & { canPickMany: true; }): Promise<T[]>;
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options: IAzureQuickPickOptions): Promise<T>;
-    showInputBox(options: AzExtInputBoxOptions): Promise<string>;
-    showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
-    showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
-    showOpenDialog(options: AzExtOpenDialogOptions): Promise<Uri[]>;
-    showWorkspaceFolderPick(options: AzExtWorkspaceFolderPickOptions): Promise<WorkspaceFolder>;
-}
-
-/**
  * Specifies the sort priority of a quick pick item
  */
 export type AzureQuickPickItemPriority = 'highest' | 'normal'; // 'highest' items come before the recently used item
@@ -2930,21 +2913,10 @@ export declare function runWithInputs<T>(callbackId: string, inputs: (string | R
 export declare function testGlobalSetup(): UIExtensionVariables;
 
 /**
- * Disposes of copilot session created by `CopilotUserInput`
- * Should be called after commands using `CopilotUserInput` to prevent any lingering copilot sessions
- */
-export function disposeCopilotSession(): Promise<void>;
-
-/**
  * Checks if the context is using `CopilotUserInput`
  */
 export function isCopilotUserInput(context: IActionContext): boolean;
 
-/**
- * When setting the ui to `CopilotUserInput`, call this function so that the context can be properly identified
- * @param context The context to mark as using `CopilotUserInput`
- */
-export function markAsCopilotUserInput(context: IActionContext, relevantContext?: string, getLoadingView?: () => vscode.WebviewPanel | undefined): void;
 /**
  * Checks if the Copilot CLI is installed, and if not, prompts the user to install it.
  * If the user agrees to install it, this will attempt to install the Copilot CLI automatically.
