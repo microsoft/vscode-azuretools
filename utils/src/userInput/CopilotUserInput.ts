@@ -5,9 +5,18 @@
 
 import type * as vscodeTypes from 'vscode';
 import { workspace } from 'vscode';
+import * as vscode from 'vscode';
 import * as types from '../../index';
 import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doGithubCopilotInteraction } from '../copilot/copilot';
 import { InvalidCopilotResponseError } from '../errors';
+import { IActionContext } from '../../index';
+
+const copilotUserInputCanaryKey = '_copilotUserInput';
+
+export function markAsCopilotUserInput(context: IActionContext, relevantContext?: string, getLoadingView?: () => vscode.WebviewPanel | undefined): void {
+    context.ui = new CopilotUserInput(vscode, relevantContext, getLoadingView);
+    (context as unknown as Record<string, unknown>)[copilotUserInputCanaryKey] = true;
+}
 
 export class CopilotUserInput implements types.IAzureUserInput {
     private readonly _vscode: typeof vscodeTypes;

@@ -14,6 +14,37 @@
     "module": "dist/esm/src/index.js",
     "main": "dist/cjs/src/index.js",
     "types": "index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./index.d.ts",
+            "import": "./dist/esm/src/index.js",
+            "require": "./dist/cjs/src/index.js"
+        },
+        "./copilot": {
+            "types": "./copilot.d.ts",
+            "import": "./dist/esm/src/copilotEntry.js",
+            "require": "./dist/cjs/src/copilotEntry.js"
+        },
+        "./activity": {
+            "types": "./activity.d.ts"
+        },
+        "./hostapi": {
+            "types": "./hostapi.d.ts"
+        }
+    },
+    "typesVersions": {
+        "*": {
+            "copilot": [
+                "copilot.d.ts"
+            ],
+            "activity": [
+                "activity.d.ts"
+            ],
+            "hostapi": [
+                "hostapi.d.ts"
+            ]
+        }
+    },
     "license": "MIT",
     "repository": {
         "type": "git",
