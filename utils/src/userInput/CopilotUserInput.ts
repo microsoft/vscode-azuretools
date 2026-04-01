@@ -4,14 +4,12 @@
 *--------------------------------------------------------------------------------------------*/
 
 import type * as vscodeTypes from 'vscode';
-import { workspace } from 'vscode';
 import * as vscode from 'vscode';
 import * as types from '../../index';
+import { type IActionContext } from '../../index';
 import { createPrimaryPromptForInputBox, createPrimaryPromptForWarningMessage, createPrimaryPromptForWorkspaceFolderPick, createPrimaryPromptToGetPickManyQuickPickInput, createPrimaryPromptToGetSingleQuickPickInput, doGithubCopilotInteraction } from '../copilot/copilot';
+import { copilotUserInputCanaryKey } from '../copilot/copilotConstants';
 import { InvalidCopilotResponseError } from '../errors';
-import { IActionContext } from '../../index';
-
-const copilotUserInputCanaryKey = '_copilotUserInput';
 
 export function markAsCopilotUserInput(context: IActionContext, relevantContext?: string, getLoadingView?: () => vscode.WebviewPanel | undefined): void {
     context.ui = new CopilotUserInput(vscode, relevantContext, getLoadingView);
@@ -55,9 +53,9 @@ export class CopilotUserInput implements types.IAzureUserInput {
     }
 
     public async showWorkspaceFolderPick(_options: types.AzExtWorkspaceFolderPickOptions,): Promise<vscodeTypes.WorkspaceFolder> {
-        const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(workspace.workspaceFolders, this._relevantContext);
+        const primaryPrompt: string = createPrimaryPromptForWorkspaceFolderPick(vscode.workspace.workspaceFolders, this._relevantContext);
         const response = await doGithubCopilotInteraction(primaryPrompt, this._relevantContext);
-        const pick = (workspace.workspaceFolders ?? []).find(folder => {
+        const pick = (vscode.workspace.workspaceFolders ?? []).find(folder => {
             return folder.name === response;
         });
 
