@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
 import { pingFunctionApp } from './pingFunctionApp';
+import { getAppServiceScopes } from './utils/appServiceEnvironment';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -39,8 +40,10 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
         outputChannel.show();
         outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
-        const credentials = site.subscription.credentials;
-        const bearerToken = (await credentials.getToken() as { token: string }).token;
+        const appServiceCredentials = await site.subscription.createCredentialsForScopes(
+            getAppServiceScopes(site.subscription.environment)
+        );
+        const bearerToken = (await appServiceCredentials.getToken() as { token: string }).token;
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action

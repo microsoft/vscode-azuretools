@@ -9,6 +9,7 @@ import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azur
 import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
 import { AzExtPipelineResponse, createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
+import { getAppServiceScopes } from './utils/appServiceEnvironment';
 import { URLSearchParams } from 'url';
 import type * as KuduModels from './KuduModels';
 import { AppKind } from './createAppService/AppKind';
@@ -332,7 +333,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async zipPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentZipPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await this.createKuduClient(context);
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
@@ -345,7 +346,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async warPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await this.createKuduClient(context);
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
         const request = createPipelineRequest({
@@ -360,7 +361,7 @@ export class SiteClient implements IAppSettingsClient {
     // TODO: only supporting /zip endpoint for now, but should support /zipurl as well
     public async flexDeploy(context: IActionContext, file: RequestBodyType,
         rawQueryParameters: { RemoteBuild?: boolean, Deployer?: string }): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await this.createKuduClient(context);
         const queryParameters = convertQueryParamsValuesToString(rawQueryParameters);
         const queryString = new URLSearchParams(queryParameters).toString();
         const headers = createHttpHeaders({
@@ -378,7 +379,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async deploy(context: IActionContext, id: string): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await this.createKuduClient(context);
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/deployments/${id}`
@@ -387,7 +388,7 @@ export class SiteClient implements IAppSettingsClient {
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
     public async getDeployResults(context: IActionContext): Promise<KuduModels.DeployResult[]> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+        const client: ServiceClient = await this.createKuduClient(context, {
             addStatusCodePolicy: true,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
@@ -407,7 +408,7 @@ export class SiteClient implements IAppSettingsClient {
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
     public async getDeployResult(context: IActionContext, deployId: string): Promise<KuduModels.DeployResult> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+        const client: ServiceClient = await this.createKuduClient(context, {
             addStatusCodePolicy: true,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
@@ -419,7 +420,7 @@ export class SiteClient implements IAppSettingsClient {
 
     // no equivalent ARM call
     public async getLogEntry(context: IActionContext, deployId: string): Promise<KuduModels.LogEntry[]> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+        const client: ServiceClient = await this.createKuduClient(context, {
             addStatusCodePolicy: true,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
@@ -440,7 +441,7 @@ export class SiteClient implements IAppSettingsClient {
 
     // no equivalent ARM call
     public async getLogEntryDetails(context: IActionContext, deployId: string, logId: string): Promise<KuduModels.LogEntry[]> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription, {
+        const client: ServiceClient = await this.createKuduClient(context, {
             addStatusCodePolicy: true,
         });
         const response: AzExtPipelineResponse = await client.sendRequest(createPipelineRequest({
@@ -459,7 +460,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async vfsGetItem(context: IActionContext, url: string): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await this.createKuduClient(context);
         return await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url,
@@ -467,7 +468,7 @@ export class SiteClient implements IAppSettingsClient {
     }
 
     public async vfsPutItem(context: IActionContext, data: string | ArrayBuffer | Uint8Array, url: string, rawHeaders?: Record<string, string>): Promise<AzExtPipelineResponse> {
-        const client: ServiceClient = await createGenericClient(context, this._site.subscription);
+        const client: ServiceClient = await this.createKuduClient(context);
         const headers = createHttpHeaders(rawHeaders);
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
@@ -475,6 +476,21 @@ export class SiteClient implements IAppSettingsClient {
             body: typeof data === 'string' ? data : new TextDecoder('utf-8').decode(data),
             headers
         }));
+    }
+
+    /**
+     * Creates a ServiceClient authenticated for App Service (Kudu) endpoint calls.
+     * Uses the dedicated App Service audience rather than the ARM audience, as ARM tokens
+     * are deprecated for Kudu calls and will break.
+     *
+     * - Public Azure:      https://appservice.azure.com/.default
+     * - Fairfax (US Gov):  https://appservice.azure.us/.default
+     */
+    private async createKuduClient(context: IActionContext, options?: { addStatusCodePolicy?: boolean }): Promise<ServiceClient> {
+        const credentials = await this._site.subscription.createCredentialsForScopes(
+            getAppServiceScopes(this._site.subscription.environment)
+        );
+        return createGenericClient(context, credentials, options);
     }
 
     /**

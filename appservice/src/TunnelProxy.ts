@@ -13,6 +13,7 @@ import * as ws from 'ws';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
 import { delay } from './utils/delay';
+import { getAppServiceScopes } from './utils/appServiceEnvironment';
 
 /**
  * Interface for tunnel GetStatus API
@@ -44,21 +45,27 @@ export class TunnelProxy {
     private _server: Server;
     private _openSockets: ws.WebSocket[];
     private _isSsh: boolean;
-    private _credentials: AzExtServiceClientCredentials;
 
+    /**
+     * @param credentials Deprecated. Credentials are now derived from the site's subscription using
+     * the correct App Service audience for the current cloud environment. This parameter is ignored.
+     */
     constructor(port: number, site: ParsedSite, credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
         this._port = port;
         this._site = site;
         this._server = createServer();
         this._openSockets = [];
         this._isSsh = isSsh;
-        this._credentials = credentials;
+        void credentials; // kept for API compatibility; credentials are now obtained internally
     }
 
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
-            const bearerToken = (await this._credentials.getToken() as { token: string }).token;
+            const appServiceCredentials = await this._site.subscription.createCredentialsForScopes(
+                getAppServiceScopes(this._site.subscription.environment)
+            );
+            const bearerToken = (await appServiceCredentials.getToken() as { token: string }).token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();
@@ -95,10 +102,12 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
+        const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
+        const appServiceCredentials = await this._site.subscription.createCredentialsForScopes(appServiceScopes);
         const client: ServiceClient = await createGenericClient(context, undefined);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
-            scopes: [],
-            credential: this._credentials
+            scopes: appServiceScopes,
+            credential: appServiceCredentials
         }));
 
         let tunnelStatus: ITunnelStatus;
