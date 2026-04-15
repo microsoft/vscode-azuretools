@@ -10,7 +10,7 @@ import { SharedState } from "./OpenConfirmationViewStep";
 
 export class OpenLoadingViewStep<T extends IActionContext> extends AzureWizardPromptStep<T> {
     public async prompt(): Promise<void> {
-        const loadingView = new LoadingViewController({ title: vscode.l10n.t('loadingViewTitle', 'Loading...') });
+        const loadingView = new LoadingViewController({ title: vscode.l10n.t('Loading...') });
         loadingView.revealToForeground(vscode.ViewColumn.Active);
         SharedState.currentPanel = loadingView.panel;
     }

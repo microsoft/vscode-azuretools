@@ -73,31 +73,31 @@ export class OpenConfirmationViewStep<T extends IActionContext> extends AzureWiz
                         title: 'Unhelpful'
                     };
                     const surveyButton: vscode.MessageItem = {
-                        title: vscode.l10n.t('provideFeedback', 'Provide Feedback'),
+                        title: vscode.l10n.t('Provide Feedback'),
 
                     };
                     const buttons = [greatButton, notHelpfulButton, surveyButton];
 
                     if (SharedState.editingPicks && SharedState.itemsToClear === 0 && SharedState.copilotClicked) {
                         resolve();
-                        const message = vscode.l10n.t('editingPicksandCopilotMessage', 'How was your experience using Copilot and revising your selections?');
+                        const message = vscode.l10n.t('How was your experience using Copilot and revising your selections?');
                         const result = await vscode.window.showInformationMessage(message, ...buttons);
                         await confirmationViewButtonActions(context, result);
                     } else if (!SharedState.cancelled && !SharedState.copilotClicked && !SharedState.editingPicks) {
                         resolve();
-                        const message = vscode.l10n.t('confirmMessage', 'How was your experience using the summary view?');
+                        const message = vscode.l10n.t('How was your experience using the summary view?');
                         const result = await vscode.window.showInformationMessage(message, ...buttons);
                         await confirmationViewButtonActions(context, result);
                     } else if (SharedState.editingPicks && SharedState.itemsToClear === 0) {
                         resolve();
-                        const message = vscode.l10n.t('editingPicksMessage', 'How was your experience revising your selections?');
+                        const message = vscode.l10n.t('How was your experience revising your selections?');
                         const result = await vscode.window.showInformationMessage(message, ...buttons);
                         await confirmationViewButtonActions(context, result);
                     } else if (SharedState.copilotClicked && !SharedState.cancelled) {
                         resolve();
                         context.telemetry.properties.isCopilotEvent = 'true';
                         context.telemetry.properties.copilotClicked = 'true';
-                        const message = vscode.l10n.t('copilotMessage', 'How was your experience using Copilot and the summary view?');
+                        const message = vscode.l10n.t('How was your experience using Copilot and the summary view?');
                         const result = await vscode.window.showInformationMessage(message, ...buttons);
                         if (result === surveyButton) {
                             await confirmationViewButtonActions(context, result);
