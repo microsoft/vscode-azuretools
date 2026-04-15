@@ -11,7 +11,7 @@
     ],
     "module": "dist/esm/src/index.js",
     "main": "dist/cjs/src/index.js",
-    "types": "index.d.ts",
+    "types": "dist/esm/src/index.d.ts",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -22,9 +22,9 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/webview/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs && npm run build:webview",
-        "build:esm": "tsc -p ./",
-        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build": "npm run build:esbuild && npm run build:declarations && npm run build:webview",
+        "build:esbuild": "node esbuild.mjs",
+        "build:declarations": "tsc -p ./ --emitDeclarationOnly",
         "build:webview": "node esbuild.views.mjs",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack",

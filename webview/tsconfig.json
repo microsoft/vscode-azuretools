@@ -14,7 +14,7 @@
         "types": [
             "node"
         ],
-        "skipLibCheck": true, // TODO: webpack typings issue
+        "skipLibCheck": true,
     },
     "exclude": [
         "node_modules",
