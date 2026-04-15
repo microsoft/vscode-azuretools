@@ -1,0 +1,23 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "target": "es2022",
+        "outDir": "dist/esm",
+        "lib": [
+            "es2022",
+            "dom"
+        ],
+        "rootDir": ".",
+        "jsx": "react-jsx",
+        "types": [
+            "node"
+        ],
+        "skipLibCheck": true, // TODO: webpack typings issue
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
