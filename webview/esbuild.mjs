@@ -4,4 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
-await autoEsbuildOrWatch(autoSelectEsbuildConfig());
+const config = autoSelectEsbuildConfig(false, false);
+config.extensionConfig.entryPoints = [{ in: './src/index.ts', out: 'extension.bundle' }];
+delete config.extensionConfig.alias;
+await autoEsbuildOrWatch(config);

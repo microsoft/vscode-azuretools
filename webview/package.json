@@ -35,16 +35,16 @@
     },
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
-        "@types/vscode-webview": "^1.57.5",
-        "@types/vscode": "^1.104.0",
         "@types/node": "22.x",
+        "@types/vscode": "^1.104.0",
+        "@types/vscode-webview": "^1.57.5",
         "esbuild": "*",
         "esbuild-plugin-copy": "*"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^4.0.7",
         "@fluentui/react-components": "^9.56.2",
         "@fluentui/react-icons": "^2.0.265",
+        "@microsoft/vscode-azext-utils": "^4.0.7",
         "@vscode/codicons": "0.0.38",
         "monaco-editor": "~0.51.0",
         "react": "^18.3.1",
