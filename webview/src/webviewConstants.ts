@@ -8,3 +8,7 @@ export const enum ConfirmationViewCommands {
     Cancel = 'cancel',
     Copilot = 'copilot',
 }
+
+export const enum LoadingViewCommands {
+    AddProgressItem = 'addProgressItem',
+}
