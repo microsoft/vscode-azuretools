@@ -1,0 +1,232 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.deploymentPlanView {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 28px;
+    max-width: 780px;
+
+    .planHeader {
+        .headerTop {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.35em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            letter-spacing: -0.01em;
+        }
+
+        .metadataBadges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+
+            .badge {
+                display: inline-block;
+                padding: 2px 10px;
+                border-radius: 10px;
+                font-size: 0.7em;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .badge.status {
+                background: var(--vscode-badge-background);
+                color: var(--vscode-badge-foreground);
+            }
+
+            .badge.mode {
+                background: var(--vscode-toolbar-hoverBackground);
+                color: var(--vscode-descriptionForeground);
+            }
+        }
+
+        .headerActions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+    }
+
+    .infoCards {
+        display: flex;
+        gap: 12px;
+
+        .infoCard {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+
+            .infoLabel {
+                font-size: 0.7em;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: var(--vscode-descriptionForeground);
+            }
+
+            .infoValue {
+                font-size: 0.85em;
+                color: var(--vscode-foreground);
+                font-weight: 500;
+
+                code {
+                    font-family: var(--vscode-editor-font-family), monospace;
+                    font-size: 0.9em;
+                    padding: 1px 5px;
+                    border-radius: 3px;
+                    background: var(--vscode-textCodeBlock-background);
+                    color: var(--vscode-descriptionForeground);
+                    margin-left: 4px;
+                }
+            }
+        }
+    }
+
+    .sectionCard {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 8px;
+        padding: 14px 18px;
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            opacity: 0.85;
+        }
+    }
+
+    .mermaidRendered {
+        padding: 24px 20px;
+        background: linear-gradient(135deg, var(--vscode-editor-background), var(--vscode-textCodeBlock-background));
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 12px;
+        overflow-x: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        svg {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+
+            .node rect,
+            .node polygon,
+            .node circle,
+            .node ellipse {
+                rx: 10px;
+                ry: 10px;
+            }
+
+            .edgePath .path {
+                stroke-width: 1.5px;
+            }
+
+            .edgeLabel {
+                font-size: 0.95em;
+            }
+        }
+    }
+
+    .mermaidBlock {
+        margin: 0;
+        padding: 12px 16px;
+        background: var(--vscode-textCodeBlock-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 6px;
+        overflow-x: auto;
+
+        code {
+            font-family: var(--vscode-editor-font-family), monospace;
+            font-size: 0.82em;
+            line-height: 1.5;
+            color: var(--vscode-foreground);
+            white-space: pre;
+        }
+    }
+
+    .planTable {
+        width: 100%;
+        margin: 2px 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--vscode-widget-border);
+
+        th,
+        td {
+            text-align: left;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--vscode-descriptionForeground);
+            background: var(--vscode-toolbar-hoverBackground);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        td:first-child {
+            font-weight: 500;
+            color: var(--vscode-foreground);
+        }
+
+        td {
+            color: var(--vscode-descriptionForeground);
+        }
+    }
+
+    .cellDropdown {
+        width: 100%;
+        background: var(--vscode-dropdown-background);
+        color: var(--vscode-dropdown-foreground);
+        border: 1px solid transparent;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 1em;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color 0.15s;
+
+        &:hover {
+            border-color: var(--vscode-dropdown-border);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+        }
+    }
+}

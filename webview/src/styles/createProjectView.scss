@@ -1,0 +1,183 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.createProjectView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 12vh 20px 40px;
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 600px;
+        width: 100%;
+        gap: 28px;
+
+        .headerSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+
+            .headerIcon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: var(--vscode-button-background);
+                margin-bottom: 4px;
+
+                .codicon {
+                    font-size: 24px;
+                    color: var(--vscode-button-foreground);
+                }
+            }
+
+            h1 {
+                margin: 0;
+                font-size: 1.8em;
+                font-weight: 600;
+                color: var(--vscode-foreground);
+            }
+
+            .subtitle {
+                margin: 0;
+                color: var(--vscode-descriptionForeground);
+                font-size: 0.9em;
+                line-height: 1.5;
+                max-width: 460px;
+            }
+        }
+
+        .promptCard {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
+            border-radius: 8px;
+            background: var(--vscode-input-background);
+            overflow: hidden;
+            transition: border-color 0.15s ease;
+
+            &:focus-within {
+                border-color: var(--vscode-focusBorder);
+            }
+
+            .promptInput {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+
+                // Override Fluent UI Textarea wrapper to remove its border/padding
+                >span {
+                    border: none !important;
+                    background: transparent !important;
+                    padding: 0 !important;
+                }
+
+                textarea {
+                    border: none;
+                    background: transparent;
+                    padding: 16px 18px;
+                    min-height: 140px;
+                    font-size: 0.9em;
+                    line-height: 1.6;
+                    color: var(--vscode-input-foreground);
+                    resize: vertical;
+
+                    &::placeholder {
+                        color: var(--vscode-input-placeholderForeground);
+                    }
+
+                    &:focus {
+                        outline: none;
+                    }
+                }
+            }
+
+            .promptActions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 12px;
+                border-top: 1px solid var(--vscode-widget-border);
+                background: var(--vscode-editor-background);
+
+                .hint {
+                    font-size: 0.75em;
+                    color: var(--vscode-descriptionForeground);
+                    user-select: none;
+                }
+
+                .buttonGroup {
+                    display: flex;
+                    gap: 8px;
+                }
+            }
+        }
+
+        .examplesSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+
+            .examplesLabel {
+                font-size: 0.8em;
+                color: var(--vscode-descriptionForeground);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-weight: 500;
+            }
+
+            .examplesList {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                gap: 6px;
+            }
+
+            .exampleChip {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid var(--vscode-widget-border);
+                border-radius: 6px;
+                background: transparent;
+                color: var(--vscode-foreground);
+                font-size: 0.85em;
+                text-align: left;
+                cursor: pointer;
+                transition: background 0.12s ease, border-color 0.12s ease;
+
+                &:hover {
+                    background: var(--vscode-list-hoverBackground);
+                    border-color: var(--vscode-focusBorder);
+                }
+
+                &:focus-visible {
+                    outline: 1px solid var(--vscode-focusBorder);
+                    outline-offset: -1px;
+                }
+
+                .exampleIcon {
+                    flex-shrink: 0;
+                    font-size: 14px;
+                    color: var(--vscode-descriptionForeground);
+                }
+            }
+        }
+    }
+}

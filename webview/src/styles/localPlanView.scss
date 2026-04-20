@@ -1,0 +1,332 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.localPlanView {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 28px;
+    max-width: 780px;
+
+    .planHeader {
+        .headerTop {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+
+            >button {
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.35em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            letter-spacing: -0.01em;
+        }
+
+        .metadataBadges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+
+            .badge {
+                display: inline-block;
+                padding: 2px 10px;
+                border-radius: 10px;
+                font-size: 0.7em;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                background: var(--vscode-badge-background);
+                color: var(--vscode-badge-foreground);
+            }
+        }
+
+        .headerNote {
+            margin: 8px 0 0 0;
+            font-size: 0.8em;
+            line-height: 1.5;
+            color: var(--vscode-descriptionForeground);
+
+            code {
+                background: var(--vscode-textCodeBlock-background);
+                padding: 1px 4px;
+                border-radius: 3px;
+                font-family: var(--vscode-editor-font-family), monospace;
+                font-size: 0.95em;
+            }
+        }
+    }
+
+    .sectionCard {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 8px;
+        padding: 14px 18px;
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            opacity: 0.85;
+        }
+
+        .sectionHeading {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+
+            &.clickable {
+                cursor: pointer;
+                border-radius: 4px;
+                padding: 4px 6px;
+                margin: -4px -6px 0 -6px;
+
+                &:hover {
+                    background: var(--vscode-list-hoverBackground);
+                }
+
+                h2 {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
+        .sectionContent {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+    }
+
+    .sectionChevron {
+        display: inline-block;
+        width: 14px;
+        text-align: center;
+        font-size: 0.6em;
+        color: var(--vscode-foreground);
+        transition: transform 0.15s;
+        flex-shrink: 0;
+
+        &.open {
+            transform: rotate(90deg);
+        }
+    }
+
+    .subsection {
+        margin-top: 4px;
+
+        h3 {
+            margin: 0;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            opacity: 0.9;
+        }
+
+        .subsectionHeading {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+
+            &.clickable {
+                cursor: pointer;
+                border-radius: 4px;
+                padding: 4px 6px;
+                margin: -4px -6px;
+
+                &:hover {
+                    background: var(--vscode-list-hoverBackground);
+                }
+            }
+        }
+
+        .subsectionContent {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+    }
+
+    .planTable {
+        width: 100%;
+        margin: 2px 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--vscode-widget-border);
+        table-layout: auto;
+
+        th,
+        td {
+            text-align: left;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border-bottom: 1px solid var(--vscode-widget-border);
+            white-space: nowrap;
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--vscode-descriptionForeground);
+            background: var(--vscode-toolbar-hoverBackground);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        td:first-child {
+            font-weight: 500;
+            color: var(--vscode-foreground);
+        }
+
+        td {
+            color: var(--vscode-descriptionForeground);
+            white-space: normal;
+
+            code {
+                background: var(--vscode-textCodeBlock-background);
+                padding: 1px 4px;
+                border-radius: 3px;
+                font-family: var(--vscode-editor-font-family), monospace;
+                font-size: 0.95em;
+            }
+
+            strong {
+                color: var(--vscode-foreground);
+                font-weight: 600;
+            }
+
+            .link {
+                color: var(--vscode-textLink-foreground);
+                cursor: default;
+            }
+        }
+    }
+
+    .codeBlock {
+        position: relative;
+        background: var(--vscode-textCodeBlock-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 4px;
+        overflow: hidden;
+
+        .codeBlockLang {
+            display: block;
+            padding: 3px 10px;
+            font-size: 0.65em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--vscode-descriptionForeground);
+            background: var(--vscode-toolbar-hoverBackground);
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        pre {
+            margin: 0;
+            padding: 10px 14px;
+            overflow-x: auto;
+
+            code {
+                font-family: var(--vscode-editor-font-family), monospace;
+                font-size: 0.78em;
+                line-height: 1.5;
+                color: var(--vscode-foreground);
+                white-space: pre;
+            }
+        }
+    }
+
+    .bulletList {
+        margin: 0;
+        padding: 0 0 0 18px;
+        list-style-type: disc;
+
+        li {
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: var(--vscode-descriptionForeground);
+            padding: 1px 0;
+
+            code {
+                background: var(--vscode-textCodeBlock-background);
+                padding: 1px 4px;
+                border-radius: 3px;
+                font-family: var(--vscode-editor-font-family), monospace;
+                font-size: 0.95em;
+            }
+
+            strong {
+                color: var(--vscode-foreground);
+                font-weight: 600;
+            }
+        }
+    }
+
+    .blockquote {
+        border-left: 3px solid var(--vscode-textBlockQuote-border);
+        padding: 6px 12px;
+        font-size: 0.78em;
+        color: var(--vscode-descriptionForeground);
+        font-style: italic;
+        border-radius: 0 4px 4px 0;
+        background: var(--vscode-textBlockQuote-background);
+        line-height: 1.5;
+
+        code {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: var(--vscode-editor-font-family), monospace;
+            font-size: 0.95em;
+            font-style: normal;
+        }
+    }
+
+    .paragraph {
+        margin: 0;
+        font-size: 0.8em;
+        line-height: 1.5;
+        color: var(--vscode-descriptionForeground);
+
+        code {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: var(--vscode-editor-font-family), monospace;
+            font-size: 0.95em;
+        }
+
+        strong {
+            color: var(--vscode-foreground);
+            font-weight: 600;
+        }
+    }
+
+    .link {
+        color: var(--vscode-textLink-foreground);
+        cursor: default;
+    }
+}

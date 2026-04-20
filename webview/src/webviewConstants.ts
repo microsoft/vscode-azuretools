@@ -8,3 +8,8 @@ export const enum ConfirmationViewCommands {
     Cancel = 'cancel',
     Copilot = 'copilot',
 }
+
+export const enum CreateProjectViewCommands {
+    Plan = 'plan',
+    Build = 'build',
+}

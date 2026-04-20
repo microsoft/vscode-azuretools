@@ -31,7 +31,14 @@ export default defineConfig([
                     format: ['camelCase', 'PascalCase', 'snake_case', 'UPPER_CASE'],
                     leadingUnderscore: 'allow'
                 },
-
+                {
+                    selector: 'objectLiteralProperty',
+                    format: null,
+                    filter: {
+                        regex: '^__|\\s',
+                        match: true,
+                    },
+                },
             ]
         }
     },
