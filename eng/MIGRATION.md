@@ -34,7 +34,8 @@ Hard mode engage!
         "@vscode/test-electron": "*",
         "@vscode/vsce": "*",
         "esbuild": "*",
-        "esbuild-plugin-copy": "*"
+        "esbuild-plugin-copy": "*",
+        "tsx": "*"
     }
     ```
 1. Update your tsconfig.json to use target=es2022, lib=es2022, module=nodenext, moduleResolution=nodenext.

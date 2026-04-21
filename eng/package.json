@@ -54,7 +54,8 @@
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.9.1",
         "esbuild": "^0.28.0",
-        "esbuild-plugin-copy": "^2.1.1"
+        "esbuild-plugin-copy": "^2.1.1",
+        "tsx": "^4.21.0"
     },
     "peerDependenciesMeta": {
         "@vscode/test-cli": {
@@ -70,6 +71,9 @@
             "optional": true
         },
         "esbuild-plugin-copy": {
+            "optional": true
+        },
+        "tsx": {
             "optional": true
         }
     },

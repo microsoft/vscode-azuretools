@@ -11,6 +11,7 @@ import { defineConfig, type TestConfiguration as VscodeTestConfig } from '@vscod
  */
 export const baseConfig: Partial<VscodeTestConfig> = {
     mocha: {
+        require: ['tsx'],
         timeout: 10000,
     },
     env: {
