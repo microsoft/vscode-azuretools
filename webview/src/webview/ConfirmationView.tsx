@@ -6,7 +6,7 @@
 import { Button, createTableColumn, DataGrid, DataGridBody, DataGridCell, DataGridRow, TableCellLayout, Tooltip, type OnSelectionChangeData, type SelectionItemId, type TableColumnDefinition } from '@fluentui/react-components';
 import * as React from 'react';
 import { useContext, useState, type JSX } from 'react';
-import { type ConfirmationViewControllerType } from './ConfirmationViewController';
+import { type ConfirmationViewControllerType } from '../extension/ConfirmationViewController';
 import './styles/confirmationView.scss';
 import { useConfiguration } from './useConfiguration';
 import { ConfirmationViewCommands } from './webviewConstants';

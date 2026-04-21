@@ -5,7 +5,7 @@
 
 import { nonNullValue } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { SharedState } from '../OpenConfirmationViewStep';
+import { SharedState } from './SharedViewState';
 import { WebviewBaseController } from './WebviewBaseController';
 /**
  * WebviewController is a class that manages a vscode.WebviewPanel and provides

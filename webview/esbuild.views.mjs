@@ -15,7 +15,7 @@ const outdir = path.resolve(__dirname, 'dist');
 
 const commonConfig = {
     entryPoints: {
-        views: path.resolve(__dirname, 'src/webviewEntry.tsx'),
+        views: path.resolve(__dirname, 'src/webview/webviewEntry.tsx'),
     },
 
     bundle: true,

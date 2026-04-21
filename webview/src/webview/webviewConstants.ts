@@ -13,3 +13,7 @@ export const enum CreateProjectViewCommands {
     Plan = 'plan',
     Build = 'build',
 }
+
+export const enum LoadingViewCommands {
+    AddProgressItem = 'addProgressItem',
+}

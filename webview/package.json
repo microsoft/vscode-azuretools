@@ -22,9 +22,9 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/webview/README.md",
     "scripts": {
-        "build": "npm run build:esbuild && npm run build:declarations && npm run build:webview",
-        "build:esbuild": "node esbuild.mjs",
-        "build:declarations": "tsc -p ./ --emitDeclarationOnly",
+        "build": "npm run build:esm && npm run build:cjs && npm run build:webview",
+        "build:esm": "tsc -p ./",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "build:webview": "node esbuild.views.mjs",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack",

@@ -6,14 +6,9 @@
 import { AzExtUserInput, AzureWizardPromptStep, GoBackError, isCopilotUserInput, openUrl, UserCancelledError, type ConfirmationViewProperty, type IActionContext } from "@microsoft/vscode-azext-utils";
 import * as vscode from 'vscode';
 import { ConfirmationViewController } from "./ConfirmationViewController";
+import { resetSharedState, SharedState } from "./SharedViewState";
 
-export const SharedState = {
-    itemsToClear: 0,
-    cancelled: true,
-    copilotClicked: false,
-    editingPicks: false,
-    currentPanel: undefined as vscode.WebviewPanel | undefined,
-};
+export { SharedState } from "./SharedViewState";
 
 export class OpenConfirmationViewStep<T extends IActionContext> extends AzureWizardPromptStep<T> {
     private readonly viewConfig: () => ConfirmationViewProperty[];
@@ -112,10 +107,7 @@ export class OpenConfirmationViewStep<T extends IActionContext> extends AzureWiz
                 }
             });
             // reset the shared state
-            SharedState.itemsToClear = 0;
-            SharedState.cancelled = true;
-            SharedState.copilotClicked = false;
-            SharedState.editingPicks = false;
+            resetSharedState();
         });
     }
 
