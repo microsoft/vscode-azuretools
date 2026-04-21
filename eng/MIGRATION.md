@@ -100,6 +100,7 @@ Your tests run directly in Mocha, because **you do not have VS Code dependencies
             ]
         }
     ```
+   > `experimental-transform-types` requires Node.js 22.6.0+.
 1. Optionally, you can choose a grep to select specific tests. All mocha options are supported here.
 1. Add in your launch config. It will look something like this:
     ```json
