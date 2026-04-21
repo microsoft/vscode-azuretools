@@ -233,7 +233,6 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     '.vscode-test/**',
     '.vscode-test.mjs',
     'esbuild*.mjs',
-    'src/mocha/**/*.mjs',
     'eslint.config.mjs',
     'main.js',
     'main.mjs',
