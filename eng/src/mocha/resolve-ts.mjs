@@ -14,8 +14,10 @@ export async function resolve(specifier, context, nextResolve) {
         for (const ext of ['.ts', '.js']) {
             try {
                 return await nextResolve(specifier + ext, context);
-            } catch {
-                // try next extension
+            } catch (e) {
+                if (e?.code !== 'ERR_MODULE_NOT_FOUND') {
+                    throw e;
+                }
             }
         }
     }
