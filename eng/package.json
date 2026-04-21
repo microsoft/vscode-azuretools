@@ -23,6 +23,10 @@
             "import": "./dist/esm/vscode-test/vscodeTestConfigs.js",
             "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js",
             "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
+        },
+        "./mocha": {
+            "import": "./src/mocha/register-hooks.mjs",
+            "require": "./src/mocha/register-hooks.mjs"
         }
     },
     "scripts": {
@@ -43,7 +47,6 @@
         "chai-as-promised": "^8.0.2",
         "eslint": "^10.0.0",
         "mocha": "^11.7.5",
-        "tsx": "^4.21.0",
         "typescript": "~5.9",
         "typescript-eslint": "^8.56.0"
     },

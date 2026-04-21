@@ -91,7 +91,9 @@ Your tests run directly in Mocha, because **you do not have VS Code dependencies
         "mocha": {
             "ui": "tdd", // Only if your tests use `suite()`, `test()`, etc.
             "node-option": [
-                "import=tsx"
+                "experimental-transform-types",
+                "disable-warning=ExperimentalWarning",
+                "import=@microsoft/vscode-azext-eng/mocha"
             ],
             "spec": [
                 "src/test/**/*.test.ts"
