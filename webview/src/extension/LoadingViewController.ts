@@ -4,9 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { ViewColumn } from "vscode";
-import { WebviewController } from "./extension-server/WebviewController";
+import { LoadingViewCommands } from "../webview/webviewConstants";
+import { WebviewController } from "./WebviewController";
 import { ext } from "./extensionVariables";
-import { LoadingViewCommands } from "./webviewConstants";
 
 export type LoadingViewProgressItem = {
     name: string;

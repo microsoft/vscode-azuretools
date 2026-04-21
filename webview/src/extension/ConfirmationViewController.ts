@@ -5,7 +5,7 @@
 
 import { type ConfirmationViewProperty } from "@microsoft/vscode-azext-utils";
 import { ViewColumn } from "vscode";
-import { WebviewController } from "./extension-server/WebviewController";
+import { WebviewController } from "./WebviewController";
 import { ext } from "./extensionVariables";
 
 export type ConfirmationViewControllerType = {

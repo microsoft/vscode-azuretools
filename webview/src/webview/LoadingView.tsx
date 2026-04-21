@@ -5,7 +5,7 @@
 
 import { Spinner } from "@fluentui/react-components";
 import { useEffect, useState } from 'react';
-import { LoadingViewProgressItem } from "./LoadingViewController";
+import { LoadingViewProgressItem } from "../extension/LoadingViewController";
 import './styles/loadingView.scss';
 import { LoadingViewCommands } from './webviewConstants';
 

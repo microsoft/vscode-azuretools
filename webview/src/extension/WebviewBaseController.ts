@@ -6,7 +6,7 @@
 import { randomBytes } from 'crypto';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ext } from '../extensionVariables';
+import { ext } from './extensionVariables';
 
 /**
  * WebviewBaseController is a class that manages a vscode.Webview and provides
@@ -44,9 +44,10 @@ export abstract class WebviewBaseController<Configuration> implements vscode.Dis
         const nonce = randomBytes(16).toString('base64');
 
         const filename = 'views.js';
-        const uri = (...parts: string[]) => webview?.asWebviewUri(vscode.Uri.file(path.join(ext.context.extensionPath, ...parts))).toString(true);
-        const srcUri = uri('dist', filename);
-        const cssUri = uri('dist', 'views.css');
+        const webviewDistDir = path.join(ext.context.extensionPath, 'node_modules', '@microsoft', 'vscode-azext-webview', 'dist');
+        const uri = (...parts: string[]) => webview?.asWebviewUri(vscode.Uri.file(path.join(webviewDistDir, ...parts))).toString(true);
+        const srcUri = uri(filename);
+        const cssUri = uri('views.css');
 
         const csp = [
             `form-action 'none';`,
