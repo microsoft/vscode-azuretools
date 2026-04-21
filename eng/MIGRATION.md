@@ -34,7 +34,8 @@ Hard mode engage!
         "@vscode/test-electron": "*",
         "@vscode/vsce": "*",
         "esbuild": "*",
-        "esbuild-plugin-copy": "*"
+        "esbuild-plugin-copy": "*",
+        "tsx": "*"
     }
     ```
 1. Update your tsconfig.json to use target=es2022, lib=es2022, module=nodenext, moduleResolution=nodenext.
@@ -91,13 +92,16 @@ Your tests run directly in Mocha, because **you do not have VS Code dependencies
         "mocha": {
             "ui": "tdd", // Only if your tests use `suite()`, `test()`, etc.
             "node-option": [
-                "import=tsx"
+                "experimental-transform-types",
+                "disable-warning=ExperimentalWarning",
+                "import=@microsoft/vscode-azext-eng/mocha"
             ],
             "spec": [
                 "src/test/**/*.test.ts"
             ]
         }
     ```
+   > `experimental-transform-types` requires Node.js 22.6.0+.
 1. Optionally, you can choose a grep to select specific tests. All mocha options are supported here.
 1. Add in your launch config. It will look something like this:
     ```json
