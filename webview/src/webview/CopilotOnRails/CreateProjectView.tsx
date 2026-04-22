@@ -7,10 +7,9 @@ import { Button, Textarea } from '@fluentui/react-components';
 import { ClipboardTaskListLtrRegular, RocketRegular } from '@fluentui/react-icons';
 import * as React from 'react';
 import { useContext, useState, type JSX } from 'react';
+import '../styles/createProjectView.scss';
 import { CreateProjectViewCommands } from '../webviewConstants';
 import { WebviewContext } from '../WebviewContext';
-import './styles/createProjectView.scss';
-
 
 export const CreateProjectView = (): JSX.Element => {
     const [prompt, setPrompt] = useState('');

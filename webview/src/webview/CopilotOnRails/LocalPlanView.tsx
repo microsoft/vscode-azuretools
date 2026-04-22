@@ -7,7 +7,7 @@ import { Button } from '@fluentui/react-components';
 import { CheckmarkRegular } from '@fluentui/react-icons';
 import { useCallback, useContext, useEffect, useState, type JSX } from 'react';
 import { WebviewContext } from '../WebviewContext';
-import './styles/localPlanView.scss';
+import '../styles/localPlanView.scss';
 import { type LocalPlanContent, type LocalPlanData, type LocalPlanSection } from './utils/parseLocalPlanMarkdown';
 
 const alwaysExpandedSections = new Set(['project analysis', 'prerequisites', 'scan results']);

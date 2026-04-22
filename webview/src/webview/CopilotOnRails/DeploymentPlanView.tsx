@@ -7,8 +7,8 @@ import { Button } from '@fluentui/react-components';
 import { CheckmarkRegular } from '@fluentui/react-icons';
 import mermaid from 'mermaid';
 import { useCallback, useContext, useEffect, useRef, useState, type JSX } from 'react';
+import '../styles/deploymentPlanView.scss';
 import { WebviewContext } from '../WebviewContext';
-import './styles/deploymentPlanView.scss';
 
 export interface DeploymentPlanTable {
     headers: string[];

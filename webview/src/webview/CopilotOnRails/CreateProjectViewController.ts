@@ -5,8 +5,8 @@
 
 import * as vscode from "vscode";
 import { ViewColumn } from "vscode";
-import { WebviewController } from "../extension-server/WebviewController";
-import { ext } from "../extensionVariables";
+import { ext } from "../../extension/extensionVariables";
+import { WebviewController } from "../../extension/WebviewController";
 
 export type CreateProjectViewControllerType = {
     title: string;

@@ -7,7 +7,7 @@ import { Button } from '@fluentui/react-components';
 import { CheckmarkRegular, EditRegular } from '@fluentui/react-icons';
 import { useCallback, useContext, useEffect, useState, type JSX } from 'react';
 import { WebviewContext } from '../WebviewContext';
-import './styles/planView.scss';
+import '../styles/scaffoldPlanView.scss';
 import { type PlanContent, type PlanData, type PlanSection, type TreeNode } from './utils/parseScaffoldPlanMarkdown';
 
 const editableOptions: Record<string, string[]> = {

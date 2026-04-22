@@ -5,8 +5,8 @@
 
 import * as vscode from "vscode";
 import { ViewColumn } from "vscode";
-import { WebviewController } from "../extension-server/WebviewController";
-import { ext } from "../extensionVariables";
+import { WebviewController } from "../../extension/WebviewController";
+import { ext } from "../../extension/extensionVariables";
 import { type LocalPlanData } from "./utils/parseLocalPlanMarkdown";
 
 export class LocalPlanViewController extends WebviewController<Record<string, never>> {

@@ -5,13 +5,13 @@
 
 import * as vscode from "vscode";
 import { ViewColumn } from "vscode";
-import { WebviewController } from "../extension-server/WebviewController";
-import { ext } from "../extensionVariables";
+import { WebviewController } from "../../extension/WebviewController";
+import { ext } from "../../extension/extensionVariables";
 import { type PlanData } from "./utils/parseScaffoldPlanMarkdown";
 
 export class ScaffoldPlanViewController extends WebviewController<Record<string, never>> {
     constructor(planData: PlanData) {
-        super(ext.context, 'Project Plan', 'planView', {}, ViewColumn.Active);
+        super(ext.context, 'Project Plan', 'scaffoldPlanView', {}, ViewColumn.Active);
 
         this.panel.webview.onDidReceiveMessage((message: { command: string; data?: PlanData }) => {
             switch (message.command) {

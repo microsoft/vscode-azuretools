@@ -11,6 +11,13 @@
     max-width: 780px;
 
     .planHeader {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--vscode-editor-background);
+        padding-bottom: 14px;
+        margin-bottom: -14px;
+
         .headerTop {
             display: flex;
             justify-content: space-between;
