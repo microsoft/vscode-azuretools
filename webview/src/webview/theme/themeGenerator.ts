@@ -59,7 +59,10 @@ export const generateAdaptiveLightTheme = (): Theme => {
     // Seed the Fluent brand palette from VS Code's primary button color so accent
     // surfaces (primary Button, Link, Checkbox, Switch, ...) match the active
     // VS Code theme instead of Fluent's default blue.
-    const buttonBackground = style.getPropertyValue('--vscode-button-background');
+    // `getComputedStyle` can return values with leading whitespace, which would
+    // break the `startsWith('#')` / `startsWith('rgb')` checks inside
+    // `getBrandTokensFromPalette` — trim defensively.
+    const buttonBackground = style.getPropertyValue('--vscode-button-background').trim();
     const brandVSCode: BrandVariants = getBrandTokensFromPalette(buttonBackground);
 
     return {
@@ -83,8 +86,9 @@ export const generateAdaptiveLightTheme = (): Theme => {
 export const generateAdaptiveDarkTheme = (): Theme => {
     const style = getComputedStyle(document.documentElement);
     // See generateAdaptiveLightTheme: seeds the Fluent brand palette from the
-    // VS Code primary button color.
-    const buttonBackground = style.getPropertyValue('--vscode-button-background');
+    // VS Code primary button color. Trimmed defensively — `getComputedStyle`
+    // values can have leading whitespace that breaks hex/rgb parsing.
+    const buttonBackground = style.getPropertyValue('--vscode-button-background').trim();
     const brandVSCode: BrandVariants = getBrandTokensFromPalette(buttonBackground);
 
     return {

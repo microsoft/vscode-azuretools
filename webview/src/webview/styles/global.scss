@@ -26,8 +26,8 @@
 .fui-Button {
     // Secondary / default Button surface
     --colorNeutralBackground1: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
-    --colorNeutralBackground1Hover: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground)) ;
-    --colorNeutralBackground1Pressed: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground ));
+    --colorNeutralBackground1Hover: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
+    --colorNeutralBackground1Pressed: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
     --colorNeutralBackground1Selected: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
     --colorNeutralForeground1: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
     --colorNeutralForeground1Hover: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
