@@ -37,10 +37,6 @@ export class CreateProjectViewController extends WebviewController<CreateProject
     }
 
     private async openChatWithQuery(query: string): Promise<void> {
-        await vscode.commands.executeCommand("workbench.action.chat.open");
-        await vscode.commands.executeCommand("azureProjectCreation.show");
-        await vscode.commands.executeCommand("azureProjectCreation.focus", ['projectCreation/plan']);
-        await vscode.commands.executeCommand("workbench.action.chat.newChat");
         await vscode.commands.executeCommand("workbench.action.chat.open", {
             mode: 'agent',
             query,

@@ -266,6 +266,31 @@
         }
     }
 
+    .mermaidDiagram {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        background: var(--vscode-textCodeBlock-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 4px;
+        overflow: auto;
+
+        svg {
+            width: auto !important;
+            max-width: none !important;
+            height: auto !important;
+            min-width: 600px;
+            min-height: 400px;
+            font-size: 18px;
+        }
+
+        // Scale up mermaid's internal text and shapes
+        .nodeLabel,
+        .edgeLabel {
+            font-size: 16px !important;
+        }
+    }
+
     .bulletList {
         margin: 0;
         padding: 0 0 0 18px;

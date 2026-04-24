@@ -5,10 +5,25 @@
 
 import { Button } from '@fluentui/react-components';
 import { CheckmarkRegular } from '@fluentui/react-icons';
-import { useCallback, useContext, useEffect, useState, type JSX } from 'react';
+import mermaid from 'mermaid';
+import { useCallback, useContext, useEffect, useRef, useState, type JSX } from 'react';
 import { WebviewContext } from '../WebviewContext';
 import '../styles/localPlanView.scss';
 import { type LocalPlanContent, type LocalPlanData, type LocalPlanSection } from './utils/parseLocalPlanMarkdown';
+
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    fontSize: 30,
+    flowchart: {
+        nodeSpacing: 60,
+        rankSpacing: 80,
+        padding: 20,
+        useMaxWidth: false,
+    },
+});
+let mermaidIdCounter = 0;
 
 const alwaysExpandedSections = new Set(['project analysis', 'prerequisites', 'scan results']);
 
@@ -107,6 +122,9 @@ const ContentBlock = ({ item }: { item: LocalPlanContent }): JSX.Element => {
         case 'table':
             return <TableBlock headers={item.headers} rows={item.rows} />;
         case 'codeBlock':
+            if (item.language?.toLowerCase() === 'mermaid') {
+                return <MermaidBlock code={item.code} />;
+            }
             return <CodeBlock language={item.language} code={item.code} />;
         case 'bulletList':
             return <BulletListBlock items={item.items} />;
@@ -142,6 +160,38 @@ const CodeBlock = ({ language, code }: { language: string; code: string }): JSX.
         <pre><code>{code}</code></pre>
     </div>
 );
+
+const MermaidBlock = ({ code }: { code: string }): JSX.Element => {
+    const ref = useRef<HTMLDivElement>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        const id = `mermaid-diagram-${++mermaidIdCounter}`;
+        mermaid.render(id, code).then(({ svg }) => {
+            if (!cancelled && ref.current) {
+                ref.current.innerHTML = svg;
+                setError(null);
+            }
+        }).catch((err: Error) => {
+            if (!cancelled) {
+                setError(err.message);
+            }
+        });
+        return () => { cancelled = true; };
+    }, [code]);
+
+    if (error) {
+        return (
+            <div className='codeBlock'>
+                <span className='codeBlockLang'>mermaid (error)</span>
+                <pre><code>{code}</code></pre>
+            </div>
+        );
+    }
+
+    return <div className='mermaidDiagram' ref={ref} />;
+};
 
 const BulletListBlock = ({ items }: { items: string[] }): JSX.Element => (
     <ul className='bulletList'>

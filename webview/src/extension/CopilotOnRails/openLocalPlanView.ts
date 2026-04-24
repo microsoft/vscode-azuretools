@@ -39,7 +39,7 @@ export function refreshLocalPlanView(uri: vscode.Uri): void {
 }
 
 export async function openLocalPlanViewFromWorkspace(): Promise<void> {
-    const files = await vscode.workspace.findFiles('**/local-dev.plan.md', '**/node_modules/**', 10);
+    const files = await vscode.workspace.findFiles('**/local-development-plan.md', '**/node_modules/**', 10);
     if (files.length === 0) {
         void vscode.window.showInformationMessage('No local plan markdown files found in the workspace.');
         return;
