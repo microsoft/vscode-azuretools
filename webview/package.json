@@ -28,8 +28,17 @@
         "build:webview": "node esbuild.views.mjs",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack",
-        "test": "exit 0",
+        "test": "mocha",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+    },
+    "mocha": {
+        "ui": "tdd",
+        "node-option": [
+            "import=tsx"
+        ],
+        "spec": [
+            "test/**/*.test.ts"
+        ]
     },
     "engines": {
         "vscode": "^1.105.0"

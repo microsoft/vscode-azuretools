@@ -12,7 +12,8 @@
         "rootDir": ".",
         "jsx": "react-jsx",
         "types": [
-            "node"
+            "node",
+            "mocha"
         ],
         "skipLibCheck": true,
     },
