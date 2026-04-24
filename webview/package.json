@@ -28,6 +28,7 @@
         "build:webview": "node esbuild.views.mjs",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack",
+        "test": "exit 0",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
