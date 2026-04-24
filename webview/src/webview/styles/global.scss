@@ -10,9 +10,16 @@
 }
 
 // Per-component overrides for Fluent v9 tokens that Button shares with other
-// components (Textarea / Card / Menu / Input / ...). Applying these at the
-// theme level would bleed Button colors into those components, so they're
-// scoped to Fluent's stable `.fui-Button` root class.
+// components (Textarea / Card / Menu / Input / ...). Fluent v9 collapses many
+// semantic surfaces onto shared `colorNeutral*` tokens, so applying these at
+// the theme level would bleed Button colors into unrelated components —
+// they're scoped to Fluent's stable `.fui-Button` root class instead.
+//
+// Why secondary tokens: Fluent's default (non-primary) Button uses the
+// `colorNeutralBackground1` family, which is the same family backing most
+// surfaces. VS Code exposes a dedicated `--vscode-button-secondaryBackground`
+// for exactly this role, so we prefer it and fall back to the primary button
+// color for themes that don't define a secondary.
 //
 // Theme-wide token overrides (brand/accent surfaces, focus ring, disabled
 // foreground) live in `src/webview/theme/themeGenerator.ts`.
@@ -25,11 +32,16 @@
     --colorNeutralForeground1: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
     --colorNeutralForeground1Hover: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
     --colorNeutralForeground1Pressed: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+    // VS Code buttons are borderless by default; `transparent` fallback keeps
+    // the Button flat when a theme doesn't define `--vscode-button-border`.
     --colorNeutralStroke1: var(--vscode-button-border, transparent);
     --colorNeutralStroke1Hover: var(--vscode-button-border, transparent);
     --colorNeutralStroke1Pressed: var(--vscode-button-border, transparent);
 
-    // Disabled surface / stroke (disabled foreground is handled theme-wide)
+    // Disabled surface / stroke. Disabled foreground is intentionally NOT set
+    // here — it's handled theme-wide in themeGenerator.ts because the mapping
+    // (`--vscode-disabledForeground`) is appropriate for every component, not
+    // just Button.
     --colorNeutralBackgroundDisabled: var(--vscode-button-background);
     --colorNeutralStrokeDisabled: var(--vscode-button-border, transparent);
 }

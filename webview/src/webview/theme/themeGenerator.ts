@@ -56,12 +56,21 @@ export function getBrandTokensFromPalette(keyColor: string, options: Options = {
 // https://react.fluentui.dev/?path=/docs/concepts-developer-theming--page#overriding-existing-tokens
 export const generateAdaptiveLightTheme = (): Theme => {
     const style = getComputedStyle(document.documentElement);
+    // Seed the Fluent brand palette from VS Code's primary button color so accent
+    // surfaces (primary Button, Link, Checkbox, Switch, ...) match the active
+    // VS Code theme instead of Fluent's default blue.
     const buttonBackground = style.getPropertyValue('--vscode-button-background');
     const brandVSCode: BrandVariants = getBrandTokensFromPalette(buttonBackground);
 
     return {
         ...createLightTheme(brandVSCode),
+        // Theme-wide VS Code token overrides (brand surfaces, focus ring,
+        // disabled foreground). Spread before the explicit overrides below so
+        // the light-theme-specific values win on key collision.
         ...sharedVSCodeTokenOverrides(),
+        // Neutral surface → VS Code editor surface. Fluent defaults produce a
+        // pale-gray background that visually clashes with the editor; using
+        // the editor tokens keeps webviews feeling native to the active theme.
         colorNeutralForeground1: 'var(--vscode-editor-foreground)',
         colorNeutralForeground1Hover: 'var(--vscode-editor-foreground)',
         colorNeutralForeground1Pressed: 'var(--vscode-editor-foreground)',
@@ -73,16 +82,26 @@ export const generateAdaptiveLightTheme = (): Theme => {
 
 export const generateAdaptiveDarkTheme = (): Theme => {
     const style = getComputedStyle(document.documentElement);
+    // See generateAdaptiveLightTheme: seeds the Fluent brand palette from the
+    // VS Code primary button color.
     const buttonBackground = style.getPropertyValue('--vscode-button-background');
     const brandVSCode: BrandVariants = getBrandTokensFromPalette(buttonBackground);
 
     return {
         ...createDarkTheme(brandVSCode),
+        // Theme-wide VS Code token overrides; spread first so the dark-theme
+        // specific overrides below take precedence on key collision.
         ...sharedVSCodeTokenOverrides(),
+        // In dark VS Code themes, `--vscode-editor-foreground` is typically
+        // lower-contrast than `--vscode-button-foreground`; using the button
+        // foreground keeps Fluent text legible against dark surfaces.
         colorNeutralForeground1: 'var(--vscode-button-foreground)',
         colorNeutralForeground1Hover: 'var(--vscode-button-foreground)',
         colorNeutralForeground1Pressed: 'var(--vscode-button-foreground)',
         colorNeutralForeground1Selected: 'var(--vscode-button-foreground)',
+        // `colorNeutralForeground2` is Fluent's "secondary" text (placeholders,
+        // helper text, secondary Button text) — map it to VS Code's secondary
+        // button foreground so it stays distinguishable from Foreground1.
         colorNeutralForeground2: 'var(--vscode-button-secondaryForeground)',
         colorNeutralForeground2Hover: 'var(--vscode-button-secondaryForeground)',
         colorNeutralForeground2Pressed: 'var(--vscode-button-secondaryForeground)',
@@ -105,7 +124,7 @@ export const generateAdaptiveDarkTheme = (): Theme => {
  * scoped to `.fui-Button` because they would conflict with other components
  * if applied globally.
  */
-const sharedVSCodeTokenOverrides = (): Partial<Theme> => ({
+export const sharedVSCodeTokenOverrides = (): Partial<Theme> => ({
     // Accent surface (primary Button, Link, Checkbox, Switch, selected Tab indicator, ...)
     colorBrandBackground: 'var(--vscode-button-background)',
     colorBrandBackgroundHover: 'var(--vscode-button-hoverBackground, var(--vscode-button-background))',
