@@ -16,5 +16,5 @@ export const WebviewRegistry = {
     deploymentPlanView: DeploymentPlanView,
     loadingView: LoadingView,
     localPlanView: LocalPlanView,
-    scaffoldPlanView: ScaffoldPlanView,
+    scaffoldPlanView: ScaffoldPlanView
 } as const;
