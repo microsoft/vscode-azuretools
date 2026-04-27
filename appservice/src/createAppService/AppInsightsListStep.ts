@@ -39,6 +39,11 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
         return await context.appInsightsTask;
     }
 
+    public static async isNameAvailable(context: IAppServiceWizardContext, name: string): Promise<boolean> {
+        const components: ApplicationInsightsComponent[] = await AppInsightsListStep.getAppInsightsComponents(context);
+        return !components.some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
+    }
+
     public async prompt(context: IAppServiceWizardContext): Promise<void> {
         const options: IAzureQuickPickOptions = { placeHolder: 'Select an Application Insights resource for your app.', id: `AppInsightsListStep/${context.subscriptionId}` };
         const input: IAzureQuickPickItem<ApplicationInsightsComponent | undefined> = (await context.ui.showQuickPick(this.getQuickPicks(context), options));

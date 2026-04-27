@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Identity } from '@azure/arm-msi';
+import type { Identity } from '@azure/arm-msi';
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';

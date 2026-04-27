@@ -1,0 +1,24 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "target": "es2022",
+        "outDir": "dist/esm",
+        "lib": [
+            "es2022",
+            "dom"
+        ],
+        "rootDir": ".",
+        "jsx": "react-jsx",
+        "types": [
+            "node",
+            "mocha"
+        ],
+        "skipLibCheck": true,
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

@@ -15,6 +15,7 @@ export * from './utils/createPortalUri';
 export * from './utils/parseAzureResourceId';
 export * from './utils/setupAzureLogger';
 export * from './utils/uiUtils';
+export { LocationCache } from './wizard/LocationCache';
 export * from './wizard/LocationListStep';
 export * from './wizard/ResourceGroupCreateStep';
 export * from './wizard/ResourceGroupListStep';

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ConfigObject as EslintConfig, Plugin as EslintPlugin } from '@eslint/core';
+import type { ConfigObject as EslintConfig } from '@eslint/core';
 import eslint from '@eslint/js';
 import eslintPluginHeader from '@tony.ganchev/eslint-plugin-header';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -44,7 +44,7 @@ export const azExtUniversalRules: EslintConfig = {
  */
 export const azExtCopyrightHeaderRule: EslintConfig = {
     plugins: {
-        'header': eslintPluginHeader as EslintPlugin,
+        'header': eslintPluginHeader,
     },
     rules: {
         'header/header': [
@@ -88,6 +88,7 @@ export const azExtTestRules: EslintConfig = {
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
         '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in test files
+        '@typescript-eslint/no-unsafe-argument': 'off', // Allow unsafe arguments in test files (goes with any)
         '@typescript-eslint/no-unsafe-assignment': 'off', // Allow unsafe assignments in test files (goes with any)
         '@typescript-eslint/no-unsafe-member-access': 'off', // Allow unsafe member access in test files (goes with any)
         '@typescript-eslint/no-unused-expressions': 'off', // Allow unused expressions in test files (e.g., for chai 'expect' statements)
@@ -224,6 +225,7 @@ export function lazyImportRuleConfig(patterns: string[]): EslintConfig {
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const ignoresConfig: EslintConfig = globalIgnores([
+    'coverage/**',
     'node_modules/**',
     'out/**',
     'dist/**',

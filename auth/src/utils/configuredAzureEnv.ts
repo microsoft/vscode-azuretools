@@ -7,7 +7,7 @@ import * as azureEnv from '@azure/ms-rest-azure-env'; // This package is so smal
 import * as vscode from 'vscode';
 
 // These strings come from https://github.com/microsoft/vscode/blob/eac16e9b63a11885b538db3e0b533a02a2fb8143/extensions/microsoft-authentication/package.json#L40-L99
-const CustomCloudConfigurationSection = 'microsoft-sovereign-cloud';
+export const CustomCloudConfigurationSection = 'microsoft-sovereign-cloud';
 const CloudEnvironmentSettingName = 'environment';
 const CustomEnvironmentSettingName = 'customEnvironment';
 
@@ -17,9 +17,12 @@ enum CloudEnvironmentSettingValue {
     Custom = 'custom',
 }
 
-class ExtendedEnvironment extends azureEnv.Environment {
+export class ExtendedEnvironment extends azureEnv.Environment {
     public constructor(parameters: azureEnv.EnvironmentParameters, public readonly isCustomCloud: boolean) {
         super(parameters);
+        // The Environment constructor only copies required properties. Copy all remaining
+        // optional properties (e.g. storageEndpointSuffix, keyVaultDnsSuffix) from the source.
+        Object.assign(this, parameters);
     }
 }
 

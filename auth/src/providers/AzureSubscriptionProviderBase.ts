@@ -5,6 +5,8 @@
 
 import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
 import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import { BearerChallengePolicy } from '../utils/BearerChallengePolicy';
+import { inspect } from 'util';
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
@@ -22,7 +24,7 @@ import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError'
 import { screen } from '../utils/screen';
 import { tryGetTokenExpiration } from '../utils/tryGetTokenExpiration';
 
-const EventDebounce = 5 * 1000; // 5 seconds minimum between `onRefreshSuggested` events
+const EventDebounce = 2 * 1000; // 2 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
 
 const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
@@ -70,7 +72,11 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
-        if (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce) {
+        // subscriptionFilterChange is an explicit user action and must never be suppressed,
+        // otherwise re-selecting a subscription shortly after unselecting one gets swallowed
+        // by the debounce/silence window that the first refresh triggered.
+        if (evtArgs.reason !== 'subscriptionFilterChange' &&
+            (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce)) {
             // Suppress and/or debounce events to avoid flooding
             return false;
         }
@@ -95,16 +101,21 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.silenceRefreshEvents();
         }
 
-        const session = await getSessionFromVSCode(
-            undefined,
-            tenant?.tenantId,
-            {
-                account: tenant?.account,
-                clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
-                createIfNone: prompt,
-                silent: !prompt,
-            }
-        );
+        let session: vscode.AuthenticationSession | undefined;
+        try {
+            session = await getSessionFromVSCode(
+                undefined,
+                tenant?.tenantId,
+                {
+                    account: tenant?.account,
+                    clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
+                    createIfNone: prompt,
+                    silent: !prompt,
+                }
+            );
+        } catch (err) {
+            throw maybeImproveSignInError(err, tenant?.tenantId);
+        }
 
         if (prompt) {
             // Interactive sign in can take a while, so silence events for a bit longer
@@ -161,7 +172,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                                         this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
                                         return;
                                     }
-                                    throw err;
+                                    // Don't rethrow--skip tenants that fail for other reasons
+                                    // (e.g., locked account) so remaining tenants can still be listed
+                                    this.errorForTenant(tenant, 'Skipping account+tenant due to error', err);
                                 }
                             }));
                         }
@@ -170,6 +183,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                             this.logForAccount(account, 'Skipping account because it is not signed in');
                             return;
                         }
+                        // Log and skip accounts that fail for other reasons (e.g., locked account)
+                        this.errorForAccount(account, 'Skipping account due to error', err);
                     }
                 }));
             }
@@ -195,7 +210,14 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.log('Fetching accounts...');
             this.silenceRefreshEvents();
 
-            const results = await vscode.authentication.getAccounts(getConfiguredAuthProviderId());
+            const environment = getConfiguredAzureEnv();
+
+            const results = (await vscode.authentication.getAccounts(getConfiguredAuthProviderId())).map(account => {
+                return {
+                    ...account,
+                    environment,
+                };
+            });
 
             if (results.length === 0) {
                 this.log('No accounts found');
@@ -307,7 +329,6 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     name: subscription.displayName!,
                     subscriptionId: subscription.subscriptionId!,
                     /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     tenantId: subscription.tenantId || tenant.tenantId, // In rare cases, a subscription may be listed but come from a different tenant
                     account: tenant.account,
                 });
@@ -329,11 +350,13 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @returns A {@link SubscriptionClient}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
      */
     protected async getSubscriptionClient(tenant: Partial<TenantIdAndAccount>): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+        // Credential ignores requested scopes and always uses default scopes (managementEndpointUrl),
+        // matching the scope used during signIn(). This avoids a refresh token round-trip that can
+        // fail when MSAL has stale cache entries for a different scope.
         const credential: TokenCredential = {
-            getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
+            getToken: async (_scopes: string | string[], options?: GetTokenOptions) => {
                 this.silenceRefreshEvents();
-                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                const session = await getSessionFromVSCode(scopes, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                const session = await getSessionFromVSCode(undefined, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
                 if (!session) {
                     throw new NotSignedInError();
                 }
@@ -346,8 +369,23 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         armSubs ??= await import('@azure/arm-resources-subscriptions');
 
+        const endpoint = getConfiguredAzureEnv().resourceManagerEndpointUrl;
+        const client = new armSubs.SubscriptionClient(credential, { endpoint });
+
+        client.pipeline.addPolicy(
+            new BearerChallengePolicy(
+                async (challenge) => {
+                    this.silenceRefreshEvents();
+                    const session = await getSessionFromVSCode(challenge, tenant.tenantId, { createIfNone: true, account: tenant.account });
+                    return session?.accessToken;
+                },
+                endpoint,
+            ),
+            { phase: 'Sign', afterPolicies: ['bearerTokenAuthenticationPolicy'] },
+        );
+
         return {
-            client: new armSubs.SubscriptionClient(credential, { endpoint: getConfiguredAzureEnv().resourceManagerEndpointUrl }),
+            client,
             credential: credential,
             authentication: {
                 getSession: async () => {
@@ -374,15 +412,41 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     protected log(message: string): void {
-        this.logger?.debug(`[auth] ${message}`);
+        this.logger?.info(`[auth] ${message}`);
     }
 
     protected logForAccount(account: AzureAccount, message: string): void {
-        this.logger?.debug(`[auth] [account: ${screen(account)}] ${message}`);
+        this.logger?.info(`[auth] [account: ${screen(account)}] ${message}`);
     }
 
     protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.debug(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        this.logger?.info(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected warnForAccount(account: AzureAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(account)}] ${message}`);
+    }
+
+    protected warnForTenant(tenant: TenantIdAndAccount, message: string): void {
+        this.logger?.warn(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    }
+
+    protected errorForAccount(account: AzureAccount, message: string, err: unknown): void {
+        this.logger?.error(`[auth] [account: ${screen(account)}] ${message}`);
+        if (err instanceof Error) {
+            this.logger?.error(err);
+        } else {
+            this.logger?.error(`[auth] [account: ${screen(account)}] ${inspect(err)}`);
+        }
+    }
+
+    protected errorForTenant(tenant: TenantIdAndAccount, message: string, err: unknown): void {
+        this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        if (err instanceof Error) {
+            this.logger?.error(err);
+        } else {
+            this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${inspect(err)}`);
+        }
     }
 
     protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
@@ -413,4 +477,38 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         this.logger?.error(`[auth] Error occurred: ${err}`);
         throw err;
     }
+}
+
+/**
+ * Inspects an error thrown during sign-in and returns a more user-friendly
+ * error when possible (e.g. native broker errors), otherwise returns the
+ * original error unchanged.
+ */
+function maybeImproveSignInError(err: unknown, tenantId: string | undefined): unknown {
+    if (!(err instanceof Error)) {
+        return err;
+    }
+
+    const message = err.message;
+
+    // The native MSAL broker surfaces opaque "platform_broker_error" messages
+    // that don't tell the user what went wrong. Re-wrap with actionable text.
+    if (message.includes('platform_broker_error')) {
+        const tenantHint = tenantId
+            ? vscode.l10n.t(' for tenant "{0}"', tenantId)
+            : '';
+        const improved = new Error(
+            vscode.l10n.t(
+                'Sign-in failed{0}. The tenant may have expired or is no longer valid. Please verify the tenant is still active and try again.',
+                tenantHint,
+            ),
+            { cause: err },
+        );
+        if (err.stack && improved.stack) {
+            improved.stack += `\nCaused by: ${err.stack}`;
+        }
+        return improved;
+    }
+
+    return err;
 }

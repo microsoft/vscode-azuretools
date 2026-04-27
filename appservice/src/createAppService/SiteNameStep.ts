@@ -9,7 +9,7 @@ import { AzExtLocation, AzExtPipelineResponse, AzExtRequestPrepareOptions, Locat
 import { AgentInputBoxOptions, AzureNameStep, IAzureAgentInput, IAzureNamingRules, nonNullValue, nonNullValueAndProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createWebSiteClient } from '../utils/azureClients';
-import { appInsightsNamingRules } from './AppInsightsListStep';
+import { AppInsightsListStep, appInsightsNamingRules } from './AppInsightsListStep';
 import { AppKind } from './AppKind';
 import { AppServicePlanListStep } from './AppServicePlanListStep';
 import { appServicePlanNamingRules } from './AppServicePlanNameStep';
@@ -75,9 +75,15 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
             siteNamingRules.maxLength = 32;
         }
 
+        const defaultNameCandidate: string | undefined = context.newResourceGroupName ?? context.resourceGroup?.name;
+        const defaultValue: string | undefined = defaultNameCandidate && !this.validateSiteName(context, defaultNameCandidate)
+            ? defaultNameCandidate
+            : undefined;
+
         const options: AgentInputBoxOptions = {
             prompt,
             placeHolder,
+            value: defaultValue,
             validateInput: (name: string): string | undefined => this.validateSiteName(context, name),
             asyncValidationTask: async (name: string): Promise<string | undefined> => await this.asyncValidateSiteName(context, client, name),
             agentMetadata: agentMetadata
@@ -115,6 +121,8 @@ export class SiteNameStep extends AzureNameStep<SiteNameStepWizardContext> {
         } else {
             tasks.push(AppServicePlanListStep.isNameAvailable(context, name, name));
         }
+
+        tasks.push(AppInsightsListStep.isNameAvailable(context, name));
 
         return (await Promise.all(tasks)).every((v: boolean) => v);
     }

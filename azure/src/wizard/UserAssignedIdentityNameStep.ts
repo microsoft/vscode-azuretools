@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ManagedServiceIdentityClient } from '@azure/arm-msi';
 import { AzureWizardPromptStep, randomUtils, validationUtils } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import * as types from '../../index';
@@ -18,13 +17,17 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
             while (!suggestedName) {
                 suggestedName = await UserAssignedIdentityNameStep.tryGenerateRelatedName(context, rgName);
             }
+        } else {
+            // Fallback: generate a name without a resource group prefix (e.g. containerized flows
+            // may not have a resource group set yet when this step runs)
+            suggestedName = `identity-${randomUtils.getRandomHexString(6)}`;
         }
 
         context.newManagedIdentityName = (await context.ui.showInputBox({
             value: suggestedName,
             prompt: vscode.l10n.t('Enter a name for the new user-assigned identity.'),
             validateInput: (name) => this.validateInput(name),
-            asyncValidationTask: (name: string) => this.asyncValidateUserAssignedIdentityAvailable(context, name),
+            asyncValidationTask: (name: string) => this.asyncValidateUserAssignedIdentityAvailable(context, context.resourceGroup?.name ?? context.newResourceGroupName, name),
         })).trim();
         context.valuesToMask.push(context.newManagedIdentityName);
     }
@@ -61,7 +64,7 @@ export class UserAssignedIdentityNameStep<T extends types.IResourceGroupWizardCo
 
     static async isNameAvailable(context: types.IResourceGroupWizardContext, rgName: string, identityName: string): Promise<boolean> {
         try {
-            const client: ManagedServiceIdentityClient = await createManagedServiceIdentityClient(context);
+            const client = await createManagedServiceIdentityClient(context);
             return !await client.userAssignedIdentities.get(rgName, identityName);
         } catch {
             return true;

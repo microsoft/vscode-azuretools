@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Provider, ResourceManagementClient } from '@azure/arm-resources';
 import { AzureWizardExecuteStep, IParsedError, ISubscriptionActionContext, maskUserInfo, parseError } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
@@ -22,10 +21,10 @@ export class VerifyProvidersStep<T extends ISubscriptionActionContext> extends A
     public async execute(context: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         progress.report({ message: l10n.t('Registering Providers...') });
 
-        const client: ResourceManagementClient = await createResourcesClient(context);
+        const client = await createResourcesClient(context);
         await Promise.all(this._providers.map(async providerName => {
             try {
-                let provider: Provider = await client.providers.get(providerName);
+                let provider = await client.providers.get(providerName);
                 if (provider.registrationState?.toLowerCase() !== 'registered') {
                     await client.providers.register(providerName);
 

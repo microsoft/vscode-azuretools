@@ -8,7 +8,6 @@ import { AzExtLocation, LocationListStep, ResourceGroupListStep, uiUtils } from 
 import { AzureWizardPromptStep, IAzureQuickPickItem, IAzureQuickPickOptions, IWizardOptions, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { webProvider } from '../constants';
-import { tryGetAppServicePlan } from '../tryGetSiteResource';
 import { createWebSiteClient } from '../utils/azureClients';
 import { AppKind, getWebsiteOSDisplayName, WebsiteOS } from './AppKind';
 import { AppServicePlanCreateStep } from './AppServicePlanCreateStep';
@@ -104,11 +103,10 @@ export class AppServicePlanListStep extends AzureWizardPromptStep<IAppServiceWiz
             let isPlanLinux: boolean = nonNullProp(plan, 'kind').toLowerCase().includes(WebsiteOS.linux);
 
             if (plan.sku && (plan.sku.family === 'EP' || plan.sku.family === 'WS')) {
-                // elastic premium plans and workflow standard plans do not have the os in the kind, so we have to check the "reserved" property
-                // also, the "reserved" property is always "false" in the list of plans returned above. We have to perform a separate get on each plan
-                const client: WebSiteManagementClient = await createWebSiteClient(context);
-                const epPlan: AppServicePlan | undefined = await tryGetAppServicePlan(client, nonNullProp(plan, 'resourceGroup'), nonNullProp(plan, 'name'));
-                isPlanLinux = !!epPlan?.reserved;
+                // Elastic premium and workflow standard plans do not have the OS in the `kind` string,
+                // so we check the `reserved` property instead. As of API version 2024-11-01+, `reserved`
+                // is correctly returned by the list operation (no extra per-plan GET needed).
+                isPlanLinux = !!plan.reserved;
             }
 
             // plan.kind will contain "linux" for Linux plans, but will _not_ contain "windows" for Windows plans. Thus we check "isLinux" for both cases

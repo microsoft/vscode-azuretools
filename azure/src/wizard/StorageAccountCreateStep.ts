@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SkuName, StorageManagementClient } from '@azure/arm-storage';
+import type { SkuName } from '@azure/arm-storage';
 import { AzureWizardExecuteStepWithActivityOutput, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { l10n, Progress } from 'vscode';
 import * as types from '../../index';
@@ -29,7 +29,7 @@ export class StorageAccountCreateStep<T extends types.IStorageAccountWizardConte
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
         const newSkuName: SkuName = `${this._defaults.performance}_${this._defaults.replication}`;
-        const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
+        const storageClient = await createStorageClient(wizardContext);
         wizardContext.storageAccount = await storageClient.storageAccounts.beginCreateAndWait(
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             wizardContext.resourceGroup!.name!,
