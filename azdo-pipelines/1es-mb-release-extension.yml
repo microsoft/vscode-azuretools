@@ -68,7 +68,7 @@ extends:
               - checkout: none
 
               - task: NodeTool@0
-                displayName: "\U0001F449 Using Node.js"
+                displayName: "👉 Using Node.js"
                 inputs:
                   versionSpec: 22.x
 
@@ -86,7 +86,7 @@ extends:
               # Publish the package to VS Marketplace
               - ${{ if eq(parameters.dryRun, false) }}:
                   - task: AzureCLI@2
-                    displayName: "\U0001F449 Publish VSIXs to Marketplace"
+                    displayName: "👉 Publish VSIXs to Marketplace"
                     inputs:
                       azureSubscription: ${{ parameters.releaseServiceConnection }}
                       scriptType: pscore
@@ -107,9 +107,9 @@ extends:
                             Write-Output "    $($commandLine)"
 
                             # Execute the publish command line
-                            # Invoke-Expression $commandLine # TODO: temporarily disabled for testing
-                            # if ($LASTEXITCODE -ne 0) {
-                            #     Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
-                            #     exit 1
-                            # }
+                            Invoke-Expression $commandLine
+                            if ($LASTEXITCODE -ne 0) {
+                                Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
+                                exit 1
+                            }
                         }

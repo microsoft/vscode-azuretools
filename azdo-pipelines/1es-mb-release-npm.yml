@@ -49,7 +49,7 @@ resources:
   repositories:
     - repository: MicroBuildTemplate
       type: git
-      name: MicroBuildTemplates/MicroBuildTemplates # TODO: Back to the 1ES repo after migration
+      name: 1ESPipelineTemplates/MicroBuildTemplate
       ref: refs/heads/release
 
 extends:
@@ -87,7 +87,7 @@ extends:
                   $tgzFileName = Join-Path $tgzFolderName $tarballList[0].tarballName
                   Write-Host "##vso[task.setvariable variable=tgzFolderName]$tgzFolderName"
                   Write-Host "##vso[task.setvariable variable=tgzFileName]$tgzFileName"
-                displayName: "\U0001F449 Set variables for found tarball"
+                displayName: "👉 Set variables for found tarball"
 
               - template: azdo-pipelines/templates/set-release-build-number.yml@azExtTemplates
                 parameters:
@@ -110,7 +110,7 @@ extends:
               # (Optional) Create a draft release on GitHub containing the package
               - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, '')) }}:
                   - task: GitHubRelease@1
-                    displayName: "\U0001F449 Create draft release on GitHub"
+                    displayName: "👉 Create draft release on GitHub"
                     inputs:
                       gitHubConnection: ${{ parameters.gitHubServiceConnection }}
                       tagSource: userSpecifiedTag
