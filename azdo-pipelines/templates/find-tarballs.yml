@@ -12,7 +12,7 @@ parameters:
 steps:
   - pwsh: |
       # Find all the matching tarballs
-      $tarballFiles = Get-ChildItem -Recurse -Filter "${{ parameters.tarballName }}*.tgz"
+      $tarballFiles = @(Get-ChildItem -Recurse -Filter "${{ parameters.tarballName }}*.tgz")
 
       # Must be exactly one matching tarball found
       if ($tarballFiles.Count -eq 0) {

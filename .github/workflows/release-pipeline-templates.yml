@@ -76,17 +76,35 @@ jobs:
               return;
             }
 
-            // Create PR
-            const { data: pr } = await github.rest.pulls.create({
+            // Reuse an existing open PR (head=main -> base=branch) if present, otherwise create one.
+            // This keeps the workflow idempotent across reruns; otherwise pulls.create returns 422.
+            const { data: existingPrs } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: 'main',
-              base: branch,
-              title: `Release pipeline templates to ${branch}`,
-              body: `Updates \`${branch}\` to match \`main\`.\n\n**Current ${branch}:** \`${branchSha}\`\n**New (from main):** \`${mainSha}\`\n\nTriggered by @${{ github.actor }} via workflow dispatch.`
+              state: 'open',
+              head: `${context.repo.owner}:main`,
+              base: branch
             });
 
-            core.summary.addHeading('✅ PR Created', 2);
+            let pr;
+            let prAction;
+            if (existingPrs.length > 0) {
+              pr = existingPrs[0];
+              prAction = 'Reused existing';
+            } else {
+              const { data: created } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: 'main',
+                base: branch,
+                title: `Release pipeline templates to ${branch}`,
+                body: `Updates \`${branch}\` to match \`main\`.\n\n**Current ${branch}:** \`${branchSha}\`\n**New (from main):** \`${mainSha}\`\n\nTriggered by @${{ github.actor }} via workflow dispatch.`
+              });
+              pr = created;
+              prAction = 'Created';
+            }
+
+            core.summary.addHeading(`✅ PR ${prAction}`, 2);
             core.summary.addRaw(`**PR:** ${pr.html_url}\n\n`);
             core.summary.addRaw(`**Target Branch:** \`${branch}\`\n`);
             await core.summary.write();

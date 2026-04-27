@@ -12,7 +12,7 @@ parameters:
 steps:
   - pwsh: |
       # Find all the (matching) VSIXs
-      $vsixFiles = Get-ChildItem -Recurse -Filter "${{ parameters.vsixName }}*.vsix"
+      $vsixFiles = @(Get-ChildItem -Recurse -Filter "${{ parameters.vsixName }}*.vsix")
 
       # Must be at least one VSIX found
       if ($vsixFiles.Count -eq 0) {

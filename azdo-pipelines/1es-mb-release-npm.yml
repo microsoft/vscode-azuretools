@@ -1,6 +1,6 @@
 parameters:
-  # The name of the package to publish.
-  # This is regex matched against .tgz files found in the build artifact.
+  # The name or filename prefix of the package tarball to publish.
+  # This is matched against .tgz files found in the build artifact using a wildcard/prefix pattern: <value>*.tgz.
   - name: packageToPublish
     type: string
 

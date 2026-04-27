@@ -1,6 +1,6 @@
 parameters:
-  # The name of the package to publish.
-  # This is regex matched against .vsix files found in the build artifact.
+  # The name or filename prefix of the package to publish.
+  # This is matched against .vsix files found in the build artifact using a wildcard/prefix pattern: <value>*.vsix.
   - name: packageToPublish
     type: string
 
@@ -98,16 +98,27 @@ extends:
                         foreach ($vsix in $vsixList) {
                             Set-Location $vsix.directory
 
-                            $commandLine = "npx @vscode/vsce@latest publish --azure-credential --packagePath $($vsix.vsixName) --manifestPath $($vsix.manifestName) --signaturePath $($vsix.signatureName)"
+                            $vsceArgs = @(
+                                '@vscode/vsce@latest'
+                                'publish'
+                                '--azure-credential'
+                                '--packagePath'
+                                $vsix.vsixName
+                                '--manifestPath'
+                                $vsix.manifestName
+                                '--signaturePath'
+                                $vsix.signatureName
+                            )
                             if ($vsix.proposedApis -ne $null -and $vsix.proposedApis.Count -gt 0) {
-                                $commandLine += " --allow-proposed-apis $($vsix.proposedApis -join ' ')"
+                                $vsceArgs += '--allow-proposed-apis'
+                                $vsceArgs += $vsix.proposedApis
                             }
 
                             Write-Output "Publishing VSIX: $($vsix.vsixName) with command:"
-                            Write-Output "    $($commandLine)"
+                            Write-Output "    npx $($vsceArgs -join ' ')"
 
-                            # Execute the publish command line
-                            Invoke-Expression $commandLine
+                            # Execute the publish command with arguments passed separately
+                            & npx @vsceArgs
                             if ($LASTEXITCODE -ne 0) {
                                 Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
                                 exit 1
