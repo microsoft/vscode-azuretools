@@ -4,11 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import { DeploymentPlanData } from "../../webview/CopilotOnRails/DeploymentPlanView";
 import { DeploymentPlanViewController } from "../../webview/CopilotOnRails/DeploymentPlanViewController";
 import { parseDeploymentPlanMarkdown } from "../../webview/CopilotOnRails/utils/parseDeploymentPlanMarkdown";
 
 let currentDeploymentPlanViewController: DeploymentPlanViewController | undefined;
+
+export function isDeploymentPlanViewOpen(): boolean {
+    return currentDeploymentPlanViewController !== undefined;
+}
 
 export function openDeploymentPlanView(uri: vscode.Uri): void {
     void openDeploymentPlanViewAsync(uri);
@@ -16,13 +19,17 @@ export function openDeploymentPlanView(uri: vscode.Uri): void {
 
 export function openDeploymentPlanViewWithContent(content: string): void {
     const planData = parseDeploymentPlanMarkdown(content);
-    showOrUpdateView(planData);
-}
 
-export function refreshDeploymentPlanView(uri: vscode.Uri): void {
     if (currentDeploymentPlanViewController) {
-        void refreshDeploymentPlanViewAsync(uri);
+        currentDeploymentPlanViewController.updateDeploymentPlanData(planData);
+        return;
     }
+
+    currentDeploymentPlanViewController = new DeploymentPlanViewController(planData);
+    currentDeploymentPlanViewController.revealToForeground(vscode.ViewColumn.Active);
+    currentDeploymentPlanViewController.panel.onDidDispose(() => {
+        currentDeploymentPlanViewController = undefined;
+    });
 }
 
 export async function openDeploymentPlanViewFromWorkspace(): Promise<void> {
@@ -52,19 +59,10 @@ export async function openDeploymentPlanViewFromWorkspace(): Promise<void> {
 async function openDeploymentPlanViewAsync(uri: vscode.Uri): Promise<void> {
     const content = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf-8');
     const planData = parseDeploymentPlanMarkdown(content);
-    showOrUpdateView(planData);
-}
 
-async function refreshDeploymentPlanViewAsync(uri: vscode.Uri): Promise<void> {
-    const content = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf-8');
-    const planData = parseDeploymentPlanMarkdown(content);
-    currentDeploymentPlanViewController?.updateDeploymentPlanData(planData);
-}
-
-function showOrUpdateView(planData: DeploymentPlanData): void {
+    // If a deployment plan view is already open, just refresh its data
     if (currentDeploymentPlanViewController) {
         currentDeploymentPlanViewController.updateDeploymentPlanData(planData);
-        currentDeploymentPlanViewController.revealToForeground(vscode.ViewColumn.Active);
         return;
     }
 

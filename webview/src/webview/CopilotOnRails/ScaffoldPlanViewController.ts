@@ -21,7 +21,7 @@ export class ScaffoldPlanViewController extends WebviewController<Record<string,
                 case 'approvePlan':
                     void vscode.commands.executeCommand('azureProjectCreation.completeStep', 'projectCreation/plan/definePlan');
                     void vscode.commands.executeCommand('workbench.action.chat.open', {
-                        mode: 'agent',
+                        mode: 'azure-project-scaffold',
                         query: 'I approve the plan.',
                     });
                     this.panel.dispose();

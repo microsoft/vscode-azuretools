@@ -17,12 +17,6 @@ export function openPlanView(uri: vscode.Uri): void {
     void openPlanViewAsync(uri);
 }
 
-export function refreshPlanView(uri: vscode.Uri): void {
-    if (currentPlanViewController) {
-        void refreshPlanViewAsync(uri);
-    }
-}
-
 export async function openPlanViewFromWorkspace(): Promise<void> {
     const files = await vscode.workspace.findFiles('**/project-plan.md', '**/node_modules/**', 10);
     if (files.length === 0) {
@@ -62,10 +56,4 @@ async function openPlanViewAsync(uri: vscode.Uri): Promise<void> {
     currentPlanViewController.panel.onDidDispose(() => {
         currentPlanViewController = undefined;
     });
-}
-
-async function refreshPlanViewAsync(uri: vscode.Uri): Promise<void> {
-    const content = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf-8');
-    const planData = parseScaffoldPlanMarkdown(content);
-    currentPlanViewController?.updatePlanData(planData);
 }

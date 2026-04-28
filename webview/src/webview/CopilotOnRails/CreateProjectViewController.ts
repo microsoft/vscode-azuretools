@@ -22,13 +22,13 @@ export class CreateProjectViewController extends WebviewController<CreateProject
                     case 'plan':
                         this.panel.dispose();
                         if (message.prompt) {
-                            void this.openChatWithQuery(`/azure-project-plan ${message.prompt}`);
+                            void this.openChatWithQuery(message.prompt);
                         }
                         break;
                     case 'build':
                         this.panel.dispose();
                         if (message.prompt) {
-                            void this.openChatWithQuery(`/azure-project-plan ${message.prompt}`); // TODO: Change to build command when implemented
+                            void this.openChatWithQuery(message.prompt); // TODO: Change to build agent when implemented
                         }
                         break;
                 }
@@ -38,7 +38,7 @@ export class CreateProjectViewController extends WebviewController<CreateProject
 
     private async openChatWithQuery(query: string): Promise<void> {
         await vscode.commands.executeCommand("workbench.action.chat.open", {
-            mode: 'agent',
+            mode: 'azure-project-plan',
             query,
         });
     }

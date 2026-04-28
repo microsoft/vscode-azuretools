@@ -32,12 +32,6 @@ export function openLocalPlanViewWithContent(content: string): void {
     });
 }
 
-export function refreshLocalPlanView(uri: vscode.Uri): void {
-    if (currentLocalPlanViewController) {
-        void refreshLocalPlanViewAsync(uri);
-    }
-}
-
 export async function openLocalPlanViewFromWorkspace(): Promise<void> {
     const files = await vscode.workspace.findFiles('**/local-development-plan.md', '**/node_modules/**', 10);
     if (files.length === 0) {
@@ -77,10 +71,4 @@ async function openLocalPlanViewAsync(uri: vscode.Uri): Promise<void> {
     currentLocalPlanViewController.panel.onDidDispose(() => {
         currentLocalPlanViewController = undefined;
     });
-}
-
-async function refreshLocalPlanViewAsync(uri: vscode.Uri): Promise<void> {
-    const content = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf-8');
-    const planData = parseLocalPlanMarkdown(content);
-    currentLocalPlanViewController?.updatePlanData(planData);
 }
