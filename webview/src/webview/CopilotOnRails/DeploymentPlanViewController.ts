@@ -13,7 +13,7 @@ export class DeploymentPlanViewController extends WebviewController<Record<strin
     constructor(planData: DeploymentPlanData) {
         super(ext.context, 'Azure Deployment Plan', 'deploymentPlanView', {}, ViewColumn.Active);
 
-        this.panel.webview.onDidReceiveMessage((message: { command: string; data?: unknown }) => {
+        this.panel.webview.onDidReceiveMessage((message: { command: string; data?: unknown; prompt?: string }) => {
             switch (message.command) {
                 case 'ready':
                     void this.panel.webview.postMessage({ command: 'setDeploymentPlanData', data: planData });
@@ -28,11 +28,26 @@ export class DeploymentPlanViewController extends WebviewController<Record<strin
                 case 'locationChanged':
                     void vscode.window.showInformationMessage(`Location changed to: ${message.data as string}`);
                     break;
+                case 'submitPlanFeedback': {
+                    const query = message.prompt?.trim();
+                    if (!query) {
+                        return;
+                    }
+                    // Hand off to Copilot agent to revise plan.md. Keep the webview
+                    // open; it will refresh in place when the file is rewritten.
+                    void vscode.commands.executeCommand('workbench.action.chat.open', {
+                        mode: 'agent',
+                        query,
+                    });
+                    void this.panel.webview.postMessage({ command: 'revisionInProgress' });
+                    break;
+                }
             }
         });
     }
 
     updateDeploymentPlanData(planData: DeploymentPlanData): void {
         void this.panel.webview.postMessage({ command: 'setDeploymentPlanData', data: planData });
+        void this.panel.webview.postMessage({ command: 'revisionComplete' });
     }
 }

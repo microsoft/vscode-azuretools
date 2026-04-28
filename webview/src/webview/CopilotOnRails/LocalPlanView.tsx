@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button } from '@fluentui/react-components';
-import { CheckmarkRegular } from '@fluentui/react-icons';
+import { Button, Spinner, Textarea } from '@fluentui/react-components';
+import { CheckmarkRegular, CommentEditRegular, DismissRegular, SendRegular } from '@fluentui/react-icons';
 import mermaid from 'mermaid';
-import { useCallback, useContext, useEffect, useRef, useState, type JSX } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { WebviewContext } from '../WebviewContext';
 import '../styles/localPlanView.scss';
 import { type LocalPlanContent, type LocalPlanData, type LocalPlanSection } from './utils/parseLocalPlanMarkdown';
@@ -27,15 +27,57 @@ let mermaidIdCounter = 0;
 
 const alwaysExpandedSections = new Set(['project analysis', 'prerequisites', 'scan results']);
 
+interface FeedbackItem {
+    id: string;
+    text: string;
+}
+
+let feedbackIdCounter = 0;
+const nextId = (): string => `fb-${++feedbackIdCounter}`;
+
+function buildFeedbackPrompt(items: FeedbackItem[]): string {
+    const notes = items
+        .map(i => `- ${i.text.trim()}`)
+        .filter(t => t.length > 2);
+
+    const lines: string[] = [
+        'Please revise the local development plan based on my feedback and update local-development-plan.md.',
+        'Keep existing sections unchanged unless a change below implies otherwise. Wait for my approval after updating the file.',
+        '',
+    ];
+    if (notes.length > 0) {
+        lines.push('Notes:', ...notes, '');
+    }
+    return lines.join('\n').trimEnd();
+}
+
 export const LocalPlanView = (): JSX.Element => {
     const [plan, setPlan] = useState<LocalPlanData | null>(null);
+    const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([]);
+    const [freeformDraft, setFreeformDraft] = useState('');
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [isAwaitingRevision, setIsAwaitingRevision] = useState(false);
     const { vscodeApi } = useContext(WebviewContext);
+
+    const hasEdits = useMemo(
+        () => feedbackItems.length > 0 || freeformDraft.trim().length > 0,
+        [feedbackItems, freeformDraft],
+    );
 
     useEffect(() => {
         const handler = (event: MessageEvent) => {
             const message = event.data;
             if (message?.command === 'setLocalPlanData') {
                 setPlan(message.data as LocalPlanData);
+                // New plan data from the controller — either the initial load or a
+                // post-revision refresh. Either way, clear pending feedback state.
+                setFeedbackItems([]);
+                setFreeformDraft('');
+            } else if (message?.command === 'revisionInProgress') {
+                setIsAwaitingRevision(true);
+                setDrawerOpen(false);
+            } else if (message?.command === 'revisionComplete') {
+                setIsAwaitingRevision(false);
             }
         };
         window.addEventListener('message', handler);
@@ -44,48 +86,209 @@ export const LocalPlanView = (): JSX.Element => {
     }, []);
 
     const handleApprove = useCallback(() => {
-        if (plan) {
-            vscodeApi.postMessage({ command: 'approvePlan', data: plan });
+        if (!plan) {
+            return;
         }
-    }, [plan, vscodeApi]);
+        if (hasEdits) {
+            setDrawerOpen(true);
+            return;
+        }
+        vscodeApi.postMessage({ command: 'approvePlan', data: plan });
+    }, [plan, hasEdits, vscodeApi]);
+
+    const handleRemoveFeedback = useCallback((id: string) => {
+        setFeedbackItems(prev => prev.filter(i => i.id !== id));
+    }, []);
+
+    const handleAddNote = useCallback(() => {
+        const text = freeformDraft.trim();
+        if (!text) {
+            return;
+        }
+        setFeedbackItems(prev => [...prev, { id: nextId(), text }]);
+        setFreeformDraft('');
+    }, [freeformDraft]);
+
+    const handleDiscardAll = useCallback(() => {
+        setFeedbackItems([]);
+        setFreeformDraft('');
+    }, []);
+
+    const handleSubmitFeedback = useCallback(() => {
+        if (!plan || !hasEdits) {
+            return;
+        }
+        const draftTrimmed = freeformDraft.trim();
+        const items = draftTrimmed.length > 0
+            ? [...feedbackItems, { id: nextId(), text: draftTrimmed }]
+            : feedbackItems;
+        const prompt = buildFeedbackPrompt(items);
+        vscodeApi.postMessage({ command: 'submitPlanFeedback', prompt, data: plan });
+        setIsAwaitingRevision(true);
+        setDrawerOpen(false);
+    }, [plan, hasEdits, feedbackItems, freeformDraft, vscodeApi]);
 
     if (!plan) {
         return <div className='localPlanView'><p>Loading local dev plan...</p></div>;
     }
 
     return (
-        <div className='localPlanView'>
-            <div className='planHeader'>
-                <div className='headerTop'>
-                    <div>
-                        <h1>{plan.title}</h1>
-                        <div className='metadataBadges'>
-                            <span className='badge'>{plan.status}</span>
+        <div className={`localPlanView ${drawerOpen ? 'drawerOpen' : ''} ${isAwaitingRevision ? 'revising' : ''}`}>
+            <div className='planMain'>
+                <div className='planHeader'>
+                    <div className='headerTop'>
+                        <div>
+                            <h1>{plan.title}</h1>
+                            <div className='metadataBadges'>
+                                <span className='badge'>{plan.status}</span>
+                            </div>
+                            {plan.headerNote && (
+                                <p className='headerNote' dangerouslySetInnerHTML={{ __html: formatInline(plan.headerNote) }} />
+                            )}
                         </div>
-                        {plan.headerNote && (
-                            <p className='headerNote' dangerouslySetInnerHTML={{ __html: formatInline(plan.headerNote) }} />
-                        )}
+                        <div className='headerActions'>
+                            <Button
+                                appearance='secondary'
+                                icon={<CommentEditRegular />}
+                                disabled={isAwaitingRevision}
+                                onClick={() => setDrawerOpen(v => !v)}
+                            >
+                                Feedback{hasEdits ? ` (${feedbackItems.length + (freeformDraft.trim() ? 1 : 0)})` : ''}
+                            </Button>
+                            <Button
+                                appearance='primary'
+                                icon={hasEdits ? <CommentEditRegular /> : <CheckmarkRegular />}
+                                disabled={isAwaitingRevision}
+                                onClick={handleApprove}
+                            >
+                                {hasEdits ? 'Review & Submit' : 'Approve Plan'}
+                            </Button>
+                        </div>
                     </div>
-                    <Button
-                        appearance='primary'
-                        icon={<CheckmarkRegular />}
-                        onClick={handleApprove}
-                    >
-                        Approve Plan
-                    </Button>
+                </div>
+
+                {isAwaitingRevision && (
+                    <div className='revisionBanner' role='status' aria-live='polite'>
+                        <Spinner size='tiny' />
+                        <span>Copilot is revising the plan…</span>
+                    </div>
+                )}
+
+                {plan.sections
+                    .filter((s) => !isHiddenSection(s.title))
+                    .map((section, i) => (
+                        <SectionCard
+                            key={i}
+                            section={section}
+                            collapsible={!alwaysExpandedSections.has(section.title.toLowerCase())}
+                        />
+                    ))}
+            </div>
+
+            {drawerOpen && !isAwaitingRevision && (
+                <FeedbackDrawer
+                    items={feedbackItems}
+                    freeformDraft={freeformDraft}
+                    onFreeformChange={setFreeformDraft}
+                    onAddNote={handleAddNote}
+                    onRemoveItem={handleRemoveFeedback}
+                    onSubmit={handleSubmitFeedback}
+                    onDiscardAll={handleDiscardAll}
+                    onClose={() => setDrawerOpen(false)}
+                />
+            )}
+        </div>
+    );
+};
+
+interface FeedbackDrawerProps {
+    items: FeedbackItem[];
+    freeformDraft: string;
+    onFreeformChange: (value: string) => void;
+    onAddNote: () => void;
+    onRemoveItem: (id: string) => void;
+    onSubmit: () => void;
+    onDiscardAll: () => void;
+    onClose: () => void;
+}
+
+const FeedbackDrawer = ({ items, freeformDraft, onFreeformChange, onAddNote, onRemoveItem, onSubmit, onDiscardAll, onClose }: FeedbackDrawerProps): JSX.Element => {
+    const hasAny = items.length > 0 || freeformDraft.trim().length > 0;
+    return (
+        <aside className='feedbackDrawer' aria-label='Plan feedback'>
+            <div className='drawerHeader'>
+                <h2>Request changes</h2>
+                <Button
+                    appearance='subtle'
+                    icon={<DismissRegular />}
+                    aria-label='Close feedback'
+                    onClick={onClose}
+                />
+            </div>
+
+            <div className='drawerBody'>
+                {items.length === 0 && (
+                    <p className='drawerHint'>
+                        Add a free-form note for Copilot describing the changes you'd like to see in this plan.
+                    </p>
+                )}
+
+                {items.length > 0 && (
+                    <ul className='feedbackList'>
+                        {items.map(item => (
+                            <li key={item.id} className='feedbackItem freeform'>
+                                <span className='feedbackFreeformText'>{item.text}</span>
+                                <Button
+                                    appearance='subtle'
+                                    size='small'
+                                    icon={<DismissRegular />}
+                                    aria-label='Remove feedback item'
+                                    onClick={() => onRemoveItem(item.id)}
+                                />
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                <div className='freeformBlock'>
+                    <Textarea
+                        value={freeformDraft}
+                        onChange={(_, data) => onFreeformChange(data.value)}
+                        placeholder='Add a note for Copilot (e.g. "Use Azurite instead of the storage emulator")'
+                        rows={3}
+                        resize='vertical'
+                    />
+                    <div className='freeformActions'>
+                        <Button
+                            appearance='secondary'
+                            size='small'
+                            disabled={freeformDraft.trim().length === 0}
+                            onClick={onAddNote}
+                        >
+                            Add note
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            {plan.sections
-                .filter((s) => !isHiddenSection(s.title))
-                .map((section, i) => (
-                    <SectionCard
-                        key={i}
-                        section={section}
-                        collapsible={!alwaysExpandedSections.has(section.title.toLowerCase())}
-                    />
-                ))}
-        </div>
+            <div className='drawerFooter'>
+                <Button
+                    appearance='subtle'
+                    disabled={!hasAny}
+                    onClick={onDiscardAll}
+                >
+                    Discard all
+                </Button>
+                <Button
+                    appearance='primary'
+                    icon={<SendRegular />}
+                    disabled={!hasAny}
+                    onClick={onSubmit}
+                >
+                    Submit feedback
+                </Button>
+            </div>
+        </aside>
     );
 };
 

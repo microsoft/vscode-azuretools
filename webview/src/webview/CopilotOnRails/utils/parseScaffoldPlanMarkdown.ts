@@ -84,8 +84,39 @@ function extractSections(lines: string[]): PlanSection[] {
             continue;
         }
 
+        // Handle fenced code blocks. If the fence wraps a tree, parse the inside
+        // as a tree; otherwise skip the fence content.
+        if (line.trim() === '```' || line.trim().startsWith('```')) {
+            const next = lines[i + 1]?.trim() ?? '';
+            const looksLikeTree =
+                next === '.' ||
+                /^[a-zA-Z0-9._-]+\/$/.test(next) ||
+                next.startsWith('├') || next.startsWith('└') || next.startsWith('│');
+            if (looksLikeTree) {
+                const tree = parseTree(lines, i + 1);
+                if (tree) {
+                    currentSection.content.push(tree.content);
+                    i = tree.endIndex;
+                    // Skip the closing fence if present
+                    if (i < lines.length && lines[i].trim() === '```') {
+                        i++;
+                    }
+                    continue;
+                }
+            }
+            // Skip to closing fence (or EOF) so fence contents don't pollute the section
+            i++;
+            while (i < lines.length && lines[i].trim() !== '```') {
+                i++;
+            }
+            if (i < lines.length) {
+                i++;
+            }
+            continue;
+        }
+
         // Parse tree structures (lines starting with tree connectors or a root folder)
-        if (line.trim().match(/^[a-zA-Z0-9._-]+\/$/) || line.trim().startsWith('├') || line.trim().startsWith('└') || line.trim().startsWith('│')) {
+        if (line.trim() === '.' || line.trim().match(/^[a-zA-Z0-9._-]+\/$/) || line.trim().startsWith('├') || line.trim().startsWith('└') || line.trim().startsWith('│')) {
             const tree = parseTree(lines, i);
             if (tree) {
                 currentSection.content.push(tree.content);
@@ -175,8 +206,8 @@ function parseTree(lines: string[], startIndex: number): { content: PlanContent;
     let i = startIndex;
     const firstLine = lines[i].trim();
 
-    // First line should be the root folder (e.g. "project-root/")
-    const rootMatch = firstLine.match(/^([a-zA-Z0-9._-]+\/)\s*$/);
+    // First line should be the root folder (e.g. "project-root/") or '.' for current dir
+    const rootMatch = firstLine.match(/^(\.|[a-zA-Z0-9._-]+\/)\s*$/);
     if (!rootMatch) {
         return undefined;
     }
@@ -188,10 +219,13 @@ function parseTree(lines: string[], startIndex: number): { content: PlanContent;
     const treeLines: string[] = [];
     while (i < lines.length) {
         const line = lines[i];
+        if (line.trim() === '```') {
+            break;
+        }
         if (line.match(/[├└│]/) || (line.startsWith('    ') && treeLines.length > 0)) {
             treeLines.push(line);
             i++;
-        } else if (line.trim() === '' || line.trim() === '```') {
+        } else if (line.trim() === '') {
             i++;
             break;
         } else {
@@ -239,8 +273,8 @@ function buildTreeNodes(lines: string[], depth: number): TreeNode[] {
         let nameAndComment = connectorMatch[1].trim();
         let comment: string | undefined;
 
-        // Extract comment (← description)
-        const commentMatch = nameAndComment.match(/^(.+?)\s+←\s+(.+)$/);
+        // Extract trailing comment. Supports both "← description" and "# description".
+        const commentMatch = nameAndComment.match(/^(.+?)\s+(?:←|#)\s+(.+)$/);
         if (commentMatch) {
             nameAndComment = commentMatch[1].trim();
             comment = commentMatch[2].trim();

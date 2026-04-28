@@ -13,7 +13,7 @@ export class LocalPlanViewController extends WebviewController<Record<string, ne
     constructor(planData: LocalPlanData) {
         super(ext.context, 'Local Dev Plan', 'localPlanView', {}, ViewColumn.Active);
 
-        this.panel.webview.onDidReceiveMessage((message: { command: string; data?: LocalPlanData }) => {
+        this.panel.webview.onDidReceiveMessage((message: { command: string; data?: LocalPlanData; prompt?: string }) => {
             switch (message.command) {
                 case 'ready':
                     void this.panel.webview.postMessage({ command: 'setLocalPlanData', data: planData });
@@ -26,10 +26,20 @@ export class LocalPlanViewController extends WebviewController<Record<string, ne
                     });
                     this.panel.dispose();
                     break;
-                case 'editPlan':
-                    void vscode.window.showInformationMessage('Local dev plan updated!');
-                    this.panel.dispose();
+                case 'submitPlanFeedback': {
+                    const query = message.prompt?.trim();
+                    if (!query) {
+                        return;
+                    }
+                    // Hand off to Copilot agent to revise local-development-plan.md. Keep the
+                    // webview open; it will refresh in place when the file is rewritten.
+                    void vscode.commands.executeCommand('workbench.action.chat.open', {
+                        mode: 'agent',
+                        query,
+                    });
+                    void this.panel.webview.postMessage({ command: 'revisionInProgress' });
                     break;
+                }
                 case 'editArchitecture':
                     // TODO: Hook in Copilot command to edit architecture
                     void vscode.window.showInformationMessage('Edit Architecture with Copilot — not yet implemented.');
@@ -40,5 +50,6 @@ export class LocalPlanViewController extends WebviewController<Record<string, ne
 
     updatePlanData(planData: LocalPlanData): void {
         void this.panel.webview.postMessage({ command: 'setLocalPlanData', data: planData });
+        void this.panel.webview.postMessage({ command: 'revisionComplete' });
     }
 }

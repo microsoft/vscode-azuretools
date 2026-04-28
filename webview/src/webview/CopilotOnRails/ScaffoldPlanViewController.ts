@@ -13,7 +13,7 @@ export class ScaffoldPlanViewController extends WebviewController<Record<string,
     constructor(planData: PlanData) {
         super(ext.context, 'Project Plan', 'scaffoldPlanView', {}, ViewColumn.Active);
 
-        this.panel.webview.onDidReceiveMessage((message: { command: string; data?: PlanData }) => {
+        this.panel.webview.onDidReceiveMessage((message: { command: string; data?: PlanData; prompt?: string }) => {
             switch (message.command) {
                 case 'ready':
                     void this.panel.webview.postMessage({ command: 'setPlanData', data: planData });
@@ -26,15 +26,26 @@ export class ScaffoldPlanViewController extends WebviewController<Record<string,
                     });
                     this.panel.dispose();
                     break;
-                case 'editPlan':
-                    void vscode.window.showInformationMessage('Plan updated!');
-                    this.panel.dispose();
+                case 'submitPlanFeedback': {
+                    const query = message.prompt?.trim();
+                    if (!query) {
+                        return;
+                    }
+                    // Hand off to Copilot agent to revise project-plan.md. Keep the webview
+                    // open; it will refresh in place when the file is rewritten.
+                    void vscode.commands.executeCommand('workbench.action.chat.open', {
+                        mode: 'agent',
+                        query,
+                    });
+                    void this.panel.webview.postMessage({ command: 'revisionInProgress' });
                     break;
+                }
             }
         });
     }
 
     updatePlanData(planData: PlanData): void {
         void this.panel.webview.postMessage({ command: 'setPlanData', data: planData });
+        void this.panel.webview.postMessage({ command: 'revisionComplete' });
     }
 }
