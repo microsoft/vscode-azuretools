@@ -19,18 +19,16 @@ export namespace ext {
     export let webviewAssetsDir: string | undefined;
 }
 
-export interface RegisterWebviewExtensionVariablesOptions {
+export interface WebviewExtensionVariables {
+    context: ExtensionContext;
     /**
      * Absolute path to the directory containing the webview assets (`views.js` and `views.css`).
      * Required for bundled extensions whose VSIX does not ship `node_modules`.
      */
-    webviewAssetsDir?: string;
+    webviewAssetsDir: string;
 }
 
-export function registerWebviewExtensionVariables(
-    context: ExtensionContext,
-    options?: RegisterWebviewExtensionVariablesOptions,
-): void {
-    ext.context = context;
-    ext.webviewAssetsDir = options?.webviewAssetsDir;
+export function registerWebviewExtensionVariables(extVars: WebviewExtensionVariables): void {
+    ext.context = extVars.context;
+    ext.webviewAssetsDir = extVars.webviewAssetsDir;
 }
