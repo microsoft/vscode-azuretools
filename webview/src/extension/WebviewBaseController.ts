@@ -44,7 +44,8 @@ export abstract class WebviewBaseController<Configuration> implements vscode.Dis
         const nonce = randomBytes(16).toString('base64');
 
         const filename = 'views.js';
-        const webviewDistDir = path.join(ext.context.extensionPath, 'node_modules', '@microsoft', 'vscode-azext-webview', 'dist');
+        const webviewDistDir = ext.webviewAssetsDir
+            ?? path.join(ext.context.extensionPath, 'node_modules', '@microsoft', 'vscode-azext-webview', 'dist');
         const uri = (...parts: string[]) => webview?.asWebviewUri(vscode.Uri.file(path.join(webviewDistDir, ...parts))).toString(true);
         const srcUri = uri(filename);
         const cssUri = uri('views.css');
