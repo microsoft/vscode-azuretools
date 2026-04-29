@@ -58,3 +58,5 @@ extends:
               working_directory: github
             - name: microsoft_vscode_azext_utils
               working_directory: utils
+            - name: microsoft_vscode_azext_webview
+              working_directory: webview
