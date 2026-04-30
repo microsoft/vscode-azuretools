@@ -369,7 +369,8 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         armSubs ??= await import('@azure/arm-resources-subscriptions');
 
-        const endpoint = getConfiguredAzureEnv().resourceManagerEndpointUrl;
+        const rawEndpoint = getConfiguredAzureEnv().resourceManagerEndpointUrl;
+        const endpoint = rawEndpoint.endsWith('/') ? rawEndpoint : `${rawEndpoint}/`;
         const client = new armSubs.SubscriptionClient(credential, { endpoint });
 
         client.pipeline.addPolicy(
