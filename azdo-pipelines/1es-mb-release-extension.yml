@@ -67,10 +67,10 @@ extends:
             steps:
               - checkout: none
 
-              - task: NodeTool@0
+              - task: UseNode@1
                 displayName: "👉 Using Node.js"
                 inputs:
-                  versionSpec: 22.x
+                  version: 22.x
 
               - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
                 parameters:
