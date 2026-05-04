@@ -12,8 +12,8 @@ import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
-import { delay } from './utils/delay';
 import { getAppServiceScopes } from './utils/appServiceEnvironment';
+import { delay } from './utils/delay';
 
 /**
  * Interface for tunnel GetStatus API
@@ -47,6 +47,8 @@ export class TunnelProxy {
     private _isSsh: boolean;
 
     /**
+        * @deprecated This parameter is ignored. Credentials are now derived from the site's subscription
+        * using the App Service audience for the active cloud environment.
      * @param credentials Deprecated. Credentials are now derived from the site's subscription using
      * the correct App Service audience for the current cloud environment. This parameter is ignored.
      */
@@ -62,10 +64,9 @@ export class TunnelProxy {
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
-            const appServiceCredentials = await this._site.subscription.createCredentialsForScopes(
-                getAppServiceScopes(this._site.subscription.environment)
-            );
-            const bearerToken = (await appServiceCredentials.getToken() as { token: string }).token;
+            const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
+            const appServiceCredentials = await this._site.subscription.createCredentialsForScopes(appServiceScopes);
+            const bearerToken = (await appServiceCredentials.getToken(appServiceScopes) as { token: string }).token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();

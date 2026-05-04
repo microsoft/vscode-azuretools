@@ -5,15 +5,15 @@
 
 import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostNameSslState, ManagedServiceIdentity, Site, SiteConfigResource, SiteLogsConfig, SiteSourceControl, SlotConfigNamesResource, SourceControl, StringDictionary, User, WebAppsListFunctionKeysResponse, WebJob, WebSiteInstanceStatus, WebSiteManagementClient } from '@azure/arm-appservice';
 import type { ServiceClient } from '@azure/core-client';
-import { RequestBodyType, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
+import { RequestBodyType, bearerTokenAuthenticationPolicy, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
 import { AzExtPipelineResponse, createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
-import { getAppServiceScopes } from './utils/appServiceEnvironment';
 import { URLSearchParams } from 'url';
 import type * as KuduModels from './KuduModels';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
+import { getAppServiceScopes } from './utils/appServiceEnvironment';
 import { createWebSiteClient } from './utils/azureClients';
 import { convertQueryParamsValuesToString } from './utils/kuduUtils';
 
@@ -480,17 +480,18 @@ export class SiteClient implements IAppSettingsClient {
 
     /**
      * Creates a ServiceClient authenticated for App Service (Kudu) endpoint calls.
-     * Uses the dedicated App Service audience rather than the ARM audience, as ARM tokens
-     * are deprecated for Kudu calls and will break.
-     *
-     * - Public Azure:      https://appservice.azure.com/.default
-     * - Fairfax (US Gov):  https://appservice.azure.us/.default
+     * Uses an explicit bearer policy so every request is signed with the App Service audience
+     * for the current cloud environment instead of falling back to ARM defaults.
      */
     private async createKuduClient(context: IActionContext, options?: { addStatusCodePolicy?: boolean }): Promise<ServiceClient> {
-        const credentials = await this._site.subscription.createCredentialsForScopes(
-            getAppServiceScopes(this._site.subscription.environment)
-        );
-        return createGenericClient(context, credentials, options);
+        const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
+        const credentials = await this._site.subscription.createCredentialsForScopes(appServiceScopes);
+        const client = await createGenericClient(context, undefined, options);
+        client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
+            scopes: appServiceScopes,
+            credential: credentials,
+        }));
+        return client;
     }
 
     /**

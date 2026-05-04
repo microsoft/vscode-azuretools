@@ -6,21 +6,18 @@
 import type { Environment } from '@azure/ms-rest-azure-env';
 
 /**
- * The App Service OAuth2 audience for public Azure.
- * App ID: abfa0a7c-a6b6-4736-8310-5855508787cd
+ * App Service resource URLs by Azure environment name.
  */
-const publicAppServiceScope: string = 'https://appservice.azure.com/.default';
+const appServiceResourceUrls: Record<string, string> = {
+    AzureUSGovernment: 'https://appservice.azure.us',
+    AzureChinaCloud: 'https://appservice.azure.cn',
+    AzureUSNat: 'https://appservice.azure.eaglex.ic.gov',
+    AzureUSSec: 'https://appservice.azure.microsoft.scloud',
+    AzureBleu: 'https://appservice.azure.sovcloud-api.fr',
+    AzureDelos: 'https://appservice.azure.sovcloud-api.de',
+};
 
-/**
- * The App Service OAuth2 audience for Azure US Government (Fairfax).
- * App ID: 6a02c803-dafd-4136-b4c3-5a6f318b4714
- */
-const fairfaxAppServiceScope: string = 'https://appservice.azure.us/.default';
-
-/**
- * The environment name for Azure US Government as defined in @azure/ms-rest-azure-env.
- */
-const usGovernmentEnvironmentName: string = 'AzureUSGovernment';
+const publicAppServiceResourceUrl: string = 'https://appservice.azure.com';
 
 /**
  * Returns the OAuth2 scopes needed to authenticate against App Service (Kudu) endpoints
@@ -29,12 +26,10 @@ const usGovernmentEnvironmentName: string = 'AzureUSGovernment';
  * App Service endpoints require tokens scoped to the App Service audience — NOT the ARM
  * management audience. Using ARM tokens for Kudu calls is deprecated and will break.
  *
- * - Public Azure:      https://appservice.azure.com/.default  (abfa0a7c-a6b6-4736-8310-5855508787cd)
- * - Fairfax (US Gov):  https://appservice.azure.us/.default   (6a02c803-dafd-4136-b4c3-5a6f318b4714)
+ * The resource URL is environment-specific for sovereign clouds, so this mapping must stay
+ * aligned with the supported Azure environments in auth.
  */
 export function getAppServiceScopes(environment: Environment): string[] {
-    if (environment.name === usGovernmentEnvironmentName) {
-        return [fairfaxAppServiceScope];
-    }
-    return [publicAppServiceScope];
+    const resourceUrl: string = appServiceResourceUrls[environment.name] ?? publicAppServiceResourceUrl;
+    return [`${resourceUrl}/.default`];
 }

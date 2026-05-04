@@ -40,10 +40,9 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
         outputChannel.show();
         outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
-        const appServiceCredentials = await site.subscription.createCredentialsForScopes(
-            getAppServiceScopes(site.subscription.environment)
-        );
-        const bearerToken = (await appServiceCredentials.getToken() as { token: string }).token;
+        const appServiceScopes = getAppServiceScopes(site.subscription.environment);
+        const appServiceCredentials = await site.subscription.createCredentialsForScopes(appServiceScopes);
+        const bearerToken = (await appServiceCredentials.getToken(appServiceScopes) as { token: string }).token;
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
