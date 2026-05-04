@@ -6,11 +6,13 @@ If at all possible, avoid breaking changes. If breaking changes are necessary, i
 
 ## Releasing
 
-Use the [Release Pipeline Templates](https://github.com/microsoft/vscode-azuretools/actions/workflows/release-pipeline-templates.yml) workflow to update or create release branches.
+To update an existing release branch (e.g., `azext-pt/v1`) to the latest `main`:
 
-1. Go to the workflow and click "Run workflow"
-2. Enter the branch name (e.g., `azext-pt/v1` for updates, `azext-pt/v2` to create a new branch for breaking changes)
-3. Click "Run workflow"
-4. If updating an existing branch, a PR will be created--review and merge it
+1. Create a PR with `main` as the head and the release branch (e.g., `azext-pt/v1`) as the base
+2. Review and merge the PR
+
+To create a new release branch (e.g., `azext-pt/v2`) for breaking changes:
+
+1. Create a new branch from `main` named `azext-pt/vN` (e.g., `azext-pt/v2`)
 
 The release branches are protected by branch protection rules, requiring a PR to update them.
