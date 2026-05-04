@@ -1,0 +1,66 @@
+{
+    "name": "@microsoft/vscode-azext-webview",
+    "author": "Microsoft Corporation",
+    "version": "1.0.0",
+    "description": "Common tools for web views in VS Code extensions",
+    "tags": [
+        "vscode"
+    ],
+    "keywords": [
+        "vscode"
+    ],
+    "module": "dist/esm/src/index.js",
+    "main": "dist/cjs/src/index.js",
+    "types": "dist/esm/src/index.d.ts",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azuretools"
+    },
+    "bugs": {
+        "url": "https://github.com/Microsoft/vscode-azuretools/issues"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/webview/README.md",
+    "scripts": {
+        "build": "npm run build:esm && npm run build:cjs && npm run build:webview",
+        "build:esm": "tsc -p ./",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:webview": "node esbuild.views.mjs",
+        "lint": "eslint --max-warnings 0",
+        "package": "npm pack",
+        "test": "mocha",
+        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+    },
+    "mocha": {
+        "ui": "tdd",
+        "node-option": [
+            "import=tsx"
+        ],
+        "spec": [
+            "test/**/*.test.ts"
+        ]
+    },
+    "engines": {
+        "vscode": "^1.105.0"
+    },
+    "devDependencies": {
+        "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
+        "@types/node": "22.x",
+        "@types/vscode": "^1.104.0",
+        "@types/vscode-webview": "^1.57.5",
+        "esbuild": "*",
+        "esbuild-plugin-copy": "*"
+    },
+    "dependencies": {
+        "@fluentui/react-components": "^9.56.2",
+        "@fluentui/react-icons": "^2.0.265",
+        "@microsoft/vscode-azext-utils": "^4.0.7",
+        "@vscode/codicons": "0.0.38",
+        "monaco-editor": "~0.51.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "sass": "~1.79.6",
+        "sass-loader": "^16.0.2",
+        "uuid": "^14.0.0"
+    }
+}

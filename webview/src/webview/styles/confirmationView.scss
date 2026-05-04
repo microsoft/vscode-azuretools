@@ -1,0 +1,29 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.confirmationView {
+    display: flex;
+    flex-direction: column;
+    align-items: edge;
+    justify-content: flex-start;
+    height: 100vh;
+    padding: 20px;
+    width: 46vw;
+
+    .header {
+        text-wrap: nowrap;
+    }
+
+    .viewContent {
+        margin-top: 5%;
+
+        .buttonsView {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 32px;
+            gap: 4px;
+        }
+    }
+}

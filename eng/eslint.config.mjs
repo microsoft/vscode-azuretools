@@ -3,4 +3,10 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export { azExtEslintStrictTypeChecked as default } from './src/eslint/eslintConfigs.ts';
+import { globalIgnores } from 'eslint/config';
+import { azExtEslintStrictTypeChecked } from './src/eslint/eslintConfigs.ts';
+
+export default [
+    ...azExtEslintStrictTypeChecked,
+    globalIgnores(['src/mocha/**']),
+];

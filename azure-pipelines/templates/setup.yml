@@ -4,11 +4,21 @@ parameters:
     default: []
 
 steps:
-  - task: NodeTool@0
+  - pwsh: |
+      $nvmrcPath = ".nvmrc"
+      if (-not (Test-Path $nvmrcPath)) {
+        Write-Output "##vso[task.logissue type=error].nvmrc file not found. Please add a .nvmrc file to the root of your repository."
+        exit 1
+      }
+      $nodeVersion = (Get-Content $nvmrcPath).Trim()
+      Write-Output "##vso[task.setvariable variable=nodeVersion]$nodeVersion"
+    displayName: "\U0001F449 Read Node version from .nvmrc"
+    condition: succeeded()
+
+  - task: UseNode@1
     displayName: "\U0001F449 Using Node.js"
     inputs:
-      versionSource: fromFile
-      versionFilePath: .nvmrc
+      version: $(nodeVersion)
     condition: succeeded()
 
   - task: Npm@1

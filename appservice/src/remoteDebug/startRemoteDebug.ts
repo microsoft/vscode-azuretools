@@ -12,6 +12,7 @@ import { reportMessage, setRemoteDebug } from './remoteDebugCommon';
 import { AzExtGenericCredentials } from '@microsoft/vscode-azext-azureutils';
 
 const remoteDebugLink: string = 'https://aka.ms/appsvc-remotedebug';
+const functionDebugLink: string = 'https://aka.ms/azfunctions-remotedebugging';
 
 let isRemoteDebugging: boolean = false;
 
@@ -46,8 +47,9 @@ async function startRemoteDebugInternal(context: IActionContext, options: StartR
         const localHostPortNumber: number = await findFreePort();
         const debugConfig: vscode.DebugConfiguration = await getDebugConfiguration(options.language, localHostPortNumber);
 
+        const debugLink: string = options.site.isFunctionApp ? functionDebugLink : remoteDebugLink;
         const confirmEnableMessage: string = vscode.l10n.t('The configuration will be updated to enable remote debugging. Would you like to continue? This will restart the app.');
-        await setRemoteDebug(context, true, confirmEnableMessage, undefined, options.site, options.siteConfig, progress, token, remoteDebugLink);
+        await setRemoteDebug(context, true, confirmEnableMessage, undefined, options.site, options.siteConfig, progress, token, debugLink);
 
         reportMessage(vscode.l10n.t('Starting tunnel proxy...'), progress, token);
 
@@ -79,7 +81,7 @@ async function startRemoteDebugInternal(context: IActionContext, options: StartR
 
                 const confirmDisableMessage: string = vscode.l10n.t('Remaining in debugging mode may cause performance issues. Would you like to disable debugging? This will restart the app.');
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (innerProgress, innerToken): Promise<void> => {
-                    await setRemoteDebug(context, false, confirmDisableMessage, undefined, options.site, options.siteConfig, innerProgress, innerToken, remoteDebugLink);
+                    await setRemoteDebug(context, false, confirmDisableMessage, undefined, options.site, options.siteConfig, innerProgress, innerToken, debugLink);
                 });
             }
         });

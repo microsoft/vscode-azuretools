@@ -1,0 +1,47 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+@import '@vscode/codicons/dist/codicon.css';
+
+.codicon,
+.codicon::before {
+    font-family: codicon !important;
+}
+
+// Per-component overrides for Fluent v9 tokens that Button shares with other
+// components (Textarea / Card / Menu / Input / ...). Fluent v9 collapses many
+// semantic surfaces onto shared `colorNeutral*` tokens, so applying these at
+// the theme level would bleed Button colors into unrelated components —
+// they're scoped to Fluent's stable `.fui-Button` root class instead.
+//
+// Why secondary tokens: Fluent's default (non-primary) Button uses the
+// `colorNeutralBackground1` family, which is the same family backing most
+// surfaces. VS Code exposes a dedicated `--vscode-button-secondaryBackground`
+// for exactly this role, so we prefer it and fall back to the primary button
+// color for themes that don't define a secondary.
+//
+// Theme-wide token overrides (brand/accent surfaces, focus ring, disabled
+// foreground) live in `src/webview/theme/themeGenerator.ts`.
+.fui-Button {
+    // Secondary / default Button surface
+    --colorNeutralBackground1: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+    --colorNeutralBackground1Hover: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
+    --colorNeutralBackground1Pressed: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
+    --colorNeutralBackground1Selected: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+    --colorNeutralForeground1: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+    --colorNeutralForeground1Hover: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+    --colorNeutralForeground1Pressed: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+    // VS Code buttons are borderless by default; `transparent` fallback keeps
+    // the Button flat when a theme doesn't define `--vscode-button-border`.
+    --colorNeutralStroke1: var(--vscode-button-border, transparent);
+    --colorNeutralStroke1Hover: var(--vscode-button-border, transparent);
+    --colorNeutralStroke1Pressed: var(--vscode-button-border, transparent);
+
+    // Disabled surface / stroke. Disabled foreground is intentionally NOT set
+    // here — it's handled theme-wide in themeGenerator.ts because the mapping
+    // (`--vscode-disabledForeground`) is appropriate for every component, not
+    // just Button.
+    --colorNeutralBackgroundDisabled: var(--vscode-button-background);
+    --colorNeutralStrokeDisabled: var(--vscode-button-border, transparent);
+}

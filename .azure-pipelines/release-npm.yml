@@ -14,6 +14,7 @@ parameters:
       - microsoft-vscode-azext-eng
       - microsoft-vscode-azext-github
       - microsoft-vscode-azext-utils
+      - microsoft-vscode-azext-webview
   - name: publishVersion
     displayName: Publish Version
     type: string

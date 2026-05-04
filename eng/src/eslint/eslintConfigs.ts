@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ConfigObject as EslintConfig, Plugin as EslintPlugin } from '@eslint/core';
+import type { ConfigObject as EslintConfig } from '@eslint/core';
 import eslint from '@eslint/js';
 import eslintPluginHeader from '@tony.ganchev/eslint-plugin-header';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -44,7 +44,7 @@ export const azExtUniversalRules: EslintConfig = {
  */
 export const azExtCopyrightHeaderRule: EslintConfig = {
     plugins: {
-        'header': eslintPluginHeader as EslintPlugin,
+        'header': eslintPluginHeader,
     },
     rules: {
         'header/header': [

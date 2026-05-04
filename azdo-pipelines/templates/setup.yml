@@ -1,0 +1,36 @@
+steps:
+  - pwsh: |
+      $nvmrcPath = "$(working_directory)/.nvmrc"
+      if (-not (Test-Path $nvmrcPath)) {
+        Write-Output "##vso[task.logissue type=error].nvmrc file not found in $(working_directory). Please add a .nvmrc file to the working directory."
+        exit 1
+      }
+      $nodeVersion = (Get-Content $nvmrcPath).Trim()
+      Write-Output "##vso[task.setvariable variable=nodeVersion]$nodeVersion"
+    displayName: "\U0001F449 Read Node version from .nvmrc"
+
+  - task: UseNode@1
+    displayName: "\U0001F449 Using Node.js"
+    inputs:
+      version: $(nodeVersion)
+
+  - pwsh: |
+      if (Test-Path "$(working_directory)/.npmrc") {
+        Write-Output "##vso[task.setvariable variable=npmrcExists]true"
+      } else {
+        Write-Output "##vso[task.setvariable variable=npmrcExists]false"
+      }
+    displayName: "\U0001F449 Check for .npmrc"
+
+  - task: npmAuthenticate@0
+    displayName: "\U0001F449 Authenticate NPM"
+    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+    inputs:
+      workingFile: $(working_directory)/.npmrc
+
+  - task: Npm@1
+    displayName: "\U0001F449 Install Dependencies"
+    inputs:
+      command: custom
+      customCommand: ci --no-optional
+      workingDir: $(working_directory)
