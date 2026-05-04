@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureauth",
     "author": "Microsoft Corporation",
-    "version": "6.0.0-alpha.8",
+    "version": "6.1.0-alpha.1",
     "description": "Azure authentication helpers for Visual Studio Code",
     "tags": [
         "azure",
@@ -49,13 +49,13 @@
     },
     "devDependencies": {
         "@azure/core-auth": "^1.10.1",
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.13",
+        "@azure/core-rest-pipeline": "^1.23.0",
+        "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/node": "22.x",
         "@types/vscode": "1.106.0"
     },
     "dependencies": {
-        "@azure/arm-resources-subscriptions": "^2.1.0",
-        "@azure/core-rest-pipeline": "^1.22.2",
+        "@azure/arm-resources-subscriptions": "file:C:/Users/bwater/Downloads/modular-packages/azure-arm-resources-subscriptions-3.0.0.tgz",
         "@azure/identity": "^4.13.1",
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
@@ -65,7 +65,9 @@
     "mocha": {
         "ui": "tdd",
         "node-option": [
-            "import=tsx"
+            "experimental-transform-types",
+            "disable-warning=ExperimentalWarning",
+            "import=@microsoft/vscode-azext-eng/mocha"
         ],
         "spec": [
             "test/**/*.test.ts"

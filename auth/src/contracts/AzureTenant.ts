@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { TenantIdDescription } from "@azure/arm-resources-subscriptions";
+import type { TenantIdDescription } from "@azure/arm-resources-subscriptions/models";
 import type { AzureAccount } from "./AzureAccount";
 
 /**

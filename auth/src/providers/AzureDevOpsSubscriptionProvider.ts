@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SubscriptionClient } from '@azure/arm-resources-subscriptions'; // Keep this as `import type` to avoid actually loading the package before necessary
+import { type SubscriptionContext, createSubscription } from '@azure/arm-resources-subscriptions/api';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
 import * as azureEnv from '@azure/ms-rest-azure-env'; // This package is so small that it's not worth lazy loading
 import * as crypto from 'crypto';
@@ -42,7 +42,6 @@ export function createAzureDevOpsSubscriptionProviderFactory(initializer: AzureD
     };
 }
 
-let armSubs: typeof import('@azure/arm-resources-subscriptions') | undefined;
 let azIdentity: typeof import('@azure/identity') | undefined;
 
 /**
@@ -121,7 +120,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     /**
      * @inheritdoc
      */
-    protected override async getSubscriptionClient(tenant: TenantIdAndAccount): Promise<{ client: SubscriptionClient, credential: TokenCredential, authentication: AzureAuthentication }> {
+    protected override getSubscriptionContext(tenant: TenantIdAndAccount): { context: SubscriptionContext, credential: TokenCredential, authentication: AzureAuthentication } {
         if (!this._tokenCredential) {
             throw new NotSignedInError();
         }
@@ -145,10 +144,8 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
             } satisfies vscode.AuthenticationSession;
         };
 
-        armSubs ??= await import('@azure/arm-resources-subscriptions');
-
         return {
-            client: new armSubs.SubscriptionClient(this._tokenCredential),
+            context: createSubscription(this._tokenCredential),
             credential: this._tokenCredential,
             authentication: {
                 getSession: () => {
