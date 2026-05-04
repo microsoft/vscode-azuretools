@@ -49,8 +49,10 @@ export class TunnelProxy {
     /**
      * @param port The local port to listen on.
      * @param site The parsed App Service site to tunnel to.
-     * @param credentials @deprecated Ignored. Credentials are now derived from the site's
-     *   subscription using the correct App Service audience for the active cloud environment.
+     * @param credentials Ignored. Credentials are now derived from the site's subscription using
+     *   the correct App Service audience for the active cloud environment.
+     * @deprecated The `credentials` parameter is no longer used. Pass any value for API
+     *   compatibility; credentials are obtained internally from the site's subscription.
      * @param isSsh Whether to tunnel to the SSH port.
      */
     constructor(port: number, site: ParsedSite, credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
