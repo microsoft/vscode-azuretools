@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { AccessToken } from '@azure/core-auth';
 import type { ServiceClient } from '@azure/core-client';
 import { RestError, bearerTokenAuthenticationPolicy, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
@@ -12,6 +13,7 @@ import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
+import { getAppServiceCredentials } from './utils/appServiceEnvironment';
 import { delay } from './utils/delay';
 
 /**
@@ -44,21 +46,38 @@ export class TunnelProxy {
     private _server: Server;
     private _openSockets: ws.WebSocket[];
     private _isSsh: boolean;
-    private _credentials: AzExtServiceClientCredentials;
 
-    constructor(port: number, site: ParsedSite, credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
+    /**
+     * @deprecated Use `new TunnelProxy(port, site, isSsh)` instead (without credentials).
+     * @param port The local port to listen on.
+     * @param site The parsed App Service site to tunnel to.
+     * @param _credentials Ignored. Credentials are now derived from the site's subscription.
+     * @param isSsh Whether to tunnel to the SSH port.
+     */
+    constructor(port: number, site: ParsedSite, _credentials: AzExtServiceClientCredentials, isSsh?: boolean);
+    /**
+     * @param port The local port to listen on.
+     * @param site The parsed App Service site to tunnel to.
+     * @param isSsh Whether to tunnel to the SSH port.
+     */
+    constructor(port: number, site: ParsedSite, isSsh?: boolean);
+    constructor(port: number, site: ParsedSite, _credentialsOrIsSsh?: AzExtServiceClientCredentials | boolean, isSsh?: boolean) {
         this._port = port;
         this._site = site;
         this._server = createServer();
         this._openSockets = [];
-        this._isSsh = isSsh;
-        this._credentials = credentials;
+        this._isSsh = typeof _credentialsOrIsSsh === 'boolean' ? _credentialsOrIsSsh : isSsh ?? false;
     }
 
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
-            const bearerToken = (await this._credentials.getToken() as { token: string }).token;
+            const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
+            const accessToken: AccessToken | null = await credentials.getToken(scopes);
+            if (!accessToken?.token) {
+                throw new Error(l10n.t('Failed to obtain access token for App Service tunnel'));
+            }
+            const bearerToken: string = accessToken.token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();
@@ -95,10 +114,11 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
+        const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
         const client: ServiceClient = await createGenericClient(context, undefined);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
-            scopes: [],
-            credential: this._credentials
+            scopes,
+            credential: credentials
         }));
 
         let tunnelStatus: ITunnelStatus;

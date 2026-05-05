@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AbortController } from '@azure/abort-controller';
+import type { AccessToken } from '@azure/core-auth';
 import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, callWithTelemetryAndErrorHandling, parseError } from '@microsoft/vscode-azext-utils';
@@ -12,6 +13,7 @@ import * as vscode from 'vscode';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
 import { pingFunctionApp } from './pingFunctionApp';
+import { getAppServiceCredentials } from './utils/appServiceEnvironment';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -39,8 +41,12 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
         outputChannel.show();
         outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
-        const credentials = site.subscription.credentials;
-        const bearerToken = (await credentials.getToken() as { token: string }).token;
+        const { credentials, scopes } = await getAppServiceCredentials(site.subscription);
+        const accessToken: AccessToken | null = await credentials.getToken(scopes);
+        if (!accessToken?.token) {
+            throw new Error(vscode.l10n.t('Failed to obtain access token for App Service log stream'));
+        }
+        const bearerToken: string = accessToken.token;
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {
             // Intentionally setting up a separate telemetry event and not awaiting the result here since log stream is a long-running action
