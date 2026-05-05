@@ -65,6 +65,19 @@
             display: flex;
             gap: 8px;
             align-items: center;
+
+            .feedbackIconWrapper {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .feedbackBadge {
+                position: absolute;
+                top: -6px;
+                right: -8px;
+            }
         }
     }
 
@@ -235,6 +248,14 @@
             outline: none;
             border-color: var(--vscode-focusBorder);
         }
+
+        &.edited {
+            border-color: var(--vscode-editorGutter-modifiedBackground, var(--vscode-focusBorder));
+        }
+    }
+
+    .planTable td.editedCell {
+        box-shadow: inset 2px 0 0 var(--vscode-editorGutter-modifiedBackground, var(--vscode-focusBorder));
     }
 
     .planMain {

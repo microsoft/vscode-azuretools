@@ -373,6 +373,19 @@
         gap: 8px;
         align-items: center;
         flex-shrink: 0;
+
+        .feedbackIconWrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedbackBadge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+        }
     }
 
     .revisionBanner {

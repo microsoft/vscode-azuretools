@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Spinner, Textarea } from '@fluentui/react-components';
+import { Button, CounterBadge, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Spinner, Textarea } from '@fluentui/react-components';
 import { CheckmarkRegular, CommentEditRegular, DismissRegular, SendRegular } from '@fluentui/react-icons';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import { WebviewContext } from '../WebviewContext';
@@ -60,6 +60,7 @@ export const ScaffoldPlanView = (): JSX.Element => {
     const [freeformDraft, setFreeformDraft] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [isAwaitingRevision, setIsAwaitingRevision] = useState(false);
+    const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
     // Tracks the ORIGINAL plan cell value when first edited, keyed by cell position.
     // Used to revert cells when a dropdown feedback item is discarded or the
     // user selects the same value again.
@@ -70,6 +71,16 @@ export const ScaffoldPlanView = (): JSX.Element => {
         () => feedbackItems.length > 0 || freeformDraft.trim().length > 0,
         [feedbackItems, freeformDraft],
     );
+
+    const editedCells = useMemo(() => {
+        const set = new Set<CellKey>();
+        for (const item of feedbackItems) {
+            if (item.kind === 'dropdown') {
+                set.add(item.cell);
+            }
+        }
+        return set;
+    }, [feedbackItems]);
     useEffect(() => {
         const handler = (event: MessageEvent) => {
             const message = event.data;
@@ -97,7 +108,7 @@ export const ScaffoldPlanView = (): JSX.Element => {
             return;
         }
         if (hasEdits) {
-            setDrawerOpen(true);
+            setConfirmSubmitOpen(true);
             return;
         }
         vscodeApi.postMessage({ command: 'approvePlan', data: plan });
@@ -216,6 +227,7 @@ export const ScaffoldPlanView = (): JSX.Element => {
         vscodeApi.postMessage({ command: 'submitPlanFeedback', prompt, data: plan });
         setIsAwaitingRevision(true);
         setDrawerOpen(false);
+        setConfirmSubmitOpen(false);
     }, [plan, hasEdits, feedbackItems, freeformDraft, vscodeApi]);
 
     if (!plan) {
@@ -237,25 +249,35 @@ export const ScaffoldPlanView = (): JSX.Element => {
                             <div className='metadataBadges'>
                                 <span className='badge'>{plan.status}</span>
                                 <span className='badge subtle'>{plan.mode}</span>
-                                <span className='created'>Created: {plan.created}</span>
                             </div>
                         </div>
                         <div className='headerActions'>
                             <Button
-                                appearance='secondary'
-                                icon={<CommentEditRegular />}
+                                appearance='subtle'
+                                aria-label='Feedback'
+                                icon={
+                                    <span className='feedbackIconWrapper'>
+                                        <CommentEditRegular />
+                                        {hasEdits && (
+                                            <CounterBadge
+                                                className='feedbackBadge'
+                                                count={feedbackItems.length + (freeformDraft.trim() ? 1 : 0)}
+                                                size='small'
+                                                color='danger'
+                                            />
+                                        )}
+                                    </span>
+                                }
                                 disabled={isAwaitingRevision}
                                 onClick={() => setDrawerOpen(v => !v)}
-                            >
-                                Feedback{hasEdits ? ` (${feedbackItems.length + (freeformDraft.trim() ? 1 : 0)})` : ''}
-                            </Button>
+                            />
                             <Button
                                 appearance='primary'
-                                icon={hasEdits ? <CommentEditRegular /> : <CheckmarkRegular />}
+                                icon={<CheckmarkRegular />}
                                 disabled={isAwaitingRevision}
                                 onClick={handleApprove}
                             >
-                                {hasEdits ? 'Review & Submit' : 'Approve Plan'}
+                                Approve Plan
                             </Button>
                         </div>
                     </div>
@@ -268,7 +290,7 @@ export const ScaffoldPlanView = (): JSX.Element => {
                     </div>
                 )}
 
-                {overviewSection && <OverviewCard section={overviewSection} />}
+                {overviewSection && <OverviewCard section={overviewSection} created={plan.created} />}
 
                 <div className='sectionsRow'>
                     {detailSections.map((section) => {
@@ -279,6 +301,7 @@ export const ScaffoldPlanView = (): JSX.Element => {
                                 section={section}
                                 sectionIdx={sectionIdx}
                                 disabled={isAwaitingRevision}
+                                editedCells={editedCells}
                                 onTableCellChange={handleTableCellChange}
                             />
                         );
@@ -300,6 +323,13 @@ export const ScaffoldPlanView = (): JSX.Element => {
                     onClose={() => setDrawerOpen(false)}
                 />
             )}
+
+            <SubmitEditsDialog
+                open={confirmSubmitOpen}
+                editCount={feedbackItems.length + (freeformDraft.trim() ? 1 : 0)}
+                onCancel={() => setConfirmSubmitOpen(false)}
+                onSubmit={handleSubmitFeedback}
+            />
         </div>
     );
 };
@@ -403,7 +433,33 @@ const FeedbackDrawer = ({ items, freeformDraft, onFreeformChange, onAddNote, onR
     );
 };
 
-const OverviewCard = ({ section }: { section: PlanSection }): JSX.Element => {
+interface SubmitEditsDialogProps {
+    open: boolean;
+    editCount: number;
+    onCancel: () => void;
+    onSubmit: () => void;
+}
+
+const SubmitEditsDialog = ({ open, editCount, onCancel, onSubmit }: SubmitEditsDialogProps): JSX.Element => (
+    <Dialog open={open} onOpenChange={(_, data) => { if (!data.open) { onCancel(); } }}>
+        <DialogSurface>
+            <DialogBody>
+                <DialogTitle>Submit edits to Copilot?</DialogTitle>
+                <DialogContent>
+                    {editCount > 0
+                        ? `You have ${editCount} pending edit${editCount === 1 ? '' : 's'}. Would you like to submit ${editCount === 1 ? 'it' : 'them'} to Copilot to revise the plan?`
+                        : 'Edits were made. Would you like to submit those edits to Copilot?'}
+                </DialogContent>
+                <DialogActions>
+                    <Button appearance='secondary' onClick={onCancel}>Cancel</Button>
+                    <Button appearance='primary' icon={<SendRegular />} onClick={onSubmit}>Submit edits</Button>
+                </DialogActions>
+            </DialogBody>
+        </DialogSurface>
+    </Dialog>
+);
+
+const OverviewCard = ({ section, created }: { section: PlanSection; created?: string }): JSX.Element => {
     const goal = section.content?.find(c => c.type === 'keyValue' && c.key === 'Goal') as { type: 'keyValue'; key: string; value: string } | undefined;
     const appType = section.content?.find(c => c.type === 'keyValue' && c.key === 'App Type') as { type: 'keyValue'; key: string; value: string } | undefined;
     const mode = section.content?.find(c => c.type === 'keyValue' && c.key === 'Mode') as { type: 'keyValue'; key: string; value: string } | undefined;
@@ -411,7 +467,10 @@ const OverviewCard = ({ section }: { section: PlanSection }): JSX.Element => {
 
     return (
         <div className='sectionCard overviewWrapper'>
-            <h2>Overview</h2>
+            <div className='overviewTitle'>
+                <h2>Overview</h2>
+                {created && <span className='created'>Created: {created}</span>}
+            </div>
             {goal && <p className='goalText'>{goal.value}</p>}
             <div className='overviewMeta'>
                 {appType && (
@@ -452,10 +511,11 @@ interface SectionCardProps {
     section: PlanSection;
     sectionIdx: number;
     disabled?: boolean;
+    editedCells?: Set<CellKey>;
     onTableCellChange: (sectionIdx: number, contentIdx: number, rowIdx: number, colIdx: number, value: string) => void;
 }
 
-const SectionCard = ({ section, sectionIdx, disabled, onTableCellChange }: SectionCardProps): JSX.Element => (
+const SectionCard = ({ section, sectionIdx, disabled, editedCells, onTableCellChange }: SectionCardProps): JSX.Element => (
     <div className='sectionCard'>
         <h2>{section.title}</h2>
         <div className='sectionContent'>
@@ -466,6 +526,7 @@ const SectionCard = ({ section, sectionIdx, disabled, onTableCellChange }: Secti
                     sectionIdx={sectionIdx}
                     contentIdx={contentIdx}
                     disabled={disabled}
+                    editedCells={editedCells}
                     onTableCellChange={onTableCellChange}
                 />
             ))}
@@ -526,10 +587,11 @@ interface ContentBlockProps {
     sectionIdx: number;
     contentIdx: number;
     disabled?: boolean;
+    editedCells?: Set<CellKey>;
     onTableCellChange: (sectionIdx: number, contentIdx: number, rowIdx: number, colIdx: number, value: string) => void;
 }
 
-const ContentBlock = ({ item, sectionIdx, contentIdx, disabled, onTableCellChange }: ContentBlockProps): JSX.Element => {
+const ContentBlock = ({ item, sectionIdx, contentIdx, disabled, editedCells, onTableCellChange }: ContentBlockProps): JSX.Element => {
     switch (item.type) {
         case 'keyValue':
             return (
@@ -552,11 +614,12 @@ const ContentBlock = ({ item, sectionIdx, contentIdx, disabled, onTableCellChang
                                 {row.map((cell, ci) => {
                                     const componentName = row[0];
                                     const options = ci > 0 ? editableOptions[componentName] : undefined;
+                                    const isEdited = options ? editedCells?.has(cellKey(sectionIdx, contentIdx, ri, ci)) : false;
                                     return (
-                                        <td key={ci}>
+                                        <td key={ci} className={isEdited ? 'editedCell' : undefined}>
                                             {options ? (
                                                 <select
-                                                    className='cellDropdown'
+                                                    className={`cellDropdown ${isEdited ? 'edited' : ''}`}
                                                     value={cell}
                                                     disabled={disabled}
                                                     onChange={(e) => onTableCellChange(sectionIdx, contentIdx, ri, ci, e.target.value)}

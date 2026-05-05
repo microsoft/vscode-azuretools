@@ -38,6 +38,19 @@
             display: flex;
             gap: 8px;
             align-items: center;
+
+            .feedbackIconWrapper {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .feedbackBadge {
+                position: absolute;
+                top: -6px;
+                right: -8px;
+            }
         }
 
         h1 {
@@ -68,11 +81,6 @@
 
             .badge.subtle {
                 background: var(--vscode-toolbar-hoverBackground);
-                color: var(--vscode-descriptionForeground);
-            }
-
-            .created {
-                font-size: 0.75em;
                 color: var(--vscode-descriptionForeground);
             }
         }
@@ -115,6 +123,23 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+
+        .overviewTitle {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+
+            h2 {
+                margin: 0;
+            }
+
+            .created {
+                font-size: 0.75em;
+                color: var(--vscode-descriptionForeground);
+            }
+        }
 
         .overviewTableWrapper {
             margin-left: 18px;
@@ -240,6 +265,14 @@
             outline: none;
             border-color: var(--vscode-focusBorder);
         }
+
+        &.edited {
+            border-color: var(--vscode-editorGutter-modifiedBackground, var(--vscode-focusBorder));
+        }
+    }
+
+    .planTable td.editedCell {
+        box-shadow: inset 2px 0 0 var(--vscode-editorGutter-modifiedBackground, var(--vscode-focusBorder));
     }
 
     .blockquote {

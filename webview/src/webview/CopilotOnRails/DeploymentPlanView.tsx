@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Spinner, Textarea } from '@fluentui/react-components';
+import { Button, CounterBadge, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Spinner, Textarea } from '@fluentui/react-components';
 import { CheckmarkRegular, CommentEditRegular, DismissRegular, SendRegular } from '@fluentui/react-icons';
 import mermaid from 'mermaid';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type JSX } from 'react';
@@ -67,6 +67,7 @@ export const DeploymentPlanView = (): JSX.Element => {
     const [freeformDraft, setFreeformDraft] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [isAwaitingRevision, setIsAwaitingRevision] = useState(false);
+    const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
     // Tracks the ORIGINAL SKU value when first edited, keyed by row index.
     // Used to revert cells when a dropdown feedback item is discarded or the
     // user selects the same value again.
@@ -77,6 +78,16 @@ export const DeploymentPlanView = (): JSX.Element => {
         () => feedbackItems.length > 0 || freeformDraft.trim().length > 0,
         [feedbackItems, freeformDraft],
     );
+
+    const editedRows = useMemo(() => {
+        const set = new Set<number>();
+        for (const item of feedbackItems) {
+            if (item.kind === 'dropdown') {
+                set.add(item.rowIdx);
+            }
+        }
+        return set;
+    }, [feedbackItems]);
 
     useEffect(() => {
         const handler = (event: MessageEvent) => {
@@ -105,7 +116,7 @@ export const DeploymentPlanView = (): JSX.Element => {
             return;
         }
         if (hasEdits) {
-            setDrawerOpen(true);
+            setConfirmSubmitOpen(true);
             return;
         }
         vscodeApi.postMessage({ command: 'approve', data: plan });
@@ -239,6 +250,7 @@ export const DeploymentPlanView = (): JSX.Element => {
         vscodeApi.postMessage({ command: 'submitPlanFeedback', prompt, data: plan });
         setIsAwaitingRevision(true);
         setDrawerOpen(false);
+        setConfirmSubmitOpen(false);
     }, [plan, hasEdits, feedbackItems, freeformDraft, vscodeApi]);
 
     if (!plan) {
@@ -259,20 +271,31 @@ export const DeploymentPlanView = (): JSX.Element => {
                         </div>
                         <div className='headerActions'>
                             <Button
-                                appearance='secondary'
-                                icon={<CommentEditRegular />}
+                                appearance='subtle'
+                                aria-label='Feedback'
+                                icon={
+                                    <span className='feedbackIconWrapper'>
+                                        <CommentEditRegular />
+                                        {hasEdits && (
+                                            <CounterBadge
+                                                className='feedbackBadge'
+                                                count={feedbackItems.length + (freeformDraft.trim() ? 1 : 0)}
+                                                size='small'
+                                                color='danger'
+                                            />
+                                        )}
+                                    </span>
+                                }
                                 disabled={isAwaitingRevision}
                                 onClick={() => setDrawerOpen(v => !v)}
-                            >
-                                Feedback{hasEdits ? ` (${feedbackItems.length + (freeformDraft.trim() ? 1 : 0)})` : ''}
-                            </Button>
+                            />
                             <Button
                                 appearance='primary'
-                                icon={hasEdits ? <CommentEditRegular /> : <CheckmarkRegular />}
+                                icon={<CheckmarkRegular />}
                                 disabled={isAwaitingRevision}
                                 onClick={handleApprove}
                             >
-                                {hasEdits ? 'Review & Submit' : 'Approve'}
+                                Approve
                             </Button>
                         </div>
                     </div>
@@ -354,6 +377,7 @@ export const DeploymentPlanView = (): JSX.Element => {
                     <ResourcesTable
                         table={plan.resources}
                         disabled={isAwaitingRevision}
+                        editedRows={editedRows}
                         onSkuChange={handleResourceSkuChange}
                     />
                 </div>
@@ -371,6 +395,13 @@ export const DeploymentPlanView = (): JSX.Element => {
                     onClose={() => setDrawerOpen(false)}
                 />
             )}
+
+            <SubmitEditsDialog
+                open={confirmSubmitOpen}
+                editCount={feedbackItems.length + (freeformDraft.trim() ? 1 : 0)}
+                onCancel={() => setConfirmSubmitOpen(false)}
+                onSubmit={handleSubmitFeedback}
+            />
         </div>
     );
 };
@@ -474,6 +505,32 @@ const FeedbackDrawer = ({ items, freeformDraft, onFreeformChange, onAddNote, onR
     );
 };
 
+interface SubmitEditsDialogProps {
+    open: boolean;
+    editCount: number;
+    onCancel: () => void;
+    onSubmit: () => void;
+}
+
+const SubmitEditsDialog = ({ open, editCount, onCancel, onSubmit }: SubmitEditsDialogProps): JSX.Element => (
+    <Dialog open={open} onOpenChange={(_, data) => { if (!data.open) { onCancel(); } }}>
+        <DialogSurface>
+            <DialogBody>
+                <DialogTitle>Submit edits to Copilot?</DialogTitle>
+                <DialogContent>
+                    {editCount > 0
+                        ? `You have ${editCount} pending edit${editCount === 1 ? '' : 's'}. Would you like to submit ${editCount === 1 ? 'it' : 'them'} to Copilot to revise the plan?`
+                        : 'Edits were made. Would you like to submit those edits to Copilot?'}
+                </DialogContent>
+                <DialogActions>
+                    <Button appearance='secondary' onClick={onCancel}>Cancel</Button>
+                    <Button appearance='primary' icon={<SendRegular />} onClick={onSubmit}>Submit edits</Button>
+                </DialogActions>
+            </DialogBody>
+        </DialogSurface>
+    </Dialog>
+);
+
 const MermaidDiagram = ({ definition }: { definition: string }): JSX.Element => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [error, setError] = useState<string | null>(null);
@@ -572,10 +629,11 @@ const skuOptions: Record<string, string[]> = {
 interface ResourcesTableProps {
     table: DeploymentPlanTable;
     disabled?: boolean;
+    editedRows?: Set<number>;
     onSkuChange: (rowIdx: number, value: string) => void;
 }
 
-const ResourcesTable = ({ table, disabled, onSkuChange }: ResourcesTableProps): JSX.Element => {
+const ResourcesTable = ({ table, disabled, editedRows, onSkuChange }: ResourcesTableProps): JSX.Element => {
     const skuColIdx = table.headers.length - 1;
 
     return (
@@ -587,13 +645,14 @@ const ResourcesTable = ({ table, disabled, onSkuChange }: ResourcesTableProps): 
                 {table.rows.map((row, ri) => {
                     const resourceName = row[0];
                     const options = skuOptions[resourceName];
+                    const isEdited = options ? editedRows?.has(ri) : false;
                     return (
                         <tr key={ri}>
                             {row.map((cell, ci) => (
-                                <td key={ci}>
+                                <td key={ci} className={ci === skuColIdx && isEdited ? 'editedCell' : undefined}>
                                     {ci === skuColIdx && options ? (
                                         <select
-                                            className='cellDropdown'
+                                            className={`cellDropdown ${isEdited ? 'edited' : ''}`}
                                             value={cell}
                                             disabled={disabled}
                                             onChange={(e) => onSkuChange(ri, e.target.value)}
