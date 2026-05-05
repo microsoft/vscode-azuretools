@@ -47,27 +47,36 @@ export class TunnelProxy {
     private _isSsh: boolean;
 
     /**
+     * @deprecated Use `new TunnelProxy(port, site, isSsh)` instead (without credentials).
      * @param port The local port to listen on.
      * @param site The parsed App Service site to tunnel to.
-     * @param credentials Ignored. Credentials are now derived from the site's subscription using
-     *   the correct App Service audience for the active cloud environment.
-     * @deprecated The `credentials` parameter is no longer used. Pass any value for API
-     *   compatibility; credentials are obtained internally from the site's subscription.
+     * @param _credentials Ignored. Credentials are now derived from the site's subscription.
      * @param isSsh Whether to tunnel to the SSH port.
      */
-    constructor(port: number, site: ParsedSite, _credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
+    constructor(port: number, site: ParsedSite, _credentials: AzExtServiceClientCredentials, isSsh?: boolean);
+    /**
+     * @param port The local port to listen on.
+     * @param site The parsed App Service site to tunnel to.
+     * @param isSsh Whether to tunnel to the SSH port.
+     */
+    constructor(port: number, site: ParsedSite, isSsh?: boolean);
+    constructor(port: number, site: ParsedSite, _credentialsOrIsSsh?: AzExtServiceClientCredentials | boolean, isSsh?: boolean) {
         this._port = port;
         this._site = site;
         this._server = createServer();
         this._openSockets = [];
-        this._isSsh = isSsh;
+        this._isSsh = typeof _credentialsOrIsSsh === 'boolean' ? _credentialsOrIsSsh : isSsh ?? false;
     }
 
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
             const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
-            const bearerToken = (await credentials.getToken(scopes) as { token: string }).token;
+            const accessToken = await credentials.getToken(scopes);
+            if (!accessToken?.token) {
+                throw new Error(l10n.t('Failed to obtain access token for App Service tunnel'));
+            }
+            const bearerToken = accessToken.token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();
