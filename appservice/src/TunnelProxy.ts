@@ -12,7 +12,7 @@ import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
-import { getAppServiceScopes } from './utils/appServiceEnvironment';
+import { getAppServiceCredentials, getAppServiceScopes } from './utils/appServiceEnvironment';
 import { delay } from './utils/delay';
 
 /**
@@ -55,20 +55,19 @@ export class TunnelProxy {
      *   compatibility; credentials are obtained internally from the site's subscription.
      * @param isSsh Whether to tunnel to the SSH port.
      */
-    constructor(port: number, site: ParsedSite, credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
+    constructor(port: number, site: ParsedSite, _credentials: AzExtServiceClientCredentials, isSsh: boolean = false) {
         this._port = port;
         this._site = site;
         this._server = createServer();
         this._openSockets = [];
         this._isSsh = isSsh;
-        void credentials; // kept for API compatibility; credentials are now obtained internally
     }
 
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
             const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
-            const appServiceCredentials = await this._site.subscription.createCredentialsForScopes(appServiceScopes);
+            const appServiceCredentials = await getAppServiceCredentials(this._site.subscription);
             const bearerToken = (await appServiceCredentials.getToken(appServiceScopes) as { token: string }).token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
@@ -107,7 +106,7 @@ export class TunnelProxy {
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
         const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
-        const appServiceCredentials = await this._site.subscription.createCredentialsForScopes(appServiceScopes);
+        const appServiceCredentials = await getAppServiceCredentials(this._site.subscription);
         const client: ServiceClient = await createGenericClient(context, undefined);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
             scopes: appServiceScopes,

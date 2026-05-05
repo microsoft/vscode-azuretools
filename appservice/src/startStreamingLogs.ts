@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
 import { pingFunctionApp } from './pingFunctionApp';
-import { getAppServiceScopes } from './utils/appServiceEnvironment';
+import { getAppServiceCredentials, getAppServiceScopes } from './utils/appServiceEnvironment';
 
 export interface ILogStream extends vscode.Disposable {
     isConnected: boolean;
@@ -41,7 +41,7 @@ export async function startStreamingLogs(context: IActionContext, site: ParsedSi
         outputChannel.appendLine(vscode.l10n.t('Connecting to log stream...'));
 
         const appServiceScopes = getAppServiceScopes(site.subscription.environment);
-        const appServiceCredentials = await site.subscription.createCredentialsForScopes(appServiceScopes);
+        const appServiceCredentials = await getAppServiceCredentials(site.subscription);
         const bearerToken = (await appServiceCredentials.getToken(appServiceScopes) as { token: string }).token;
 
         return await new Promise((onLogStreamCreated: (ls: ILogStream) => void): void => {

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Environment } from '@azure/ms-rest-azure-env';
+import type { AzExtServiceClientCredentials, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 
 /**
  * App Service resource URLs by Azure environment name.
@@ -32,4 +33,13 @@ const publicAppServiceResourceUrl: string = 'https://appservice.azure.com';
 export function getAppServiceScopes(environment: Environment): string[] {
     const resourceUrl: string = appServiceResourceUrls[environment.name] ?? publicAppServiceResourceUrl;
     return [`${resourceUrl}/.default`];
+}
+
+/**
+ * Creates credentials scoped to the App Service OAuth2 audience for the given subscription's
+ * cloud environment. This eliminates the need to repeat getAppServiceScopes + createCredentialsForScopes
+ * at multiple call sites.
+ */
+export async function getAppServiceCredentials(subscription: ISubscriptionContext): Promise<AzExtServiceClientCredentials> {
+    return await subscription.createCredentialsForScopes(getAppServiceScopes(subscription.environment));
 }
