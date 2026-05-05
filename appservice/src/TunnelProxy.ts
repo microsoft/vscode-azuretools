@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { AccessToken } from '@azure/core-auth';
 import type { ServiceClient } from '@azure/core-client';
 import { RestError, bearerTokenAuthenticationPolicy, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
@@ -72,11 +73,11 @@ export class TunnelProxy {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
             const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
-            const accessToken = await credentials.getToken(scopes);
+            const accessToken: AccessToken | null = await credentials.getToken(scopes);
             if (!accessToken?.token) {
                 throw new Error(l10n.t('Failed to obtain access token for App Service tunnel'));
             }
-            const bearerToken = accessToken.token;
+            const bearerToken: string = accessToken.token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();

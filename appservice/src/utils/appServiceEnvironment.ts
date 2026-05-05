@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { TokenCredential } from '@azure/core-auth';
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtServiceClientCredentials, ISubscriptionContext } from '@microsoft/vscode-azext-utils';
+import type { ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 
 /**
  * App Service resource URLs by Azure environment name.
@@ -39,10 +40,10 @@ export function getAppServiceScopes(environment: Environment): string[] {
  * Creates App Service auth context for the given subscription's cloud environment.
  * Returns both scopes and credentials so callers can avoid recomputing scopes.
  */
-export async function getAppServiceCredentials(subscription: ISubscriptionContext): Promise<{ credentials: AzExtServiceClientCredentials, scopes: string[] }> {
+export async function getAppServiceCredentials(subscription: ISubscriptionContext): Promise<{ credentials: TokenCredential, scopes: string[] }> {
     const scopes: string[] = getAppServiceScopes(subscription.environment);
     return {
-        credentials: await subscription.createCredentialsForScopes(scopes),
+        credentials: await subscription.createCredentialsForScopes(scopes) as TokenCredential,
         scopes,
     };
 }
