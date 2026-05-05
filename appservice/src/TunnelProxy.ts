@@ -12,7 +12,7 @@ import { CancellationToken, Disposable, l10n } from 'vscode';
 import * as ws from 'ws';
 import { ParsedSite } from './SiteClient';
 import { ext } from './extensionVariables';
-import { getAppServiceCredentials, getAppServiceScopes } from './utils/appServiceEnvironment';
+import { getAppServiceCredentials } from './utils/appServiceEnvironment';
 import { delay } from './utils/delay';
 
 /**
@@ -66,9 +66,8 @@ export class TunnelProxy {
     public async startProxy(context: IActionContext, token: CancellationToken): Promise<void> {
         try {
             await this.checkTunnelStatusWithRetry(context, token);
-            const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
-            const appServiceCredentials = await getAppServiceCredentials(this._site.subscription);
-            const bearerToken = (await appServiceCredentials.getToken(appServiceScopes) as { token: string }).token;
+            const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
+            const bearerToken = (await credentials.getToken(scopes) as { token: string }).token;
             await this.setupTunnelServer(bearerToken, token);
         } catch (error) {
             this.dispose();
@@ -105,12 +104,11 @@ export class TunnelProxy {
     }
 
     private async checkTunnelStatus(context: IActionContext): Promise<void> {
-        const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
-        const appServiceCredentials = await getAppServiceCredentials(this._site.subscription);
+        const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
         const client: ServiceClient = await createGenericClient(context, undefined);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
-            scopes: appServiceScopes,
-            credential: appServiceCredentials
+            scopes,
+            credential: credentials
         }));
 
         let tunnelStatus: ITunnelStatus;

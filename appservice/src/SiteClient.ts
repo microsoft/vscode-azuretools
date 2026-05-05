@@ -13,7 +13,7 @@ import { URLSearchParams } from 'url';
 import type * as KuduModels from './KuduModels';
 import { AppKind } from './createAppService/AppKind';
 import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSiteResource';
-import { getAppServiceCredentials, getAppServiceScopes } from './utils/appServiceEnvironment';
+import { getAppServiceCredentials } from './utils/appServiceEnvironment';
 import { createWebSiteClient } from './utils/azureClients';
 import { convertQueryParamsValuesToString } from './utils/kuduUtils';
 
@@ -484,11 +484,10 @@ export class SiteClient implements IAppSettingsClient {
      * for the current cloud environment instead of falling back to ARM defaults.
      */
     private async createKuduClient(context: IActionContext, options?: { addStatusCodePolicy?: boolean }): Promise<ServiceClient> {
-        const appServiceScopes = getAppServiceScopes(this._site.subscription.environment);
-        const credentials = await getAppServiceCredentials(this._site.subscription);
+        const { credentials, scopes } = await getAppServiceCredentials(this._site.subscription);
         const client = await createGenericClient(context, undefined, options);
         client.pipeline.addPolicy(bearerTokenAuthenticationPolicy({
-            scopes: appServiceScopes,
+            scopes,
             credential: credentials,
         }));
         return client;

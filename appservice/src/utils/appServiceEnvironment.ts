@@ -36,10 +36,13 @@ export function getAppServiceScopes(environment: Environment): string[] {
 }
 
 /**
- * Creates credentials scoped to the App Service OAuth2 audience for the given subscription's
- * cloud environment. This eliminates the need to repeat getAppServiceScopes + createCredentialsForScopes
- * at multiple call sites.
+ * Creates App Service auth context for the given subscription's cloud environment.
+ * Returns both scopes and credentials so callers can avoid recomputing scopes.
  */
-export async function getAppServiceCredentials(subscription: ISubscriptionContext): Promise<AzExtServiceClientCredentials> {
-    return await subscription.createCredentialsForScopes(getAppServiceScopes(subscription.environment));
+export async function getAppServiceCredentials(subscription: ISubscriptionContext): Promise<{ credentials: AzExtServiceClientCredentials, scopes: string[] }> {
+    const scopes: string[] = getAppServiceScopes(subscription.environment);
+    return {
+        credentials: await subscription.createCredentialsForScopes(scopes),
+        scopes,
+    };
 }
