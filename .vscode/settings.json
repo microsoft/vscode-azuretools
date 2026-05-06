@@ -23,5 +23,5 @@
             "mode": "auto"
         }
     ],
-    "yaml.format.printWidth": 200
+    "yaml.format.printWidth": 200,
 }
