@@ -28,8 +28,8 @@ parameters:
     type: string
     default: ""
 
-  # NPM registry URL for a private mirror feed (e.g. Azure Artifacts). Generated at runtime, not committed to repo.
-  - name: npmRegistry
+  # Azure Artifacts feed for a private NPM mirror (e.g. FeedName or ProjectName/FeedName)
+  - name: npmFeed
     type: string
     default: ""
 
@@ -77,23 +77,14 @@ extends:
                 inputs:
                   version: 22.x
 
-              - pwsh: |
-                  $registry = "${{ parameters.npmRegistry }}"
-                  $npmrcPath = "$(System.DefaultWorkingDirectory)/.npmrc"
-                  if ($registry) {
-                    Write-Output "Writing .npmrc with registry: $registry"
-                    Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true"
-                    Write-Output "##vso[task.setvariable variable=npmrcExists]true"
-                  } else {
-                    Write-Output "##vso[task.setvariable variable=npmrcExists]false"
-                  }
-                displayName: "👉 Configure .npmrc"
-
-              - task: npmAuthenticate@0
-                displayName: "👉 Authenticate NPM"
-                condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+              - task: Npm@1
+                displayName: "👉 Install vsce"
                 inputs:
-                  workingFile: $(System.DefaultWorkingDirectory)/.npmrc
+                  command: custom
+                  customCommand: i -g @vscode/vsce@latest
+                  ${{ if ne(parameters.npmFeed, '') }}:
+                    customRegistry: useFeed
+                    customFeed: ${{ parameters.npmFeed }}
 
               - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
                 parameters:
@@ -122,7 +113,6 @@ extends:
                             Set-Location $vsix.directory
 
                             $vsceArgs = @(
-                                '@vscode/vsce@latest'
                                 'publish'
                                 '--azure-credential'
                                 '--packagePath'
@@ -138,10 +128,10 @@ extends:
                             }
 
                             Write-Output "Publishing VSIX: $($vsix.vsixName) with command:"
-                            Write-Output "    npx $($vsceArgs -join ' ')"
+                            Write-Output "    vsce $($vsceArgs -join ' ')"
 
                             # Execute the publish command with arguments passed separately
-                            & npx @vsceArgs
+                            & vsce @vsceArgs
                             if ($LASTEXITCODE -ne 0) {
                                 Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
                                 exit 1

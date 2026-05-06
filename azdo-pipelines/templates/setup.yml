@@ -1,7 +1,7 @@
 parameters:
-  - name: npmRegistry
+  - name: npmFeed
     type: string
-    displayName: "NPM registry URL (e.g. Azure Artifacts feed URL)"
+    displayName: "Azure Artifacts feed to use (e.g. FeedName or ProjectName/FeedName)"
     default: ""
 
 steps:
@@ -21,18 +21,12 @@ steps:
       version: $(nodeVersion)
 
   - pwsh: |
-      $registry = "${{ parameters.npmRegistry }}"
-      $npmrcPath = "$(working_directory)/.npmrc"
-      if ($registry) {
-        Write-Output "Writing .npmrc with registry: $registry"
-        Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true"
-        Write-Output "##vso[task.setvariable variable=npmrcExists]true"
-      } elseif (Test-Path $npmrcPath) {
+      if (Test-Path "$(working_directory)/.npmrc") {
         Write-Output "##vso[task.setvariable variable=npmrcExists]true"
       } else {
         Write-Output "##vso[task.setvariable variable=npmrcExists]false"
       }
-    displayName: "👉 Configure .npmrc"
+    displayName: "👉 Check for .npmrc"
 
   - task: npmAuthenticate@0
     displayName: "👉 Authenticate NPM"
@@ -46,3 +40,6 @@ steps:
       command: custom
       customCommand: ci --no-optional
       workingDir: $(working_directory)
+      ${{ if ne(parameters.npmFeed, '') }}:
+        customRegistry: useFeed
+        customFeed: ${{ parameters.npmFeed }}

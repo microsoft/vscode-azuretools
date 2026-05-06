@@ -38,8 +38,8 @@ parameters:
     type: string
     default: ""
 
-  # NPM registry URL for a private mirror feed
-  - name: npmRegistry
+  # Azure Artifacts feed for a private NPM mirror
+  - name: npmFeed
     type: string
     default: ""
 
@@ -70,7 +70,7 @@ stages:
                 fetchDepth: 1
               - template: ../templates/setup.yml
                 parameters:
-                  npmRegistry: ${{ parameters.npmRegistry }}
+                  npmFeed: ${{ parameters.npmFeed }}
               - ${{ parameters.additionalSetupSteps }}
               - template: ../templates/lint.yml
               - template: ../templates/build.yml

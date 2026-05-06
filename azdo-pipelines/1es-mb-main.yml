@@ -51,8 +51,8 @@ parameters:
     type: string
     default: ""
 
-  # NPM registry URL for a private mirror feed (e.g. Azure Artifacts). Generated at runtime, not committed to repo.
-  - name: npmRegistry
+  # Azure Artifacts feed for a private NPM mirror (e.g. FeedName or ProjectName/FeedName)
+  - name: npmFeed
     type: string
     default: ""
 
@@ -90,4 +90,4 @@ extends:
           alternativeSigningSteps: ${{ parameters.alternativeSigningSteps }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           testARMServiceConnection: ${{ parameters.testARMServiceConnection }}
-          npmRegistry: ${{ parameters.npmRegistry }}
+          npmFeed: ${{ parameters.npmFeed }}
