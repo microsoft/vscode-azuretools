@@ -1,0 +1,468 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.scaffoldPlanView {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 28px;
+    max-width: 640px;
+
+    .planMain {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .planHeader {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--vscode-editor-background);
+        padding-bottom: 14px;
+        margin-bottom: -14px;
+
+        .headerTop {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+            gap: 12px;
+        }
+
+        .headerActions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.35em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            letter-spacing: -0.01em;
+        }
+
+        .metadataBadges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+
+            .badge {
+                display: inline-block;
+                padding: 2px 10px;
+                border-radius: 10px;
+                font-size: 0.7em;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                background: var(--vscode-badge-background);
+                color: var(--vscode-badge-foreground);
+            }
+
+            .badge.subtle {
+                background: var(--vscode-toolbar-hoverBackground);
+                color: var(--vscode-descriptionForeground);
+            }
+
+            .created {
+                font-size: 0.75em;
+                color: var(--vscode-descriptionForeground);
+            }
+        }
+    }
+
+    .sectionsRow {
+        display: flex;
+        gap: 12px;
+
+        >.sectionCard {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+
+    .sectionCard {
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 8px;
+        padding: 14px 18px;
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            opacity: 0.85;
+        }
+
+        .sectionContent {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+    }
+
+    .overviewWrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        .overviewTableWrapper {
+            margin-left: 18px;
+            margin-right: 18px;
+
+            .planTable {
+                width: 100%;
+            }
+        }
+
+        .goalText {
+            margin: 0 0 12px 0;
+            font-size: 0.85em;
+            line-height: 1.55;
+            color: var(--vscode-foreground);
+        }
+
+        .overviewMeta {
+            display: flex;
+            gap: 20px;
+
+            .metaItem {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+
+                .metaLabel {
+                    font-size: 0.7em;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: var(--vscode-descriptionForeground);
+                }
+
+                .metaValue {
+                    font-size: 0.82em;
+                    color: var(--vscode-foreground);
+                    font-weight: 500;
+                }
+            }
+        }
+    }
+
+    .keyValue {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        padding: 3px 0;
+
+        .key {
+            font-weight: 600;
+            font-size: 0.75em;
+            color: var(--vscode-foreground);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            opacity: 0.7;
+        }
+
+        .value {
+            font-size: 0.82em;
+            color: var(--vscode-foreground);
+            line-height: 1.45;
+        }
+    }
+
+    .planTable {
+        width: 100%;
+        margin: 2px 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--vscode-widget-border);
+
+        th,
+        td {
+            text-align: left;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--vscode-descriptionForeground);
+            background: var(--vscode-toolbar-hoverBackground);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        td:first-child {
+            font-weight: 500;
+            color: var(--vscode-foreground);
+        }
+
+        td {
+            color: var(--vscode-descriptionForeground);
+        }
+    }
+
+    .cellDropdown {
+        width: 100%;
+        background: var(--vscode-dropdown-background);
+        color: var(--vscode-dropdown-foreground);
+        border: 1px solid transparent;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 1em;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color 0.15s;
+
+        &:hover {
+            border-color: var(--vscode-dropdown-border);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+        }
+    }
+
+    .blockquote {
+        border-left: 3px solid var(--vscode-textBlockQuote-border);
+        padding: 4px 10px;
+        font-size: 0.78em;
+        color: var(--vscode-descriptionForeground);
+        font-style: italic;
+        border-radius: 0 4px 4px 0;
+        background: var(--vscode-textBlockQuote-background);
+    }
+
+    .paragraph {
+        margin: 0;
+        font-size: 0.78em;
+        line-height: 1.4;
+        color: var(--vscode-descriptionForeground);
+    }
+
+    // Tree view
+    .treeView {
+        font-size: 0.82em;
+        font-family: var(--vscode-editor-font-family), monospace;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .treeNode {
+        .treeRow {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            user-select: none;
+
+            &.clickable {
+                cursor: pointer;
+            }
+
+            &:hover {
+                background: var(--vscode-list-hoverBackground);
+            }
+        }
+
+        .treeChevron {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            font-size: 0.6em;
+            color: var(--vscode-foreground);
+            transition: transform 0.1s;
+            flex-shrink: 0;
+
+            &.open {
+                transform: rotate(90deg);
+            }
+        }
+
+        .treeChevronSpacer {
+            display: inline-block;
+            width: 16px;
+            flex-shrink: 0;
+        }
+
+        .treeIcon {
+            flex-shrink: 0;
+            font-size: 1em;
+        }
+
+        .treeName {
+            color: var(--vscode-foreground);
+        }
+
+        .treeComment {
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+            margin-left: 8px;
+            font-size: 0.9em;
+        }
+    }
+
+    .revisionBanner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: var(--vscode-editorInfo-background, var(--vscode-toolbar-hoverBackground));
+        border: 1px solid var(--vscode-focusBorder);
+        color: var(--vscode-foreground);
+        font-size: 0.82em;
+    }
+
+    &.revising {
+
+        .cellDropdown,
+        .planMain .planTable {
+            opacity: 0.7;
+        }
+    }
+
+    .feedbackDrawer {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 340px;
+        max-width: calc(100vw - 40px);
+        max-height: calc(100vh - 40px);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        background: var(--vscode-editor-background);
+        border: 1px solid var(--vscode-widget-border);
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+
+        .drawerHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+
+            h2 {
+                margin: 0;
+                font-size: 0.85em;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                opacity: 0.85;
+            }
+        }
+
+        .drawerBody {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .drawerHint {
+            margin: 0;
+            font-size: 0.78em;
+            line-height: 1.4;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .feedbackList {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .feedbackItem {
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            padding: 6px 8px;
+            background: var(--vscode-toolbar-hoverBackground);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 4px;
+            font-size: 0.8em;
+            line-height: 1.35;
+
+            &.dropdown {
+                .arrow {
+                    color: var(--vscode-descriptionForeground);
+                    margin: 0 2px;
+                }
+
+                .feedbackChipText {
+                    flex: 1;
+                    min-width: 0;
+                    color: var(--vscode-foreground);
+                    word-break: break-word;
+                }
+            }
+
+            &.freeform .feedbackFreeformText {
+                flex: 1;
+                min-width: 0;
+                color: var(--vscode-foreground);
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+        }
+
+        .freeformBlock {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            .freeformActions {
+                display: flex;
+                justify-content: flex-end;
+            }
+        }
+
+        .drawerFooter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--vscode-widget-border);
+        }
+    }
+}
+
+@media (max-width: 600px) {
+    .scaffoldPlanView .feedbackDrawer {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-width: none;
+    }
+}

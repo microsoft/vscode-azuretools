@@ -4,9 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ConfirmationView } from "./ConfirmationView";
+import { CreateProjectView } from "./CopilotOnRails/CreateProjectView";
+import { DeploymentPlanView } from "./CopilotOnRails/DeploymentPlanView";
+import { LocalPlanView } from "./CopilotOnRails/LocalPlanView";
+import { ScaffoldPlanView } from "./CopilotOnRails/ScaffoldPlanView";
 import { LoadingView } from "./LoadingView";
 
 export const WebviewRegistry = {
     confirmationView: ConfirmationView,
-    loadingView: LoadingView
+    createProjectView: CreateProjectView,
+    deploymentPlanView: DeploymentPlanView,
+    loadingView: LoadingView,
+    localPlanView: LocalPlanView,
+    scaffoldPlanView: ScaffoldPlanView
 } as const;
