@@ -5,22 +5,22 @@
 
 import './styles/global.scss';
 
-import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { type WebviewApi } from 'vscode-webview';
 import { DynamicThemeProvider } from './theme/DynamicThemeProvider';
 import { type WebviewState, WithWebviewContext } from './WebviewContext';
-import { WebviewRegistry } from './WebviewRegistry';
+import { getView } from './WebviewRegistry';
 
-export type ViewKey = keyof typeof WebviewRegistry;
-
-export function render<V extends ViewKey>(key: V, vscodeApi: WebviewApi<WebviewState>, rootId = 'root'): void {
+export function render(key: string, vscodeApi: WebviewApi<WebviewState>, rootId = 'root'): void {
     const container = document.getElementById(rootId);
     if (!container) {
         throw new Error(`Element with id of ${rootId} not found.`);
     }
 
-    const Component: React.ComponentType = WebviewRegistry[key];
+    const Component = getView(key);
+    if (!Component) {
+        throw new Error(`View "${key}" is not registered. Available views can be checked via getView().`);
+    }
 
     const root = createRoot(container);
 
