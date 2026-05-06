@@ -38,6 +38,11 @@ parameters:
     type: string
     default: ""
 
+  # NPM registry URL for a private mirror feed
+  - name: npmRegistry
+    type: string
+    default: ""
+
 stages:
   - stage: BuildStage
     pool: ${{ parameters.buildPool }}
@@ -46,7 +51,8 @@ stages:
           - job: ${{ job.name }}
             templateContext:
               ${{ if eq(length(parameters.alternativeSigningSteps), 0) }}:
-                mb: # Enable the MicroBuild Signing toolset
+                mb:
+                  # Enable the MicroBuild Signing toolset
                   signing:
                     enabled: ${{ ne(parameters.signType, 'none') }}
                     signType: ${{ parameters.signType }}
@@ -63,6 +69,8 @@ stages:
               - checkout: self
                 fetchDepth: 1
               - template: ../templates/setup.yml
+                parameters:
+                  npmRegistry: ${{ parameters.npmRegistry }}
               - ${{ parameters.additionalSetupSteps }}
               - template: ../templates/lint.yml
               - template: ../templates/build.yml

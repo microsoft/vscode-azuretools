@@ -1,3 +1,9 @@
+parameters:
+  - name: npmRegistry
+    type: string
+    displayName: "NPM registry URL (e.g. Azure Artifacts feed URL)"
+    default: ""
+
 steps:
   - pwsh: |
       $nvmrcPath = "$(working_directory)/.nvmrc"
@@ -7,29 +13,35 @@ steps:
       }
       $nodeVersion = (Get-Content $nvmrcPath).Trim()
       Write-Output "##vso[task.setvariable variable=nodeVersion]$nodeVersion"
-    displayName: "\U0001F449 Read Node version from .nvmrc"
+    displayName: "👉 Read Node version from .nvmrc"
 
   - task: UseNode@1
-    displayName: "\U0001F449 Using Node.js"
+    displayName: "👉 Using Node.js"
     inputs:
       version: $(nodeVersion)
 
   - pwsh: |
-      if (Test-Path "$(working_directory)/.npmrc") {
+      $registry = "${{ parameters.npmRegistry }}"
+      $npmrcPath = "$(working_directory)/.npmrc"
+      if ($registry) {
+        Write-Output "Writing .npmrc with registry: $registry"
+        Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true"
+        Write-Output "##vso[task.setvariable variable=npmrcExists]true"
+      } elseif (Test-Path $npmrcPath) {
         Write-Output "##vso[task.setvariable variable=npmrcExists]true"
       } else {
         Write-Output "##vso[task.setvariable variable=npmrcExists]false"
       }
-    displayName: "\U0001F449 Check for .npmrc"
+    displayName: "👉 Configure .npmrc"
 
   - task: npmAuthenticate@0
-    displayName: "\U0001F449 Authenticate NPM"
+    displayName: "👉 Authenticate NPM"
     condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
     inputs:
       workingFile: $(working_directory)/.npmrc
 
   - task: Npm@1
-    displayName: "\U0001F449 Install Dependencies"
+    displayName: "👉 Install Dependencies"
     inputs:
       command: custom
       customCommand: ci --no-optional

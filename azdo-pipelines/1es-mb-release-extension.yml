@@ -28,6 +28,11 @@ parameters:
     type: string
     default: ""
 
+  # NPM registry URL for a private mirror feed (e.g. Azure Artifacts). Generated at runtime, not committed to repo.
+  - name: npmRegistry
+    type: string
+    default: ""
+
   # The pool to use for releases
   - name: releasePool
     type: object
@@ -71,6 +76,24 @@ extends:
                 displayName: "👉 Using Node.js"
                 inputs:
                   version: 22.x
+
+              - pwsh: |
+                  $registry = "${{ parameters.npmRegistry }}"
+                  $npmrcPath = "$(System.DefaultWorkingDirectory)/.npmrc"
+                  if ($registry) {
+                    Write-Output "Writing .npmrc with registry: $registry"
+                    Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true"
+                    Write-Output "##vso[task.setvariable variable=npmrcExists]true"
+                  } else {
+                    Write-Output "##vso[task.setvariable variable=npmrcExists]false"
+                  }
+                displayName: "👉 Configure .npmrc"
+
+              - task: npmAuthenticate@0
+                displayName: "👉 Authenticate NPM"
+                condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+                inputs:
+                  workingFile: $(System.DefaultWorkingDirectory)/.npmrc
 
               - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
                 parameters:
