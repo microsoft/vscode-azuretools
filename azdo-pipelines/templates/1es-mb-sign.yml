@@ -26,12 +26,22 @@ steps:
           )
       }
 
+      # Resolve the full path to vsce before changing directories
+      $vsce = (Get-Command vsce -ErrorAction SilentlyContinue).Source
+      if (-not $vsce) {
+          $vsce = Join-Path $(working_directory) 'node_modules/.bin/vsce'
+          if (-not (Test-Path $vsce)) {
+              Write-Error "Cannot find vsce. Ensure @vscode/vsce is installed."
+              exit 1
+          }
+      }
+
       foreach ($vsix in $vsixList) {
           Set-Location $vsix.directory
 
           # Generate manifest
           Write-Output "Generating manifest for $($vsix.vsixName)..."
-          & vsce generate-manifest -i $vsix.vsixName -o $vsix.manifestName
+          & $vsce generate-manifest -i $vsix.vsixName -o $vsix.manifestName
           if ($LASTEXITCODE -ne 0) {
               Write-Error "Failed to generate manifest for $($vsix.vsixName)"
               exit 1
