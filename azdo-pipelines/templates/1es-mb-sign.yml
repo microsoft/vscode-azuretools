@@ -1,14 +1,14 @@
 steps:
   # Eww, but DDSignFiles.dll requires .NET Core 3.1
   - task: UseDotNet@2
-    displayName: "\U0001F449 Signing: Install .NET Core 3.1"
+    displayName: "👉 Signing: Install .NET Core 3.1"
     inputs:
       packageType: sdk
       version: 3.1.x
 
   # ...and the actual PME signing tool requires .NET 8
   - task: UseDotNet@2
-    displayName: "\U0001F449 Signing: Install .NET 8"
+    displayName: "👉 Signing: Install .NET 8"
     inputs:
       packageType: sdk
       version: 8.x
@@ -31,7 +31,7 @@ steps:
 
           # Generate manifest
           Write-Output "Generating manifest for $($vsix.vsixName)..."
-          & npx @vscode/vsce@latest generate-manifest -i $vsix.vsixName -o $vsix.manifestName
+          & vsce generate-manifest -i $vsix.vsixName -o $vsix.manifestName
           if ($LASTEXITCODE -ne 0) {
               Write-Error "Failed to generate manifest for $($vsix.vsixName)"
               exit 1
@@ -50,10 +50,10 @@ steps:
 
       # Write out the file list to sign
       $fileListObject | ConvertTo-Json -Depth 4 | Out-File -FilePath $(Build.SourcesDirectory)/filesToSign.json
-    displayName: "\U0001F449 Prepare VSIXs for signing"
+    displayName: "👉 Prepare VSIXs for signing"
 
   - pwsh: |
       & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /filelist:$(Build.SourcesDirectory)/filesToSign.json
-    displayName: "\U0001F449 Sign VSIX signature files"
+    displayName: "👉 Sign VSIX signature files"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
