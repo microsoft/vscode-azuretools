@@ -8,3 +8,14 @@ export * from './extension/extensionVariables';
 export * from './extension/LoadingViewController';
 export * from './extension/OpenConfirmationViewStep';
 export * from './extension/OpenLoadingViewStep';
+export * from './extension/TemplateGalleryController';
+export type {
+    IProjectTemplate,
+    TemplateGalleryConfig,
+    FilterState,
+    AiState,
+    ViewMode,
+    ActiveView,
+    ExtensionToWebviewMessage,
+    WebviewToExtensionMessage,
+} from './webview/TemplateGallery/types';
