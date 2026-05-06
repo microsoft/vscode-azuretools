@@ -1,7 +1,7 @@
 variables:
   # Upstream artifact feeds
-  - name: npmRegistry
-    value: https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode/npm/registry/
+  - name: npmFeed
+    value: DevDiv/azcode
 
   # Related to extension release approval process
   - name: extensionReleaseServiceConnection
