@@ -30,7 +30,7 @@ steps:
 
   - task: npmAuthenticate@0
     displayName: "👉 Authenticate NPM"
-    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'), eq('${{ parameters.npmFeed }}', ''))
     inputs:
       workingFile: $(working_directory)/.npmrc
 
