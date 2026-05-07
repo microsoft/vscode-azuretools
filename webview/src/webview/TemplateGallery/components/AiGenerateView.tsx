@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { Button, Dropdown, Field, Input, Option, Spinner, Textarea } from '@fluentui/react-components';
+import { ArrowLeftRegular } from '@fluentui/react-icons';
 import { useState, useEffect, useRef, useCallback, type JSX, type Dispatch } from 'react';
 import type { AiState, WebviewToExtensionMessage, AiCompleteMessage } from '../types';
 
@@ -71,8 +73,8 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
     const startProgressAnimation = useCallback(() => {
         setProgressStep(0);
         setShowExtendedWait(false);
-        if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-        if (extendedTimerRef.current) clearTimeout(extendedTimerRef.current);
+        if (progressTimerRef.current) {clearInterval(progressTimerRef.current);}
+        if (extendedTimerRef.current) {clearTimeout(extendedTimerRef.current);}
 
         let step = 0;
         progressTimerRef.current = setInterval(() => {
@@ -81,20 +83,20 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                 setProgressStep(step);
                 if (step === progressMessages.length - 1) {
                     // Last step — stop timer, show extended wait after 3s
-                    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+                    if (progressTimerRef.current) {clearInterval(progressTimerRef.current);}
                     progressTimerRef.current = null;
                     extendedTimerRef.current = setTimeout(() => setShowExtendedWait(true), 3000);
                 }
             } else {
-                if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+                if (progressTimerRef.current) {clearInterval(progressTimerRef.current);}
                 progressTimerRef.current = null;
             }
         }, 2500);
     }, []);
 
     const completeProgress = useCallback(() => {
-        if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-        if (extendedTimerRef.current) clearTimeout(extendedTimerRef.current);
+        if (progressTimerRef.current) {clearInterval(progressTimerRef.current);}
+        if (extendedTimerRef.current) {clearTimeout(extendedTimerRef.current);}
         progressTimerRef.current = null;
         extendedTimerRef.current = null;
         setProgressStep(progressMessages.length);
@@ -104,8 +106,8 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-            if (extendedTimerRef.current) clearTimeout(extendedTimerRef.current);
+            if (progressTimerRef.current) {clearInterval(progressTimerRef.current);}
+            if (extendedTimerRef.current) {clearTimeout(extendedTimerRef.current);}
         };
     }, []);
 
@@ -119,7 +121,7 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
     }, [ai.isGenerating, ai.projectData, viewState]);
 
     const handleGenerate = useCallback(() => {
-        if (!ai.prompt.trim()) return;
+        if (!ai.prompt.trim()) {return;}
         dispatch({ type: 'SET_AI_GENERATING' });
         setViewState('generating');
         startProgressAnimation();
@@ -137,7 +139,7 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
     }, [ai.prompt, ai.language, dispatch, postMessage, startProgressAnimation]);
 
     const handleCreate = useCallback(() => {
-        if (!ai.location || !ai.projectData) return;
+        if (!ai.location || !ai.projectData) {return;}
         dispatch({ type: 'SET_VIEW', view: 'creating' });
         postMessage({
             type: 'createAiProject',
@@ -174,10 +176,14 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                         <h3>Copilot Chat is opening&hellip;</h3>
                         <p>Your prompt has been pre-filled. Continue the conversation to design and generate your function app.</p>
                     </div>
-                    <button className="ai-chat-link ai-back-link" onClick={() => setViewState(ai.projectData ? 'success' : 'prompt')}>
-                        <span className="codicon codicon-arrow-left"></span>
+                    <Button
+                        appearance="transparent"
+                        icon={<ArrowLeftRegular />}
+                        className="ai-back-link"
+                        onClick={() => setViewState(ai.projectData ? 'success' : 'prompt')}
+                    >
                         Back to generator
-                    </button>
+                    </Button>
                 </div>
             </div>
         );
@@ -198,58 +204,62 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                         </div>
                     </div>
 
-                    <textarea
+                    <Textarea
                         className="ai-textarea"
                         placeholder="e.g., I need an HTTP API that receives sensor readings, validates the data, and stores it in Azure Cosmos DB. It should also send alerts to a Service Bus queue when values exceed a threshold."
                         rows={5}
                         aria-label="Describe your function app"
                         value={ai.prompt}
-                        onChange={e => dispatch({ type: 'SET_AI_PROMPT', prompt: e.target.value })}
+                        onChange={(_ev, data) => dispatch({ type: 'SET_AI_PROMPT', prompt: data.value })}
+                        resize="vertical"
                     />
 
                     <div className="example-prompts">
                         <span className="example-label">Try an example:</span>
                         <div className="example-chips">
                             {examplePrompts.map(ex => (
-                                <button key={ex.label} className="example-chip" onClick={() => handleExampleClick(ex.prompt)}>
+                                <Button key={ex.label} appearance="outline" size="small" className="example-chip" onClick={() => handleExampleClick(ex.prompt)}>
                                     {ex.label}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     </div>
 
                     <div className="ai-controls">
-                        <div className="ai-language-group">
-                            <label htmlFor="ai-language-select">Language</label>
-                            <select
-                                id="ai-language-select"
-                                className="form-select ai-language-select"
+                        <Field label="Language" className="ai-language-group">
+                            <Dropdown
                                 value={ai.language}
-                                onChange={e => dispatch({ type: 'SET_AI_LANGUAGE', language: e.target.value })}
+                                selectedOptions={[ai.language]}
+                                onOptionSelect={(_ev, data) => {
+                                    if (data.optionValue) {dispatch({ type: 'SET_AI_LANGUAGE', language: data.optionValue });}
+                                }}
+                                className="ai-language-select"
                             >
-                                <option value="TypeScript">TypeScript</option>
-                                <option value="JavaScript">JavaScript</option>
-                                <option value="Python">Python</option>
-                                <option value="CSharp">C# (.NET)</option>
-                                <option value="Java">Java</option>
-                                <option value="PowerShell">PowerShell</option>
-                            </select>
-                        </div>
-                        <button
+                                <Option value="TypeScript">TypeScript</Option>
+                                <Option value="JavaScript">JavaScript</Option>
+                                <Option value="Python">Python</Option>
+                                <Option value="CSharp">C# (.NET)</Option>
+                                <Option value="Java">Java</Option>
+                                <Option value="PowerShell">PowerShell</Option>
+                            </Dropdown>
+                        </Field>
+                        <Button
+                            appearance="primary"
                             className="ai-generate-btn"
                             disabled={!ai.prompt.trim() || ai.isGenerating}
                             onClick={handleGenerate}
+                            icon={<span className="codicon codicon-sparkle"></span>}
                         >
-                            <span className="codicon codicon-sparkle"></span>
                             Generate Project
-                        </button>
+                        </Button>
                     </div>
 
                     <div className="ai-chat-action">
-                        <button className="ai-chat-link" onClick={() => handleContinueInChat('prompt')}>
-                            <span className="codicon codicon-comment-discussion"></span>
+                        <Button appearance="transparent" className="ai-chat-link" onClick={() => handleContinueInChat('prompt')}
+                            icon={<span className="codicon codicon-comment-discussion"></span>}
+                        >
                             Continue in Copilot Chat
-                        </button>
+                        </Button>
                         <span className="ai-chat-hint">For complex apps that need multi-turn design</span>
                     </div>
 
@@ -275,11 +285,12 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                                     key={i}
                                     className={`ai-step ${i < progressStep ? 'done' : ''} ${i === progressStep && progressStep < progressMessages.length ? 'active' : ''}`}
                                 >
-                                    <span className={`codicon ${
-                                        i < progressStep ? 'codicon-check' :
-                                        i === progressStep && progressStep < progressMessages.length ? 'codicon-loading codicon-modifier-spin' :
-                                        'codicon-circle-outline'
-                                    }`}></span>
+                                    {i < progressStep
+                                        ? <span className="codicon codicon-check"></span>
+                                        : i === progressStep && progressStep < progressMessages.length
+                                            ? <Spinner size="tiny" />
+                                            : <span className="codicon codicon-circle-outline"></span>
+                                    }
                                     <span>{msg}</span>
                                 </div>
                             ))}
@@ -323,39 +334,36 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                                 ))}
                             </ul>
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="ai-location-input">Project Location</label>
+                        <Field label="Project Location">
                             <div className="location-input-group">
-                                <input
-                                    type="text"
-                                    id="ai-location-input"
-                                    className="form-input"
+                                <Input
                                     readOnly
                                     placeholder="Select a folder..."
                                     value={ai.location}
+                                    className="form-input"
                                 />
-                                <button type="button" className="secondary-button" onClick={() => postMessage({ type: 'browseFolder', source: 'ai' })}>
+                                <Button appearance="secondary" onClick={() => postMessage({ type: 'browseFolder', source: 'ai' })}>
                                     Browse...
-                                </button>
+                                </Button>
                             </div>
-                        </div>
+                        </Field>
                         <div className="form-actions">
-                            <button
-                                type="button"
-                                className="primary-button"
+                            <Button
+                                appearance="primary"
                                 disabled={!ai.location || !ai.projectData}
                                 onClick={handleCreate}
+                                icon={<span className="codicon codicon-check"></span>}
                             >
-                                <span className="codicon codicon-check"></span>
                                 Create Project
-                            </button>
+                            </Button>
                         </div>
                         <div className="ai-escalation">
                             <span>Want to refine this further?</span>
-                            <button className="ai-chat-link" onClick={() => handleContinueInChat('success')}>
-                                <span className="codicon codicon-comment-discussion"></span>
+                            <Button appearance="transparent" className="ai-chat-link" onClick={() => handleContinueInChat('success')}
+                                icon={<span className="codicon codicon-comment-discussion"></span>}
+                            >
                                 Continue in Copilot Chat
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -367,13 +375,14 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                     <div className="ai-error-state">
                         <span className="codicon codicon-warning ai-error-icon"></span>
                         <p className="ai-error-message">{errorMessage || 'An error occurred'}</p>
-                        <button className="secondary-button" onClick={handleRegenerate}>Try Again</button>
+                        <Button appearance="secondary" onClick={handleRegenerate}>Try Again</Button>
                         <div className="ai-escalation">
                             <span>Or try in Copilot Chat instead:</span>
-                            <button className="ai-chat-link" onClick={() => handleContinueInChat('error')}>
-                                <span className="codicon codicon-comment-discussion"></span>
+                            <Button appearance="transparent" className="ai-chat-link" onClick={() => handleContinueInChat('error')}
+                                icon={<span className="codicon codicon-comment-discussion"></span>}
+                            >
                                 Continue in Copilot Chat
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

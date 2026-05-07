@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as React from 'react';
+import { Button, Dropdown, Field, Input, Option, Badge } from '@fluentui/react-components';
+import { ArrowLeftRegular } from '@fluentui/react-icons';
 import { useState, useMemo, useCallback, type JSX } from 'react';
 import { useTemplateGalleryConfig } from '../TemplateGalleryConfigContext';
 import type { IProjectTemplate } from '../types';
@@ -47,7 +48,7 @@ export const TemplateConfigView = ({
                 const displayName = languageDisplayNames[lang] || lang;
                 const filterClass = languageFilterMap[lang] || 'other';
                 const key = `${filterClass}-${displayName}`;
-                if (seen.has(key)) return null;
+                if (seen.has(key)) {return null;}
                 seen.add(key);
                 return { displayName, filterClass, key };
             })
@@ -66,10 +67,14 @@ export const TemplateConfigView = ({
     return (
         <div className="config-view">
             <header className="config-header">
-                <button className="back-button" aria-label="Back to gallery" onClick={onBack}>
-                    <span className="codicon codicon-arrow-left"></span>
+                <Button
+                    appearance="transparent"
+                    icon={<ArrowLeftRegular />}
+                    onClick={onBack}
+                    aria-label="Back to gallery"
+                >
                     Back
-                </button>
+                </Button>
                 <h1>Configure your project</h1>
             </header>
 
@@ -80,48 +85,45 @@ export const TemplateConfigView = ({
                         <p>{template.shortDescription}</p>
                         <div className="card-languages">
                             {languageBadges.map(b => (
-                                <span key={b.key} className={`language-badge ${b.filterClass}`}>
+                                <Badge key={b.key} appearance="filled" className={`language-badge ${b.filterClass}`}>
                                     {b.displayName}
-                                </span>
+                                </Badge>
                             ))}
                         </div>
                     </div>
 
                     <form className="config-form" onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="language-select">Language</label>
+                        <Field label="Language">
                             {uniqueLanguages.length === 1 ? (
                                 <span className="form-static">{uniqueLanguages[0]}</span>
                             ) : (
-                                <select
-                                    id="language-select"
-                                    className="form-select"
+                                <Dropdown
                                     value={selectedLanguage}
-                                    onChange={e => setSelectedLanguage(e.target.value)}
+                                    selectedOptions={[selectedLanguage]}
+                                    onOptionSelect={(_ev, data) => {
+                                        if (data.optionValue) {setSelectedLanguage(data.optionValue);}
+                                    }}
                                 >
                                     {uniqueLanguages.map(lang => (
-                                        <option key={lang} value={lang}>{lang}</option>
+                                        <Option key={lang} value={lang}>{lang}</Option>
                                     ))}
-                                </select>
+                                </Dropdown>
                             )}
-                        </div>
+                        </Field>
 
-                        <div className="form-group">
-                            <label htmlFor="location-input">Project Location</label>
+                        <Field label="Project Location">
                             <div className="location-input-group">
-                                <input
-                                    type="text"
-                                    id="location-input"
-                                    className="form-input"
+                                <Input
                                     value={projectLocation}
                                     readOnly
                                     required
+                                    className="form-input"
                                 />
-                                <button type="button" className="secondary-button" onClick={onBrowse}>
+                                <Button appearance="secondary" onClick={onBrowse}>
                                     Browse...
-                                </button>
+                                </Button>
                             </div>
-                        </div>
+                        </Field>
 
                         <div className="whats-included">
                             <h3>What&apos;s included:</h3>
@@ -135,12 +137,20 @@ export const TemplateConfigView = ({
                         </div>
 
                         <div className="form-actions">
-                            <button type="button" className="secondary-button" onClick={onBack}>
-                                <span className="codicon codicon-arrow-left"></span> Back to Gallery
-                            </button>
-                            <button type="submit" className="primary-button" disabled={!projectLocation}>
+                            <Button
+                                appearance="secondary"
+                                icon={<ArrowLeftRegular />}
+                                onClick={onBack}
+                            >
+                                Back to Gallery
+                            </Button>
+                            <Button
+                                appearance="primary"
+                                type="submit"
+                                disabled={!projectLocation}
+                            >
                                 Create Project
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -157,6 +167,7 @@ export const TemplateConfigView = ({
                             <div className="readme-header">
                                 <span className="codicon codicon-book"></span> README
                             </div>
+                            {/* eslint-disable-next-line @typescript-eslint/naming-convention */}
                             <div dangerouslySetInnerHTML={{ __html: renderMarkdown(readmeMarkdown) }} />
                         </div>
                     )}

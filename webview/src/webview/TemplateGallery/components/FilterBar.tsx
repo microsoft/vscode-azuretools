@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as React from 'react';
+import { SearchBox, RadioGroup, Radio, type SearchBoxChangeEvent, type InputOnChangeData } from '@fluentui/react-components';
 import { useMemo, useCallback, type JSX } from 'react';
 import { useTemplateGalleryConfig } from '../TemplateGalleryConfigContext';
 import type { IProjectTemplate, FilterState } from '../types';
@@ -24,13 +24,13 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
         languageOrder,
     } = useTemplateGalleryConfig();
 
-    // Build dynamic language chips
+    // Build dynamic language options
     const languages = useMemo(() => {
         const langSet = new Set<string>();
         templates.forEach(t => {
             (t.languages || []).forEach(lang => {
                 const filterVal = languageFilterMap[lang];
-                if (filterVal) langSet.add(filterVal);
+                if (filterVal) {langSet.add(filterVal);}
             });
         });
         const sorted = [...langSet].sort((a, b) => {
@@ -40,12 +40,12 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
         });
         const displayMap: Record<string, string> = {};
         for (const [key, val] of Object.entries(languageFilterMap)) {
-            if (!displayMap[val]) displayMap[val] = languageDisplayNames[key] || key;
+            if (!displayMap[val]) {displayMap[val] = languageDisplayNames[key] || key;}
         }
         return sorted.map(val => ({ value: val, label: displayMap[val] || val }));
     }, [templates, languageFilterMap, languageDisplayNames, languageOrder]);
 
-    // Build dynamic use case chips
+    // Build dynamic use case options
     const useCases = useMemo(() => {
         const caseSet = new Set<string>();
         templates.forEach(t => {
@@ -61,11 +61,11 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
             .map(val => ({ value: val, label: categoryDisplayNames[val] || val.charAt(0).toUpperCase() + val.slice(1) }));
     }, [templates, categoryDisplayNames]);
 
-    // Build dynamic resource chips
+    // Build dynamic resource options
     const resources = useMemo(() => {
         const resSet = new Set<string>();
         templates.forEach(t => {
-            if (t.resource) resSet.add(t.resource);
+            if (t.resource) {resSet.add(t.resource);}
         });
         return [...resSet]
             .sort((a, b) => {
@@ -76,31 +76,20 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
             .map(val => ({ value: val, label: resourceDisplayNames[val] || val.charAt(0).toUpperCase() + val.slice(1) }));
     }, [templates, resourceDisplayNames]);
 
-    const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        onFilterChange('search', e.target.value);
-    }, [onFilterChange]);
-
-    const clearSearch = useCallback(() => {
-        onFilterChange('search', '');
+    const handleSearch = useCallback((_ev: SearchBoxChangeEvent, data: InputOnChangeData) => {
+        onFilterChange('search', data.value);
     }, [onFilterChange]);
 
     return (
         <div className="filter-bar">
             <div className="search-container">
-                <span className="search-icon codicon codicon-search"></span>
-                <input
-                    type="text"
-                    className="search-input"
+                <SearchBox
                     placeholder="Search templates..."
                     aria-label="Search templates"
                     value={filters.search}
                     onChange={handleSearch}
+                    className="search-input"
                 />
-                {filters.search && (
-                    <button className="clear-search" aria-label="Clear search" onClick={clearSearch}>
-                        <span className="codicon codicon-close"></span>
-                    </button>
-                )}
             </div>
 
             <div className="filters-container">
@@ -137,27 +126,23 @@ interface FilterGroupProps {
 const FilterGroup = ({ label, items, activeValue, onChange }: FilterGroupProps): JSX.Element => (
     <div className="filter-group">
         <label className="filter-label">{label}:</label>
-        <div className="filter-chips" role="radiogroup" aria-label={`Filter by ${label.toLowerCase()}`}>
-            <button
-                className={`filter-chip ${activeValue === 'all' ? 'active' : ''}`}
-                role="radio"
-                aria-checked={activeValue === 'all'}
-                onClick={() => onChange('all')}
-            >
-                All
-            </button>
+        <RadioGroup
+            layout="horizontal"
+            value={activeValue}
+            onChange={(_ev, data) => onChange(data.value)}
+            aria-label={`Filter by ${label.toLowerCase()}`}
+            className="filter-chips"
+        >
+            <Radio value="all" label="All" className="filter-chip" />
             {items.map(item => (
-                <button
+                <Radio
                     key={item.value}
-                    className={`filter-chip ${activeValue === item.value ? 'active' : ''}`}
+                    value={item.value}
+                    label={item.label}
+                    className="filter-chip"
                     data-value={item.value}
-                    role="radio"
-                    aria-checked={activeValue === item.value}
-                    onClick={() => onChange(item.value)}
-                >
-                    {item.label}
-                </button>
+                />
             ))}
-        </div>
+        </RadioGroup>
     </div>
 );

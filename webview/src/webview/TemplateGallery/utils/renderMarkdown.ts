@@ -92,11 +92,12 @@ export function renderMarkdown(md: string): string {
             }
         }
     }
-    if (inUL) out.push('</ul>');
-    if (inOL) out.push('</ol>');
+    if (inUL) { out.push('</ul>'); }
+    if (inOL) { out.push('</ol>'); }
 
     // 12. Restore code blocks
     let html = out.join('\n');
+    // eslint-disable-next-line no-control-regex
     html = html.replace(/\x00BLOCK(\d+)\x00/g, (_, i: string) => codeBlocks[parseInt(i)]);
 
     return html;

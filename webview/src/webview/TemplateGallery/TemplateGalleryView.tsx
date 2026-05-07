@@ -5,6 +5,7 @@
 
 import * as React from 'react';
 import { useReducer, useEffect, useCallback, useContext, type JSX } from 'react';
+import { Button, TabList, Tab, Spinner, type SelectTabData, type SelectTabEvent } from '@fluentui/react-components';
 import { WebviewContext } from '../WebviewContext';
 import { useConfiguration } from '../useConfiguration';
 import { TemplateGalleryConfigProvider, useTemplateGalleryConfig } from './TemplateGalleryConfigContext';
@@ -122,11 +123,11 @@ function createApplyFilters(languageFilterMap: Record<string, string>) {
         }
 
         results.sort((a, b) => {
-            if (a.isHighlighted && !b.isHighlighted) return -1;
-            if (!a.isHighlighted && b.isHighlighted) return 1;
+            if (a.isHighlighted && !b.isHighlighted) {return -1;}
+            if (!a.isHighlighted && b.isHighlighted) {return 1;}
             const aPrio = a.priority ?? 999;
             const bPrio = b.priority ?? 999;
-            if (aPrio !== bPrio) return aPrio - bPrio;
+            if (aPrio !== bPrio) {return aPrio - bPrio;}
             return a.displayName.localeCompare(b.displayName);
         });
 
@@ -353,6 +354,10 @@ const TemplateGalleryViewInner = (): JSX.Element => {
     const featured = state.filteredTemplates.filter(t => t.isHighlighted);
     const rest = state.filteredTemplates.filter(t => !t.isHighlighted);
 
+    const handleTabSelect = useCallback((_event: SelectTabEvent, data: SelectTabData) => {
+        dispatch({ type: 'SET_MODE', mode: data.value as ViewMode });
+    }, [dispatch]);
+
     return (
         <div className="template-gallery">
             <header className="gallery-header">
@@ -364,22 +369,19 @@ const TemplateGalleryViewInner = (): JSX.Element => {
 
             {/* Mode Toggle */}
             <div className="mode-toggle">
-                <button
-                    className={`mode-tab ${state.mode === 'browse' ? 'active' : ''}`}
-                    onClick={() => dispatch({ type: 'SET_MODE', mode: 'browse' })}
+                <TabList
+                    selectedValue={state.mode}
+                    onTabSelect={handleTabSelect}
                 >
-                    <span className="codicon codicon-extensions"></span>
-                    Browse Templates
-                </button>
-                {config.supportsAiGeneration && (
-                    <button
-                        className={`mode-tab ${state.mode === 'ai' ? 'active' : ''}`}
-                        onClick={() => dispatch({ type: 'SET_MODE', mode: 'ai' })}
-                    >
-                        <span className="codicon codicon-sparkle"></span>
-                        Generate with Copilot
-                    </button>
-                )}
+                    <Tab value="browse" icon={<span className="codicon codicon-extensions"></span>}>
+                        Browse Templates
+                    </Tab>
+                    {config.supportsAiGeneration && (
+                        <Tab value="ai" icon={<span className="codicon codicon-sparkle"></span>}>
+                            Generate with Copilot
+                        </Tab>
+                    )}
+                </TabList>
             </div>
 
             {/* Browse Mode */}
@@ -400,8 +402,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
 
                     {state.isLoading && (
                         <div className="loading-state">
-                            <span className="codicon codicon-loading codicon-modifier-spin"></span>
-                            <p>Loading templates...</p>
+                            <Spinner size="medium" label="Loading templates..." />
                         </div>
                     )}
 
@@ -411,8 +412,8 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                             <h2>Unable to load templates</h2>
                             <p>Check your internet connection and try again</p>
                             <div className="error-actions">
-                                <button className="primary-button" onClick={handleRefresh}>Retry</button>
-                                <button className="secondary-button" onClick={handleUseCached}>Use Cached</button>
+                                <Button appearance="primary" onClick={handleRefresh}>Retry</Button>
+                                <Button appearance="secondary" onClick={handleUseCached}>Use Cached</Button>
                             </div>
                         </div>
                     )}
@@ -422,9 +423,9 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                             <span className="codicon codicon-inbox empty-icon"></span>
                             <h2>No templates found</h2>
                             <p>Try adjusting your filters or search</p>
-                            <button className="secondary-button" onClick={() => dispatch({ type: 'CLEAR_FILTERS' })}>
+                            <Button appearance="secondary" onClick={() => dispatch({ type: 'CLEAR_FILTERS' })}>
                                 Clear all filters
-                            </button>
+                            </Button>
                         </div>
                     )}
 
@@ -457,10 +458,13 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     )}
 
                     <footer className="gallery-footer">
-                        <button className="text-button" onClick={handleRefresh}>
-                            <span className="codicon codicon-refresh"></span>
+                        <Button
+                            appearance="transparent"
+                            icon={<span className="codicon codicon-refresh"></span>}
+                            onClick={handleRefresh}
+                        >
                             Refresh templates
-                        </button>
+                        </Button>
                     </footer>
                 </div>
             )}

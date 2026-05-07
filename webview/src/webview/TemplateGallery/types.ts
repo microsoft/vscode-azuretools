@@ -233,6 +233,8 @@ export interface AiProjectResult {
 }
 
 // ── Default display name maps ──
+// These maps use external manifest keys which don't follow camelCase conventions
+/* eslint-disable @typescript-eslint/naming-convention */
 
 export const defaultLanguageFilterMap: Record<string, string> = {
     'JavaScript': 'javascript',
@@ -280,5 +282,7 @@ export const defaultLanguageDisplayNames: Record<string, string> = {
     'Java': 'Java',
     'PowerShell': 'PowerShell',
 };
+
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export const defaultLanguageOrder = ['python', 'dotnet', 'typescript', 'javascript', 'java', 'go', 'powershell'];

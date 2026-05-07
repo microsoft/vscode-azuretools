@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { Spinner } from '@fluentui/react-components';
 import type { JSX } from 'react';
 
 interface CreatingViewProps {
@@ -12,8 +13,7 @@ interface CreatingViewProps {
 export const CreatingView = ({ detail }: CreatingViewProps): JSX.Element => (
     <div className="creating-view">
         <div className="creating-content">
-            <span className="codicon codicon-loading codicon-modifier-spin creating-spinner"></span>
-            <h2>Creating project...</h2>
+            <Spinner size="large" label="Creating project..." />
             <p>{detail || 'Cloning template repository'}</p>
         </div>
     </div>
