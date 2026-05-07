@@ -12,6 +12,23 @@
     "module": "dist/esm/src/index.js",
     "main": "dist/cjs/src/index.js",
     "types": "dist/esm/src/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/esm/src/index.d.ts",
+            "import": "./dist/esm/src/index.js",
+            "require": "./dist/cjs/src/index.js"
+        },
+        "./webview": {
+            "types": "./dist/esm/src/webview/index.d.ts",
+            "import": "./dist/esm/src/webview/index.js",
+            "require": "./dist/cjs/src/webview/index.js"
+        },
+        "./webview/global-styles": {
+            "types": "./dist/esm/src/webview/global-styles.d.ts",
+            "import": "./dist/esm/src/webview/global-styles.js",
+            "require": "./dist/cjs/src/webview/global-styles.js"
+        }
+    },
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -22,9 +39,10 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/webview/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs && npm run build:webview",
+        "build": "npm run build:esm && npm run build:cjs && npm run build:assets && npm run build:webview",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:assets": "node copy-assets.mjs",
         "build:webview": "node esbuild.views.mjs",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack",
