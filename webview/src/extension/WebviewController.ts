@@ -7,6 +7,16 @@ import { nonNullValue } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { SharedState } from './SharedViewState';
 import { WebviewBaseController } from './WebviewBaseController';
+
+export type WebviewBundleLocation = {
+    /** Absolute path to the directory containing the bundle. */
+    distDir: string;
+    /** File name of the bundle's entry script (must export `render`). */
+    scriptFileName: string;
+    /** File name of the bundle's stylesheet. */
+    styleFileName: string;
+};
+
 /**
  * WebviewController is a class that manages a vscode.WebviewPanel and provides
  * a way to communicate with it. It uses tRPC to handle incoming requests (queries,
@@ -21,12 +31,14 @@ export class WebviewController<Configuration> extends WebviewBaseController<Conf
     /**
      * Creates a new WebviewController instance.
      *
-     * @param context      The extension context.
-     * @param title        The title of the webview panel.
-     * @param webviewName  The identifier/name for the webview resource.
-     * @param initialState The initial state object that the webview will use on startup.
-     * @param viewColumn   The view column in which to show the new webview panel.
-     * @param _iconPath    An optional icon to display in the tab of the webview.
+     * @param context        The extension context.
+     * @param title          The title of the webview panel.
+     * @param webviewName    The identifier/name for the webview resource.
+     * @param initialState   The initial state object that the webview will use on startup.
+     * @param viewColumn     The view column in which to show the new webview panel.
+     * @param _iconPath      An optional icon to display in the tab of the webview.
+     * @param bundleLocation Optional override for where the bundled webview script/styles live.
+     *                       Defaults to the bundle that ships inside `@microsoft/vscode-azext-webview`.
      */
     constructor(
         context: vscode.ExtensionContext,
@@ -40,14 +52,18 @@ export class WebviewController<Configuration> extends WebviewBaseController<Conf
                 readonly light: vscode.Uri;
                 readonly dark: vscode.Uri;
             },
+        bundleLocation?: WebviewBundleLocation,
     ) {
-        super(context, webviewName, initialState);
+        super(context, webviewName, initialState, bundleLocation);
 
         // Create the webview panel
         this._panel = vscode.window.createWebviewPanel('react-webview-' + webviewName, title, viewColumn, {
             enableScripts: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [vscode.Uri.file(this.extensionContext.extensionPath)],
+            localResourceRoots: [
+                vscode.Uri.file(this.extensionContext.extensionPath),
+                ...(bundleLocation ? [vscode.Uri.file(bundleLocation.distDir)] : []),
+            ],
         });
 
         this._panel.webview.html = this.getDocumentTemplate(this._panel.webview);
