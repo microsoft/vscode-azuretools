@@ -8,7 +8,7 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     {
-        ignores: ['react-shim.js']
+        ignores: ['react-shim.js', 'copy-assets.mjs']
     },
     azExtEslintRecommended,
     {

@@ -9,13 +9,11 @@ export * from './extension/LoadingViewController';
 export * from './extension/OpenConfirmationViewStep';
 export * from './extension/OpenLoadingViewStep';
 export * from './extension/TemplateGalleryController';
+export { WebviewBaseController } from './extension/WebviewBaseController';
+export { WebviewController } from './extension/WebviewController';
+export type { WebviewBundleLocation } from './extension/WebviewController';
 export type {
-    IProjectTemplate,
-    TemplateGalleryConfig,
-    FilterState,
-    AiState,
-    ViewMode,
-    ActiveView,
-    ExtensionToWebviewMessage,
-    WebviewToExtensionMessage,
+    ActiveView, AiState, ExtensionToWebviewMessage, FilterState, IProjectTemplate,
+    TemplateGalleryConfig, ViewMode, WebviewToExtensionMessage
 } from './webview/TemplateGallery/types';
+
