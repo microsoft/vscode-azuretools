@@ -1,0 +1,51 @@
+name: Release Pipeline Templates
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Release branch to update (e.g. azext-pt/v1)"
+        required: true
+        default: "azext-pt/v1"
+        type: string
+
+jobs:
+  release:
+    name: Update ${{ inputs.release_branch }}
+    runs-on: ubuntu-latest
+    environment: release-pipeline-templates
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fast-forward release branch
+        run: |
+          git fetch origin "${{ inputs.release_branch }}"
+
+          # Verify the release branch exists
+          if ! git rev-parse "origin/${{ inputs.release_branch }}" >/dev/null 2>&1; then
+            echo "::error::Branch '${{ inputs.release_branch }}' does not exist"
+            exit 1
+          fi
+
+          # Verify the release branch is an ancestor of main (i.e. main is ahead)
+          if ! git merge-base --is-ancestor "origin/${{ inputs.release_branch }}" origin/main; then
+            echo "::error::Release branch '${{ inputs.release_branch }}' has diverged from main. Manual intervention required."
+            exit 1
+          fi
+
+          MAIN_SHA=$(git rev-parse origin/main)
+          RELEASE_SHA=$(git rev-parse "origin/${{ inputs.release_branch }}")
+
+          if [ "$MAIN_SHA" = "$RELEASE_SHA" ]; then
+            echo "Release branch is already up to date with main."
+            exit 0
+          fi
+
+          echo "Updating ${{ inputs.release_branch }} from $RELEASE_SHA to $MAIN_SHA"
+          git push origin "origin/main:refs/heads/${{ inputs.release_branch }}"
