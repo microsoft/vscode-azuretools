@@ -14,8 +14,6 @@ jobs:
     name: Update ${{ inputs.release_branch }}
     runs-on: ubuntu-latest
     environment: release-pipeline-templates
-    permissions:
-      contents: write
     steps:
       - name: Validate input
         run: |
@@ -24,11 +22,19 @@ jobs:
             exit 1
           fi
 
+      - name: Generate token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AZURETOOLS_VSCODE_BOT_APP_ID }}
+          private-key: ${{ secrets.AZURETOOLS_VSCODE_BOT_APP_PRIVATE_KEY }}
+
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Fast-forward release branch
         run: |
