@@ -16,6 +16,10 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
+  # Azure Artifacts feed for a private NPM mirror
+  - name: npmFeed
+    type: string
+    default: DevDiv/azcode
   - name: additionalPostPackageSteps
     type: stepList
     default: []
@@ -50,6 +54,7 @@ stages:
               - template: ./templates/setup.yml
                 parameters:
                   additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
+                  npmFeed: ${{ parameters.npmFeed }}
               - template: ./templates/build.yml
               - template: ./templates/1espackage.yml
                 parameters:

@@ -45,7 +45,7 @@ steps:
 
   # Sign single vsix file if vsixFileNames are not provided
   - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
-      - script: npx @vscode/vsce@latest generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/extension.manifest
+      - script: vsce generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/extension.manifest
         condition: and(succeeded(), eq(variables['signprojExists'], True))
         displayName: "\U0001F449 Generate extension manifest"
         workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}
@@ -79,7 +79,7 @@ steps:
   - ${{ if ne(join('', parameters.vsixFileNames), '') }}:
       # run this script for each item in vsixFileNames
       - ${{ each vsixFileName in parameters.vsixFileNames }}:
-          - script: npx @vscode/vsce@latest generate-manifest -i ${{ vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/extension.manifest
+          - script: vsce generate-manifest -i ${{ vsixFileName }}-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/extension.manifest
             condition: and(succeeded(), eq(variables['signprojExists'], True))
             displayName: "\U0001F449 Generate extension manifest for ${{ vsixFileName }}"
             workingDirectory: $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}

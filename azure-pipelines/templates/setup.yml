@@ -3,6 +3,11 @@ parameters:
     type: stepList
     default: []
 
+  # Azure Artifacts feed for a private NPM mirror (e.g. FeedName or ProjectName/FeedName)
+  - name: npmFeed
+    type: string
+    default: DevDiv/azcode
+
 steps:
   - pwsh: |
       $nvmrcPath = ".nvmrc"
@@ -27,6 +32,9 @@ steps:
       command: custom
       customCommand: ci --no-optional
       workingDir: $(working_directory)
+      ${{ if ne(parameters.npmFeed, '') }}:
+        customRegistry: useFeed
+        customFeed: ${{ parameters.npmFeed }}
     condition: succeeded()
 
   - bash: |
