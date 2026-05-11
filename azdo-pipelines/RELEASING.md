@@ -29,4 +29,4 @@ The `release-pipeline-templates` GitHub environment must be configured with:
 - **Required reviewers**: at least 2
 - **Deployment branches**: limit to `main` (or all branches if preferred)
 
-The release branches should also have branch protection rules requiring PRs (no direct pushes).
+The release branches should also have branch protection rules. Note that GitHub Actions must be allowed to bypass the branch protection rules (e.g., via "Allow GitHub Actions to create and approve pull requests" or by adding the workflow's token to the bypass list), since the release workflow updates the branch via a direct push.

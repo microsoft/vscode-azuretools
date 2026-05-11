@@ -17,6 +17,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Validate input
+        run: |
+          if [[ ! "${{ inputs.release_branch }}" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "::error::Invalid branch name '${{ inputs.release_branch }}'. Only alphanumeric characters, dots, slashes, and hyphens are allowed."
+            exit 1
+          fi
+
       - name: Checkout main
         uses: actions/checkout@v4
         with:
@@ -25,6 +32,7 @@ jobs:
 
       - name: Fast-forward release branch
         run: |
+          set -euo pipefail
           git fetch origin "${{ inputs.release_branch }}"
 
           # Verify the release branch exists
@@ -34,12 +42,12 @@ jobs:
           fi
 
           # Verify the release branch is an ancestor of main (i.e. main is ahead)
-          if ! git merge-base --is-ancestor "origin/${{ inputs.release_branch }}" origin/main; then
+          if ! git merge-base --is-ancestor "origin/${{ inputs.release_branch }}" HEAD; then
             echo "::error::Release branch '${{ inputs.release_branch }}' has diverged from main. Manual intervention required."
             exit 1
           fi
 
-          MAIN_SHA=$(git rev-parse origin/main)
+          MAIN_SHA=$(git rev-parse HEAD)
           RELEASE_SHA=$(git rev-parse "origin/${{ inputs.release_branch }}")
 
           if [ "$MAIN_SHA" = "$RELEASE_SHA" ]; then
@@ -48,4 +56,4 @@ jobs:
           fi
 
           echo "Updating ${{ inputs.release_branch }} from $RELEASE_SHA to $MAIN_SHA"
-          git push origin "origin/main:refs/heads/${{ inputs.release_branch }}"
+          git push origin "HEAD:refs/heads/${{ inputs.release_branch }}"
