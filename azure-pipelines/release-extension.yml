@@ -27,6 +27,11 @@ parameters:
     type: boolean
     default: false
 
+  # Azure Artifacts feed for a private NPM mirror (e.g. FeedName or ProjectName/FeedName)
+  - name: npmFeed
+    type: string
+    default: DevDiv/azcode
+
   # A list of publish commands to run. It defaults to publishing a single .vsix file. If you want to publish multiple .vsix files (platform specifc), you can add mutliple commands to this list.
   - name: publishCommands
     type: object
@@ -139,8 +144,14 @@ extends:
                         version: "20.x"
                       displayName: "\U0001F449 Install Node.js"
 
-                    - script: npm i -g @vscode/vsce
+                    - task: Npm@1
                       displayName: "\U0001F449 Install vsce"
+                      inputs:
+                        command: custom
+                        customCommand: i -g @vscode/vsce
+                        ${{ if ne(parameters.npmFeed, '') }}:
+                          customRegistry: useFeed
+                          customFeed: ${{ parameters.npmFeed }}
 
                     - ${{ each publishCommand in parameters.publishCommands }}:
                         # log the publishCommand
