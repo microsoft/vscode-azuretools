@@ -8,6 +8,9 @@ parameters:
   - name: workingDirectory
     type: string
     default: "."
+  - name: npmFeed
+    type: string
+    default: DevDiv/azcode
 
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
@@ -42,6 +45,16 @@ steps:
     name: package
     displayName: "\U0001F449 Get extension info from package.json"
     workingDirectory: $(Build.SourcesDirectory)
+
+  - task: Npm@1
+    displayName: "\U0001F449 Install vsce"
+    condition: and(succeeded(), eq(variables['signprojExists'], True))
+    inputs:
+      command: custom
+      customCommand: i -g @vscode/vsce
+      ${{ if ne(parameters.npmFeed, '') }}:
+        customRegistry: useFeed
+        customFeed: ${{ parameters.npmFeed }}
 
   # Sign single vsix file if vsixFileNames are not provided
   - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
