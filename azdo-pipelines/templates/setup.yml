@@ -1,3 +1,9 @@
+parameters:
+  - name: npmFeed
+    type: string
+    displayName: "Azure Artifacts feed to use (e.g. FeedName or ProjectName/FeedName)"
+    default: ""
+
 steps:
   - pwsh: |
       $nvmrcPath = "$(working_directory)/.nvmrc"
@@ -7,10 +13,10 @@ steps:
       }
       $nodeVersion = (Get-Content $nvmrcPath).Trim()
       Write-Output "##vso[task.setvariable variable=nodeVersion]$nodeVersion"
-    displayName: "\U0001F449 Read Node version from .nvmrc"
+    displayName: "👉 Read Node version from .nvmrc"
 
   - task: UseNode@1
-    displayName: "\U0001F449 Using Node.js"
+    displayName: "👉 Using Node.js"
     inputs:
       version: $(nodeVersion)
 
@@ -20,17 +26,20 @@ steps:
       } else {
         Write-Output "##vso[task.setvariable variable=npmrcExists]false"
       }
-    displayName: "\U0001F449 Check for .npmrc"
+    displayName: "👉 Check for .npmrc"
 
   - task: npmAuthenticate@0
-    displayName: "\U0001F449 Authenticate NPM"
-    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+    displayName: "👉 Authenticate NPM"
+    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'), eq('${{ parameters.npmFeed }}', ''))
     inputs:
       workingFile: $(working_directory)/.npmrc
 
   - task: Npm@1
-    displayName: "\U0001F449 Install Dependencies"
+    displayName: "👉 Install Dependencies"
     inputs:
       command: custom
       customCommand: ci --no-optional
       workingDir: $(working_directory)
+      ${{ if ne(parameters.npmFeed, '') }}:
+        customRegistry: useFeed
+        customFeed: ${{ parameters.npmFeed }}
