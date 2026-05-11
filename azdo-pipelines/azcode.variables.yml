@@ -1,4 +1,8 @@
 variables:
+  # Upstream artifact feeds
+  - name: npmFeed
+    value: DevDiv/azcode
+
   # Related to extension release approval process
   - name: extensionReleaseServiceConnection
     value: AzCodeReleases
