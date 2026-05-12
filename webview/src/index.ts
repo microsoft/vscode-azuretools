@@ -8,3 +8,7 @@ export * from './extension/extensionVariables';
 export * from './extension/LoadingViewController';
 export * from './extension/OpenConfirmationViewStep';
 export * from './extension/OpenLoadingViewStep';
+export { WebviewBaseController } from './extension/WebviewBaseController';
+export { WebviewController } from './extension/WebviewController';
+export type { WebviewBundleLocation } from './extension/WebviewController';
+

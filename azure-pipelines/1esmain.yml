@@ -15,6 +15,10 @@ parameters:
   - name: additionalSetupSteps
     type: stepList
     default: []
+  # Azure Artifacts feed for a private NPM mirror (e.g. FeedName or ProjectName/FeedName)
+  - name: npmFeed
+    type: string
+    default: DevDiv/azcode
   - name: additionalPostPackageSteps
     type: stepList
     default: []
@@ -69,6 +73,7 @@ extends:
           bamiServiceConnectionName: ${{ parameters.bamiServiceConnectionName }}
           bamiVariablesGroupName: ${{ parameters.bamiVariablesGroupName }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
+          npmFeed: ${{ parameters.npmFeed }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
           enableSigning: ${{ parameters.enableSigning }}
           vsixFileNames: ${{ parameters.vsixFileNames }}

@@ -39,8 +39,9 @@ export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
         });
 
         // we need the new api-version to get the functionAppConfig
+        const resourceManagerEndpoint = context.site.subscription.environment.resourceManagerEndpointUrl.replace(/\/$/, '');
         const options: AzExtRequestPrepareOptions = {
-            url: `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${rgName}/providers/Microsoft.Web/sites/${siteName}?api-version=2023-12-01`,
+            url: `${resourceManagerEndpoint}/subscriptions/${subscriptionId}/resourceGroups/${rgName}/providers/Microsoft.Web/sites/${siteName}?api-version=2023-12-01`,
             method: 'GET',
             headers
         };

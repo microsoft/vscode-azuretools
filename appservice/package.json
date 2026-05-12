@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
-    "version": "4.2.4",
+    "version": "5.0.0",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
@@ -69,5 +69,8 @@
         "@types/yazl": "^2.4.2",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*"
+    },
+    "overrides": {
+        "serialize-javascript": "^7.0.5"
     }
 }

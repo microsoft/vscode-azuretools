@@ -7,6 +7,7 @@ import { randomBytes } from 'crypto';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ext } from './extensionVariables';
+import { type WebviewBundleLocation } from './WebviewController';
 
 /**
  * WebviewBaseController is a class that manages a vscode.Webview and provides
@@ -29,11 +30,14 @@ export abstract class WebviewBaseController<Configuration> implements vscode.Dis
      * @param extensionContext The context of the extension-server
      * @param _webviewName The source file that the webview will use
      * @param configuration The initial state object that the webview will use
+     * @param _bundleLocation Optional override for where the webview bundle lives. Defaults to the
+     *                        bundle that ships inside `@microsoft/vscode-azext-webview`.
      */
     constructor(
         protected extensionContext: vscode.ExtensionContext,
         private _webviewName: string,
         protected configuration: Configuration,
+        private _bundleLocation?: WebviewBundleLocation,
     ) { }
 
     protected registerDisposable(disposable: vscode.Disposable) {
@@ -43,12 +47,15 @@ export abstract class WebviewBaseController<Configuration> implements vscode.Dis
     protected getDocumentTemplate(webview?: vscode.Webview) {
         const nonce = randomBytes(16).toString('base64');
 
-        const filename = 'views.js';
-        const webviewDistDir = ext.webviewAssetsDir
-            ?? path.join(ext.context.extensionPath, 'node_modules', '@microsoft', 'vscode-azext-webview', 'dist');
-        const uri = (...parts: string[]) => webview?.asWebviewUri(vscode.Uri.file(path.join(webviewDistDir, ...parts))).toString(true);
-        const srcUri = uri(filename);
-        const cssUri = uri('views.css');
+        const loc = this._bundleLocation ?? {
+            distDir: path.join(ext.context.extensionPath, 'node_modules', '@microsoft', 'vscode-azext-webview', 'dist'),
+            scriptFileName: 'views.js',
+            styleFileName: 'views.css',
+        };
+        const uri = (file: string) =>
+            webview?.asWebviewUri(vscode.Uri.file(path.join(loc.distDir, file))).toString(true);
+        const srcUri = uri(loc.scriptFileName);
+        const cssUri = uri(loc.styleFileName);
 
         const csp = [
             `form-action 'none';`,

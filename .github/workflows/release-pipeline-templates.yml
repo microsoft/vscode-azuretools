@@ -3,108 +3,63 @@ name: Release Pipeline Templates
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: "Branch to update (e.g., azext-pt/v1)"
+      release_branch:
+        description: "Release branch to update (e.g. azext-pt/v1)"
         required: true
         default: "azext-pt/v1"
+        type: string
 
 jobs:
-  create-pr:
+  release:
+    name: Update ${{ inputs.release_branch }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    environment: release-pipeline-templates
     steps:
-      - uses: actions/github-script@v7
+      - name: Validate input
+        run: |
+          if [[ ! "${{ inputs.release_branch }}" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "::error::Invalid branch name '${{ inputs.release_branch }}'. Only alphanumeric characters, dots, slashes, and hyphens are allowed."
+            exit 1
+          fi
+
+      - name: Generate token
+        id: app-token
+        uses: actions/create-github-app-token@v1
         with:
-          script: |
-            const branch = '${{ inputs.branch }}';
+          app-id: ${{ secrets.AZURETOOLS_VSCODE_BOT_APP_ID }}
+          private-key: ${{ secrets.AZURETOOLS_VSCODE_BOT_APP_PRIVATE_KEY }}
 
-            // Validate branch format
-            if (!/^azext-pt\/v\d+$/.test(branch)) {
-              core.setFailed(`Branch must match pattern azext-pt/vN (e.g., azext-pt/v1)`);
-              return;
-            }
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
-            // Get main branch SHA
-            const { data: mainRef } = await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/main'
-            });
-            const mainSha = mainRef.object.sha;
+      - name: Fast-forward release branch
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ inputs.release_branch }}"
 
-            // Check if release branch exists
-            let branchExists = true;
-            let branchSha = null;
-            try {
-              const { data: branchRef } = await github.rest.git.getRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `heads/${branch}`
-              });
-              branchSha = branchRef.object.sha;
-            } catch (e) {
-              if (e.status === 404) {
-                branchExists = false;
-              } else {
-                throw e;
-              }
-            }
+          # Verify the release branch exists
+          if ! git rev-parse "origin/${{ inputs.release_branch }}" >/dev/null 2>&1; then
+            echo "::error::Branch '${{ inputs.release_branch }}' does not exist"
+            exit 1
+          fi
 
-            // Create branch if it doesn't exist
-            if (!branchExists) {
-              await github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/heads/${branch}`,
-                sha: mainSha
-              });
-              core.summary.addHeading('✅ Branch Created', 2);
-              core.summary.addRaw(`**Branch:** \`${branch}\`\n\n`);
-              core.summary.addRaw(`**Commit:** \`${mainSha}\`\n`);
-              await core.summary.write();
-              return;
-            }
+          # Verify the release branch is an ancestor of main (i.e. main is ahead)
+          if ! git merge-base --is-ancestor "origin/${{ inputs.release_branch }}" HEAD; then
+            echo "::error::Release branch '${{ inputs.release_branch }}' has diverged from main. Manual intervention required."
+            exit 1
+          fi
 
-            // Check if already up to date
-            if (mainSha === branchSha) {
-              core.notice(`Branch ${branch} is already up to date with main`);
-              core.summary.addHeading('ℹ️ No Changes', 2);
-              core.summary.addRaw(`Branch \`${branch}\` is already at the same commit as \`main\`.\n`);
-              await core.summary.write();
-              return;
-            }
+          MAIN_SHA=$(git rev-parse HEAD)
+          RELEASE_SHA=$(git rev-parse "origin/${{ inputs.release_branch }}")
 
-            // Reuse an existing open PR (head=main -> base=branch) if present, otherwise create one.
-            // This keeps the workflow idempotent across reruns; otherwise pulls.create returns 422.
-            const { data: existingPrs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: `${context.repo.owner}:main`,
-              base: branch
-            });
+          if [ "$MAIN_SHA" = "$RELEASE_SHA" ]; then
+            echo "Release branch is already up to date with main."
+            exit 0
+          fi
 
-            let pr;
-            let prAction;
-            if (existingPrs.length > 0) {
-              pr = existingPrs[0];
-              prAction = 'Reused existing';
-            } else {
-              const { data: created } = await github.rest.pulls.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                head: 'main',
-                base: branch,
-                title: `Release pipeline templates to ${branch}`,
-                body: `Updates \`${branch}\` to match \`main\`.\n\n**Current ${branch}:** \`${branchSha}\`\n**New (from main):** \`${mainSha}\`\n\nTriggered by @${{ github.actor }} via workflow dispatch.`
-              });
-              pr = created;
-              prAction = 'Created';
-            }
-
-            core.summary.addHeading(`✅ PR ${prAction}`, 2);
-            core.summary.addRaw(`**PR:** ${pr.html_url}\n\n`);
-            core.summary.addRaw(`**Target Branch:** \`${branch}\`\n`);
-            await core.summary.write();
+          echo "Updating ${{ inputs.release_branch }} from $RELEASE_SHA to $MAIN_SHA"
+          git push origin "HEAD:refs/heads/${{ inputs.release_branch }}"
