@@ -45,6 +45,7 @@ extends:
     packageToPublish: ${{ parameters.packageToPublish }}
     publishVersion: ${{ parameters.publishVersion }}
     dryRun: ${{ parameters.dryRun }}
+    artifactName: "Build ${{ parameters.packageToPublish }}"
     ownerAliases: ${{ variables.npmReleaseOwnerAliases }}
     approverAliases: ${{ variables.npmReleaseApproverAliases }}
     gitHubServiceConnection: ${{ variables.gitHubServiceConnection }}
