@@ -108,8 +108,9 @@ extends:
                       owners: "${{ parameters.ownerAliases }}"
                       approvers: "${{ parameters.approverAliases }}"
               - ${{ else }}:
-                  - pwsh: Write-Host "Skipping NPM publish (dry run)"
+                  - pwsh: Write-Host "Skipping NPM publish"
                     displayName: "👉 Publish NPM package (skipped - dry run)"
+                    condition: false
 
               # (Optional) Create a draft release on GitHub containing the package
               - ${{ if ne(parameters.gitHubServiceConnection, '') }}:
