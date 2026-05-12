@@ -1,0 +1,51 @@
+# Only run this pipeline when manually triggered
+trigger: none
+pr: none
+
+parameters:
+  - name: packageToPublish
+    displayName: Package to publish
+    type: string
+    values:
+      - microsoft-vscode-azext-azureappservice
+      - microsoft-vscode-azext-azureappsettings
+      - microsoft-vscode-azext-azureauth
+      - microsoft-vscode-azext-azureutils
+      - microsoft-vscode-azext-eng
+      - microsoft-vscode-azext-github
+      - microsoft-vscode-azext-utils
+      - microsoft-vscode-azext-webview
+  - name: publishVersion
+    displayName: Version to publish
+    type: string
+  - name: dryRun
+    displayName: Dry run
+    type: boolean
+    default: false
+
+resources:
+  pipelines:
+    - pipeline: build # This must be "build"
+      source: \Azure Tools\VSCode\Packages\vscode-azuretools
+  repositories:
+    - repository: azExtTemplates
+      type: github
+      name: microsoft/vscode-azuretools
+      ref: azext-pt/v1
+      endpoint: GitHub-AzureTools
+
+variables:
+  - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
+  - name: TeamName
+    value: "Azure Tools for VS Code"
+
+extends:
+  template: azdo-pipelines/1es-mb-release-npm.yml@azExtTemplates
+  parameters:
+    packageToPublish: ${{ parameters.packageToPublish }}
+    publishVersion: ${{ parameters.publishVersion }}
+    dryRun: ${{ parameters.dryRun }}
+    ownerAliases: ${{ variables.npmReleaseOwnerAliases }}
+    approverAliases: ${{ variables.npmReleaseApproverAliases }}
+    gitHubServiceConnection: ${{ variables.gitHubServiceConnection }}
+    releaseApprovalEnvironment: ${{ variables.npmReleaseApprovalEnvironment }}
