@@ -33,6 +33,7 @@ variables:
 extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates
   parameters:
+    signType: none
     npmFeed: ${{ variables.npmFeed }}
     testARMServiceConnection: ${{ variables.testARMServiceConnection }}
     jobs:
