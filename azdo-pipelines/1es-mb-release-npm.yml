@@ -107,18 +107,22 @@ extends:
                       waitForReleaseCompletion: true
                       owners: "${{ parameters.ownerAliases }}"
                       approvers: "${{ parameters.approverAliases }}"
+              - ${{ else }}:
+                  - pwsh: Write-Host "Skipping NPM publish (dry run)"
+                    displayName: "👉 Publish NPM package (skipped - dry run)"
 
               # (Optional) Create a draft release on GitHub containing the package
-              - task: GitHubRelease@1
-                displayName: "👉 Create draft release on GitHub"
-                condition: and(succeeded(), eq(${{ parameters.dryRun }}, false), ne('${{ parameters.gitHubServiceConnection }}', ''))
-                inputs:
-                  gitHubConnection: ${{ parameters.gitHubServiceConnection }}
-                  tagSource: userSpecifiedTag
-                  tag: "${{ parameters.packageToPublish }}-v${{ parameters.publishVersion }}"
-                  title: "${{ parameters.packageToPublish }} v${{ parameters.publishVersion }}"
-                  releaseNotesSource: inline
-                  assets: "$(tgzFileName)"
-                  isDraft: true
-                  isPreRelease: true
-                  addChangeLog: false
+              - ${{ if ne(parameters.gitHubServiceConnection, '') }}:
+                  - task: GitHubRelease@1
+                    displayName: "👉 Create draft release on GitHub"
+                    condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
+                    inputs:
+                      gitHubConnection: ${{ parameters.gitHubServiceConnection }}
+                      tagSource: userSpecifiedTag
+                      tag: "${{ parameters.packageToPublish }}-v${{ parameters.publishVersion }}"
+                      title: "${{ parameters.packageToPublish }} v${{ parameters.publishVersion }}"
+                      releaseNotesSource: inline
+                      assets: "$(tgzFileName)"
+                      isDraft: true
+                      isPreRelease: true
+                      addChangeLog: false
