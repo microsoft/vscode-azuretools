@@ -8,7 +8,10 @@ steps:
   - pwsh: |
       $nvmrcPath = "$(working_directory)/.nvmrc"
       if (-not (Test-Path $nvmrcPath)) {
-        Write-Output "##vso[task.logissue type=error].nvmrc file not found in $(working_directory). Please add a .nvmrc file to the working directory."
+        $nvmrcPath = "$(Build.SourcesDirectory)/.nvmrc"
+      }
+      if (-not (Test-Path $nvmrcPath)) {
+        Write-Output "##vso[task.logissue type=error].nvmrc file not found in $(working_directory) or repo root. Please add a .nvmrc file."
         exit 1
       }
       $nodeVersion = (Get-Content $nvmrcPath).Trim()
