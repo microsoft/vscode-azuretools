@@ -27,8 +27,6 @@ resources:
 variables:
   # Pick up shared AZCode variables
   - template: azdo-pipelines/azcode.variables.yml@azExtTemplates
-  - name: TeamName
-    value: "Azure Tools for VS Code"
 
 extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates
