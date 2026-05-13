@@ -47,11 +47,15 @@ export abstract class WebviewBaseController<Configuration> implements vscode.Dis
     protected getDocumentTemplate(webview?: vscode.Webview) {
         const nonce = randomBytes(16).toString('base64');
 
-        const loc = this._bundleLocation ?? {
+        const loc = this._bundleLocation ?? (ext.webviewAssetsDir ? {
+            distDir: ext.webviewAssetsDir,
+            scriptFileName: 'views.js',
+            styleFileName: 'views.css',
+        } : {
             distDir: path.join(ext.context.extensionPath, 'node_modules', '@microsoft', 'vscode-azext-webview', 'dist'),
             scriptFileName: 'views.js',
             styleFileName: 'views.css',
-        };
+        });
         const uri = (file: string) =>
             webview?.asWebviewUri(vscode.Uri.file(path.join(loc.distDir, file))).toString(true);
         const srcUri = uri(loc.scriptFileName);

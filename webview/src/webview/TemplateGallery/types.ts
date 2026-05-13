@@ -51,6 +51,10 @@ export interface TemplateGalleryConfig {
     languageFilterMap?: Record<string, string>;
     /** Ordered list of language filter keys for display order */
     languageOrder?: string[];
+    /** Ordered list of category keys for display order. Unlisted categories appear alphabetically at the end. */
+    categoryOrder?: string[];
+    /** Ordered list of resource keys for display order. Unlisted resources appear alphabetically at the end. */
+    resourceOrder?: string[];
 }
 
 // ── Messages: Webview → Extension ──
@@ -259,6 +263,21 @@ export const defaultCategoryDisplayNames: Record<string, string> = {
     'other': 'Other',
 };
 
+/**
+ * Default category display order. Categories listed here appear first (in this order);
+ * any categories from templates not listed here are appended alphabetically at the end.
+ */
+export const defaultCategoryOrder: string[] = [
+    'starter',
+    'web-apis',
+    'data-processing',
+    'event-processing',
+    'ai-ml',
+    'scheduling',
+    'workflows',
+    'other',
+];
+
 export const defaultResourceDisplayNames: Record<string, string> = {
     'http': 'HTTP',
     'timer': 'Timer',
@@ -270,6 +289,22 @@ export const defaultResourceDisplayNames: Record<string, string> = {
     'eventgrid': 'Event Grid',
     'sql': 'SQL',
 };
+
+/**
+ * Default resource display order. Resources listed here appear first (in this order);
+ * any resources from templates not listed here are appended alphabetically at the end.
+ */
+export const defaultResourceOrder: string[] = [
+    'http',
+    'timer',
+    'storage',
+    'cosmos',
+    'sql',
+    'eventhub',
+    'eventgrid',
+    'servicebus',
+    'signalr',
+];
 
 export const defaultLanguageDisplayNames: Record<string, string> = {
     'JavaScript': 'JavaScript',

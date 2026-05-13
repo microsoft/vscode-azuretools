@@ -7,10 +7,12 @@ import * as React from 'react';
 import { createContext, useContext, useMemo } from 'react';
 import {
     defaultCategoryDisplayNames,
+    defaultCategoryOrder,
     defaultLanguageDisplayNames,
     defaultLanguageFilterMap,
     defaultLanguageOrder,
     defaultResourceDisplayNames,
+    defaultResourceOrder,
     type TemplateGalleryConfig,
 } from './types';
 
@@ -24,6 +26,8 @@ export interface TemplateGalleryConfigContextValue {
     resourceDisplayNames: Record<string, string>;
     languageFilterMap: Record<string, string>;
     languageOrder: string[];
+    categoryOrder: string[];
+    resourceOrder: string[];
 }
 
 const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextValue>({
@@ -36,6 +40,8 @@ const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextV
     resourceDisplayNames: defaultResourceDisplayNames,
     languageFilterMap: defaultLanguageFilterMap,
     languageOrder: defaultLanguageOrder,
+    categoryOrder: defaultCategoryOrder,
+    resourceOrder: defaultResourceOrder,
 });
 
 /**
@@ -58,6 +64,8 @@ export const TemplateGalleryConfigProvider = ({
         resourceDisplayNames: { ...defaultResourceDisplayNames, ...config.resourceDisplayNames },
         languageFilterMap: { ...defaultLanguageFilterMap, ...config.languageFilterMap },
         languageOrder: config.languageOrder ?? defaultLanguageOrder,
+        categoryOrder: config.categoryOrder ?? defaultCategoryOrder,
+        resourceOrder: config.resourceOrder ?? defaultResourceOrder,
     }), [config]);
 
     return (

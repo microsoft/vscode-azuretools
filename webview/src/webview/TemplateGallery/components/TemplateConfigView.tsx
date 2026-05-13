@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Dropdown, Field, Input, Option, Badge } from '@fluentui/react-components';
+import { Badge, Button, Dropdown, Input, Label, Option } from '@fluentui/react-components';
 import { ArrowLeftRegular } from '@fluentui/react-icons';
-import { useState, useMemo, useCallback, type JSX } from 'react';
+import { useState, useMemo, useCallback, useId, type JSX } from 'react';
 import { useTemplateGalleryConfig } from '../TemplateGalleryConfigContext';
 import type { IProjectTemplate } from '../types';
 import { renderMarkdown } from '../utils/renderMarkdown';
@@ -31,6 +31,9 @@ export const TemplateConfigView = ({
 }: TemplateConfigViewProps): JSX.Element => {
     const { languageDisplayNames, languageFilterMap } = useTemplateGalleryConfig();
 
+    const languageInputId = useId();
+    const locationInputId = useId();
+
     const uniqueLanguages = useMemo(() => [...new Set(template.languages)], [template.languages]);
     const [selectedLanguage, setSelectedLanguage] = useState(uniqueLanguages[0] || '');
 
@@ -48,7 +51,7 @@ export const TemplateConfigView = ({
                 const displayName = languageDisplayNames[lang] || lang;
                 const filterClass = languageFilterMap[lang] || 'other';
                 const key = `${filterClass}-${displayName}`;
-                if (seen.has(key)) {return null;}
+                if (seen.has(key)) { return null; }
                 seen.add(key);
                 return { displayName, filterClass, key };
             })
@@ -75,7 +78,7 @@ export const TemplateConfigView = ({
                 >
                     Back
                 </Button>
-                <h1>Configure your project</h1>
+                <h1>Template Details</h1>
             </header>
 
             <div className="config-layout">
@@ -93,15 +96,17 @@ export const TemplateConfigView = ({
                     </div>
 
                     <form className="config-form" onSubmit={handleSubmit}>
-                        <Field label="Language">
+                        <div className="form-field">
+                            <Label htmlFor={languageInputId} className="form-label">Language</Label>
                             {uniqueLanguages.length === 1 ? (
-                                <span className="form-static">{uniqueLanguages[0]}</span>
+                                <span id={languageInputId} className="form-static">{uniqueLanguages[0]}</span>
                             ) : (
                                 <Dropdown
+                                    id={languageInputId}
                                     value={selectedLanguage}
                                     selectedOptions={[selectedLanguage]}
                                     onOptionSelect={(_ev, data) => {
-                                        if (data.optionValue) {setSelectedLanguage(data.optionValue);}
+                                        if (data.optionValue) { setSelectedLanguage(data.optionValue); }
                                     }}
                                 >
                                     {uniqueLanguages.map(lang => (
@@ -109,11 +114,13 @@ export const TemplateConfigView = ({
                                     ))}
                                 </Dropdown>
                             )}
-                        </Field>
+                        </div>
 
-                        <Field label="Project Location">
+                        <div className="form-field">
+                            <Label htmlFor={locationInputId} className="form-label">Project Location</Label>
                             <div className="location-input-group">
                                 <Input
+                                    id={locationInputId}
                                     value={projectLocation}
                                     readOnly
                                     required
@@ -123,7 +130,7 @@ export const TemplateConfigView = ({
                                     Browse...
                                 </Button>
                             </div>
-                        </Field>
+                        </div>
 
                         <div className="whats-included">
                             <h3>What&apos;s included:</h3>

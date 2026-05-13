@@ -321,6 +321,13 @@ const TemplateGalleryViewInner = (): JSX.Element => {
         postMessage({ type: 'createProject', template, language, location });
     }, [postMessage]);
 
+    // "Use Template" button on the card → create immediately using the default
+    // project location and the template's first language. Skips the details screen.
+    const handleUseTemplateDirect = useCallback((template: IProjectTemplate) => {
+        const language = template.languages[0] || '';
+        handleCreateProject(template, language, state.projectLocation);
+    }, [handleCreateProject, state.projectLocation]);
+
     const handleRefresh = useCallback(() => {
         dispatch({ type: 'SET_LOADING' });
         postMessage({ type: 'refreshTemplates' });
@@ -329,6 +336,10 @@ const TemplateGalleryViewInner = (): JSX.Element => {
     const handleUseCached = useCallback(() => {
         postMessage({ type: 'useCachedTemplates' });
     }, [postMessage]);
+
+    const handleTabSelect = useCallback((_event: SelectTabEvent, data: SelectTabData) => {
+        dispatch({ type: 'SET_MODE', mode: data.value as ViewMode });
+    }, [dispatch]);
 
     // ── Render ──
 
@@ -353,10 +364,6 @@ const TemplateGalleryViewInner = (): JSX.Element => {
     // Gallery view
     const featured = state.filteredTemplates.filter(t => t.isHighlighted);
     const rest = state.filteredTemplates.filter(t => !t.isHighlighted);
-
-    const handleTabSelect = useCallback((_event: SelectTabEvent, data: SelectTabData) => {
-        dispatch({ type: 'SET_MODE', mode: data.value as ViewMode });
-    }, [dispatch]);
 
     return (
         <div className="template-gallery">
@@ -436,7 +443,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                                     <h2 className="section-heading">Featured Templates</h2>
                                     <div className="templates-grid" role="list" aria-label="Featured Templates">
                                         {featured.map(t => (
-                                            <TemplateCard key={t.id} template={t} onSelect={handleSelectTemplate} />
+                                            <TemplateCard key={t.id} template={t} onSelect={handleSelectTemplate} onUseTemplate={handleUseTemplateDirect} />
                                         ))}
                                     </div>
                                 </div>
@@ -449,7 +456,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                                     </h2>
                                     <div className="templates-grid" role="list" aria-label="Templates">
                                         {rest.map(t => (
-                                            <TemplateCard key={t.id} template={t} onSelect={handleSelectTemplate} />
+                                            <TemplateCard key={t.id} template={t} onSelect={handleSelectTemplate} onUseTemplate={handleUseTemplateDirect} />
                                         ))}
                                     </div>
                                 </div>

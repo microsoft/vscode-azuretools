@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SearchBox, RadioGroup, Radio, type SearchBoxChangeEvent, type InputOnChangeData } from '@fluentui/react-components';
+import { SearchBox, type SearchBoxChangeEvent, type InputOnChangeData } from '@fluentui/react-components';
 import { useMemo, useCallback, type JSX } from 'react';
 import { useTemplateGalleryConfig } from '../TemplateGalleryConfigContext';
 import type { IProjectTemplate, FilterState } from '../types';
@@ -22,15 +22,16 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
         categoryDisplayNames,
         resourceDisplayNames,
         languageOrder,
+        categoryOrder,
+        resourceOrder,
     } = useTemplateGalleryConfig();
 
-    // Build dynamic language options
     const languages = useMemo(() => {
         const langSet = new Set<string>();
         templates.forEach(t => {
             (t.languages || []).forEach(lang => {
                 const filterVal = languageFilterMap[lang];
-                if (filterVal) {langSet.add(filterVal);}
+                if (filterVal) { langSet.add(filterVal); }
             });
         });
         const sorted = [...langSet].sort((a, b) => {
@@ -40,12 +41,11 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
         });
         const displayMap: Record<string, string> = {};
         for (const [key, val] of Object.entries(languageFilterMap)) {
-            if (!displayMap[val]) {displayMap[val] = languageDisplayNames[key] || key;}
+            if (!displayMap[val]) { displayMap[val] = languageDisplayNames[key] || key; }
         }
         return sorted.map(val => ({ value: val, label: displayMap[val] || val }));
     }, [templates, languageFilterMap, languageDisplayNames, languageOrder]);
 
-    // Build dynamic use case options
     const useCases = useMemo(() => {
         const caseSet = new Set<string>();
         templates.forEach(t => {
@@ -54,27 +54,36 @@ export const FilterBar = ({ templates, filters, onFilterChange, onClearFilters: 
         });
         return [...caseSet]
             .sort((a, b) => {
+                const aIdx = categoryOrder.indexOf(a);
+                const bIdx = categoryOrder.indexOf(b);
+                if (aIdx !== -1 && bIdx !== -1) { return aIdx - bIdx; }
+                if (aIdx !== -1) { return -1; }
+                if (bIdx !== -1) { return 1; }
                 const aName = categoryDisplayNames[a] || a;
                 const bName = categoryDisplayNames[b] || b;
                 return aName.localeCompare(bName);
             })
             .map(val => ({ value: val, label: categoryDisplayNames[val] || val.charAt(0).toUpperCase() + val.slice(1) }));
-    }, [templates, categoryDisplayNames]);
+    }, [templates, categoryDisplayNames, categoryOrder]);
 
-    // Build dynamic resource options
     const resources = useMemo(() => {
         const resSet = new Set<string>();
         templates.forEach(t => {
-            if (t.resource) {resSet.add(t.resource);}
+            if (t.resource) { resSet.add(t.resource); }
         });
         return [...resSet]
             .sort((a, b) => {
+                const aIdx = resourceOrder.indexOf(a);
+                const bIdx = resourceOrder.indexOf(b);
+                if (aIdx !== -1 && bIdx !== -1) { return aIdx - bIdx; }
+                if (aIdx !== -1) { return -1; }
+                if (bIdx !== -1) { return 1; }
                 const aName = resourceDisplayNames[a] || a;
                 const bName = resourceDisplayNames[b] || b;
                 return aName.localeCompare(bName);
             })
             .map(val => ({ value: val, label: resourceDisplayNames[val] || val.charAt(0).toUpperCase() + val.slice(1) }));
-    }, [templates, resourceDisplayNames]);
+    }, [templates, resourceDisplayNames, resourceOrder]);
 
     const handleSearch = useCallback((_ev: SearchBoxChangeEvent, data: InputOnChangeData) => {
         onFilterChange('search', data.value);
@@ -123,26 +132,29 @@ interface FilterGroupProps {
     onChange: (value: string) => void;
 }
 
-const FilterGroup = ({ label, items, activeValue, onChange }: FilterGroupProps): JSX.Element => (
-    <div className="filter-group">
-        <label className="filter-label">{label}:</label>
-        <RadioGroup
-            layout="horizontal"
-            value={activeValue}
-            onChange={(_ev, data) => onChange(data.value)}
-            aria-label={`Filter by ${label.toLowerCase()}`}
-            className="filter-chips"
-        >
-            <Radio value="all" label="All" className="filter-chip" />
-            {items.map(item => (
-                <Radio
-                    key={item.value}
-                    value={item.value}
-                    label={item.label}
-                    className="filter-chip"
-                    data-value={item.value}
-                />
-            ))}
-        </RadioGroup>
-    </div>
-);
+const FilterGroup = ({ label, items, activeValue, onChange }: FilterGroupProps): JSX.Element => {
+    const allItems = [{ value: 'all', label: 'All' }, ...items];
+    return (
+        <div className="filter-group">
+            <label className="filter-label">{label}:</label>
+            <div role="radiogroup" aria-label={`Filter by ${label.toLowerCase()}`} className="filter-chips">
+                {allItems.map(item => {
+                    const isActive = activeValue === item.value;
+                    return (
+                        <button
+                            key={item.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={isActive}
+                            className={`filter-chip${isActive ? ' active' : ''}`}
+                            data-value={item.value}
+                            onClick={() => onChange(item.value)}
+                        >
+                            {item.label}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
