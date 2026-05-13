@@ -272,7 +272,10 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     break;
                 case 'projectCreationFailed':
                     dispatch({ type: 'CREATION_FAILED' });
-                    postMessage({ type: 'showError', message: message.error });
+                    // Empty error indicates a silent cancellation (e.g. user declined a confirmation prompt) — don't surface a dialog.
+                    if (message.error) {
+                        postMessage({ type: 'showError', message: message.error });
+                    }
                     break;
                 case 'aiGenerating':
                     dispatch({ type: 'SET_AI_GENERATING' });

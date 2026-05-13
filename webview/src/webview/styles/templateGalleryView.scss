@@ -640,14 +640,11 @@
 
 .form-static {
     display: block;
-    padding: 8px 12px;
+    padding: 4px 0;
     font-size: 14px;
-    color: var(--vscode-input-foreground);
-    background-color: var(--vscode-input-background);
-    border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
+    color: var(--vscode-foreground);
+    background-color: transparent;
+    border: none;
 }
 
 .location-input-group {
