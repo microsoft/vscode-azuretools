@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Dropdown, Field, Input, Option, Spinner, Textarea } from '@fluentui/react-components';
-import { ArrowLeftRegular } from '@fluentui/react-icons';
+import { Button, Dropdown, Field, Input, Option, Popover, PopoverSurface, PopoverTrigger, Spinner, Textarea } from '@fluentui/react-components';
+import { ArrowLeftRegular, QuestionCircleRegular } from '@fluentui/react-icons';
 import { useState, useEffect, useRef, useCallback, type JSX, type Dispatch } from 'react';
 import type { AiState, WebviewToExtensionMessage, AiCompleteMessage } from '../types';
 
@@ -185,12 +185,31 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                 <div className="ai-prompt-section">
                     <div className="ai-intro">
                         <span className="codicon codicon-sparkle ai-intro-icon"></span>
-                        <div>
-                            <h2 className="ai-intro-title">Generate with GitHub Copilot</h2>
-                            <p className="ai-intro-description">
-                                Describe the Azure Function app you want to build. Copilot will generate a complete, working project tailored to your needs.
-                            </p>
-                        </div>
+                        <p className="ai-intro-description">
+                            Describe the Azure Function app you want to build. Copilot will generate a complete, working project tailored to your needs.
+                        </p>
+                        <Popover withArrow positioning="below-end">
+                            <PopoverTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="subtle"
+                                    icon={<QuestionCircleRegular />}
+                                    className="ai-help-btn"
+                                    aria-label="What can Copilot Chat do?"
+                                    title="What can Copilot Chat do?"
+                                />
+                            </PopoverTrigger>
+                            <PopoverSurface>
+                                <div className="ai-chat-help-popover">
+                                    <h3>What can Copilot Chat do?</h3>
+                                    <ul className="ai-chat-capabilities">
+                                        <li><span className="codicon codicon-check"></span> Multi-turn conversation to refine your app design</li>
+                                        <li><span className="codicon codicon-check"></span> Access to workspace files for context-aware generation</li>
+                                        <li><span className="codicon codicon-check"></span> Built-in tools: file editing, terminal, search</li>
+                                        <li><span className="codicon codicon-check"></span> Iterative code review and debugging assistance</li>
+                                    </ul>
+                                </div>
+                            </PopoverSurface>
+                        </Popover>
                     </div>
 
                     <Textarea
@@ -222,6 +241,15 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                             </Dropdown>
                         </Field>
                         <Button
+                            appearance="secondary"
+                            className="ai-continue-chat-btn"
+                            onClick={() => handleContinueInChat('prompt')}
+                            icon={<span className="codicon codicon-comment-discussion"></span>}
+                            title="For complex apps that need multi-turn design"
+                        >
+                            Continue in Copilot Chat
+                        </Button>
+                        <Button
                             appearance="primary"
                             className="ai-generate-btn"
                             disabled={!ai.prompt.trim() || ai.isGenerating}
@@ -231,25 +259,6 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                             Generate Project
                         </Button>
                     </div>
-
-                    <div className="ai-chat-action">
-                        <Button appearance="transparent" className="ai-chat-link" onClick={() => handleContinueInChat('prompt')}
-                            icon={<span className="codicon codicon-comment-discussion"></span>}
-                        >
-                            Continue in Copilot Chat
-                        </Button>
-                        <span className="ai-chat-hint">For complex apps that need multi-turn design</span>
-                    </div>
-
-                    <details className="ai-chat-details">
-                        <summary>What can Copilot Chat do?</summary>
-                        <ul className="ai-chat-capabilities">
-                            <li><span className="codicon codicon-check"></span> Multi-turn conversation to refine your app design</li>
-                            <li><span className="codicon codicon-check"></span> Access to workspace files for context-aware generation</li>
-                            <li><span className="codicon codicon-check"></span> Built-in tools: file editing, terminal, search</li>
-                            <li><span className="codicon codicon-check"></span> Iterative code review and debugging assistance</li>
-                        </ul>
-                    </details>
                 </div>
             )}
 

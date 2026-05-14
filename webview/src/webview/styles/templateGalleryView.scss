@@ -823,16 +823,29 @@
     margin-top: 2px;
 }
 
-.ai-intro-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
 .ai-intro-description {
+    flex: 1;
     font-size: 13px;
     color: var(--vscode-descriptionForeground);
     line-height: 1.5;
+}
+
+.ai-help-btn {
+    flex-shrink: 0;
+    align-self: flex-start;
+    color: var(--vscode-descriptionForeground);
+}
+
+.ai-chat-help-popover {
+    max-width: 360px;
+    padding: 4px;
+}
+
+.ai-chat-help-popover h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--vscode-foreground);
 }
 
 .ai-textarea {
@@ -863,6 +876,11 @@
     align-items: flex-end;
     gap: 16px;
     flex-wrap: wrap;
+}
+
+/* Push the primary "Generate Project" button to the right edge so it's a clear submit affordance. */
+.ai-controls .ai-generate-btn {
+    margin-left: auto;
 }
 
 .ai-language-group {
@@ -1122,7 +1140,7 @@
     line-height: 1.5;
 }
 
-/* Continue in Copilot Chat — secondary action */
+/* Continue in Copilot Chat — secondary action (link-style) in success/error states */
 .ai-chat-action {
     display: flex;
     align-items: center;
@@ -1152,39 +1170,6 @@
 .ai-chat-hint {
     color: var(--vscode-descriptionForeground);
     font-size: 12px;
-}
-
-/* Collapsible capabilities panel */
-.ai-chat-details {
-    margin-top: 10px;
-    border: 1px solid var(--vscode-panel-border, var(--vscode-widget-border));
-    border-radius: 4px;
-    padding: 8px 12px;
-    font-size: 12px;
-    color: var(--vscode-descriptionForeground);
-}
-
-.ai-chat-details summary {
-    cursor: pointer;
-    font-weight: 500;
-    color: var(--vscode-foreground);
-    user-select: none;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.ai-chat-details summary::-webkit-details-marker { display: none; }
-
-.ai-chat-details summary::before {
-    content: '▶';
-    font-size: 10px;
-    transition: transform 0.15s;
-}
-
-.ai-chat-details[open] summary::before {
-    transform: rotate(90deg);
 }
 
 .ai-chat-capabilities {
