@@ -858,44 +858,6 @@
     color: var(--vscode-input-placeholderForeground);
 }
 
-.example-prompts {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.example-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--vscode-descriptionForeground);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-}
-
-.example-chips {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.example-chip {
-    padding: 5px 12px;
-    background-color: var(--vscode-badge-background);
-    color: var(--vscode-badge-foreground);
-    border: 1px solid transparent;
-    border-radius: 16px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s ease;
-}
-
-.example-chip:hover {
-    border-color: var(--vscode-focusBorder);
-    background-color: var(--vscode-list-hoverBackground);
-    color: var(--vscode-foreground);
-}
-
 .ai-controls {
     display: flex;
     align-items: flex-end;

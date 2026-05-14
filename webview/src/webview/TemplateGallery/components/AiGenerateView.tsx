@@ -8,13 +8,6 @@ import { ArrowLeftRegular } from '@fluentui/react-icons';
 import { useState, useEffect, useRef, useCallback, type JSX, type Dispatch } from 'react';
 import type { AiState, WebviewToExtensionMessage, AiCompleteMessage } from '../types';
 
-const examplePrompts = [
-    { label: 'HTTP API → Cosmos DB', prompt: 'HTTP API that accepts JSON sensor data, validates it, and stores it in Azure Cosmos DB' },
-    { label: 'Nightly archive job', prompt: 'Timer function that runs every night at midnight to archive old blob files and log results to Application Insights' },
-    { label: 'Service Bus → Email', prompt: 'Process messages from an Azure Service Bus queue and send email notifications using Azure Communication Services' },
-    { label: 'AI image analysis pipeline', prompt: 'Blob trigger that activates when an image is uploaded, analyzes it with Azure AI Vision, and saves results to a Cosmos DB container' },
-];
-
 const progressMessages = [
     'Analyzing your requirements...',
     'Designing project structure...',
@@ -161,10 +154,6 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
         setViewState('chatConfirmation');
     }, [ai, postMessage]);
 
-    const handleExampleClick = useCallback((prompt: string) => {
-        dispatch({ type: 'SET_AI_PROMPT', prompt });
-    }, [dispatch]);
-
     // ── Render ──
 
     if (viewState === 'chatConfirmation') {
@@ -213,17 +202,6 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                         onChange={(_ev, data) => dispatch({ type: 'SET_AI_PROMPT', prompt: data.value })}
                         resize="vertical"
                     />
-
-                    <div className="example-prompts">
-                        <span className="example-label">Try an example:</span>
-                        <div className="example-chips">
-                            {examplePrompts.map(ex => (
-                                <Button key={ex.label} appearance="outline" size="small" className="example-chip" onClick={() => handleExampleClick(ex.prompt)}>
-                                    {ex.label}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
 
                     <div className="ai-controls">
                         <Field label="Language" className="ai-language-group">
