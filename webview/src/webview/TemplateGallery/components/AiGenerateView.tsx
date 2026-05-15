@@ -6,7 +6,7 @@
 import { Button, Dropdown, Field, Input, Option, Popover, PopoverSurface, PopoverTrigger, Spinner, Textarea } from '@fluentui/react-components';
 import { ArrowLeftRegular, QuestionCircleRegular } from '@fluentui/react-icons';
 import { useState, useEffect, useRef, useCallback, type JSX, type Dispatch } from 'react';
-import type { AiState, WebviewToExtensionMessage, AiCompleteMessage } from '../types';
+import type { AiState, WebviewToExtensionMessage, TemplateGalleryAction } from '../types';
 
 const progressMessages = [
     'Analyzing your requirements...',
@@ -15,15 +15,13 @@ const progressMessages = [
     'Adding configuration files...',
 ];
 
-// Dispatch action types from the parent reducer
-type ParentAction =
-    | { type: 'SET_AI_PROMPT'; prompt: string }
-    | { type: 'SET_AI_LANGUAGE'; language: string }
-    | { type: 'SET_AI_GENERATING' }
-    | { type: 'SET_AI_LOCATION'; path: string }
-    | { type: 'SET_VIEW'; view: 'creating' }
-    | { type: 'AI_COMPLETE'; data: AiCompleteMessage['projectData']; title: string; description: string; files: string[] }
-    | { type: 'AI_ERROR'; error: string };
+// Narrow the parent's action union to just the actions this component dispatches.
+// Sourcing from the shared TemplateGalleryAction keeps this in sync when the
+// parent reducer's action shape evolves.
+type ParentAction = Extract<
+    TemplateGalleryAction,
+    { type: 'SET_AI_PROMPT' | 'SET_AI_LANGUAGE' | 'SET_AI_GENERATING' | 'SET_AI_LOCATION' | 'SET_VIEW' | 'AI_COMPLETE' | 'AI_ERROR' }
+>;
 
 interface AiGenerateViewProps {
     ai: AiState;
@@ -40,28 +38,8 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
     const [aiTitle, setAiTitle] = useState('');
     const [aiDescription, setAiDescription] = useState('');
     const [aiFiles, setAiFiles] = useState<string[]>([]);
-    const [errorMessage, _setErrorMessage] = useState('');
     const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const extendedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // Sync with parent state for generating/complete/error
-    useEffect(() => {
-        if (ai.isGenerating && viewState !== 'generating') {
-            startProgressAnimation();
-            setViewState('generating');
-        }
-    }, [ai.isGenerating]);
-
-    // Listen for AI complete/error from parent
-    useEffect(() => {
-        if (!ai.isGenerating && ai.projectData && viewState === 'generating') {
-            completeProgress();
-            setAiTitle(ai.projectData.title || '');
-            setAiDescription(ai.projectData.description || '');
-            setAiFiles(ai.projectData.files?.map(f => f.path) || []);
-            setTimeout(() => setViewState('success'), 400);
-        }
-    }, [ai.isGenerating, ai.projectData]);
 
     const startProgressAnimation = useCallback(() => {
         setProgressStep(0);
@@ -96,6 +74,32 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
         setShowExtendedWait(false);
     }, []);
 
+    // Single effect drives view-state transitions deterministically from the parent's AI phase.
+    // Internal guards (`viewState !== 'generating'`) keep this idempotent when viewState changes
+    // via setViewState below — re-entries are early-returned.
+    useEffect(() => {
+        if (ai.phase === 'generating' && viewState !== 'generating') {
+            startProgressAnimation();
+            setViewState('generating');
+            return;
+        }
+
+        if (viewState !== 'generating') {
+            return;
+        }
+
+        if (ai.phase === 'success' && ai.projectData) {
+            completeProgress();
+            setAiTitle(ai.projectData.title || '');
+            setAiDescription(ai.projectData.description || '');
+            setAiFiles(ai.projectData.files?.map(f => f.path) || []);
+            setTimeout(() => setViewState('success'), 400);
+        } else if (ai.phase === 'error') {
+            completeProgress();
+            setViewState('error');
+        }
+    }, [ai.phase, ai.projectData, viewState, startProgressAnimation, completeProgress]);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -103,15 +107,6 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
             if (extendedTimerRef.current) {clearTimeout(extendedTimerRef.current);}
         };
     }, []);
-
-    // Handle AI error
-    useEffect(() => {
-        if (!ai.isGenerating && !ai.projectData && viewState === 'generating') {
-            // Error case: not generating, no data, but we were generating
-            completeProgress();
-            setViewState('error');
-        }
-    }, [ai.isGenerating, ai.projectData, viewState]);
 
     const handleGenerate = useCallback(() => {
         if (!ai.prompt.trim()) {return;}
@@ -361,7 +356,7 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                 <div className="ai-output">
                     <div className="ai-error-state">
                         <span className="codicon codicon-warning ai-error-icon"></span>
-                        <p className="ai-error-message">{errorMessage || 'An error occurred'}</p>
+                        <p className="ai-error-message">{ai.errorMessage || 'An error occurred'}</p>
                         <Button appearance="secondary" onClick={handleRegenerate}>Try Again</Button>
                         <div className="ai-escalation">
                             <span>Or try in Copilot Chat instead:</span>

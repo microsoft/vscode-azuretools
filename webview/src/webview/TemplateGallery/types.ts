@@ -217,16 +217,46 @@ export interface FilterState {
     search: string;
 }
 
+export type AiPhase = 'idle' | 'generating' | 'success' | 'error';
+
 export interface AiState {
     prompt: string;
     language: string;
     location: string;
     projectData: AiCompleteMessage['projectData'] | null;
     isGenerating: boolean;
+    /** Explicit lifecycle phase used to drive UI transitions deterministically. */
+    phase: AiPhase;
+    /** Last error from generation/creation, or empty string if none. */
+    errorMessage: string;
 }
 
 export type ViewMode = 'browse' | 'ai';
 export type ActiveView = 'gallery' | 'config' | 'creating';
+
+// ── Reducer action contract (shared between TemplateGalleryView and child components like AiGenerateView) ──
+
+export type TemplateGalleryAction =
+    | { type: 'SET_TEMPLATES'; templates: IProjectTemplate[]; defaultLocation: string }
+    | { type: 'SET_ERROR'; message: string }
+    | { type: 'SET_LOADING' }
+    | { type: 'SET_FILTER'; key: keyof FilterState; value: string }
+    | { type: 'CLEAR_FILTERS' }
+    | { type: 'SELECT_TEMPLATE'; template: IProjectTemplate }
+    | { type: 'BACK_TO_GALLERY' }
+    | { type: 'SET_MODE'; mode: ViewMode }
+    | { type: 'SET_VIEW'; view: ActiveView }
+    | { type: 'SET_PROJECT_LOCATION'; path: string }
+    | { type: 'SET_AI_LOCATION'; path: string }
+    | { type: 'SET_AI_PROMPT'; prompt: string }
+    | { type: 'SET_AI_LANGUAGE'; language: string }
+    | { type: 'SET_AI_GENERATING' }
+    | { type: 'AI_COMPLETE'; data: AiCompleteMessage['projectData']; title: string; description: string; files: string[] }
+    | { type: 'AI_ERROR'; error: string }
+    | { type: 'SET_README_LOADING' }
+    | { type: 'SET_README_CONTENT'; markdown: string }
+    | { type: 'SET_CREATING_DETAIL'; detail: string }
+    | { type: 'CREATION_FAILED' };
 
 // ── AI project result (returned by extension's generateWithCopilot) ──
 

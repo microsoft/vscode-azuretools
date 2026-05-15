@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as React from 'react';
-import { useReducer, useEffect, useCallback, useContext, type JSX } from 'react';
+import { useReducer, useEffect, useCallback, useContext, useMemo, type JSX } from 'react';
 import { Button, TabList, Tab, Spinner, type SelectTabData, type SelectTabEvent } from '@fluentui/react-components';
 import { WebviewContext } from '../WebviewContext';
 import { useConfiguration } from '../useConfiguration';
@@ -17,8 +17,8 @@ import type {
     ActiveView,
     ExtensionToWebviewMessage,
     WebviewToExtensionMessage,
-    AiCompleteMessage,
     TemplateGalleryConfig,
+    TemplateGalleryAction as Action,
 } from './types';
 import { defaultLanguageFilterMap } from './types';
 import { FilterBar } from './components/FilterBar';
@@ -62,6 +62,8 @@ const initialState: GalleryState = {
         location: '',
         projectData: null,
         isGenerating: false,
+        phase: 'idle',
+        errorMessage: '',
     },
     readmeMarkdown: '',
     readmeLoading: false,
@@ -70,27 +72,7 @@ const initialState: GalleryState = {
 
 // ── Actions ──
 
-type Action =
-    | { type: 'SET_TEMPLATES'; templates: IProjectTemplate[]; defaultLocation: string }
-    | { type: 'SET_ERROR'; message: string }
-    | { type: 'SET_LOADING' }
-    | { type: 'SET_FILTER'; key: keyof FilterState; value: string }
-    | { type: 'CLEAR_FILTERS' }
-    | { type: 'SELECT_TEMPLATE'; template: IProjectTemplate }
-    | { type: 'BACK_TO_GALLERY' }
-    | { type: 'SET_MODE'; mode: ViewMode }
-    | { type: 'SET_VIEW'; view: ActiveView }
-    | { type: 'SET_PROJECT_LOCATION'; path: string }
-    | { type: 'SET_AI_LOCATION'; path: string }
-    | { type: 'SET_AI_PROMPT'; prompt: string }
-    | { type: 'SET_AI_LANGUAGE'; language: string }
-    | { type: 'SET_AI_GENERATING' }
-    | { type: 'AI_COMPLETE'; data: AiCompleteMessage['projectData']; title: string; description: string; files: string[] }
-    | { type: 'AI_ERROR'; error: string }
-    | { type: 'SET_README_LOADING' }
-    | { type: 'SET_README_CONTENT'; markdown: string }
-    | { type: 'SET_CREATING_DETAIL'; detail: string }
-    | { type: 'CREATION_FAILED' };
+
 
 function createApplyFilters(languageFilterMap: Record<string, string>) {
     return function applyFilters(templates: IProjectTemplate[], filters: FilterState): IProjectTemplate[] {
@@ -204,7 +186,7 @@ function createReducer(languageFilterMap: Record<string, string>) {
             case 'SET_AI_LANGUAGE':
                 return { ...state, ai: { ...state.ai, language: action.language } };
             case 'SET_AI_GENERATING':
-                return { ...state, ai: { ...state.ai, isGenerating: true, projectData: null } };
+                return { ...state, ai: { ...state.ai, isGenerating: true, projectData: null, errorMessage: '', phase: 'generating' } };
             case 'AI_COMPLETE':
                 return {
                     ...state,
@@ -212,10 +194,12 @@ function createReducer(languageFilterMap: Record<string, string>) {
                         ...state.ai,
                         isGenerating: false,
                         projectData: action.data,
+                        errorMessage: '',
+                        phase: 'success',
                     },
                 };
             case 'AI_ERROR':
-                return { ...state, ai: { ...state.ai, isGenerating: false } };
+                return { ...state, ai: { ...state.ai, isGenerating: false, errorMessage: action.error || 'An error occurred', phase: 'error' } };
             case 'SET_README_LOADING':
                 return { ...state, readmeLoading: true, readmeMarkdown: '' };
             case 'SET_README_CONTENT':
@@ -408,6 +392,16 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                         <span className="results-count">
                             Showing {state.filteredTemplates.length} template{state.filteredTemplates.length !== 1 ? 's' : ''}
                         </span>
+                        <Button
+                            appearance="transparent"
+                            icon={<span className="codicon codicon-refresh"></span>}
+                            onClick={handleRefresh}
+                            className="refresh-btn"
+                            title="Refresh templates"
+                            aria-label="Refresh templates"
+                        >
+                            Refresh
+                        </Button>
                     </div>
 
                     {state.isLoading && (
@@ -466,16 +460,6 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                             )}
                         </>
                     )}
-
-                    <footer className="gallery-footer">
-                        <Button
-                            appearance="transparent"
-                            icon={<span className="codicon codicon-refresh"></span>}
-                            onClick={handleRefresh}
-                        >
-                            Refresh templates
-                        </Button>
-                    </footer>
                 </div>
             )}
 
@@ -496,11 +480,13 @@ const TemplateGalleryViewInner = (): JSX.Element => {
 export const TemplateGalleryView = (): JSX.Element => {
     const config = useConfiguration<TemplateGalleryConfig>();
 
-    // Merge with defaults for languageFilterMap if not provided
-    const mergedConfig: TemplateGalleryConfig = {
+    // Memoize the merged config so the context value (and every consumer) keeps a stable
+    // identity across renders. Without this, every parent re-render recreates the object
+    // and invalidates the provider's internal memo, re-rendering FilterBar, TemplateCard, etc.
+    const mergedConfig: TemplateGalleryConfig = useMemo(() => ({
         ...config,
         languageFilterMap: { ...defaultLanguageFilterMap, ...config.languageFilterMap },
-    };
+    }), [config]);
 
     return (
         <TemplateGalleryConfigProvider config={mergedConfig}>

@@ -167,13 +167,22 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    padding-bottom: 12px;
+    padding: 8px 0 12px;
     border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
+    /* Keep the results count + refresh action visible while the user scrolls through templates. */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: var(--vscode-editor-background);
 }
 
 .results-count {
     color: var(--vscode-descriptionForeground);
     font-size: 13px;
+}
+
+.refresh-btn {
+    flex-shrink: 0;
 }
 
 /* Template Sections */
@@ -267,12 +276,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     margin-top: auto;
 }
 
 .card-badges {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .category-badge {
@@ -315,6 +328,10 @@
     font-size: 13px;
     font-family: inherit;
     transition: background-color 0.15s ease;
+    /* Keep the button text on a single line and prevent it from shrinking when
+       category badges in the same footer claim a lot of horizontal space. */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .use-template-btn:hover {
@@ -370,13 +387,6 @@
 }
 
 /* Footer */
-.gallery-footer {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid var(--vscode-widget-border);
-}
-
 /* Buttons */
 .primary-button {
     padding: 8px 20px;

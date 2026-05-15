@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import { ext } from './extensionVariables';
 import { WebviewBaseController } from './WebviewBaseController';
 import type { IProjectTemplate, TemplateGalleryConfig, WebviewToExtensionMessage, ExtensionToWebviewMessage } from '../webview/TemplateGallery/types';
 
@@ -26,6 +27,19 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
     ) {
         super(context, 'templateGalleryView', config);
 
+        // The webview bundle (views.js / views.css) may be loaded from one of three locations,
+        // checked in this order by WebviewBaseController.getDocumentTemplate():
+        //   1. An explicit WebviewBundleLocation passed to the base controller
+        //   2. `ext.webviewAssetsDir` set via registerWebviewExtensionVariables
+        //   3. The package's own `node_modules/@microsoft/vscode-azext-webview/dist`
+        // Whichever path is used must be reachable via webview.asWebviewUri, so all three
+        // must be included in localResourceRoots. Out-of-tree paths (e.g. global storage,
+        // a sibling extension's install) are otherwise blocked by the webview's CSP.
+        const resourceRoots: vscode.Uri[] = [vscode.Uri.file(context.extensionPath)];
+        if (ext.webviewAssetsDir) {
+            resourceRoots.push(vscode.Uri.file(ext.webviewAssetsDir));
+        }
+
         this._panel = vscode.window.createWebviewPanel(
             'templateGallery',
             config.headerTitle ?? 'Template Gallery',
@@ -33,7 +47,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: [vscode.Uri.file(context.extensionPath)],
+                localResourceRoots: resourceRoots,
             },
         );
 
