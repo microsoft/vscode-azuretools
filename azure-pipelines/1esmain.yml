@@ -19,6 +19,13 @@ parameters:
   - name: npmFeed
     type: string
     default: DevDiv/azcode
+  # Azure Artifacts feed for a private NuGet mirror used during the signing step
+  # (the SignExtension.signproj references Microsoft.VisualStudioEng.MicroBuild.Core).
+  # Configure this feed in Azure DevOps to upstream api.nuget.org/v3/index.json
+  # so that builds don't reach out to public nuget.org.
+  - name: nugetFeed
+    type: string
+    default: DevDiv/azcode
   - name: additionalPostPackageSteps
     type: stepList
     default: []
@@ -74,6 +81,7 @@ extends:
           bamiVariablesGroupName: ${{ parameters.bamiVariablesGroupName }}
           additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
           npmFeed: ${{ parameters.npmFeed }}
+          nugetFeed: ${{ parameters.nugetFeed }}
           additionalPostPackageSteps: ${{ parameters.additionalPostPackageSteps }}
           enableSigning: ${{ parameters.enableSigning }}
           vsixFileNames: ${{ parameters.vsixFileNames }}

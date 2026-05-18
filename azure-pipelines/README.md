@@ -120,6 +120,18 @@ extends:
 </Project>
 ```
 
+> **NuGet feed prerequisite for signing:** The signing step runs `dotnet` against
+> `SignExtension.signproj`, which has a `PackageReference` on
+> `Microsoft.VisualStudioEng.MicroBuild.Core`. To avoid the build reaching out
+> to public `nuget.org`, the templates restore that package from the Azure
+> Artifacts feed identified by the `nugetFeed` parameter (defaults to
+> `DevDiv/azcode`). That feed must be configured in Azure DevOps to have
+> `api.nuget.org/v3/index.json` as an upstream source. If your feed does not
+> mirror NuGet, either (a) add a NuGet upstream to the feed, or (b) override
+> the `nugetFeed` parameter when extending the template (set it to `''` to
+> fall back to the default NuGet sources, or to a different `Project/Feed`
+> name).
+
 ### Extension release pipeline
 
 This pipeline downloads and releases signed VSIX artifacts from the specified build pipeline.

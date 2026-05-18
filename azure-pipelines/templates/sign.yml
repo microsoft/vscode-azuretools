@@ -11,6 +11,12 @@ parameters:
   - name: npmFeed
     type: string
     default: DevDiv/azcode
+  # Azure Artifacts feed for a private NuGet mirror used when restoring the
+  # SignExtension.signproj project. This avoids reaching out to nuget.org from
+  # the signing step. Set to '' to fall back to the default NuGet sources.
+  - name: nugetFeed
+    type: string
+    default: DevDiv/azcode
 
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
@@ -56,6 +62,19 @@ steps:
         customRegistry: useFeed
         customFeed: ${{ parameters.npmFeed }}
 
+  # Restore the signing project's NuGet packages (e.g. Microsoft.VisualStudioEng.MicroBuild.Core)
+  # from the internal Azure Artifacts feed rather than nuget.org. The build steps below pass
+  # --no-restore so they don't trigger an implicit restore against the public feed.
+  - task: DotNetCoreCLI@2
+    condition: and(succeeded(), eq(variables['signprojExists'], True))
+    displayName: "\U0001F449 Restore signing project from internal NuGet feed"
+    inputs:
+      command: "restore"
+      projects: $(signprojPath)
+      ${{ if ne(parameters.nugetFeed, '') }}:
+        feedsToUse: "select"
+        vstsFeed: ${{ parameters.nugetFeed }}
+
   # Sign single vsix file if vsixFileNames are not provided
   - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
       - script: vsce generate-manifest -i $(package.name)-$(package.version).vsix -o $(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/extension.manifest
@@ -70,7 +89,7 @@ steps:
         inputs:
           command: "build"
           projects: $(signprojPath)
-          arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/"
+          arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/ --no-restore"
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -104,7 +123,7 @@ steps:
             inputs:
               command: "build"
               projects: $(signprojPath)
-              arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/"
+              arguments: "/p:ProjectDir=$(Build.SourcesDirectory)/${{ parameters.workingDirectory }}/.azure-pipelines/ --no-restore"
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 

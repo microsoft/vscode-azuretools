@@ -20,6 +20,10 @@ parameters:
   - name: npmFeed
     type: string
     default: DevDiv/azcode
+  # Azure Artifacts feed for a private NuGet mirror (used by the signing step)
+  - name: nugetFeed
+    type: string
+    default: DevDiv/azcode
   - name: additionalPostPackageSteps
     type: stepList
     default: []
@@ -65,6 +69,7 @@ stages:
                   vsixFileNames: ${{ parameters.vsixFileNames }}
                   workingDirectory: ${{ job.working_directory }}
                   npmFeed: ${{ parameters.npmFeed }}
+                  nugetFeed: ${{ parameters.nugetFeed }}
 
               - template: ./templates/stage-artifacts.yml
               - template: ./templates/test.yml
