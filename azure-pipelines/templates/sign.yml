@@ -75,6 +75,8 @@ steps:
         feedsToUse: "select"
         vstsFeed: ${{ parameters.nugetFeed }}
         includeNuGetOrg: false
+        restoreArguments: >-
+          /p:NuGetAudit=false
 
   # Sign single vsix file if vsixFileNames are not provided
   - ${{ if eq(join('', parameters.vsixFileNames), '') }}:
