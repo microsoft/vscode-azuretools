@@ -17,6 +17,11 @@ parameters:
   - name: nugetFeed
     type: string
     default: DevDiv/azcode
+  # Internal NuGet v3 index used to force restore to a single source via
+  # command-line arguments without requiring a repo-local NuGet.config.
+  - name: nugetFeedUrl
+    type: string
+    default: https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode/nuget/v3/index.json
 
 steps:
   # Check if the SignExtension.signproj file exists and set a variable using PowerShell
@@ -76,6 +81,7 @@ steps:
         vstsFeed: ${{ parameters.nugetFeed }}
         includeNuGetOrg: false
         restoreArguments: >-
+          --source ${{ parameters.nugetFeedUrl }}
           /p:NuGetAudit=false
 
   # Sign single vsix file if vsixFileNames are not provided
