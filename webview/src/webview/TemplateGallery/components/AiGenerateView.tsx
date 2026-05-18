@@ -235,24 +235,26 @@ export const AiGenerateView = ({ ai, postMessage, dispatch }: AiGenerateViewProp
                                 <Option value="PowerShell">PowerShell</Option>
                             </Dropdown>
                         </Field>
-                        <Button
-                            appearance="secondary"
-                            className="ai-continue-chat-btn"
-                            onClick={() => handleContinueInChat('prompt')}
-                            icon={<span className="codicon codicon-comment-discussion"></span>}
-                            title="For complex apps that need multi-turn design"
-                        >
-                            Continue in Copilot Chat
-                        </Button>
-                        <Button
-                            appearance="primary"
-                            className="ai-generate-btn"
-                            disabled={!ai.prompt.trim() || ai.isGenerating}
-                            onClick={handleGenerate}
-                            icon={<span className="codicon codicon-sparkle"></span>}
-                        >
-                            Generate Project
-                        </Button>
+                        <div className="ai-action-buttons">
+                            <Button
+                                appearance="secondary"
+                                className="ai-continue-chat-btn"
+                                onClick={() => handleContinueInChat('prompt')}
+                                icon={<span className="codicon codicon-comment-discussion"></span>}
+                                title="For complex apps that need multi-turn design"
+                            >
+                                Continue in Copilot Chat
+                            </Button>
+                            <Button
+                                appearance="primary"
+                                className="ai-generate-btn"
+                                disabled={!ai.prompt.trim() || ai.isGenerating}
+                                onClick={handleGenerate}
+                                icon={<span className="codicon codicon-sparkle"></span>}
+                            >
+                                Generate Project
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
