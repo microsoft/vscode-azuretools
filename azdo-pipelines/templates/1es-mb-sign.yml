@@ -26,22 +26,24 @@ steps:
           )
       }
 
-      # Resolve the full path to vsce before changing directories
-      $vsce = (Get-Command vsce -ErrorAction SilentlyContinue).Source
-      if (-not $vsce) {
-          $vsce = Join-Path $(working_directory) 'node_modules/.bin/vsce'
-          if (-not (Test-Path $vsce)) {
-              Write-Error "Cannot find vsce. Ensure @vscode/vsce is installed."
+      # Resolve the full path to the .bin directory before changing directories, and prepend it to PATH.
+      # This ensures vsce is found regardless of OS-specific shim names (vsce, vsce.cmd, vsce.ps1).
+      $binDir = Join-Path $(working_directory) 'node_modules/.bin'
+      if (-not (Test-Path $binDir)) {
+          $binDir = Join-Path $(Build.SourcesDirectory) 'node_modules/.bin'
+          if (-not (Test-Path $binDir)) {
+              Write-Error "Cannot find node_modules/.bin. Ensure @vscode/vsce is installed."
               exit 1
           }
       }
+      $env:PATH = "$(( Resolve-Path -LiteralPath $binDir ).Path)$([System.IO.Path]::PathSeparator)$env:PATH"
 
       foreach ($vsix in $vsixList) {
           Set-Location $vsix.directory
 
           # Generate manifest
           Write-Output "Generating manifest for $($vsix.vsixName)..."
-          & $vsce generate-manifest -i $vsix.vsixName -o $vsix.manifestName
+          & vsce generate-manifest -i $vsix.vsixName -o $vsix.manifestName
           if ($LASTEXITCODE -ne 0) {
               Write-Error "Failed to generate manifest for $($vsix.vsixName)"
               exit 1

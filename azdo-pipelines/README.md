@@ -42,6 +42,7 @@ This template handles building, linting, testing, packaging, and signing your co
 | `alternativeSigningSteps`   | stepList | `[]`                                   | Custom signing steps (disables MicroBuild signing)       |
 | `additionalSetupSteps`      | stepList | `[]`                                   | Extra steps to run during setup                          |
 | `testARMServiceConnection`  | string   | `""`                                   | ARM service connection for federated credential tests    |
+| `npmFeed`                   | string   | `""`                                   | Azure Artifacts feed for a private NPM mirror            |
 
 ### Example
 
@@ -83,6 +84,7 @@ extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates # Use the main build template
   parameters:
     testARMServiceConnection: ${{ variables.testARMServiceConnection }}
+    # npmFeed: MyProject/MyFeed # Use a private NPM mirror from Azure Artifacts
     # signType: none # For NPM packages, disable signing
 ```
 
@@ -94,12 +96,13 @@ This template releases a signed VS Code extension to the Visual Studio Marketpla
 
 | Parameter                   | Type    | Default      | Description                                        |
 | --------------------------- | ------- | ------------ | -------------------------------------------------- |
-| `packageToPublish`          | string  | *required*   | Regex pattern to match the `.vsix` file            |
+| `packageToPublish`          | string  | *required*   | Name or filename prefix to match the `.vsix` file  |
 | `publishVersion`            | string  | *required*   | Expected version (verified against `package.json`) |
 | `dryRun`                    | boolean | `false`      | Skip the actual publish step                       |
 | `artifactName`              | string  | `Build Root` | Name of the artifact containing the package        |
 | `releaseServiceConnection`  | string  | *required*   | Service connection for VSCE authentication         |
 | `releaseApprovalEnvironment`| string  | `""`         | AzDO environment for release approval              |
+| `npmFeed`                   | string  | `""`         | Azure Artifacts feed for a private NPM mirror      |
 | `releasePool`               | object  | Windows MicroBuild pool | Pool for the release job                |
 
 ### Required Build Artifacts
@@ -157,6 +160,7 @@ extends:
     dryRun: ${{ parameters.dryRun }}
     releaseServiceConnection: ${{ variables.extensionReleaseServiceConnection }}
     releaseApprovalEnvironment: ${{ variables.extensionReleaseApprovalEnvironment }}
+    # npmFeed: MyProject/MyFeed # Use a private NPM mirror from Azure Artifacts
 ```
 
 ## NPM Release Pipeline (`1es-mb-release-npm.yml`)
@@ -167,7 +171,7 @@ This template releases an NPM package via ESRP.
 
 | Parameter                    | Type    | Default               | Description                                        |
 | ---------------------------- | ------- | --------------------- | -------------------------------------------------- |
-| `packageToPublish`           | string  | *required*            | Regex pattern to match the `.tgz` file             |
+| `packageToPublish`           | string  | *required*            | Name or filename prefix to match the `.tgz` file   |
 | `publishVersion`             | string  | *required*            | Expected version (verified against `package.json`) |
 | `dryRun`                     | boolean | `false`               | Skip the actual publish step                       |
 | `artifactName`               | string  | `Build Root`          | Name of the artifact containing the package        |
@@ -179,7 +183,7 @@ This template releases an NPM package via ESRP.
 
 ### Required Build Artifacts
 
-The build pipeline must produce the following artifacts for extension release:
+The build pipeline must produce the following artifacts for NPM release:
 
 1. `*.tgz` - The packaged NPM package
 2. `package.json` - Used to verify extension name and version
