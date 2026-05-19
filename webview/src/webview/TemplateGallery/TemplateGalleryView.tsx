@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { Button, Spinner, Tab, TabList, type SelectTabData, type SelectTabEvent } from '@fluentui/react-components';
 import * as React from 'react';
-import { useReducer, useEffect, useCallback, useContext, useMemo, type JSX } from 'react';
-import { Button, TabList, Tab, Spinner, type SelectTabData, type SelectTabEvent } from '@fluentui/react-components';
+import { useCallback, useContext, useEffect, useMemo, useReducer, type JSX } from 'react';
 import { WebviewContext } from '../WebviewContext';
+import '../styles/templateGalleryView.scss';
 import { useConfiguration } from '../useConfiguration';
 import { TemplateGalleryConfigProvider, useTemplateGalleryConfig } from './TemplateGalleryConfigContext';
-import type {
-    IProjectTemplate,
-    FilterState,
-    AiState,
-    ViewMode,
-    ActiveView,
-    ExtensionToWebviewMessage,
-    WebviewToExtensionMessage,
-    TemplateGalleryConfig,
-    TemplateGalleryAction as Action,
-} from './types';
-import { defaultLanguageFilterMap } from './types';
+import { AiGenerateView } from './components/AiGenerateView';
+import { CreatingView } from './components/CreatingView';
 import { FilterBar } from './components/FilterBar';
 import { TemplateCard } from './components/TemplateCard';
 import { TemplateConfigView } from './components/TemplateConfigView';
-import { CreatingView } from './components/CreatingView';
-import { AiGenerateView } from './components/AiGenerateView';
-import '../styles/templateGalleryView.scss';
+import type {
+    TemplateGalleryAction as Action,
+    ActiveView,
+    AiState,
+    ExtensionToWebviewMessage,
+    FilterState,
+    IProjectTemplate,
+    TemplateGalleryConfig,
+    ViewMode,
+    WebviewToExtensionMessage,
+} from './types';
+import { defaultLanguageFilterMap } from './types';
 
 // ── State ──
 
@@ -70,10 +70,6 @@ const initialState: GalleryState = {
     creatingDetail: '',
 };
 
-// ── Actions ──
-
-
-
 function createApplyFilters(languageFilterMap: Record<string, string>) {
     return function applyFilters(templates: IProjectTemplate[], filters: FilterState): IProjectTemplate[] {
         let results = [...templates];
@@ -105,11 +101,11 @@ function createApplyFilters(languageFilterMap: Record<string, string>) {
         }
 
         results.sort((a, b) => {
-            if (a.isHighlighted && !b.isHighlighted) {return -1;}
-            if (!a.isHighlighted && b.isHighlighted) {return 1;}
+            if (a.isHighlighted && !b.isHighlighted) { return -1; }
+            if (!a.isHighlighted && b.isHighlighted) { return 1; }
             const aPrio = a.priority ?? 999;
             const bPrio = b.priority ?? 999;
-            if (aPrio !== bPrio) {return aPrio - bPrio;}
+            if (aPrio !== bPrio) { return aPrio - bPrio; }
             return a.displayName.localeCompare(b.displayName);
         });
 
