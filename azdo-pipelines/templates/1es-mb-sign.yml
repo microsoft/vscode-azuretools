@@ -27,14 +27,15 @@ steps:
       }
 
       # Resolve the full path to vsce before changing directories
-      $vsce = (Get-Command vsce -ErrorAction SilentlyContinue).Source
-      if (-not $vsce) {
-          $vsce = Join-Path $(working_directory) 'node_modules/.bin/vsce'
+      $vsce = Join-Path $(working_directory) 'node_modules/.bin/vsce'
+      if (-not (Test-Path $vsce)) {
+          $vsce = Join-Path $(Build.SourcesDirectory) 'node_modules/.bin/vsce'
           if (-not (Test-Path $vsce)) {
               Write-Error "Cannot find vsce. Ensure @vscode/vsce is installed."
               exit 1
           }
       }
+      $vsce = Resolve-Path $vsce
 
       foreach ($vsix in $vsixList) {
           Set-Location $vsix.directory
