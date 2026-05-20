@@ -82,5 +82,8 @@
         "sass": "~1.79.6",
         "sass-loader": "^16.0.2",
         "uuid": "^14.0.0"
+    },
+    "overrides": {
+        "serialize-javascript": "^7.0.5"
     }
 }

@@ -6,13 +6,27 @@ If at all possible, avoid breaking changes. If breaking changes are necessary, i
 
 ## Releasing
 
-To update an existing release branch (e.g., `azext-pt/v1`) to the latest `main`:
+Releasing is done via the **Release Pipeline Templates** GitHub Actions workflow, which requires approval from the `release-pipeline-templates` GitHub environment (1 reviewer).
 
-1. Create a PR with `main` as the head and the release branch (e.g., `azext-pt/v1`) as the base
-2. Review and merge the PR
+### Update an existing release branch (e.g., `azext-pt/v1`)
 
-To create a new release branch (e.g., `azext-pt/v2`) for breaking changes:
+1. Go to **Actions** > **Release Pipeline Templates** > **Run workflow**
+2. Enter the release branch name (e.g., `azext-pt/v1`)
+3. Click **Run workflow**
+4. One reviewer must approve the environment deployment before the branch is updated
+
+The workflow fast-forwards the release branch to the current `main` commit.
+
+### Create a new release branch (e.g., `azext-pt/v2`) for breaking changes
 
 1. Create a new branch from `main` named `azext-pt/vN` (e.g., `azext-pt/v2`)
+2. Use the workflow above to manage subsequent releases
 
-The release branches are protected by branch protection rules, requiring a PR to update them.
+## Setup
+
+The `release-pipeline-templates` GitHub environment must be configured with:
+
+- **Required reviewers**: at least 1
+- **Deployment branches**: limit to `main` (or all branches if preferred)
+
+The release branches should also have branch protection rules. Note that GitHub Actions must be allowed to bypass the branch protection rules (e.g., via "Allow GitHub Actions to create and approve pull requests" or by adding the workflow's token to the bypass list), since the release workflow updates the branch via a direct push.
