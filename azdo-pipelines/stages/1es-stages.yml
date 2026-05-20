@@ -43,6 +43,11 @@ parameters:
     type: string
     default: ""
 
+  # Base URL for the Azure Artifacts feed (if needed for more than just NPM mirror)
+  - name: feedBaseUrl
+    type: string
+    default: ""
+
 stages:
   - stage: BuildStage
     pool: ${{ parameters.buildPool }}
@@ -83,3 +88,4 @@ stages:
               - template: ../templates/test.yml
                 parameters:
                   testARMServiceConnection: ${{ parameters.testARMServiceConnection }}
+                  feedBaseUrl: ${{ parameters.feedBaseUrl }}

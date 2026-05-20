@@ -3,6 +3,10 @@ parameters:
   - name: testARMServiceConnection
     type: string
 
+  # Base URL for the Azure Artifacts feed (if needed for more than just NPM mirror)
+  - name: feedBaseUrl
+    type: string
+
 steps:
   - bash: |
       /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -38,3 +42,6 @@ steps:
         FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
         FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
         FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
+      ${{ if ne(parameters.feedBaseUrl, '') }}:
+        FEED_BASE_URL: ${{ parameters.feedBaseUrl }}
+        FEED_TOKEN: $(System.AccessToken)
