@@ -72,20 +72,6 @@ extends:
             steps:
               - checkout: none
 
-              - task: UseNode@1
-                displayName: "👉 Using Node.js"
-                inputs:
-                  version: 22.x
-
-              - task: Npm@1
-                displayName: "👉 Install vsce"
-                inputs:
-                  command: custom
-                  customCommand: i -g @vscode/vsce@latest
-                  ${{ if ne(parameters.npmFeed, '') }}:
-                    customRegistry: useFeed
-                    customFeed: ${{ parameters.npmFeed }}
-
               - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
                 parameters:
                   vsixName: ${{ parameters.packageToPublish }}
@@ -96,6 +82,22 @@ extends:
                   packageToPublish: ${{ parameters.packageToPublish }}
                   publishVersion: ${{ parameters.publishVersion }}
                   dryRun: ${{ parameters.dryRun }}
+
+              - task: UseNode@1
+                displayName: "👉 Using Node.js"
+                condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
+                inputs:
+                  version: 22.x
+
+              - task: Npm@1
+                displayName: "👉 Install vsce"
+                condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
+                inputs:
+                  command: custom
+                  customCommand: i -g @vscode/vsce@latest
+                  ${{ if ne(parameters.npmFeed, '') }}:
+                    customRegistry: useFeed
+                    customFeed: ${{ parameters.npmFeed }}
 
               # Publish the package to VS Marketplace
               - task: AzureCLI@2
