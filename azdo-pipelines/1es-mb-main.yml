@@ -56,7 +56,7 @@ parameters:
     type: string
     default: ""
 
-  # Base URL for the Azure Artifacts feed (if needed for more than just NPM mirror)
+  # Base URL for the Azure Artifacts feed (if needed for more than just NPM mirror). Example: https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode
   - name: feedBaseUrl
     type: string
     default: ""
