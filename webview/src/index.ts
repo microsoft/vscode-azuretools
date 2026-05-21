@@ -8,7 +8,12 @@ export * from './extension/extensionVariables';
 export * from './extension/LoadingViewController';
 export * from './extension/OpenConfirmationViewStep';
 export * from './extension/OpenLoadingViewStep';
+export * from './extension/TemplateGalleryController';
 export { WebviewBaseController } from './extension/WebviewBaseController';
 export { WebviewController } from './extension/WebviewController';
 export type { WebviewBundleLocation } from './extension/WebviewController';
+export type {
+    ActiveView, AiState, ExtensionToWebviewMessage, FilterState, IProjectTemplate,
+    TemplateGalleryConfig, ViewMode, WebviewToExtensionMessage
+} from './webview/TemplateGallery/types';
 

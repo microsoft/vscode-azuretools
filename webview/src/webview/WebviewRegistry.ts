@@ -5,8 +5,10 @@
 
 import { ConfirmationView } from "./ConfirmationView";
 import { LoadingView } from "./LoadingView";
+import { TemplateGalleryView } from "./TemplateGallery/TemplateGalleryView";
 
 export const WebviewRegistry = {
     confirmationView: ConfirmationView,
-    loadingView: LoadingView
+    loadingView: LoadingView,
+    templateGalleryView: TemplateGalleryView,
 } as const;
