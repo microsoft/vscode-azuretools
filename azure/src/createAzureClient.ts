@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";
 import * as types from '../index';
+import { FeedMirrorPolicy } from './utils/FeedMirrorPolicy';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
@@ -138,6 +139,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
+    FeedMirrorPolicy.addIfNeeded(client.pipeline);
     return Promise.resolve(client);
 }
 

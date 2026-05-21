@@ -33,6 +33,10 @@ steps:
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
 
+  - template: ./setup-nuget-configs.yml
+    parameters:
+      feedBaseUrl: ${{ parameters.feedBaseUrl }}
+
   - task: Npm@1
     displayName: "\U0001F449 Test"
     inputs:
@@ -56,9 +60,6 @@ steps:
         AzCode_ServiceConnectionDomain: $(FC_SERVICE_CONNECTION_TENANT_ID)
         AzCode_ServiceConnectionClientID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
       ${{ if ne(parameters.feedBaseUrl, '') }}:
-        NUGET_MIRROR_FEED_URL: ${{ parameters.feedBaseUrl }}/nuget/v3/flat2
-        PSGALLERY_MIRROR_FEED_URL: ${{ parameters.feedBaseUrl }}/nuget/v2
-        NUGET_MIRROR_PAT: $(System.AccessToken)
         PIP_INDEX_URL: ${{ replace(parameters.feedBaseUrl, 'https://', 'https://build:$(System.AccessToken)@') }}/pypi/simple/
         FEED_BASE_URL: ${{ parameters.feedBaseUrl }}
         FEED_PAT: $(System.AccessToken)
