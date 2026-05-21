@@ -8,6 +8,7 @@
         "skipLibCheck": true, // TODO: webpack typings issue
         "types": [
             "node",
+            "mocha",
         ]
     },
 }
