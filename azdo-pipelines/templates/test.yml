@@ -60,3 +60,5 @@ steps:
         PSGALLERY_MIRROR_FEED_URL: ${{ parameters.feedBaseUrl }}/nuget/v2
         NUGET_MIRROR_PAT: $(System.AccessToken)
         PIP_INDEX_URL: ${{ replace(parameters.feedBaseUrl, 'https://', 'https://build:$(System.AccessToken)@') }}/pypi/simple/
+        FEED_BASE_URL: ${{ parameters.feedBaseUrl }}
+        FEED_PAT: $(System.AccessToken)
