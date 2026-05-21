@@ -7,6 +7,11 @@ parameters:
   - name: npmFeed
     type: string
 
+  # Base URL of an Azure Artifacts universal feed for test env vars
+  - name: feedBaseUrl
+    type: string
+    default: ""
+
 steps:
   - bash: |
       /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -45,3 +50,8 @@ steps:
         FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
         FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
         FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
+      ${{ if ne(parameters.feedBaseUrl, '') }}:
+        NUGET_MIRROR_FEED_URL: ${{ parameters.feedBaseUrl }}/nuget/v3/flat2
+        PSGALLERY_MIRROR_FEED_URL: ${{ parameters.feedBaseUrl }}/nuget/v2
+        NUGET_MIRROR_PAT: $(System.AccessToken)
+        PIP_INDEX_URL: ${{ replace(parameters.feedBaseUrl, 'https://', 'https://build:$(System.AccessToken)@') }}/pypi/simple/

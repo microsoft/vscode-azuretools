@@ -43,6 +43,11 @@ parameters:
     type: string
     default: ""
 
+  # Base URL of an Azure Artifacts universal feed for test env vars
+  - name: feedBaseUrl
+    type: string
+    default: ""
+
 stages:
   - stage: BuildStage
     pool: ${{ parameters.buildPool }}
@@ -84,3 +89,4 @@ stages:
                 parameters:
                   testARMServiceConnection: ${{ parameters.testARMServiceConnection }}
                   npmFeed: ${{ parameters.npmFeed }}
+                  feedBaseUrl: ${{ parameters.feedBaseUrl }}
