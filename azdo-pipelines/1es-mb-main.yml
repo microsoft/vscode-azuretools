@@ -57,7 +57,7 @@ parameters:
     default: ""
 
   # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode)
-  # When set, NUGET_MIRROR_FEED_URL, NUGET_MIRROR_PAT, and PIP_INDEX_URL env vars are injected into the test step
+  # When set, FEED_BASE_URL, FEED_PAT, and PIP_INDEX_URL env vars are injected into the test step
   - name: feedBaseUrl
     type: string
     default: ""
