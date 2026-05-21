@@ -91,11 +91,14 @@ export class FeedMirrorPolicy implements PipelinePolicy {
             this.log.info(`PSGallery rewrite → ${request.url}`);
         }
 
-        // Auth: add Bearer for the feed host, strip for any other host (e.g. blob storage after redirect)
+        // Auth: add Bearer for the feed host, strip after redirect away from it
         try {
-            if (new URL(request.url).host === this.feedHost) {
-                request.headers.set('Authorization', `Bearer ${this.feedPat}`);
-            } else {
+            const requestHost = new URL(request.url).host;
+            const header = `Bearer ${this.feedPat}`;
+            if (requestHost === this.feedHost) {
+                request.headers.set('Authorization', header);
+            } else if (request.headers.get('Authorization') === header) {
+                // Only remove auth we added -- don't touch auth set by others
                 request.headers.delete('Authorization');
             }
         } catch { /* invalid URL */ }
