@@ -73,7 +73,7 @@ export class FeedMirrorPolicy implements PipelinePolicy {
         clientPipeline.addPolicy(policy, { afterPolicies: [redirectPolicyName] });
     }
 
-    public sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
+    public async sendRequest(request: PipelineRequest, next: SendRequest): Promise<PipelineResponse> {
         // NuGet v2 URL rewrite: nuget.org/api/v2/package/{id}/{ver} → mirror v3 flat container
         const nugetV2Match = this.nugetV2Re.exec(request.url);
         if (nugetV2Match?.groups) {
@@ -112,6 +112,18 @@ export class FeedMirrorPolicy implements PipelinePolicy {
             }
         } catch { /* invalid URL */ }
 
-        return next(request);
+        const response = await next(request);
+
+        // The built-in redirectPolicy only follows 303 for POST requests (per HTTP spec),
+        // but the AzDO feed returns 303 for GET requests to redirect to blob storage.
+        // Follow 303 redirects manually, stripping auth since the target is a different host.
+        const location = response.headers.get('location');
+        if (response.status === 303 && location) {
+            request.url = location;
+            request.headers.delete('Authorization');
+            return next(request);
+        }
+
+        return response;
     }
 }
