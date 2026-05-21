@@ -4,7 +4,6 @@
 parameters:
   - name: feedBaseUrl
     type: string
-    default: ""
 
 steps:
   - pwsh: |

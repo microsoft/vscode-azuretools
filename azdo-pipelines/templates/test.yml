@@ -10,7 +10,6 @@ parameters:
   # Base URL of an Azure Artifacts universal feed for test env vars
   - name: feedBaseUrl
     type: string
-    default: ""
 
 steps:
   - bash: |
