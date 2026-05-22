@@ -131,9 +131,10 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         context.telemetry.properties.subscriptionId = (context as { subscriptionId: string }).subscriptionId;
     }
 
-    const retryOptions: RetryPolicyOptions | undefined =
-        (options?.retryOptions as RetryPolicyOptions | undefined)
-        ?? (options?.noRetryPolicy ? { maxRetries: 0 } : undefined);
+    let retryOptions: RetryPolicyOptions | undefined = options?.retryOptions;
+    if (!retryOptions && options?.noRetryPolicy) {
+        retryOptions = { maxRetries: 0 };
+    }
     endpoint = options?.endpoint ?? endpoint;
     const client = new ServiceClient({
         ...options,
@@ -142,7 +143,6 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
-
     FeedMirrorPolicy.addIfNeeded(client.pipeline);
     return Promise.resolve(client);
 }
