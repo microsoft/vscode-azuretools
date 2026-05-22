@@ -101,7 +101,7 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
     return client;
 }
 
-export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo): Promise<types.AzExtPipelineResponse> {
+export async function sendRequestWithTimeout(context: IActionContext, options: types.AzExtRequestPrepareOptions, timeout: number, clientInfo: types.AzExtGenericClientInfo, genericClientOptions?: types.IGenericClientOptions): Promise<types.AzExtPipelineResponse> {
     const request: PipelineRequest = createPipelineRequest({
         ...options,
         timeout
@@ -111,7 +111,7 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
         request.agent = new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized });
     }
 
-    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true, addStatusCodePolicy: true });
+    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true, addStatusCodePolicy: true, ...genericClientOptions });
     return await client.sendRequest(request);
 }
 
