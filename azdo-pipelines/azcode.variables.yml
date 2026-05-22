@@ -2,6 +2,8 @@ variables:
   # Upstream artifact feeds
   - name: npmFeed
     value: DevDiv/azcode
+  - name: feedBaseUrl
+    value: https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode
 
   # Related to extension release approval process
   - name: extensionReleaseServiceConnection
