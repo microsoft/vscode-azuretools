@@ -43,7 +43,7 @@ export class FeedMirrorPolicy implements PipelinePolicy {
      * If running in a test environment with a feed mirror configured, creates the
      * policy and adds it to the client's pipeline. No-ops otherwise.
      *
-     * Callers should also set {@link IGenericClientOptions.allowCrossOriginRedirects}
+     * Callers should also set `redirectOptions: { allowCrossOriginRedirects: true }`
      * so the built-in redirect policy follows cross-origin redirects from the feed.
      */
     public static addIfNeeded(clientPipeline: Pipeline, logger?: AzureLogger): void {
