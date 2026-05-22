@@ -531,6 +531,12 @@ export interface IGenericClientOptions {
     noRetryPolicy?: boolean;
     addStatusCodePolicy?: boolean;
     endpoint?: string;
+    /**
+     * Replace the default redirect policy with one that follows cross-origin redirects.
+     * Needed when the target server responds with a 303 redirect to a different host
+     * (e.g. blob storage), which the default policy refuses to follow.
+     */
+    allowCrossOriginRedirects?: boolean;
 }
 
 /**

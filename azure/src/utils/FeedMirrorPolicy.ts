@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Pipeline, PipelinePolicy, PipelineRequest, PipelineResponse, SendRequest } from '@azure/core-rest-pipeline';
-import { redirectPolicy, redirectPolicyName } from '@azure/core-rest-pipeline';
+import { redirectPolicyName } from '@azure/core-rest-pipeline';
 import { createClientLogger, type AzureLogger } from '@azure/logger';
 
 /**
@@ -42,6 +42,9 @@ export class FeedMirrorPolicy implements PipelinePolicy {
     /**
      * If running in a test environment with a feed mirror configured, creates the
      * policy and adds it to the client's pipeline. No-ops otherwise.
+     *
+     * Callers should also set {@link IGenericClientOptions.allowCrossOriginRedirects}
+     * so the built-in redirect policy follows cross-origin 303 redirects from the feed.
      */
     public static addIfNeeded(clientPipeline: Pipeline, logger?: AzureLogger): void {
         if (!process.env.VSCODE_RUNNING_TESTS) {
@@ -60,14 +63,6 @@ export class FeedMirrorPolicy implements PipelinePolicy {
         } catch {
             return;
         }
-
-        // The AzDO feed responds with a 303 redirect to blob storage (*.blob.core.windows.net).
-        // The default redirectPolicy has allowCrossOriginRedirects: false and refuses to follow it,
-        // causing StatusCodePolicy to throw "Unexpected status code: 303". Replace it with one
-        // that allows cross-origin redirects. afterPhase: 'Retry' matches the original positioning
-        // from createPipelineFromOptions.
-        clientPipeline.removePolicy({ name: redirectPolicyName });
-        clientPipeline.addPolicy(redirectPolicy({ allowCrossOriginRedirects: true }), { afterPhase: 'Retry' });
 
         const policy = new FeedMirrorPolicy(feedBaseUrl, feedPat, feedHost, logger ?? createClientLogger('feedMirror'));
         clientPipeline.addPolicy(policy, { afterPolicies: [redirectPolicyName] });
