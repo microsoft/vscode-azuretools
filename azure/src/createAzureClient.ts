@@ -111,7 +111,7 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
         request.agent = new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized });
     }
 
-    const client = await createGenericClient(context, clientInfo, { ...genericClientOptions, noRetryPolicy: true, addStatusCodePolicy: true });
+    const client = await createGenericClient(context, clientInfo, { ...genericClientOptions, retryOptions: { maxRetries: 0 }, addStatusCodePolicy: true });
     return await client.sendRequest(request);
 }
 
@@ -139,7 +139,7 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     const client = new ServiceClient({
         ...options,
         credential: credentials,
-        endpoint,
+        endpoint
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
