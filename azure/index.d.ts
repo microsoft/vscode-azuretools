@@ -524,6 +524,9 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
+ *
+ * Any additional `CommonClientOptions` on `options` (e.g. `retryOptions`, `redirectOptions`, `httpClient`)
+ * are forwarded to the underlying `ServiceClient`.
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
 export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient>;
