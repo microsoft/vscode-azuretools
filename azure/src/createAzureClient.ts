@@ -111,7 +111,7 @@ export async function sendRequestWithTimeout(context: IActionContext, options: t
         request.agent = new HttpsAgent({ rejectUnauthorized: options.rejectUnauthorized });
     }
 
-    const client = await createGenericClient(context, clientInfo, { noRetryPolicy: true, addStatusCodePolicy: true, ...genericClientOptions });
+    const client = await createGenericClient(context, clientInfo, { ...genericClientOptions, noRetryPolicy: true, addStatusCodePolicy: true });
     return await client.sendRequest(request);
 }
 
