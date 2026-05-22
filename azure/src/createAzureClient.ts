@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import { createHttpHeaders, createPipelineRequest, Pipeline, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { BearerChallengePolicy } from '@microsoft/vscode-azext-azureauth';
 import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
@@ -77,7 +77,6 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
         client.pipeline,
         context.environment.resourceManagerEndpointUrl,
         undefined,
-        undefined,
         createBearerChallengePolicy(context)
     );
     return client;
@@ -94,7 +93,6 @@ export function createAzureSubscriptionClient<T extends ServiceClient>(clientCon
         context,
         client.pipeline,
         context.environment.resourceManagerEndpointUrl,
-        undefined,
         undefined,
         createBearerChallengePolicy(context)
     );
@@ -139,23 +137,18 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
     const client = new ServiceClient({
         ...options,
         credential: credentials,
-        endpoint
+        endpoint,
+        retryOptions,
     });
 
-    addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
+    addAzExtPipeline(context, client.pipeline, endpoint, options?.addStatusCodePolicy);
     FeedMirrorPolicy.addIfNeeded(client.pipeline);
     return Promise.resolve(client);
 }
 
-function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, options?: PipelineOptions, addStatusCodePolicy?: boolean, bearerChallengePolicy?: PipelinePolicy): Pipeline {
+function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?: string, addStatusCodePolicy?: boolean, bearerChallengePolicy?: PipelinePolicy): Pipeline {
     // ServiceClient has default pipeline policies that the core-client SDKs require. Rather than building an entirely custom pipeline,
     // it's easier to just remove the default policies and add ours as-needed
-
-    // ServiceClient adds a default retry policy, so we need to remove it and add ours
-    if (options?.retryOptions) {
-        pipeline.removePolicy(defaultRetryPolicy());
-        pipeline.addPolicy(defaultRetryPolicy(options?.retryOptions));
-    }
 
     // ServiceClient adds a default userAgent policy and you can't have duplicate policies, so we need to remove it and add ours
     pipeline.removePolicy(userAgentPolicy());

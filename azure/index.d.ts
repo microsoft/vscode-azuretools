@@ -532,7 +532,15 @@ export interface IGenericClientOptions extends CommonClientOptions {
      * @deprecated Set `retryOptions: { maxRetries: 0 }` instead.
      */
     noRetryPolicy?: boolean;
+    /**
+     * If true, adds a policy that converts non-2xx responses into thrown `RestError`s. Useful for
+     * generic requests since, unlike SDK calls, the pipeline otherwise resolves with the response.
+     */
     addStatusCodePolicy?: boolean;
+    /**
+     * Overrides the endpoint derived from `clientInfo`. Requests with relative URLs will be resolved
+     * against this endpoint.
+     */
     endpoint?: string;
 }
 
@@ -546,9 +554,11 @@ export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauth
 export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
 
 /**
- * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
+ * Send request with a timeout specified. Retries are disabled (because retrying could take a lot longer)
+ * and `addStatusCodePolicy` is enabled; both override any matching fields in `genericClientOptions`.
  * @param timeout The timeout in milliseconds
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
+ * @param genericClientOptions Additional options forwarded to the underlying generic client
  */
 export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo, genericClientOptions?: IGenericClientOptions): Promise<AzExtPipelineResponse>;
 
