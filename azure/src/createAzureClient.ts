@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, redirectPolicy, redirectPolicyName, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import { createHttpHeaders, createPipelineRequest, defaultRetryPolicy, Pipeline, PipelineOptions, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { BearerChallengePolicy } from '@microsoft/vscode-azext-azureauth';
 import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
@@ -131,22 +131,17 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         context.telemetry.properties.subscriptionId = (context as { subscriptionId: string }).subscriptionId;
     }
 
-    const retryOptions: RetryPolicyOptions | undefined = options?.noRetryPolicy ? { maxRetries: 0 } : undefined;
+    const retryOptions: RetryPolicyOptions | undefined =
+        (options?.retryOptions as RetryPolicyOptions | undefined)
+        ?? (options?.noRetryPolicy ? { maxRetries: 0 } : undefined);
     endpoint = options?.endpoint ?? endpoint;
     const client = new ServiceClient({
+        ...options,
         credential: credentials,
-        endpoint
+        endpoint,
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, { retryOptions }, options?.addStatusCodePolicy);
-
-    if (options?.allowCrossOriginRedirects) {
-        // The default redirectPolicy has allowCrossOriginRedirects: false and refuses to follow
-        // cross-origin redirects, causing StatusCodePolicy to throw "Unexpected status code: 303".
-        // Replace it with one that allows cross-origin redirects.
-        client.pipeline.removePolicy({ name: redirectPolicyName });
-        client.pipeline.addPolicy(redirectPolicy({ allowCrossOriginRedirects: true }), { afterPhase: 'Retry' });
-    }
 
     FeedMirrorPolicy.addIfNeeded(client.pipeline);
     return Promise.resolve(client);

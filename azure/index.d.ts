@@ -11,7 +11,7 @@ import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
 import { type StorageManagementClient } from '@azure/arm-storage';
-import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
+import type { CommonClientOptions, ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
@@ -527,16 +527,13 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
 export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient>;
-export interface IGenericClientOptions {
+export interface IGenericClientOptions extends CommonClientOptions {
+    /**
+     * @deprecated Set `retryOptions: { maxRetries: 0 }` instead.
+     */
     noRetryPolicy?: boolean;
     addStatusCodePolicy?: boolean;
     endpoint?: string;
-    /**
-     * Replace the default redirect policy with one that follows cross-origin redirects.
-     * Needed when the target server redirects to a different host (e.g. blob storage),
-     * which the default policy refuses to follow.
-     */
-    allowCrossOriginRedirects?: boolean;
 }
 
 /**
