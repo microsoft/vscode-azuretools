@@ -10,11 +10,11 @@ on:
 jobs:
   ChangedPackages:
     # Determine changed subpaths to run the matrix on
-    # See https://github.com/dorny/paths-filter/tree/v2/#examples
+    # See https://github.com/dorny/paths-filter/tree/v4/#examples
     runs-on: ubuntu-latest
     steps:
       - name: Determine changed packages
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
