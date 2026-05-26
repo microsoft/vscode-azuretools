@@ -42,6 +42,9 @@ export class FeedMirrorPolicy implements PipelinePolicy {
     /**
      * If running in a test environment with a feed mirror configured, creates the
      * policy and adds it to the client's pipeline. No-ops otherwise.
+     *
+     * Also replaces the built-in redirect policy with one that allows cross-origin
+     * redirects, since the feed redirects (303) to blob storage on a different host.
      */
     public static addIfNeeded(clientPipeline: Pipeline, logger?: AzureLogger): void {
         if (!process.env.VSCODE_RUNNING_TESTS) {
