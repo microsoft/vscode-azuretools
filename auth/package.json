@@ -55,7 +55,7 @@
         "@types/vscode": "1.106.0"
     },
     "dependencies": {
-        "@azure/arm-resources-subscriptions": "file:C:/Users/bwater/Downloads/modular-packages/azure-arm-resources-subscriptions-3.0.0.tgz",
+        "@azure/arm-resources-subscriptions": "^3.0.0-beta.1",
         "@azure/identity": "^4.13.1",
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
