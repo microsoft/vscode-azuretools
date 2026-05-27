@@ -96,6 +96,7 @@ extends:
                   dryRun: ${{ parameters.dryRun }}
 
               # Publish the package to NPM
+              # NOTE: Template references don't support `condition:`, so dryRun must remain a compile-time check here
               - ${{ if eq(parameters.dryRun, false) }}:
                   - template: MicroBuild.Publish.yml@MicroBuildTemplate
                     parameters:
@@ -106,11 +107,16 @@ extends:
                       waitForReleaseCompletion: true
                       owners: "${{ parameters.ownerAliases }}"
                       approvers: "${{ parameters.approverAliases }}"
+              - ${{ else }}:
+                  - pwsh: Write-Host "Skipping NPM publish"
+                    displayName: "👉 Publish NPM package (skipped - dry run)"
+                    condition: false
 
               # (Optional) Create a draft release on GitHub containing the package
-              - ${{ if and(eq(parameters.dryRun, false), ne(parameters.gitHubServiceConnection, '')) }}:
+              - ${{ if ne(parameters.gitHubServiceConnection, '') }}:
                   - task: GitHubRelease@1
                     displayName: "👉 Create draft release on GitHub"
+                    condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
                     inputs:
                       gitHubConnection: ${{ parameters.gitHubServiceConnection }}
                       tagSource: userSpecifiedTag

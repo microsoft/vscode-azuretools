@@ -3,6 +3,14 @@ parameters:
   - name: testARMServiceConnection
     type: string
 
+  # Azure Artifacts feed for a private NPM mirror
+  - name: npmFeed
+    type: string
+
+  # Base URL of an Azure Artifacts universal feed for test env vars
+  - name: feedBaseUrl
+    type: string
+
 steps:
   - bash: |
       /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -24,12 +32,19 @@ steps:
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_CLIENT_ID]$env:servicePrincipalId"
             Write-Host "##vso[task.setvariable variable=FC_SERVICE_CONNECTION_TENANT_ID]$env:tenantId"
 
+  - template: ./setup-nuget-configs.yml
+    parameters:
+      feedBaseUrl: ${{ parameters.feedBaseUrl }}
+
   - task: Npm@1
     displayName: "\U0001F449 Test"
     inputs:
       command: custom
       customCommand: run test
       workingDir: $(working_directory)
+      ${{ if ne(parameters.npmFeed, '') }}:
+        customRegistry: useFeed
+        customFeed: ${{ parameters.npmFeed }}
     env:
       DISPLAY: :99 # Only necessary for Linux tests, must match Xvfb display number set above
       ${{ if ne(parameters.testARMServiceConnection, '') }}:
@@ -38,3 +53,12 @@ steps:
         FC_SERVICE_CONNECTION_ID: $(FC_SERVICE_CONNECTION_ID)
         FC_SERVICE_CONNECTION_CLIENT_ID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
         FC_SERVICE_CONNECTION_TENANT_ID: $(FC_SERVICE_CONNECTION_TENANT_ID)
+        # Temporary: legacy env vars for old azure-pipelines template compatibility, needed until RGs is released
+        AzCode_UseAzureFederatedCredentials: true
+        AzCode_ServiceConnectionID: $(FC_SERVICE_CONNECTION_ID)
+        AzCode_ServiceConnectionDomain: $(FC_SERVICE_CONNECTION_TENANT_ID)
+        AzCode_ServiceConnectionClientID: $(FC_SERVICE_CONNECTION_CLIENT_ID)
+      ${{ if ne(parameters.feedBaseUrl, '') }}:
+        PIP_INDEX_URL: ${{ replace(parameters.feedBaseUrl, 'https://', 'https://build:$(System.AccessToken)@') }}/pypi/simple/
+        FEED_BASE_URL: ${{ parameters.feedBaseUrl }}
+        FEED_PAT: $(System.AccessToken)

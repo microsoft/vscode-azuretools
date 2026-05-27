@@ -11,7 +11,7 @@ import type { ExtendedLocation, ResourceGroup } from '@azure/arm-resources';
 import type { Location } from '@azure/arm-resources-subscriptions';
 import type { StorageAccount } from '@azure/arm-storage';
 import { type StorageManagementClient } from '@azure/arm-storage';
-import type { ServiceClient, ServiceClientOptions } from '@azure/core-client';
+import type { CommonClientOptions, ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
 import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
@@ -524,12 +524,26 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  * Creates a generic http rest client (i.e. for non-Azure calls or for Azure calls that the available sdks don't support), ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns (if clientInfo corresponds to an Azure environment)
+ *
+ * Any additional `CommonClientOptions` on `options` (e.g. `retryOptions`, `redirectOptions`, `httpClient`)
+ * are forwarded to the underlying `ServiceClient`.
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
 export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient>;
-export interface IGenericClientOptions {
+export interface IGenericClientOptions extends CommonClientOptions {
+    /**
+     * @deprecated Set `retryOptions: { maxRetries: 0 }` instead.
+     */
     noRetryPolicy?: boolean;
+    /**
+     * If true, adds a policy that converts non-2xx responses into thrown `RestError`s. Useful for
+     * generic requests since, unlike SDK calls, the pipeline otherwise resolves with the response.
+     */
     addStatusCodePolicy?: boolean;
+    /**
+     * Overrides the endpoint derived from `clientInfo`. Requests with relative URLs will be resolved
+     * against this endpoint.
+     */
     endpoint?: string;
 }
 
@@ -543,11 +557,13 @@ export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauth
 export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
 
 /**
- * Send request with a timeout specified and turn off retry policy (because retrying could take a lot longer)
+ * Send request with a timeout specified. Retries are disabled (because retrying could take a lot longer)
+ * and `addStatusCodePolicy` is enabled; both override any matching fields in `genericClientOptions`.
  * @param timeout The timeout in milliseconds
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
+ * @param genericClientOptions Additional options forwarded to the underlying generic client
  */
-export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo): Promise<AzExtPipelineResponse>;
+export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo, genericClientOptions?: IGenericClientOptions): Promise<AzExtPipelineResponse>;
 
 export type AzExtClientType<T extends ServiceClient> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
 

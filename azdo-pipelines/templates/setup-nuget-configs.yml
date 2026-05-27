@@ -1,0 +1,36 @@
+# Configure CLI package managers (NuGet, pip) to use an Azure Artifacts feed mirror.
+# npm is handled separately via the npmFeed parameter.
+
+parameters:
+  - name: feedBaseUrl
+    type: string
+
+steps:
+  - pwsh: |
+      $feedBase = "${{ parameters.feedBaseUrl }}"
+
+      # NuGet: write config with <clear/> to block all other sources.
+      # dotnet walks up the directory tree for nuget.config, so the repo root
+      # covers all subdirectories. User-level and temp copies handle dotnet
+      # commands that run outside the repo tree.
+      $nugetConfig = "<?xml version=`"1.0`" encoding=`"utf-8`"?>`n<configuration>`n  <packageSources>`n    <clear />`n    <add key=`"AzureArtifacts`" value=`"${feedBase}/nuget/v3/index.json`" />`n  </packageSources>`n</configuration>"
+      $nugetConfig | Set-Content -Path "$(Build.SourcesDirectory)/nuget.config"
+      $userConfigDir = if ($IsWindows) { "$env:APPDATA/NuGet" } else { "$HOME/.nuget/NuGet" }
+      New-Item -ItemType Directory -Path $userConfigDir -Force | Out-Null
+      $nugetConfig | Set-Content -Path (Join-Path $userConfigDir "NuGet.Config")
+      $tempDir = if ($IsWindows) { $env:TEMP } else { "/tmp" }
+      $nugetConfig | Set-Content -Path (Join-Path $tempDir "nuget.config")
+
+      # Verify configuration
+      Write-Host "--- NuGet sources ---"
+      dotnet nuget list source
+      Write-Host "--- NuGet config locations ---"
+      Write-Host "  repo:       $(Build.SourcesDirectory)/nuget.config"
+      Write-Host "  user-level: $(Join-Path $userConfigDir 'NuGet.Config')"
+      Write-Host "  temp:       $(Join-Path $tempDir 'nuget.config')"
+    displayName: "👉 Configure NuGet feed mirror"
+    condition: and(succeeded(), ne('${{ parameters.feedBaseUrl }}', ''), ne(variables['DOTNET_ROOT'], ''))
+
+  - task: NuGetAuthenticate@1
+    displayName: "👉 Authenticate NuGet feeds"
+    condition: and(succeeded(), ne('${{ parameters.feedBaseUrl }}', ''), ne(variables['DOTNET_ROOT'], ''))

@@ -72,20 +72,6 @@ extends:
             steps:
               - checkout: none
 
-              - task: UseNode@1
-                displayName: "👉 Using Node.js"
-                inputs:
-                  version: 22.x
-
-              - task: Npm@1
-                displayName: "👉 Install vsce"
-                inputs:
-                  command: custom
-                  customCommand: i -g @vscode/vsce@latest
-                  ${{ if ne(parameters.npmFeed, '') }}:
-                    customRegistry: useFeed
-                    customFeed: ${{ parameters.npmFeed }}
-
               - template: azdo-pipelines/templates/find-vsixs.yml@azExtTemplates
                 parameters:
                   vsixName: ${{ parameters.packageToPublish }}
@@ -97,43 +83,59 @@ extends:
                   publishVersion: ${{ parameters.publishVersion }}
                   dryRun: ${{ parameters.dryRun }}
 
+              - task: UseNode@1
+                displayName: "👉 Using Node.js"
+                condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
+                inputs:
+                  version: 22.x
+
+              - task: Npm@1
+                displayName: "👉 Install vsce"
+                condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
+                inputs:
+                  command: custom
+                  customCommand: i -g @vscode/vsce@latest
+                  ${{ if ne(parameters.npmFeed, '') }}:
+                    customRegistry: useFeed
+                    customFeed: ${{ parameters.npmFeed }}
+
               # Publish the package to VS Marketplace
-              - ${{ if eq(parameters.dryRun, false) }}:
-                  - task: AzureCLI@2
-                    displayName: "👉 Publish VSIXs to Marketplace"
-                    inputs:
-                      azureSubscription: ${{ parameters.releaseServiceConnection }}
-                      scriptType: pscore
-                      scriptLocation: inlineScript
-                      inlineScript: |
-                        $vsixList = @('$(vsixListJson)' | ConvertFrom-Json)
+              - task: AzureCLI@2
+                displayName: "👉 Publish VSIXs to Marketplace"
+                condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
+                inputs:
+                  azureSubscription: ${{ parameters.releaseServiceConnection }}
+                  scriptType: pscore
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    $vsixList = @('$(vsixListJson)' | ConvertFrom-Json)
 
-                        # Publish each of the found VSIXs, automatically adding the enabled API proposals argument as well
-                        foreach ($vsix in $vsixList) {
-                            Set-Location $vsix.directory
+                    # Publish each of the found VSIXs, automatically adding the enabled API proposals argument as well
+                    foreach ($vsix in $vsixList) {
+                        Set-Location $vsix.directory
 
-                            $vsceArgs = @(
-                                'publish'
-                                '--azure-credential'
-                                '--packagePath'
-                                $vsix.vsixName
-                                '--manifestPath'
-                                $vsix.manifestName
-                                '--signaturePath'
-                                $vsix.signatureName
-                            )
-                            if ($vsix.proposedApis -ne $null -and $vsix.proposedApis.Count -gt 0) {
-                                $vsceArgs += '--allow-proposed-apis'
-                                $vsceArgs += $vsix.proposedApis
-                            }
-
-                            Write-Output "Publishing VSIX: $($vsix.vsixName) with command:"
-                            Write-Output "    vsce $($vsceArgs -join ' ')"
-
-                            # Execute the publish command with arguments passed separately
-                            & vsce @vsceArgs
-                            if ($LASTEXITCODE -ne 0) {
-                                Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
-                                exit 1
-                            }
+                        $vsceArgs = @(
+                            'publish'
+                            '--azure-credential'
+                            '--packagePath'
+                            $vsix.vsixName
+                            '--manifestPath'
+                            $vsix.manifestName
+                            '--signaturePath'
+                            $vsix.signatureName
+                        )
+                        if ($vsix.proposedApis -ne $null -and $vsix.proposedApis.Count -gt 0) {
+                            $vsceArgs += '--allow-proposed-apis'
+                            $vsceArgs += $vsix.proposedApis
                         }
+
+                        Write-Output "Publishing VSIX: $($vsix.vsixName) with command:"
+                        Write-Output "    vsce $($vsceArgs -join ' ')"
+
+                        # Execute the publish command with arguments passed separately
+                        & vsce @vsceArgs
+                        if ($LASTEXITCODE -ne 0) {
+                            Write-Error "Failed to publish VSIX: $($vsix.vsixName)"
+                            exit 1
+                        }
+                    }
