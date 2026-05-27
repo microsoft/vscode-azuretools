@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { azExtEslintStrictTypeChecked, lazyImportAzurePackages } from '@microsoft/vscode-azext-eng/eslint'; // Other configurations exist
+import { azExtEslintStrictTypeChecked, lazyImportRuleConfig } from '@microsoft/vscode-azext-eng/eslint'; // Other configurations exist
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     azExtEslintStrictTypeChecked,
-    lazyImportAzurePackages,
+    lazyImportRuleConfig(['@azure/*', '!@azure/ms-rest-azure-env', '!@azure/arm-resources-subscriptions']),
 ]);
