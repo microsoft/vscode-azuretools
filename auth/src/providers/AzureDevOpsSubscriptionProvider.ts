@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { type SubscriptionContext, createSubscription } from '@azure/arm-resources-subscriptions/api';
-import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package
 import * as azureEnv from '@azure/ms-rest-azure-env'; // This package is so small that it's not worth lazy loading
 import * as crypto from 'crypto';
 import type * as vscode from 'vscode';

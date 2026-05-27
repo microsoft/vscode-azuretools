@@ -6,7 +6,7 @@
 import { createSubscription, type SubscriptionContext } from '@azure/arm-resources-subscriptions/api';
 import { list as listSubscriptions } from '@azure/arm-resources-subscriptions/api/subscriptions';
 import { list as listTenants } from '@azure/arm-resources-subscriptions/api/tenants';
-import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package (at all, this one is dev-only)
+import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package
 import { inspect } from 'util';
 import * as vscode from 'vscode';
 import type { AzureAccount } from '../contracts/AzureAccount';
