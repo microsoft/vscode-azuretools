@@ -3,5 +3,9 @@
     "compilerOptions": {
         "outDir": "dist/esm",
         "rootDir": ".",
+        "types": [
+            "node",
+            "mocha",
+        ]
     },
 }

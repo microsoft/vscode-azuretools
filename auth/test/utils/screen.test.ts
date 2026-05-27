@@ -5,7 +5,6 @@
 
 import assert from 'assert';
 import type { AzureAccount } from '../../src/contracts/AzureAccount';
-import type { AzureTenant } from '../../src/contracts/AzureTenant';
 import { screen } from '../../src/utils/screen';
 
 suite('(unit) screen()', () => {
@@ -58,10 +57,10 @@ suite('(unit) screen()', () => {
     suite('invalid input', () => {
         test('returns "unknown" for missing label/displayName', () => {
             assert.strictEqual(screen({ id: '1' } as unknown as AzureAccount), 'unknown');
-            assert.strictEqual(screen({ id: '2', label: '' } as unknown as AzureAccount), 'unknown');
+            assert.strictEqual(screen({ id: '2', label: '' }), 'unknown');
 
-            assert.strictEqual(screen({ tenantId: '3' } as unknown as AzureTenant), 'unknown');
-            assert.strictEqual(screen({ tenantId: '4', displayName: '' } as unknown as AzureTenant), 'unknown');
+            assert.strictEqual(screen({ tenantId: '3' }), 'unknown');
+            assert.strictEqual(screen({ tenantId: '4', displayName: '' }), 'unknown');
         });
     });
 });
