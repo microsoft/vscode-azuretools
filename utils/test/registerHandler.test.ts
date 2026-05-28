@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { teardown } from 'mocha';
 import { Disposable } from 'vscode';
-import { ErrorHandler } from '..';
+import { ErrorHandler, TelemetryHandler } from '..';
 import { callWithTelemetryAndErrorHandling, registerErrorHandler, registerTelemetryHandler } from '../src/callWithTelemetryAndErrorHandling';
 
 suite('registerHandler', () => {
@@ -15,7 +15,7 @@ suite('registerHandler', () => {
 
     let disposables: Disposable[] = [];
     teardown(() => {
-        disposables.forEach(d => d.dispose());
+        disposables.forEach(d => { d.dispose(); });
         disposables = [];
     });
 
@@ -58,7 +58,7 @@ suite('registerHandler', () => {
     });
 
     suite('telemetryHandler', () => {
-        function registerTestHandler(handler: ErrorHandler): Disposable {
+        function registerTestHandler(handler: TelemetryHandler): Disposable {
             const disposable = registerTelemetryHandler(handler);
             disposables.push(disposable);
             return disposable;

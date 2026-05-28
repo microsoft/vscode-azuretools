@@ -48,9 +48,8 @@ export async function findFreePort(startPort: number = 0, maxAttempts: number = 
         server.on('listening', () => {
             doResolve(startPort, resolve);
         });
-        server.on('error', err => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (err && ((<any>err).code === 'EADDRINUSE' || (<any>err).code === 'EACCES') && (countTried < maxAttempts)) {
+        server.on('error', (err: NodeJS.ErrnoException) => {
+            if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES') && (countTried < maxAttempts)) {
                 startPort += countTried;
                 countTried++;
                 server.listen(startPort, '127.0.0.1');

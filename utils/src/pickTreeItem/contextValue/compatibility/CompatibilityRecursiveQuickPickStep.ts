@@ -124,7 +124,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
     }
 
     protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
-        const picks: types.IAzureQuickPickItem<unknown | CreateCallback>[] = [];
+        const picks: types.IAzureQuickPickItem<unknown>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
         } catch (error) {

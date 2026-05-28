@@ -284,15 +284,15 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
         if (output.item &&
-            options.suppressActivityOutput !== ActivityOutputType.Item &&
-            options.suppressActivityOutput !== ActivityOutputType.All
+            (options.suppressActivityOutput as ActivityOutputType) !== ActivityOutputType.Item &&
+            (options.suppressActivityOutput as ActivityOutputType) !== ActivityOutputType.All
         ) {
             this._context.activityChildren?.push(output.item);
         }
 
         if (output.message &&
-            options.suppressActivityOutput !== ActivityOutputType.Message &&
-            options.suppressActivityOutput !== ActivityOutputType.All
+            (options.suppressActivityOutput as ActivityOutputType) !== ActivityOutputType.Message &&
+            (options.suppressActivityOutput as ActivityOutputType) !== ActivityOutputType.All
         ) {
             ext.outputChannel?.appendLog(output.message);
         }

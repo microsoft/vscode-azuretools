@@ -15,14 +15,15 @@ const mockFilePath = "mock_file_path";
 class MockAzExtTreeFileSystem extends AzExtTreeFileSystem<MockItemType> {
     public override scheme = "mockAzExtTreeFileSystem";
 
-    public override async statImpl(_context: IActionContext, _item: MockItemType, _originalUri): Promise<vscode.FileStat> {
+    public override statImpl(_context: IActionContext, _item: MockItemType, _originalUri): Promise<vscode.FileStat> {
         throw Error("not implemented");
     }
 
-    public override async readFileImpl(_context: IActionContext, _item: MockItemType, _originalUri): Promise<Uint8Array> {
+    public override readFileImpl(_context: IActionContext, _item: MockItemType, _originalUri): Promise<Uint8Array> {
         throw Error("not implemented");
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public override async writeFileImpl(_context: IActionContext, _item: MockItemType) {
         return;
     }

@@ -131,7 +131,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 context.telemetry.measurements.childCount = result.length;
                 return result;
-            }))!;
+            })) ?? [];
         } catch (error) {
             return [new GenericTreeItem(arg, {
                 label: l10n.t('Error: {0}', parseError(error).message),
@@ -196,6 +196,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return <T><unknown>treeItem;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
         return treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent;
     }

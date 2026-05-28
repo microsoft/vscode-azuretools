@@ -49,7 +49,7 @@ suite('TreeElementStateManager', () => {
 
     test('wrapItemInStateHandling - getChildren returns unmodified children', async () => {
         const testItemWithChildren = getTestItemWithChildren();
-        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, async () => { });
+        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, () => { });
 
         const originalChildren = await (testItemWithChildren as TreeElementBase).getChildren?.();
         const wrappedChildren = await wrappedItem.getChildren?.() ?? [];
@@ -59,7 +59,7 @@ suite('TreeElementStateManager', () => {
 
     test('wrapItemInStateHandling - getTreeItem returns an unmodified tree item', async () => {
         const testItemWithChildren = getTestItemWithChildren();
-        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, async () => { });
+        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, () => { });
 
         const originalTreeItem = await (testItemWithChildren as TreeElementBase).getTreeItem();
         const wrappedTreeItem = await wrappedItem.getTreeItem();
@@ -67,20 +67,20 @@ suite('TreeElementStateManager', () => {
         assert.deepEqual(wrappedTreeItem, originalTreeItem);
     });
 
-    test('wrapItemInStateHandling - throws error if item is wrapped twice', async () => {
+    test('wrapItemInStateHandling - throws error if item is wrapped twice', () => {
         const testItemWithChildren = getTestItemWithChildren();
-        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, async () => { });
+        const wrappedItem = state.wrapItemInStateHandling(testItemWithChildren, () => { });
 
         assert.throws(() => {
-            state.wrapItemInStateHandling(wrappedItem, async () => { });
+            state.wrapItemInStateHandling(wrappedItem, () => { });
         });
     });
 
-    test('notifyChildrenChanged - calls the refresh callback', async () => {
+    test('notifyChildrenChanged - calls the refresh callback', () => {
         const testItemWithChildren = getTestItemWithChildren();
 
         let calledCount = 0;
-        state.wrapItemInStateHandling(testItemWithChildren, async () => {
+        state.wrapItemInStateHandling(testItemWithChildren, () => {
             calledCount++;
         });
 
@@ -128,7 +128,7 @@ suite('TreeElementStateManager', () => {
         const wrappedItem = state.wrapItemInStateHandling(testItem, () => { });
         try {
 
-            await state.runWithTemporaryDescription(wrappedItem.id, 'temporary description', async () => {
+            await state.runWithTemporaryDescription(wrappedItem.id, 'temporary description', () => {
                 throw new Error();
             });
         } catch {
@@ -143,7 +143,7 @@ suite('TreeElementStateManager', () => {
         const wrappedItem = state.wrapItemInStateHandling(testItem, () => { });
         let throws = false;
         try {
-            await state.runWithTemporaryDescription(wrappedItem.id, 'temporary description', async () => {
+            await state.runWithTemporaryDescription(wrappedItem.id, 'temporary description', () => {
                 throw new Error('test error');
             });
         } catch {
@@ -166,7 +166,7 @@ suite('TreeElementStateManager', () => {
 
             const treeItems: TreeItem[] = [];
 
-            for await (const child of childrenDuringCallback) {
+            for (const child of childrenDuringCallback) {
                 treeItems.push(await child.getTreeItem());
             }
 
@@ -186,7 +186,7 @@ suite('TreeElementStateManager', () => {
 async function getTreeItems(children: TreeElementBase[]): Promise<TreeItem[]> {
     const treeItems: TreeItem[] = [];
 
-    for await (const child of children) {
+    for (const child of children) {
         treeItems.push(await child.getTreeItem());
     }
 

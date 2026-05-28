@@ -56,7 +56,7 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
  * Long-standing issue that is pretty common for all Azure calls, but can be fixed with a simple reload of VS Code
  * https://github.com/microsoft/vscode-azure-account/issues/53
  */
-async function handleEntryNotFound(context: types.IErrorHandlerContext): Promise<void> {
+function handleEntryNotFound(context: types.IErrorHandlerContext): void {
     if (parseError(context.error).message === 'Entry not found in cache.') {
         context.error = new Error(l10n.t('Your VS Code window must be reloaded to perform this action.'));
         context.errorHandling.suppressReportIssue = true;

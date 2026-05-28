@@ -23,7 +23,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
         const recentlyUsedKey: string | undefined = await getRecentlyUsedKey(options);
         const groups: QuickPickGroup[] = [];
 
-        // eslint-disable-next-line no-async-promise-executor
+        // eslint-disable-next-line no-async-promise-executor, @typescript-eslint/no-misused-promises
         const result = await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
             disposables.push(
                 quickPick.onDidAccept(async () => {
@@ -42,6 +42,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                             }
                         }
                     } catch (error) {
+                        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                         reject(error);
                     }
                 }),
@@ -78,6 +79,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                 quickPick.busy = false;
                 quickPick.enabled = true;
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 reject(err);
             }
         });

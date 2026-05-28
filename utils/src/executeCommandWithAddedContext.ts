@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 import * as types from '../index';
 
 export function executeCommandWithAddedContext<T = unknown>(commandId: string, additionalContext: Partial<types.IActionContext>, ...args: unknown[]): Thenable<T> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const metadata = { __injectedContext: additionalContext };
     return vscode.commands.executeCommand(commandId, ...args, metadata);
 }

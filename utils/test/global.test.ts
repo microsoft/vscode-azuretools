@@ -6,6 +6,6 @@
 import { testGlobalSetup } from '../src/index';
 
 // Runs before all tests
-suiteSetup(async () => {
+suiteSetup(() => {
     testGlobalSetup();
 });

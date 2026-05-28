@@ -372,7 +372,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         return new ThemeIcon('warning');
     }
 
-    public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
+    public loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
         throw this._error;
     }
 

@@ -27,6 +27,7 @@ suite("masking", () => {
            hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
 
             await assertThrowsAsync(async (): Promise<void> => {
+                // eslint-disable-next-line @typescript-eslint/require-await
                 await callWithMaskHandling(async () => {
                     throw new Error(errorMessage);
                 }, credentials);
@@ -49,6 +50,7 @@ suite("masking", () => {
            scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda`;
 
             await assertThrowsAsync(async (): Promise<void> => {
+                // eslint-disable-next-line @typescript-eslint/require-await
                 await callWithMaskHandling(async () => {
                     throw new Error(errorMessage);
                 }, credentials);
@@ -69,7 +71,9 @@ suite("masking", () => {
            hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
 
             await assertThrowsAsync(async (): Promise<void> => {
+                // eslint-disable-next-line @typescript-eslint/require-await
                 await callWithMaskHandling(async () => {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw errorMessage;
                 }, credentialsSpecialChars);
             }, (err: unknown) => {
@@ -81,7 +85,9 @@ suite("masking", () => {
             const errorMessage: string = "'ssh-keygen' is not recognized as an internal or external command";
 
             await assertThrowsAsync(async (): Promise<void> => {
+                // eslint-disable-next-line @typescript-eslint/require-await
                 await callWithMaskHandling(async () => {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw errorMessage;
                 }, '');
             }, (err: Error) => {
@@ -100,7 +106,9 @@ suite("masking", () => {
            hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
 
             await assertThrowsAsync(async (): Promise<void> => {
+                // eslint-disable-next-line @typescript-eslint/require-await
                 await callWithMaskHandling(async () => {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw errorMessage;
                 }, credentialsWithReservedChars);
             }, (err: Error) => {
@@ -110,22 +118,22 @@ suite("masking", () => {
     });
 
     suite("maskUserInfo", () => {
-        test('generic text should not be masked', async () => {
+        test('generic text should not be masked', () => {
             const loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
             assert.strictEqual(maskUserInfo(loremIpsum, []), loremIpsum);
         });
 
-        test('Action value', async () => {
+        test('Action value', () => {
             assert.strictEqual(maskUserInfo('test1', ['test1']), '---');
         });
 
-        test('Extension value', async () => {
+        test('Extension value', () => {
             const extensionValue = randomUtils.getRandomHexString();
             addExtensionValueToMask(extensionValue);
             assert.strictEqual(maskUserInfo(extensionValue, []), '---');
         });
 
-        test('Multiple action and extension values', async () => {
+        test('Multiple action and extension values', () => {
             const extensionValue1 = randomUtils.getRandomHexString();
             const extensionValue2 = randomUtils.getRandomHexString();
             addExtensionValueToMask(extensionValue1);
@@ -133,23 +141,23 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo(`${extensionValue1} ${extensionValue2} action1 action2`, ['action1', 'action2']), '--- --- --- ---');
         });
 
-        test('One value is substring of another', async () => {
+        test('One value is substring of another', () => {
             assert.strictEqual(maskUserInfo('firstNameLastName', ['firstName', 'firstNameLastName']), '---');
             assert.strictEqual(maskUserInfo('firstNameLastName', ['firstNameLastName', 'firstName']), '---'); // flip order
         });
 
-        test('Values from azure id', async () => {
+        test('Values from azure id', () => {
             const appId = `/subscriptions/${randomUtils.getRandomHexString()}/resourceGroups/${randomUtils.getRandomHexString()}/providers/Microsoft.Web/sites/${randomUtils.getRandomHexString()}`;
             const context = <types.IActionContext><any>{ valuesToMask: [] };
             addValuesToMaskFromAzureId(context, appId);
             assert.strictEqual(maskUserInfo(appId, context.valuesToMask), '/subscriptions/---/resourceGroups/---/providers/Microsoft.Web/sites/---');
         });
 
-        test('Email', async () => {
+        test('Email', () => {
             assert.strictEqual(maskUserInfo('user@microsoft.com user2@microsoft.com us---Er@mic.rosoft.com', []), 'redacted:email redacted:email redacted:email');
         });
 
-        test('Username', async () => {
+        test('Username', () => {
             resetUsernameMask();
             const getUsername = () => 'dave';
             assert.strictEqual(maskUserInfo('User dave cannot do that', [], false, getUsername), 'User redacted:username cannot do that');
@@ -161,7 +169,7 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo('Cannot do that, Dave', [], false, getUsername), 'Cannot do that, redacted:username');
         });
 
-        test('Short Username', async () => {
+        test('Short Username', () => {
             resetUsernameMask();
             const getUsername = () => 'dav';
             assert.strictEqual(maskUserInfo('User dav can do that', [], false, getUsername), 'User dav can do that');
@@ -169,37 +177,37 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo('Davuser can do that', [], false, getUsername), 'Davuser can do that');
         });
 
-        test('Guid', async () => {
+        test('Guid', () => {
             assert.strictEqual(maskUserInfo('c35d6342-5917-46f8-953e-9d3faffd1c72 C35D6342-5917-46F8-953E-9D3FAFFD1C72 c35d6342591746f8953e9d3faffd1c72', []), 'redacted:id redacted:id redacted:id');
         });
 
-        test('id with word breaks', async () => {
+        test('id with word breaks', () => {
             assert.strictEqual(maskUserInfo('(c35d6342) "c35d6342" \'c35d6342\'', []), '(redacted:id) "redacted:id" \'redacted:id\'');
         });
 
-        test('Ip address', async () => {
+        test('Ip address', () => {
             assert.strictEqual(maskUserInfo('127.0.0.1 aaaa:0000:0000:0000:ffff:0000:0000:0001', []), 'redacted:id redacted:id');
         });
 
-        test('Phone number', async () => {
+        test('Phone number', () => {
             assert.strictEqual(maskUserInfo('000-0000 000-111-2222', []), 'redacted:id redacted:id');
         });
 
-        test('Url', async () => {
+        test('Url', () => {
             assert.strictEqual(maskUserInfo('https://microsoft.com http://microsoft.com mongodb://mongodb0.example.com:27017', []), 'redacted:url redacted:url redacted:url');
         });
 
-        test('Url without scheme', async () => {
+        test('Url without scheme', () => {
             assert.strictEqual(maskUserInfo('microsoft.com microsoft.org?queryParam=test1 microsoft.net', []), 'redacted:url redacted:url redacted:url');
         });
 
-        test('Url masking exclusions', async () => {
+        test('Url masking exclusions', () => {
             // ".NET" and "ASP.NET" with no scheme should not be masked, but something like "microsoft-asp.net" or "microsoftasp.net" *should* be masked.
             assert.strictEqual(maskUserInfo('microsoft.NET .NET ASP.NET microsoft-asp.net microsoftasp.net', []), 'redacted:url .NET ASP.NET redacted:url redacted:url');
             assert.strictEqual(maskUserInfo('http://microsoft.NET http://.NET http://ASP.NET http://microsoft-asp.net http://microsoftasp.net', []), 'redacted:url redacted:url redacted:url redacted:url redacted:url');
         });
 
-        test('key', async () => {
+        test('key', () => {
             assert.strictEqual(maskUserInfo('sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dddddddddddddddddddddddddddddddddddddddddddddddd', []), 'redacted:key');
             assert.strictEqual(maskUserInfo('DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=dddddddddddddddddddddddddddddddddddddddddddddddd/dddddddd/dddddddd==;', []), 'redacted:key');
             assert.strictEqual(maskUserInfo('AccountEndpoint=accountname.documents.azure:443;AccountKey=accountkey==;', []), 'redacted:key');
@@ -221,13 +229,13 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo(`This message references two jwt's: ${mockJwtOne} and ${mockJwtTwo}.`, []), 'This message references two jwt\'s: redacted:jwt and redacted:jwt.');
         });
 
-        test('lessAggressive', async () => {
+        test('lessAggressive', () => {
             const valueToMask = 'valueToMask';
             assert.strictEqual(maskUserInfo('https://microsoft.com c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world accountkey=1234 valueToMask', [valueToMask], true /* lessAggressive */), 'redacted:url c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world redacted:key ---');
         });
 
         // https://github.com/microsoft/vscode-azuretools/issues/967
-        test('non-strings', async () => {
+        test('non-strings', () => {
             assert.strictEqual(maskUserInfo(4, []), '4');
             assert.strictEqual(maskUserInfo(true, []), 'true');
             assert.strictEqual(maskUserInfo(undefined, []), 'undefined');

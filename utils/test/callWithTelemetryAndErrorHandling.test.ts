@@ -12,20 +12,20 @@ function testFunc(): string {
     return 'testFunc';
 }
 
-async function testFuncAsync(): Promise<string> {
-    return 'testFuncAsync';
+function testFuncAsync(): Promise<string> {
+    return Promise.resolve('testFuncAsync');
 }
 
 function testFuncError(): string {
     throw new Error('testFuncError');
 }
 
-async function testFuncErrorAsync(): Promise<string> {
-    throw new Error('testFuncErrorAsync');
+function testFuncErrorAsync(): Promise<string> {
+    return Promise.reject(new Error('testFuncErrorAsync'));
 }
 
 suite('callWithTelemetryAndErrorHandling tests', () => {
-    test('sync', async () => {
+    test('sync', () => {
         assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFunc), testFunc());
         assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFuncError), undefined);
 
@@ -50,7 +50,7 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
         assert.strictEqual(await callWithTelemetryAndErrorHandling('callbackId', testFuncErrorAsync), undefined);
 
         await assertThrowsAsync(
-            async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
+            async () => await callWithTelemetryAndErrorHandling('callbackId', (context: IActionContext) => {
                 context.errorHandling.rethrow = true;
                 return testFuncError();
             }),
@@ -59,7 +59,7 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
         await assertThrowsAsync(
             async () => await callWithTelemetryAndErrorHandling('callbackId', async (context: IActionContext) => {
                 context.errorHandling.rethrow = true;
-                return testFuncErrorAsync();
+                return await testFuncErrorAsync();
             }),
             /testFuncErrorAsync/);
     });

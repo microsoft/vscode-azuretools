@@ -40,6 +40,7 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
         this.label = options.label;
         this.suppressMaskLabel = options.suppressMaskLabel;
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.compareChildrenImpl = options.compareChildrenImpl ?? (() => 0);
     }
 

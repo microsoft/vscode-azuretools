@@ -30,10 +30,12 @@ suite("showQuickPick", () => {
                 get<T>(key: string): T | undefined;
                 get<T>(key: string, defaultValue: T): T;
                 get<T>(key: any, defaultValue?: any): T | undefined {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                     return this.fakeKeys[key] ?? defaultValue;
                 }
-                async update(key: string, value: any): Promise<void> {
+                update(key: string, value: any): Thenable<void> {
                     this.fakeKeys[key] = value;
+                    return Promise.resolve();
                 }
 
             }
@@ -50,12 +52,12 @@ suite("showQuickPick", () => {
                     expected: string[]
                 }
             ): Promise<void> {
-                const input: types.IAzureQuickPickItem<string>[] = options.input.map(p => {
+                const input: types.IAzureQuickPickItem<string>[] = options.input.map(p => ({
                     label: p.label,
                     data: p.label,
                     suppressPersistence: p.suppressPersistance,
                     priority: p.priority,
-                });
+                }));
                 const fakeState = new FakeMemento();
                 if (options.recentlyUsed) {
                     fakeState.fakeKeys[options.recentlyUsed] = await getrecentlyUsed(options.recentlyUsed);

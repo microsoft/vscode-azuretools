@@ -81,6 +81,7 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
             throw error;
         }
 
+        // eslint-disable-next-line preserve-caught-error -- Don't want to rethrow the masked error
         throw new Error(maskValue(parsedError.message, valueToMask));
     }
 }

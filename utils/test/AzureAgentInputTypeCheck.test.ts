@@ -57,11 +57,11 @@ const mockAzureUserInput: IAzureUserInput = new MockAzureUserInput();
 const mockAzureAgentInput: IAzureAgentInput = new MockAzureAgentInput();
 
 suite("Azure Agent Input Type Check", () => {
-    test("Azure Agent Input Can Be Used as Azure User Input", async () => {
+    test("Azure Agent Input Can Be Used as Azure User Input", () => {
         const azureUserInputSetFromAgentInput: IAzureUserInput = mockAzureAgentInput;
         assert.equal(azureUserInputSetFromAgentInput, mockAzureAgentInput);
     });
-    test("Azure User Input Can Be Used as Azure Agent Input", async () => {
+    test("Azure User Input Can Be Used as Azure Agent Input", () => {
         const azureAgentInputSetFromUserInput: IAzureAgentInput = mockAzureUserInput;
         assert.equal(azureAgentInputSetFromUserInput, mockAzureUserInput);
     });

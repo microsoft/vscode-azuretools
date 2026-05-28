@@ -36,7 +36,9 @@ export namespace validationUtils {
             return vscode.l10n.t('The value must be {0} characters or less.', rc.upperLimitIncl);
         } else {
             return rc.lowerLimitIncl === rc.upperLimitIncl ?
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 vscode.l10n.t('The value must be {0} characters long.', rc.lowerLimitIncl!) :
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 vscode.l10n.t('The value must be between {0} and {1} characters long.', rc.lowerLimitIncl!, rc.upperLimitIncl!);
         }
     }

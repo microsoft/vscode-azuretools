@@ -103,6 +103,7 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
         const properties: { [key: string]: string } = {};
 
         for (const key of props.keys()) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             properties[key] = props.get(key)!;
         }
 

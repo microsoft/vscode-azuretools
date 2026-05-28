@@ -139,6 +139,7 @@ export class AzExtUserInputWithInputQueue implements AzExtUserInputWithInputQueu
         let result: T;
         const nextItemInQueue = (this._inputsQueue.shift() as T | null | undefined);
         if (!nextItemInQueue) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
             result = await this._realAzureUserInput.showWarningMessage(message, ...args);
         } else {
             result = nextItemInQueue;

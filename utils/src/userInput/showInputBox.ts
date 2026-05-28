@@ -51,6 +51,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                         }
                     } catch (e) {
                         const pe: types.IParsedError = parseError(e);
+                        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                         reject(pe.message);
                     }
 
@@ -101,6 +102,7 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
 
     options.ignoreFocusOut ??= true;
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const validateInput = options.validateInput;
     if (validateInput) {
         options.validateInput = async (v): Promise<InputBoxValidationResult> => validOnTimeoutOrException(async () => await validateInput(v));
