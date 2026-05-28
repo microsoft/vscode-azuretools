@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isArray } from "util";
 import { IAzureNamingRules, IRelatedNameWizardContext } from "../../index";
 import { AzureWizardPromptStep } from "./AzureWizardPromptStep";
 
@@ -11,7 +10,7 @@ export abstract class AzureNameStep<T extends IRelatedNameWizardContext> extends
     protected abstract isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean>;
 
     protected async generateRelatedName(wizardContext: T, name: string, namingRules: IAzureNamingRules | IAzureNamingRules[]): Promise<string | undefined> {
-        if (!isArray(namingRules)) {
+        if (!Array.isArray(namingRules)) {
             namingRules = [namingRules];
         }
 
