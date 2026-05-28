@@ -97,7 +97,7 @@ export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>
     const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
 
     const wizard = context.ui.wizard;
-    if (wizard && wizard.showTitle) {
+    if (wizard?.showTitle) {
         quickPick.title = wizard.title;
         if (!wizard.hideStepCount && wizard.title) {
             quickPick.step = wizard.currentStep;

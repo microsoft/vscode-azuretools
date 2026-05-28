@@ -96,7 +96,7 @@ export abstract class ActivityBase<R> implements hTypes.Activity {
             const result = await this.task({ report: this.report.bind(this) as typeof this.report }, this.cancellationTokenSource.token);
             this.status = ActivityStatus.Succeeded;
             this._onSuccessEmitter.fire(this.getState());
-            return result as R;
+            return result;
         } catch (e) {
             this.error = parseError(e);
             this.status = ActivityStatus.Failed;

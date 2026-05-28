@@ -71,7 +71,7 @@ export async function doGithubCopilotInteraction(primaryPrompt: string, relevant
         mode: "immediate"
     });
 
-    if (!response || !response.data) {
+    if (!response?.data) {
         throw new InvalidCopilotResponseError();
     }
 
@@ -116,7 +116,7 @@ export async function disposeCopilotSession(): Promise<void> {
 
 function extractSubscriptionIdFromContext(context: string): string | undefined {
     const regex = /https:\/\/management\.[^/]+\/subscriptions\/([0-9a-fA-F-]{36})/;
-    const match = context.match(regex);
+    const match = regex.exec(context);
     return match ? match[1] : undefined;
 }
 
