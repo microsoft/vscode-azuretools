@@ -59,11 +59,6 @@ const initialState: GalleryState = {
     ai: {
         prompt: '',
         language: 'TypeScript',
-        location: '',
-        projectData: null,
-        isGenerating: false,
-        phase: 'idle',
-        errorMessage: '',
     },
     readmeMarkdown: '',
     readmeLoading: false,
@@ -125,10 +120,6 @@ function createReducer(languageFilterMap: Record<string, string>) {
                     isLoading: false,
                     error: null,
                     projectLocation: state.projectLocation || action.defaultLocation,
-                    ai: {
-                        ...state.ai,
-                        location: state.ai.location || action.defaultLocation,
-                    },
                 };
                 newState.filteredTemplates = applyFilters(newState.templates, newState.filters);
                 return newState;
@@ -175,27 +166,10 @@ function createReducer(languageFilterMap: Record<string, string>) {
                 return { ...state, activeView: action.view };
             case 'SET_PROJECT_LOCATION':
                 return { ...state, projectLocation: action.path };
-            case 'SET_AI_LOCATION':
-                return { ...state, ai: { ...state.ai, location: action.path } };
             case 'SET_AI_PROMPT':
                 return { ...state, ai: { ...state.ai, prompt: action.prompt } };
             case 'SET_AI_LANGUAGE':
                 return { ...state, ai: { ...state.ai, language: action.language } };
-            case 'SET_AI_GENERATING':
-                return { ...state, ai: { ...state.ai, isGenerating: true, projectData: null, errorMessage: '', phase: 'generating' } };
-            case 'AI_COMPLETE':
-                return {
-                    ...state,
-                    ai: {
-                        ...state.ai,
-                        isGenerating: false,
-                        projectData: action.data,
-                        errorMessage: '',
-                        phase: 'success',
-                    },
-                };
-            case 'AI_ERROR':
-                return { ...state, ai: { ...state.ai, isGenerating: false, errorMessage: action.error || 'An error occurred', phase: 'error' } };
             case 'SET_README_LOADING':
                 return { ...state, readmeLoading: true, readmeMarkdown: '' };
             case 'SET_README_CONTENT':
@@ -235,9 +209,9 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     dispatch({ type: 'SET_ERROR', message: message.message });
                     break;
                 case 'folderSelected':
-                    if (message.source === 'ai') {
-                        dispatch({ type: 'SET_AI_LOCATION', path: message.path });
-                    } else {
+                    // AI tab no longer needs a folder picker — Copilot Chat owns the
+                    // file-writing flow and resolves the destination itself.
+                    if (message.source === 'template') {
                         dispatch({ type: 'SET_PROJECT_LOCATION', path: message.path });
                     }
                     break;
@@ -256,21 +230,6 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     if (message.error) {
                         postMessage({ type: 'showError', message: message.error });
                     }
-                    break;
-                case 'aiGenerating':
-                    dispatch({ type: 'SET_AI_GENERATING' });
-                    break;
-                case 'aiComplete':
-                    dispatch({
-                        type: 'AI_COMPLETE',
-                        data: message.projectData,
-                        title: message.title,
-                        description: message.description,
-                        files: message.files,
-                    });
-                    break;
-                case 'aiError':
-                    dispatch({ type: 'AI_ERROR', error: message.error });
                     break;
             }
         };
@@ -368,7 +327,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     </Tab>
                     {config.supportsAiGeneration && (
                         <Tab value="ai" icon={<span className="codicon codicon-sparkle"></span>}>
-                            Generate with Copilot
+                            Build with Copilot Chat
                         </Tab>
                     )}
                 </TabList>

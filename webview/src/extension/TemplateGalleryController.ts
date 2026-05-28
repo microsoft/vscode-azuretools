@@ -89,18 +89,14 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
 
     // ── Optional overrides ──
 
-    /** Generate a project using AI/Copilot. Override to enable AI generation. */
-    protected async generateWithCopilot(_prompt: string, _language: string): Promise<void> {
-        // No-op by default. Override in extension if supportsAiGeneration is true.
-    }
-
-    /** Create the AI-generated project files on disk. Override to enable AI generation. */
-    protected async createAiProject(_files: Array<{ path: string; content: string }>, _location: string): Promise<void> {
-        // No-op by default. Override in extension if supportsAiGeneration is true.
-    }
-
-    /** Continue an AI conversation in the VS Code chat. Override to enable. */
-    protected async continueInChat(_prompt: string, _language: string, _context: string, _projectData?: { title?: string; description?: string }): Promise<void> {
+    /**
+     * Open Copilot Chat with a grounded prompt for designing the project.
+     * Override to enable the AI tab; default is a no-op.
+     *
+     * The webview hands the user off to chat for multi-turn design and
+     * file generation — there is no separate "generate then write" pipeline.
+     */
+    protected async continueInChat(_prompt: string, _language: string): Promise<void> {
         // No-op by default.
     }
 
@@ -170,16 +166,8 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 await this._handleBrowseFolder(message.source);
                 break;
 
-            case 'generateWithCopilot':
-                await this._handleGenerateWithCopilot(message.prompt, message.language);
-                break;
-
-            case 'createAiProject':
-                await this._handleCreateAiProject(message.files, message.location);
-                break;
-
             case 'continueInChat':
-                await this.continueInChat(message.prompt, message.language, message.context, message.projectData);
+                await this.continueInChat(message.prompt, message.language);
                 break;
 
             case 'showError':
@@ -243,25 +231,6 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
         const folderPath = await this.browseFolder();
         if (folderPath) {
             this.postMessageToWebview({ type: 'folderSelected', path: folderPath, source });
-        }
-    }
-
-    private async _handleGenerateWithCopilot(prompt: string, language: string): Promise<void> {
-        this.postMessageToWebview({ type: 'aiGenerating' });
-        try {
-            await this.generateWithCopilot(prompt, language);
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            this.postMessageToWebview({ type: 'aiError', error: msg });
-        }
-    }
-
-    private async _handleCreateAiProject(files: Array<{ path: string; content: string }>, location: string): Promise<void> {
-        try {
-            await this.createAiProject(files, location);
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            this.postMessageToWebview({ type: 'aiError', error: msg });
         }
     }
 }
