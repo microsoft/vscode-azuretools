@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isNullOrUndefined } from 'util';
 import { commands, l10n, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
 import * as types from '../../index';
 import { NoResourceFoundError, NotImplementedError, UserCancelledError } from '../errors';
+import { isNullOrUndefined } from '../utils/nonNull';
 import { randomUtils } from '../utils/randomUtils';
 import { AzExtTreeItem } from './AzExtTreeItem';
 import { GenericTreeItem } from './GenericTreeItem';

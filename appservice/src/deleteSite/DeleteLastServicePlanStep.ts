@@ -3,8 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep, DialogResponses, nonNullProp } from "@microsoft/vscode-azext-utils";
-import { isNullOrUndefined } from "util";
+import { AzureWizardPromptStep, DialogResponses, isNullOrUndefined, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { l10n, MessageItem } from "vscode";
 import { IDeleteSiteWizardContext } from "./IDeleteSiteWizardContext";
 
