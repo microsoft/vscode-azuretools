@@ -14,6 +14,10 @@
         "noUnusedParameters": true,
         "incremental": true,
         "declaration": true,
+        "types": [
+            "mocha",
+            "node",
+        ],
     },
     "exclude": [
         "**/node_modules",
