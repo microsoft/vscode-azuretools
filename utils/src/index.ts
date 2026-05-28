@@ -60,7 +60,7 @@ export * from './utils/copilotUtils';
 export * from './utils/credentialUtils';
 export * from './utils/dateTimeUtils';
 export * from './utils/findFreePort';
-export * from './utils/nonNull';
+export { isNullOrUndefined, nonNullOrEmptyValue, nonNullProp, nonNullValue, nonNullValueAndProp } from './utils/nonNull';
 export * from './utils/openUrl';
 export * from './utils/randomUtils';
 export * from './utils/validationUtils';

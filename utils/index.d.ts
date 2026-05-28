@@ -2053,6 +2053,8 @@ export declare function nonNullOrEmptyValue(value: string | undefined, propertyN
  */
 export declare function nonNullValueAndProp<TSource, TKey extends keyof TSource>(source: TSource | undefined, name: TKey): NonNullable<TSource[TKey]>;
 
+export declare function isNullOrUndefined(value: unknown): value is null | undefined;
+
 /**
  * Finds an available port.
  * NOTE: If another listener is on '0.0.0.0', this will take the '127.0.0.1' allocation from them!
