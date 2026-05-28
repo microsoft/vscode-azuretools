@@ -36,7 +36,7 @@
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^4.0.0"
+        "@microsoft/vscode-azext-utils": "^4.1.0"
     },
     "devDependencies": {
         "@azure/arm-appservice": "^18.0.0",

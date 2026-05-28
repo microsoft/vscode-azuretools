@@ -42,7 +42,7 @@
         "@types/vscode": "1.105.0"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^4.0.4",
+        "@microsoft/vscode-azext-utils": "^4.1.0",
         "@octokit/rest": "^22.0.1"
     },
     "overrides": {
