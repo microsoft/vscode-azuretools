@@ -47,6 +47,6 @@ export function nonNullValueAndProp<TSource, TKey extends keyof TSource>(source:
     return nonNullProp(nonNullValue(source, <string>name), name);
 }
 
-function isNullOrUndefined(value: unknown): value is null | undefined {
+export function isNullOrUndefined(value: unknown): value is null | undefined {
     return value === null || value === undefined;
 }

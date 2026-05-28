@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isNullOrUndefined } from 'util';
 import * as vscode from 'vscode';
 import { ProgressLocation } from 'vscode';
 import * as types from '../../index';
@@ -17,6 +16,7 @@ import type { CopilotUserInput } from '../userInput/CopilotUserInput';
 import { isCopilotUserInput } from '../utils/copilotUtils';
 import { createQuickPick } from '../userInput/showQuickPick';
 import { dateTimeUtils } from '../utils/dateTimeUtils';
+import { isNullOrUndefined } from '../utils/nonNull';
 import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';

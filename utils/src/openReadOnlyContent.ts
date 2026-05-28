@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isNumber } from "util";
 import { CancellationToken, Event, EventEmitter, TextDocumentContentProvider, TextDocumentShowOptions, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
 import { ext } from "./extensionVariables";
 import { nonNullValue } from "./utils/nonNull";
@@ -35,7 +34,7 @@ export async function openReadOnlyJson(node: { label: string, fullId: string }, 
     const insertSpaces: boolean = !!config.get<boolean>('insertSpaces');
     if (insertSpaces) {
         let tabSize: number | undefined = config.get<number>('tabSize');
-        if (!isNumber(tabSize) || tabSize < 0) {
+        if (typeof tabSize !== 'number' || tabSize < 0) {
             tabSize = 4;
         }
 
