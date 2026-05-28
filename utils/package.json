@@ -85,14 +85,14 @@
         }
     },
     "devDependencies": {
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
+        "@github/copilot-sdk": "*",
+        "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/html-to-text": "^9.0.4",
         "@types/node": "22.x",
         "@types/semver": "^7.7.1",
         "@types/vscode": "1.105.0",
         "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*",
-        "@github/copilot-sdk": "*"
+        "@vscode/test-electron": "*"
     },
     "overrides": {
         "serialize-javascript": "^7.0.5"
