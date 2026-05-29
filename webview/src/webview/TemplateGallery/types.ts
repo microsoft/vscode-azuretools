@@ -89,24 +89,10 @@ export interface CreateProjectMessage {
     location: string;
 }
 
-export interface GenerateWithCopilotMessage {
-    type: 'generateWithCopilot';
-    prompt: string;
-    language: string;
-}
-
-export interface CreateAiProjectMessage {
-    type: 'createAiProject';
-    files: Array<{ path: string; content: string }>;
-    location: string;
-}
-
 export interface ContinueInChatMessage {
     type: 'continueInChat';
     prompt: string;
     language: string;
-    context: 'prompt' | 'success' | 'error';
-    projectData?: { title?: string; description?: string };
 }
 
 export interface ShowErrorMessage {
@@ -121,8 +107,6 @@ export type WebviewToExtensionMessage =
     | TemplateSelectedMessage
     | BrowseFolderMessage
     | CreateProjectMessage
-    | GenerateWithCopilotMessage
-    | CreateAiProjectMessage
     | ContinueInChatMessage
     | ShowErrorMessage;
 
@@ -164,27 +148,6 @@ export interface ProjectCreationFailedMessage {
     error: string;
 }
 
-export interface AiGeneratingMessage {
-    type: 'aiGenerating';
-}
-
-export interface AiCompleteMessage {
-    type: 'aiComplete';
-    title: string;
-    description: string;
-    files: string[];
-    projectData: {
-        title: string;
-        description: string;
-        files: Array<{ path: string; content: string }>;
-    };
-}
-
-export interface AiErrorMessage {
-    type: 'aiError';
-    error: string;
-}
-
 export interface ChatOpenedMessage {
     type: 'chatOpened';
 }
@@ -202,9 +165,6 @@ export type ExtensionToWebviewMessage =
     | ReadmeContentMessage
     | CreatingProgressMessage
     | ProjectCreationFailedMessage
-    | AiGeneratingMessage
-    | AiCompleteMessage
-    | AiErrorMessage
     | ChatOpenedMessage
     | ChatUnavailableMessage;
 
@@ -217,18 +177,14 @@ export interface FilterState {
     search: string;
 }
 
-export type AiPhase = 'idle' | 'generating' | 'success' | 'error';
-
+/**
+ * AI tab state. The AI tab is now a chat-handoff funnel — Copilot Chat owns
+ * the multi-turn design + file-writing flow, so the webview only needs to
+ * track the prompt and language used to ground the chat conversation.
+ */
 export interface AiState {
     prompt: string;
     language: string;
-    location: string;
-    projectData: AiCompleteMessage['projectData'] | null;
-    isGenerating: boolean;
-    /** Explicit lifecycle phase used to drive UI transitions deterministically. */
-    phase: AiPhase;
-    /** Last error from generation/creation, or empty string if none. */
-    errorMessage: string;
 }
 
 export type ViewMode = 'browse' | 'ai';
@@ -247,24 +203,12 @@ export type TemplateGalleryAction =
     | { type: 'SET_MODE'; mode: ViewMode }
     | { type: 'SET_VIEW'; view: ActiveView }
     | { type: 'SET_PROJECT_LOCATION'; path: string }
-    | { type: 'SET_AI_LOCATION'; path: string }
     | { type: 'SET_AI_PROMPT'; prompt: string }
     | { type: 'SET_AI_LANGUAGE'; language: string }
-    | { type: 'SET_AI_GENERATING' }
-    | { type: 'AI_COMPLETE'; data: AiCompleteMessage['projectData']; title: string; description: string; files: string[] }
-    | { type: 'AI_ERROR'; error: string }
     | { type: 'SET_README_LOADING' }
     | { type: 'SET_README_CONTENT'; markdown: string }
     | { type: 'SET_CREATING_DETAIL'; detail: string }
     | { type: 'CREATION_FAILED' };
-
-// ── AI project result (returned by extension's generateWithCopilot) ──
-
-export interface AiProjectResult {
-    title: string;
-    description: string;
-    files: Array<{ path: string; content: string }>;
-}
 
 // ── Default display name maps ──
 // These maps use external manifest keys which don't follow camelCase conventions
