@@ -5,10 +5,12 @@
 
 /// <reference types="mocha" />
 
+import type { TokenCredential } from '@azure/core-auth';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import * as azureEnv from '@azure/ms-rest-azure-env';
+import type { ISubscriptionContext } from '@microsoft/vscode-azext-utils';
 import * as assert from 'assert';
-import { getAppServiceScopes } from '../src/utils/appServiceEnvironment';
+import { getAppServiceCredentials, getAppServiceScopes } from '../src/utils/appServiceEnvironment';
 
 suite('appServiceEnvironment', () => {
     test('returns public scope for AzureCloud', () => {
@@ -33,4 +35,57 @@ suite('appServiceEnvironment', () => {
             assert.deepStrictEqual(getAppServiceScopes({ name: environmentName } as Environment), [expectedScope]);
         });
     }
+});
+
+suite('getAppServiceCredentials', () => {
+    const publicScope = 'https://appservice.azure.com/.default';
+    const fakeCredentials = {} as TokenCredential;
+
+    function createSubscription(authentication?: unknown): { subscription: ISubscriptionContext, createCredentialsCalls: string[][] } {
+        const createCredentialsCalls: string[][] = [];
+        const subscription = {
+            environment: azureEnv.Environment.AzureCloud,
+            createCredentialsForScopes: async (scopes: string[]) => {
+                createCredentialsCalls.push(scopes);
+                return fakeCredentials;
+            },
+            authentication,
+        } as unknown as ISubscriptionContext;
+        return { subscription, createCredentialsCalls };
+    }
+
+    test('eagerly requests interactive consent for the App Service scope, then creates credentials', async () => {
+        const sessionCalls: { scopes: string[], options: unknown }[] = [];
+        const { subscription, createCredentialsCalls } = createSubscription({
+            getSessionWithScopes: async (scopes: string[], options: unknown) => {
+                sessionCalls.push({ scopes, options });
+                return undefined;
+            },
+        });
+
+        const result = await getAppServiceCredentials(subscription);
+
+        assert.deepStrictEqual(sessionCalls, [{ scopes: [publicScope], options: { createIfNone: true } }]);
+        assert.deepStrictEqual(createCredentialsCalls, [[publicScope]]);
+        assert.strictEqual(result.credentials, fakeCredentials);
+        assert.deepStrictEqual(result.scopes, [publicScope]);
+    });
+
+    test('still creates credentials when authentication is undefined', async () => {
+        const { subscription, createCredentialsCalls } = createSubscription(undefined);
+
+        const result = await getAppServiceCredentials(subscription);
+
+        assert.deepStrictEqual(createCredentialsCalls, [[publicScope]]);
+        assert.strictEqual(result.credentials, fakeCredentials);
+    });
+
+    test('degrades gracefully when authentication lacks getSessionWithScopes', async () => {
+        const { subscription, createCredentialsCalls } = createSubscription({});
+
+        const result = await getAppServiceCredentials(subscription);
+
+        assert.deepStrictEqual(createCredentialsCalls, [[publicScope]]);
+        assert.strictEqual(result.credentials, fakeCredentials);
+    });
 });
