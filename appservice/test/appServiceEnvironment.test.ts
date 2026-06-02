@@ -45,9 +45,9 @@ suite('getAppServiceCredentials', () => {
         const createCredentialsCalls: string[][] = [];
         const subscription = {
             environment: azureEnv.Environment.AzureCloud,
-            createCredentialsForScopes: async (scopes: string[]) => {
+            createCredentialsForScopes: (scopes: string[]) => {
                 createCredentialsCalls.push(scopes);
-                return fakeCredentials;
+                return Promise.resolve(fakeCredentials);
             },
             authentication,
         } as unknown as ISubscriptionContext;
@@ -57,9 +57,9 @@ suite('getAppServiceCredentials', () => {
     test('eagerly requests interactive consent for the App Service scope, then creates credentials', async () => {
         const sessionCalls: { scopes: string[], options: unknown }[] = [];
         const { subscription, createCredentialsCalls } = createSubscription({
-            getSessionWithScopes: async (scopes: string[], options: unknown) => {
+            getSessionWithScopes: (scopes: string[], options: unknown) => {
                 sessionCalls.push({ scopes, options });
-                return undefined;
+                return Promise.resolve(undefined);
             },
         });
 
