@@ -395,12 +395,24 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                     }
                     return session;
                 },
-                getSessionWithScopes: async (scopeListOrRequest) => {
-                    this.silenceRefreshEvents();
-                    // in order to handle a challenge, we must enable createIfNone so
-                    // that we can prompt the user to step-up their session with MFA
-                    // otherwise, never prompt the user
-                    const session = await getSessionFromVSCode(scopeListOrRequest, tenant.tenantId, { ...(isAuthenticationWwwAuthenticateRequest(scopeListOrRequest) ? { createIfNone: true } : { silent: true }), account: tenant.account });
+                getSessionWithScopes: async (scopeListOrRequest, options) => {
+                    // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can
+                    // satisfy it. For a plain scope list we stay silent by default, but allow callers to
+                    // opt in to an interactive consent prompt via `options.createIfNone` (used, for example,
+                    // to consent to the App Service audience before a deployment).
+                    // See https://github.com/microsoft/vscode-azurefunctions/issues/5073
+                    const createIfNone = isAuthenticationWwwAuthenticateRequest(scopeListOrRequest) || !!options?.createIfNone;
+                    if (createIfNone) {
+                        // Interactive consent can take a while, so suppress without timeout until it is
+                        // done, then silence for a bit longer afterwards (same pattern as `signIn`).
+                        this.suppressRefreshSuggestedEvents = true;
+                    } else {
+                        this.silenceRefreshEvents();
+                    }
+                    const session = await getSessionFromVSCode(scopeListOrRequest, tenant.tenantId, { ...(createIfNone ? { createIfNone: true } : { silent: true }), account: tenant.account });
+                    if (createIfNone) {
+                        this.silenceRefreshEvents();
+                    }
                     if (!session) {
                         throw new NotSignedInError();
                     }

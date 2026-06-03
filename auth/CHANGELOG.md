@@ -1,5 +1,9 @@
 # Change Log
 
+## 6.1.0-alpha.2 - 2026-06-02
+
+* Add an optional `options` parameter to `getSessionWithScopes`. Passing `{ createIfNone: true }` allows an interactive consent prompt when a session for the requested scopes has not yet been granted, instead of failing silently. This enables callers to eagerly obtain consent for a non-management audience (e.g. the App Service audience used for Kudu/SCM deployments) before it is first needed. See [microsoft/vscode-azurefunctions#5073](https://github.com/microsoft/vscode-azurefunctions/issues/5073)
+
 ## 6.0.0-alpha.8 - 2026-03-27
 
 * [#2248](https://github.com/microsoft/vscode-azuretools/pull/2248) Watch sovereign cloud config and fire `onRefreshSuggested`
