@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
+import type { AzExtResourceType, AzureAuthentication, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
 import type * as vscode from 'vscode';
 import type * as vscodeTypes from 'vscode';
@@ -187,6 +187,14 @@ export interface ISubscriptionContext {
     userId: string;
     environment: Environment;
     isCustomCloud: boolean;
+    /**
+     * The authentication object for the subscription, used to acquire sessions/tokens for specific scopes.
+     *
+     * Optional because not every `ISubscriptionContext` originates from {@link createSubscriptionContext}
+     * (which spreads `authentication` from the host's {@link AzureSubscription}); some contexts are
+     * constructed by other means and may not carry it.
+     */
+    authentication?: AzureAuthentication;
 }
 
 export type TreeItemIconPath = vscodeTypes.IconPath;
