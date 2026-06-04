@@ -192,17 +192,17 @@ export interface ISubscriptionContext {
      * sessions/tokens for arbitrary scopes (e.g. to prompt for consent to a non-ARM audience before
      * making a downstream call).
      *
-     * Optional, for two reasons:
+     * Optional because not every subscription context can supply one. The modern flow —
+     * {@link createSubscriptionContext}, which spreads `authentication` from the host's
+     * {@link AzureSubscription} (provided by the Azure Resources extension via
+     * `VSCodeAzureSubscriptionProvider`) — always carries it. But the legacy `AzureAccountTreeItemBase`
+     * path (in `@microsoft/vscode-azext-azureutils`) builds an `ISubscriptionContext` from the old
+     * `ms-vscode.azure-account` extension's `AzureSession`, which only exposes a static `TokenCredential`
+     * and has no `AzureAuthentication`/per-scope session concept to provide. Marking this required would
+     * therefore be unsatisfiable for that path (and a breaking change for any other caller — test mocks,
+     * custom tree items — that constructs the interface directly).
      *
-     * 1. `ISubscriptionContext` is a public, widely-implemented interface. Many callers build one
-     *    directly — test mocks, custom tree items, and older integrations that predate this field —
-     *    and would not supply an `authentication` object. Making it required would be a breaking
-     *    change for every such implementer.
-     * 2. Only contexts produced by {@link createSubscriptionContext} are guaranteed to carry it: that
-     *    helper spreads `authentication` from the host's {@link AzureSubscription} (provided by the
-     *    Azure Resources extension). Contexts originating from other sources may legitimately omit it.
-     *
-     * Consumers should therefore optional-chain this member and degrade gracefully when it is absent.
+     * Consumers should optional-chain this member and degrade gracefully when it is absent.
      */
     authentication?: AzureAuthentication;
 }
