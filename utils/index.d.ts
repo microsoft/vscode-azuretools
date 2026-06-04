@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Environment } from '@azure/ms-rest-azure-env';
-import type { AzExtResourceType, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
+import type { AzExtResourceType, AzureAuthentication, AzureResource, AzureSubscription, ResourceModelBase } from '@microsoft/vscode-azureresources-api';
 import type * as duration from 'dayjs/plugin/duration';
 import type * as vscode from 'vscode';
 import type * as vscodeTypes from 'vscode';
@@ -187,6 +187,16 @@ export interface ISubscriptionContext {
     userId: string;
     environment: Environment;
     isCustomCloud: boolean;
+    /**
+     * The host's authentication object, used to acquire VS Code auth sessions/tokens for arbitrary
+     * scopes (e.g. to consent to a non-ARM audience before a downstream call).
+     *
+     * Optional because the legacy `AzureAccountTreeItemBase` path builds an `ISubscriptionContext`
+     * from `ms-vscode.azure-account`'s `AzureSession`, which has no per-scope session concept to
+     * supply. The modern {@link createSubscriptionContext} flow always carries it. Consumers should
+     * optional-chain and degrade gracefully when it is absent.
+     */
+    authentication?: AzureAuthentication;
 }
 
 export type TreeItemIconPath = vscodeTypes.IconPath;
