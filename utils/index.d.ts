@@ -188,11 +188,21 @@ export interface ISubscriptionContext {
     environment: Environment;
     isCustomCloud: boolean;
     /**
-     * The authentication object for the subscription, used to acquire sessions/tokens for specific scopes.
+     * The host's authentication object for this subscription, used to acquire VS Code authentication
+     * sessions/tokens for arbitrary scopes (e.g. to prompt for consent to a non-ARM audience before
+     * making a downstream call).
      *
-     * Optional because not every `ISubscriptionContext` originates from {@link createSubscriptionContext}
-     * (which spreads `authentication` from the host's {@link AzureSubscription}); some contexts are
-     * constructed by other means and may not carry it.
+     * Optional, for two reasons:
+     *
+     * 1. `ISubscriptionContext` is a public, widely-implemented interface. Many callers build one
+     *    directly — test mocks, custom tree items, and older integrations that predate this field —
+     *    and would not supply an `authentication` object. Making it required would be a breaking
+     *    change for every such implementer.
+     * 2. Only contexts produced by {@link createSubscriptionContext} are guaranteed to carry it: that
+     *    helper spreads `authentication` from the host's {@link AzureSubscription} (provided by the
+     *    Azure Resources extension). Contexts originating from other sources may legitimately omit it.
+     *
+     * Consumers should therefore optional-chain this member and degrade gracefully when it is absent.
      */
     authentication?: AzureAuthentication;
 }
