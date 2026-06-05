@@ -2,6 +2,9 @@ parameters:
   # Package manager used to install dependencies (npm or pnpm)
   - name: packageManager
     type: string
+    values:
+      - npm
+      - pnpm
     default: npm
 
   # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
@@ -50,14 +53,10 @@ steps:
       $feedBaseUrl = "${{ parameters.feedBaseUrl }}"
       if (Test-Path $npmrcPath) {
         Write-Host "Using checked-in .npmrc"
-        Write-Host "--- .npmrc ---"
-        Get-Content $npmrcPath
       } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
         $registry = "$feedBaseUrl/npm/registry/"
         Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
         Write-Host "Wrote .npmrc with registry $registry"
-        Write-Host "--- .npmrc ---"
-        Get-Content $npmrcPath
       } else {
         Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl."
         exit 1
@@ -70,7 +69,7 @@ steps:
       workingFile: $(working_directory)/.npmrc
 
   - ${{ if eq(parameters.packageManager, 'pnpm') }}:
-      - pwsh: pnpm install --frozen-lockfile
+      - pwsh: pnpm install --frozen-lockfile --no-optional
         displayName: "👉 Install Dependencies"
         workingDirectory: $(working_directory)
   - ${{ else }}:

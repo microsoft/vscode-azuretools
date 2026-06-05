@@ -41,6 +41,9 @@ parameters:
   # Package manager used for install/build/lint/package/test (npm or pnpm)
   - name: packageManager
     type: string
+    values:
+      - npm
+      - pnpm
     default: npm
 
   # Base URL of an Azure Artifacts universal feed for test env vars and the
