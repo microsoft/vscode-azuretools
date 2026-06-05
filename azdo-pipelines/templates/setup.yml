@@ -63,7 +63,7 @@ steps:
         Write-Host "##vso[task.logissue type=warning]BREAK-GLASS: 'allowPublicNpm' is set, so the fail-closed feed guard is bypassed!"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       } else {
-        Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl. (Emergency override: set the pipeline variable 'allowPublicNpm' to 'true' to bypass this guard and install from PUBLIC npm -- never for official or release builds.)"
+        Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl. (Emergency override: set the pipeline variable 'allowPublicNpm' to 'true' to bypass this guard and install from PUBLIC npm -- strongly avoid for official or release builds.)"
         exit 1
       }
     displayName: "👉 Configure npm/pnpm registry"
