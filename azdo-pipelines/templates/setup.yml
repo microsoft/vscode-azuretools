@@ -74,15 +74,8 @@ steps:
     inputs:
       workingFile: $(working_directory)/.npmrc
 
-  - ${{ if eq(parameters.packageManager, 'pnpm') }}:
-      - pwsh: pnpm install --frozen-lockfile --no-optional
-        displayName: "👉 Install Dependencies"
-        workingDirectory: $(working_directory)
-        env:
-          NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
-  - ${{ else }}:
-      - pwsh: npm ci --no-optional
-        displayName: "👉 Install Dependencies"
-        workingDirectory: $(working_directory)
-        env:
-          NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
+  - pwsh: ${{ parameters.packageManager }} ci --no-optional
+    displayName: "👉 Install Dependencies"
+    workingDirectory: $(working_directory)
+    env:
+      NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
