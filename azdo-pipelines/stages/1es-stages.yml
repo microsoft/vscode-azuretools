@@ -38,12 +38,16 @@ parameters:
     type: string
     default: ""
 
-  # Azure Artifacts feed for a private NPM mirror
-  - name: npmFeed
+  # Package manager used for install/build/lint/package/test (npm or pnpm)
+  - name: packageManager
     type: string
-    default: ""
+    values:
+      - npm
+      - pnpm
+    default: npm
 
-  # Base URL of an Azure Artifacts universal feed for test env vars
+  # Base URL of an Azure Artifacts universal feed for test env vars and the
+  # private npm/pnpm registry mirror
   - name: feedBaseUrl
     type: string
     default: ""
@@ -70,12 +74,16 @@ stages:
             variables:
               artifact_name: ${{ replace(job.name, '_', '-') }}
               working_directory: ${{ job.working_directory }}
+              # Package manager (npm or pnpm) exposed as a runtime variable so leaf
+              # templates can read $(packageManager) without threading a parameter.
+              packageManager: ${{ parameters.packageManager }}
             steps:
               - checkout: self
                 fetchDepth: 1
               - template: ../templates/setup.yml
                 parameters:
-                  npmFeed: ${{ parameters.npmFeed }}
+                  packageManager: ${{ parameters.packageManager }}
+                  feedBaseUrl: ${{ parameters.feedBaseUrl }}
               - ${{ parameters.additionalSetupSteps }}
               - template: ../templates/lint.yml
               - template: ../templates/build.yml
@@ -88,5 +96,4 @@ stages:
               - template: ../templates/test.yml
                 parameters:
                   testARMServiceConnection: ${{ parameters.testARMServiceConnection }}
-                  npmFeed: ${{ parameters.npmFeed }}
                   feedBaseUrl: ${{ parameters.feedBaseUrl }}
