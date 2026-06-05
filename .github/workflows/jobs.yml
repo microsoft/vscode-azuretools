@@ -9,6 +9,10 @@ on:
         required: false
         type: boolean
         default: true
+      package_manager:
+        required: false
+        type: string
+        default: "npm"
 
 jobs:
   Build:
@@ -21,20 +25,34 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v3
+      - name: Using PNPM
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ inputs.working_directory }}/package.json
       - name: Using Node.js
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
-      - run: npm ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
+          cache: ${{ inputs.package_manager == 'pnpm' && 'pnpm' || '' }}
+          cache-dependency-path: ${{ inputs.package_manager == 'pnpm' && format('{0}/pnpm-lock.yaml', inputs.working_directory) || '' }}
+
+      # Install
+      - name: Install (npm)
+        if: ${{ inputs.package_manager == 'npm' }}
+        run: npm ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
+      - name: Install (pnpm)
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        run: pnpm install --frozen-lockfile ${{ inputs.use_no_optional && '--no-optional' || '' }}
 
       # Lint
-      - run: npm run lint
+      - run: ${{ inputs.package_manager }} run lint
 
       # Build
-      - run: npm run build
+      - run: ${{ inputs.package_manager }} run build
 
       # Package
-      - run: npm run package
+      - run: ${{ inputs.package_manager }} run package
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -45,4 +63,4 @@ jobs:
             !**/node_modules
 
       # Test
-      - run: xvfb-run -a npm test
+      - run: xvfb-run -a ${{ inputs.package_manager }} test
