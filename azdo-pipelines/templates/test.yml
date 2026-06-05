@@ -3,11 +3,6 @@ parameters:
   - name: testARMServiceConnection
     type: string
 
-  # Package manager used to run the test script (npm or pnpm)
-  - name: packageManager
-    type: string
-    default: npm
-
   # Base URL of an Azure Artifacts universal feed for test env vars
   - name: feedBaseUrl
     type: string
@@ -37,7 +32,7 @@ steps:
     parameters:
       feedBaseUrl: ${{ parameters.feedBaseUrl }}
 
-  - pwsh: ${{ parameters.packageManager }} run test
+  - pwsh: $(packageManager) run test
     displayName: "👉 Test"
     workingDirectory: $(working_directory)
     env:

@@ -1,10 +1,4 @@
-parameters:
-  # Package manager used to run the script (npm or pnpm)
-  - name: packageManager
-    type: string
-    default: npm
-
 steps:
-  - pwsh: ${{ parameters.packageManager }} run package
+  - pwsh: $(packageManager) run package
     displayName: "👉 Package"
     workingDirectory: $(working_directory)

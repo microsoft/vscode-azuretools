@@ -1,10 +1,4 @@
-parameters:
-  # Package manager used to run the script (npm or pnpm)
-  - name: packageManager
-    type: string
-    default: npm
-
 steps:
-  - pwsh: ${{ parameters.packageManager }} run lint
+  - pwsh: $(packageManager) run lint
     displayName: "👉 Lint"
     workingDirectory: $(working_directory)
