@@ -36,6 +36,8 @@ jobs:
           node-version-file: .nvmrc
           cache: ${{ inputs.package_manager == 'pnpm' && 'pnpm' || '' }}
           cache-dependency-path: ${{ inputs.package_manager == 'pnpm' && format('{0}/pnpm-lock.yaml', inputs.working_directory) || '' }}
+
+      # Install
       - name: Install (npm)
         if: ${{ inputs.package_manager == 'npm' }}
         run: npm ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
