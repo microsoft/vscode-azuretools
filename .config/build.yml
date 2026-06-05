@@ -32,7 +32,6 @@ extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates
   parameters:
     signType: none
-    npmFeed: ${{ variables.npmFeed }}
     feedBaseUrl: ${{ variables.feedBaseUrl }}
     testARMServiceConnection: ${{ variables.testARMServiceConnection }}
     jobs:
