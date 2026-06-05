@@ -26,12 +26,14 @@ jobs:
       # Setup
       - uses: actions/checkout@v3
       # Activate pnpm via Corepack (a plain run step) instead of a Marketplace
-      # action so consumers don't need to allowlist a third-party action. The
-      # pnpm version is taken from the consumer's package.json "packageManager"
-      # field. Skipped entirely for npm consumers.
+      # action so consumers don't need to allowlist a third-party action. This
+      # runs in working_directory, so `corepack prepare --activate` downloads and
+      # pins the pnpm version from that directory's package.json "packageManager"
+      # field before actions/setup-node runs its `cache: pnpm` step. Skipped
+      # entirely for npm consumers.
       - name: Using PNPM
         if: ${{ inputs.package_manager == 'pnpm' }}
-        run: corepack enable
+        run: corepack enable && corepack prepare --activate
       - name: Using Node.js
         uses: actions/setup-node@v3
         with:
