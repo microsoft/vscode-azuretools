@@ -33,6 +33,7 @@ extends:
   parameters:
     signType: none
     npmFeed: ${{ variables.npmFeed }}
+    feedBaseUrl: ${{ variables.feedBaseUrl }}
     testARMServiceConnection: ${{ variables.testARMServiceConnection }}
     jobs:
       - name: microsoft_vscode_azext_azureappservice
