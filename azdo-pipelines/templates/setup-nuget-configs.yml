@@ -1,5 +1,5 @@
 # Configure CLI package managers (NuGet, pip) to use an Azure Artifacts feed mirror.
-# npm is handled separately via the npmFeed parameter.
+# npm/pnpm registry auth is handled separately in setup.yml via the feedBaseUrl parameter.
 
 parameters:
   - name: feedBaseUrl

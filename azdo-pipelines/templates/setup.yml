@@ -1,7 +1,14 @@
 parameters:
-  - name: npmFeed
+  # Package manager used to install dependencies (npm or pnpm)
+  - name: packageManager
     type: string
-    displayName: "Azure Artifacts feed to use (e.g. FeedName or ProjectName/FeedName)"
+    default: npm
+
+  # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
+  # When set, an .npmrc pointing at "<feedBaseUrl>/npm/registry/" is written and
+  # authenticated, so both npm and pnpm install from the private mirror.
+  - name: feedBaseUrl
+    type: string
     default: ""
 
 steps:
@@ -23,26 +30,57 @@ steps:
     inputs:
       version: $(nodeVersion)
 
-  - pwsh: |
-      if (Test-Path "$(working_directory)/.npmrc") {
-        Write-Output "##vso[task.setvariable variable=npmrcExists]true"
-      } else {
-        Write-Output "##vso[task.setvariable variable=npmrcExists]false"
-      }
-    displayName: "👉 Check for .npmrc"
+  # pnpm is activated through Corepack using the version pinned by the consumer's
+  # package.json "packageManager" field (e.g. "pnpm@9.x").
+  - ${{ if eq(parameters.packageManager, 'pnpm') }}:
+      - pwsh: |
+          corepack enable
+          node --version
+          pnpm --version
+        displayName: "👉 Activate pnpm (Corepack)"
+        workingDirectory: $(working_directory)
 
-  - task: npmAuthenticate@0
-    displayName: "👉 Authenticate NPM"
-    condition: and(succeeded(), eq(variables['npmrcExists'], 'true'), eq('${{ parameters.npmFeed }}', ''))
-    inputs:
-      workingFile: $(working_directory)/.npmrc
+  # Private-feed auth. When feedBaseUrl is set, ensure $(working_directory)/.npmrc
+  # routes the registry at the Azure Artifacts mirror (appending so any existing
+  # pnpm settings are preserved), then inject a token. Both npm and pnpm read
+  # .npmrc. When feedBaseUrl is empty, authenticate a consumer-committed .npmrc
+  # if one exists.
+  - ${{ if ne(parameters.feedBaseUrl, '') }}:
+      - pwsh: |
+          $npmrcPath = "$(working_directory)/.npmrc"
+          $registry = "${{ parameters.feedBaseUrl }}/npm/registry/"
+          $lines = "registry=$registry`nalways-auth=true`n"
+          if (Test-Path $npmrcPath) {
+            Add-Content -Path $npmrcPath -Value $lines
+          } else {
+            Set-Content -Path $npmrcPath -Value $lines
+          }
+          Write-Host "--- .npmrc ---"
+          Get-Content $npmrcPath
+        displayName: "👉 Configure npm/pnpm registry mirror"
+      - task: npmAuthenticate@0
+        displayName: "👉 Authenticate NPM"
+        inputs:
+          workingFile: $(working_directory)/.npmrc
+  - ${{ else }}:
+      - pwsh: |
+          if (Test-Path "$(working_directory)/.npmrc") {
+            Write-Output "##vso[task.setvariable variable=npmrcExists]true"
+          } else {
+            Write-Output "##vso[task.setvariable variable=npmrcExists]false"
+          }
+        displayName: "👉 Check for .npmrc"
+      - task: npmAuthenticate@0
+        displayName: "👉 Authenticate NPM"
+        condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
+        inputs:
+          workingFile: $(working_directory)/.npmrc
 
-  - task: Npm@1
-    displayName: "👉 Install Dependencies"
-    inputs:
-      command: custom
-      customCommand: ci --no-optional
-      workingDir: $(working_directory)
-      ${{ if ne(parameters.npmFeed, '') }}:
-        customRegistry: useFeed
-        customFeed: ${{ parameters.npmFeed }}
+  - ${{ if eq(parameters.packageManager, 'pnpm') }}:
+      - pwsh: pnpm install --frozen-lockfile
+        displayName: "👉 Install Dependencies"
+        workingDirectory: $(working_directory)
+  - ${{ else }}:
+      - pwsh: npm ci --no-optional
+        displayName: "👉 Install Dependencies"
+        workingDirectory: $(working_directory)
