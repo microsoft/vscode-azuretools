@@ -50,7 +50,7 @@ steps:
   # way npmAuthenticate@0 injects a token, and both npm and pnpm read .npmrc.
   - pwsh: |
       $npmrcPath = "$(working_directory)/.npmrc"
-      $feedBaseUrl = "${{ parameters.feedBaseUrl }}"
+      $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
       if (Test-Path $npmrcPath) {
         Write-Host "Using checked-in .npmrc"
       } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
@@ -72,7 +72,11 @@ steps:
       - pwsh: pnpm install --frozen-lockfile --no-optional
         displayName: "👉 Install Dependencies"
         workingDirectory: $(working_directory)
+        env:
+          NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
   - ${{ else }}:
       - pwsh: npm ci --no-optional
         displayName: "👉 Install Dependencies"
         workingDirectory: $(working_directory)
+        env:
+          NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
