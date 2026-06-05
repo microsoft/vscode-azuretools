@@ -35,3 +35,39 @@ jobs:
     # Use template from https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows
     uses: microsoft/vscode-azuretools/.github/workflows/jobs.yml@main
 ```
+
+## Inputs
+
+The reusable workflow accepts the following inputs:
+
+| Input | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `working_directory` | string | no | `"."` | Directory to run the build/test commands in. |
+| `use_no_optional` | boolean | no | `true` | When `true`, optional dependencies are skipped during install (`--no-optional`). |
+| `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value fails the build with a clear error. |
+
+### Using PNPM
+
+By default the workflow uses NPM and behaves exactly as it always has. To opt into PNPM, set `package_manager: pnpm`. When PNPM is selected the workflow:
+
+- runs `pnpm/action-setup` before `actions/setup-node`,
+- enables PNPM store caching via `actions/setup-node`,
+- installs with `pnpm install --frozen-lockfile` (adding `--no-optional` when `use_no_optional` is `true`),
+- runs your scripts with `pnpm run <script>` and tests with `pnpm test`.
+
+PNPM consumers must:
+
+1. Commit a `pnpm-lock.yaml` at the root of your `working_directory` so `--frozen-lockfile` works (the workflow resolves `pnpm/action-setup` and the PNPM cache relative to `working_directory`).
+1. Specify the PNPM version. The easiest way is to add a `packageManager` field to your `package.json` (e.g. `"packageManager": "pnpm@9.x.x"`), which `pnpm/action-setup` reads automatically.
+1. Optionally add an `.npmrc` if you need custom PNPM settings (for example `node-linker` or registry configuration).
+
+Example `main.yml` job that opts into PNPM:
+
+```yaml
+jobs:
+  Build:
+    # Use template from https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows
+    uses: microsoft/vscode-azuretools/.github/workflows/jobs.yml@main
+    with:
+      package_manager: pnpm
+```
