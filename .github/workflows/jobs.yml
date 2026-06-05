@@ -42,12 +42,7 @@ jobs:
           cache-dependency-path: ${{ inputs.package_manager == 'pnpm' && format('{0}/pnpm-lock.yaml', inputs.working_directory) || '' }}
 
       # Install
-      - name: Install (npm)
-        if: ${{ inputs.package_manager == 'npm' }}
-        run: npm ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
-      - name: Install (pnpm)
-        if: ${{ inputs.package_manager == 'pnpm' }}
-        run: pnpm install --frozen-lockfile ${{ inputs.use_no_optional && '--no-optional' || '' }}
+      - run: ${{ inputs.package_manager }} ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
 
       # Lint
       - run: ${{ inputs.package_manager }} run lint

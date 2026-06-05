@@ -52,7 +52,7 @@ By default the workflow uses NPM and behaves exactly as it always has. To opt in
 
 - runs `pnpm/action-setup` before `actions/setup-node`,
 - enables PNPM store caching via `actions/setup-node`,
-- installs with `pnpm install --frozen-lockfile` (adding `--no-optional` when `use_no_optional` is `true`),
+- installs with `pnpm ci` (which requires pnpm 11+; adds `--no-optional` when `use_no_optional` is `true`),
 - runs your scripts with `pnpm run <script>` and tests with `pnpm test`.
 
 PNPM consumers must:
