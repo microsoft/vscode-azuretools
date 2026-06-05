@@ -60,7 +60,6 @@ steps:
         Write-Host "Wrote .npmrc with registry $registry"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
       } elseif ($allowPublicNpm -match '^(true|1|yes)$') {
-        Set-Content -Path $npmrcPath -Value "registry=https://registry.npmjs.org/`n"
         Write-Host "##vso[task.logissue type=warning]BREAK-GLASS: 'allowPublicNpm' is set, so the fail-closed feed guard is bypassed!"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       } else {
