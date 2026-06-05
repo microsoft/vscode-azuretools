@@ -47,15 +47,21 @@ steps:
   # way npmAuthenticate@0 injects a token, and both npm and pnpm read .npmrc.
   - pwsh: |
       $npmrcPath = "$(working_directory)/.npmrc"
+      $feedBaseUrl = "${{ parameters.feedBaseUrl }}"
       if (Test-Path $npmrcPath) {
         Write-Host "Using checked-in .npmrc"
-      } else {
-        $registry = "${{ parameters.feedBaseUrl }}/npm/registry/"
+        Write-Host "--- .npmrc ---"
+        Get-Content $npmrcPath
+      } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
+        $registry = "$feedBaseUrl/npm/registry/"
         Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
         Write-Host "Wrote .npmrc with registry $registry"
+        Write-Host "--- .npmrc ---"
+        Get-Content $npmrcPath
+      } else {
+        Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl."
+        exit 1
       }
-      Write-Host "--- .npmrc ---"
-      Get-Content $npmrcPath
     displayName: "👉 Configure npm/pnpm registry"
 
   - task: npmAuthenticate@0
