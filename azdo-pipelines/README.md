@@ -45,7 +45,6 @@ This template handles building, linting, testing, packaging, and signing your co
 | `testARMServiceConnection`  | string   | `""`                                   | ARM service connection for federated credential tests    |
 | `packageManager`            | string   | `npm`                                  | Package manager for build/test: `npm` or `pnpm`          |
 | `feedBaseUrl`               | string   | `""`                                   | Azure Artifacts feed base URL; routes npm/pnpm installs through the private mirror and injects test feed env vars |
-| `npmFeed`                   | string   | `""`                                   | **Deprecated/no-op** (use `feedBaseUrl`); kept for back-compat |
 
 ### Example
 
@@ -103,14 +102,12 @@ When `packageManager: pnpm`:
 
 ### Private feed (npm and pnpm)
 
-Builds always install from an internal Azure Artifacts feed, never public npm. There are two ways to point at it:
+Builds always install from an internal Azure Artifacts feed, never public npm. `feedBaseUrl` is optional, but a feed source is **required** at build time — the setup step fails closed (errors out before install) if neither of the following is present. There are two ways to point at the feed:
 
 - **Check in your own `.npmrc`** (at the working directory) with the registry your repo needs. The setup step leaves it untouched.
 - **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
 
-Either way, the setup step then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed.
-
-> The legacy `npmFeed` parameter is deprecated and ignored on the build path; use `feedBaseUrl` instead.
+Either way, the setup step then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the build hard-fails before install rather than falling back to public npm.
 
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
 

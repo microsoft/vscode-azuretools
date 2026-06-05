@@ -65,13 +65,6 @@ parameters:
       - pnpm
     default: npm
 
-  # Deprecated/no-op: private-feed routing is now driven by `feedBaseUrl` (below)
-  # for both npm and pnpm. Retained only so existing consumers that still pass it
-  # don't fail template validation. To use a private mirror, set `feedBaseUrl`.
-  - name: npmFeed
-    type: string
-    default: ""
-
   # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode)
   # When set, FEED_BASE_URL, FEED_PAT, and PIP_INDEX_URL env vars are injected into the test step
   - name: feedBaseUrl
