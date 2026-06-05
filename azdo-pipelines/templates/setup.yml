@@ -61,7 +61,7 @@ steps:
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
       } elseif ($allowPublicNpm -match '^(true|1|yes)$') {
         Set-Content -Path $npmrcPath -Value "registry=https://registry.npmjs.org/`n"
-        Write-Host "##vso[task.logissue type=warning]BREAK-GLASS: 'allowPublicNpm' is set, so the fail-closed feed guard is bypassed and this build will install from PUBLIC npm (registry.npmjs.org). This is for emergency use only -- do NOT use it for official or release builds. Configure a feed (check in an .npmrc or pass feedBaseUrl) and unset 'allowPublicNpm' as soon as possible."
+        Write-Host "##vso[task.logissue type=warning]BREAK-GLASS: 'allowPublicNpm' is set, so the fail-closed feed guard is bypassed!"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       } else {
         Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl. (Emergency override: set the pipeline variable 'allowPublicNpm' to 'true' to bypass this guard and install from PUBLIC npm -- never for official or release builds.)"
