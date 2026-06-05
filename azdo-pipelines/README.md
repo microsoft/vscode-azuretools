@@ -109,6 +109,12 @@ Builds always install from an internal Azure Artifacts feed, never public npm. `
 
 Either way, the setup step then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the build hard-fails before install rather than falling back to public npm.
 
+#### Break-glass override (`allowPublicNpm`)
+
+For emergencies only, you can bypass the fail-closed guard by setting the pipeline variable **`allowPublicNpm`** to `true` (values `1`/`yes` also work). The fastest path is a **queue-time variable** when manually running the build, so no YAML change is needed (the variable must be defined as settable at queue time, or added to your pipeline's `variables`).
+
+When set, the setup step skips the feed configuration, writes an `.npmrc` pinned to the public registry (`https://registry.npmjs.org/`), skips `npmAuthenticate`, and logs a loud warning. **The build will install from PUBLIC npm.** Do **not** use this for official or release builds — it is a temporary escape hatch so you can unblock a fast build when no feed source is configured. Leave it unset (the default) and configure a feed (`.npmrc` or `feedBaseUrl`) for normal builds.
+
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
 
 This template releases a signed VS Code extension to the Visual Studio Marketplace.

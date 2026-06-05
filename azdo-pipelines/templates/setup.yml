@@ -48,23 +48,41 @@ steps:
   # Artifacts feed (never public npm). A repo may check in its own .npmrc; if it
   # doesn't, we write one pointing the registry at the feedBaseUrl mirror. Either
   # way npmAuthenticate@0 injects a token, and both npm and pnpm read .npmrc.
+  #
+  # Fail-closed: if there is no feed source (no checked-in .npmrc AND empty
+  # feedBaseUrl) the build hard-fails before install rather than silently
+  # falling back to public npm. Break-glass: setting the pipeline variable
+  # 'allowPublicNpm' to 'true' (e.g. as a queue-time variable) bypasses the
+  # guard and installs from PUBLIC npm for emergency builds only -- never for
+  # official or release builds.
   - pwsh: |
       $npmrcPath = "$(working_directory)/.npmrc"
       $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
+      $allowPublicNpm = "$env:ALLOWPUBLICNPM".Trim()
       if (Test-Path $npmrcPath) {
         Write-Host "Using checked-in .npmrc"
+        Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
       } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
         $registry = "$feedBaseUrl/npm/registry/"
         Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
         Write-Host "Wrote .npmrc with registry $registry"
+        Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
+      } elseif ($allowPublicNpm -match '^(true|1|yes)$') {
+        # Break-glass: explicitly pin the public registry so the install is
+        # deterministic regardless of any ambient/global npm config, and skip
+        # npmAuthenticate (no feed token needed).
+        Set-Content -Path $npmrcPath -Value "registry=https://registry.npmjs.org/`n"
+        Write-Host "##vso[task.logissue type=warning]BREAK-GLASS: 'allowPublicNpm' is set, so the fail-closed feed guard is bypassed and this build will install from PUBLIC npm (registry.npmjs.org). This is for emergency use only -- do NOT use it for official or release builds. Configure a feed (check in an .npmrc or pass feedBaseUrl) and unset 'allowPublicNpm' as soon as possible."
+        Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       } else {
-        Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl."
+        Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl. (Emergency override: set the pipeline variable 'allowPublicNpm' to 'true' to bypass this guard and install from PUBLIC npm -- never for official or release builds.)"
         exit 1
       }
     displayName: "👉 Configure npm/pnpm registry"
 
   - task: npmAuthenticate@0
     displayName: "👉 Authenticate NPM"
+    condition: and(succeeded(), eq(variables['needsNpmAuth'], 'true'))
     inputs:
       workingFile: $(working_directory)/.npmrc
 
