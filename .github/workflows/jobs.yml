@@ -25,19 +25,6 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v3
-      - name: Validate package_manager
-        working-directory: .
-        shell: bash
-        env:
-          PACKAGE_MANAGER: ${{ inputs.package_manager }}
-        run: |
-          case "$PACKAGE_MANAGER" in
-            npm|pnpm) ;;
-            *)
-              echo "::error::Unsupported package_manager '$PACKAGE_MANAGER'. Supported values: npm, pnpm."
-              exit 1
-              ;;
-          esac
       - name: Using PNPM
         if: ${{ inputs.package_manager == 'pnpm' }}
         uses: pnpm/action-setup@v4

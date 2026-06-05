@@ -44,7 +44,7 @@ The reusable workflow accepts the following inputs:
 | --- | --- | --- | --- | --- |
 | `working_directory` | string | no | `"."` | Directory to run the build/test commands in. |
 | `use_no_optional` | boolean | no | `true` | When `true`, optional dependencies are skipped during install (`--no-optional`). |
-| `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value fails the build with a clear error. |
+| `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value is treated as `npm`. |
 
 ### Using PNPM
 
