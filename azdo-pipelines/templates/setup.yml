@@ -5,8 +5,9 @@ parameters:
     default: npm
 
   # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
-  # When set, an .npmrc pointing at "<feedBaseUrl>/npm/registry/" is written and
-  # authenticated, so both npm and pnpm install from the private mirror.
+  # Used to write a build-time .npmrc (registry "<feedBaseUrl>/npm/registry/")
+  # when the repo doesn't check one in, so both npm and pnpm install from the
+  # internal mirror.
   - name: feedBaseUrl
     type: string
     default: ""
@@ -40,41 +41,27 @@ steps:
         displayName: "👉 Activate pnpm (Corepack)"
         workingDirectory: $(working_directory)
 
-  # Private-feed auth. When feedBaseUrl is set, ensure $(working_directory)/.npmrc
-  # routes the registry at the Azure Artifacts mirror (appending so any existing
-  # pnpm settings are preserved), then inject a token. Both npm and pnpm read
-  # .npmrc. When feedBaseUrl is empty, authenticate a consumer-committed .npmrc
-  # if one exists.
-  - ${{ if ne(parameters.feedBaseUrl, '') }}:
-      - pwsh: |
-          $npmrcPath = "$(working_directory)/.npmrc"
-          $registry = "${{ parameters.feedBaseUrl }}/npm/registry/"
-          $lines = "registry=$registry`nalways-auth=true`n"
-          if (Test-Path $npmrcPath) {
-            Add-Content -Path $npmrcPath -Value $lines
-          } else {
-            Set-Content -Path $npmrcPath -Value $lines
-          }
-          Write-Host "--- .npmrc ---"
-          Get-Content $npmrcPath
-        displayName: "👉 Configure npm/pnpm registry mirror"
-      - task: npmAuthenticate@0
-        displayName: "👉 Authenticate NPM"
-        inputs:
-          workingFile: $(working_directory)/.npmrc
-  - ${{ else }}:
-      - pwsh: |
-          if (Test-Path "$(working_directory)/.npmrc") {
-            Write-Output "##vso[task.setvariable variable=npmrcExists]true"
-          } else {
-            Write-Output "##vso[task.setvariable variable=npmrcExists]false"
-          }
-        displayName: "👉 Check for .npmrc"
-      - task: npmAuthenticate@0
-        displayName: "👉 Authenticate NPM"
-        condition: and(succeeded(), eq(variables['npmrcExists'], 'true'))
-        inputs:
-          workingFile: $(working_directory)/.npmrc
+  # Private-feed auth. Official builds always install from an internal Azure
+  # Artifacts feed (never public npm). A repo may check in its own .npmrc; if it
+  # doesn't, we write one pointing the registry at the feedBaseUrl mirror. Either
+  # way npmAuthenticate@0 injects a token, and both npm and pnpm read .npmrc.
+  - pwsh: |
+      $npmrcPath = "$(working_directory)/.npmrc"
+      if (Test-Path $npmrcPath) {
+        Write-Host "Using checked-in .npmrc"
+      } else {
+        $registry = "${{ parameters.feedBaseUrl }}/npm/registry/"
+        Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
+        Write-Host "Wrote .npmrc with registry $registry"
+      }
+      Write-Host "--- .npmrc ---"
+      Get-Content $npmrcPath
+    displayName: "👉 Configure npm/pnpm registry"
+
+  - task: npmAuthenticate@0
+    displayName: "👉 Authenticate NPM"
+    inputs:
+      workingFile: $(working_directory)/.npmrc
 
   - ${{ if eq(parameters.packageManager, 'pnpm') }}:
       - pwsh: pnpm install --frozen-lockfile

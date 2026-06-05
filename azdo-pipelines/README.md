@@ -103,7 +103,12 @@ When `packageManager: pnpm`:
 
 ### Private feed (npm and pnpm)
 
-Private-feed auth is driven by `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`). When set, the setup step writes an `.npmrc` in the working directory pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`, then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the mirror. Any existing `.npmrc` settings (such as pnpm's `node-linker`) are preserved.
+Builds always install from an internal Azure Artifacts feed, never public npm. There are two ways to point at it:
+
+- **Check in your own `.npmrc`** (at the working directory) with the registry your repo needs. The setup step leaves it untouched.
+- **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
+
+Either way, the setup step then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed.
 
 > The legacy `npmFeed` parameter is deprecated and ignored on the build path; use `feedBaseUrl` instead.
 
