@@ -29,7 +29,10 @@ export function parseClientContext(clientContext: InternalAzExtClientContext): I
             tenantId: subscription.tenantId,
             userId: subscription.userId,
             environment: subscription.environment,
-            isCustomCloud: subscription.isCustomCloud
+            isCustomCloud: subscription.isCustomCloud,
+            // Carry `authentication` through so scope-specific consent (e.g. the App Service audience
+            // prompt for vscode-azurefunctions#5073) isn't silently dropped on contexts routed through here.
+            authentication: subscription.authentication,
         });
     } else {
         return clientContext;
