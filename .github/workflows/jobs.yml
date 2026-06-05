@@ -36,44 +36,21 @@ jobs:
           node-version-file: .nvmrc
           cache: ${{ inputs.package_manager == 'pnpm' && 'pnpm' || '' }}
           cache-dependency-path: ${{ inputs.package_manager == 'pnpm' && format('{0}/pnpm-lock.yaml', inputs.working_directory) || '' }}
-      - name: Compute commands
-        working-directory: .
-        shell: bash
-        env:
-          PACKAGE_MANAGER: ${{ inputs.package_manager }}
-          USE_NO_OPTIONAL: ${{ inputs.use_no_optional }}
-        run: |
-          if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
-            if [ "$USE_NO_OPTIONAL" = "true" ]; then
-              echo "INSTALL_CMD=pnpm install --frozen-lockfile --no-optional" >> "$GITHUB_ENV"
-            else
-              echo "INSTALL_CMD=pnpm install --frozen-lockfile" >> "$GITHUB_ENV"
-            fi
-            echo "RUN_CMD=pnpm run" >> "$GITHUB_ENV"
-            echo "TEST_CMD=pnpm test" >> "$GITHUB_ENV"
-          else
-            if [ "$USE_NO_OPTIONAL" = "true" ]; then
-              echo "INSTALL_CMD=npm ci --no-optional" >> "$GITHUB_ENV"
-            else
-              echo "INSTALL_CMD=npm ci" >> "$GITHUB_ENV"
-            fi
-            echo "RUN_CMD=npm run" >> "$GITHUB_ENV"
-            echo "TEST_CMD=npm test" >> "$GITHUB_ENV"
-          fi
-      - run: $INSTALL_CMD
-        shell: bash
+      - name: Install (npm)
+        if: ${{ inputs.package_manager == 'npm' }}
+        run: npm ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
+      - name: Install (pnpm)
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        run: pnpm install --frozen-lockfile ${{ inputs.use_no_optional && '--no-optional' || '' }}
 
       # Lint
-      - run: $RUN_CMD lint
-        shell: bash
+      - run: ${{ inputs.package_manager }} run lint
 
       # Build
-      - run: $RUN_CMD build
-        shell: bash
+      - run: ${{ inputs.package_manager }} run build
 
       # Package
-      - run: $RUN_CMD package
-        shell: bash
+      - run: ${{ inputs.package_manager }} run package
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -84,5 +61,4 @@ jobs:
             !**/node_modules
 
       # Test
-      - run: xvfb-run -a $TEST_CMD
-        shell: bash
+      - run: xvfb-run -a ${{ inputs.package_manager }} test
