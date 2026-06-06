@@ -64,5 +64,3 @@ steps:
   - pwsh: $(packageManager) ci
     displayName: "👉 Install Dependencies"
     workingDirectory: $(working_directory)
-    env:
-      NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
