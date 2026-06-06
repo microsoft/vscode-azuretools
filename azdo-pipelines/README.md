@@ -93,11 +93,11 @@ extends:
 
 ### Using pnpm
 
-By default the build uses **npm** (`npm ci --no-optional`, then `npm run <script>`). Set `packageManager: pnpm` to use pnpm instead. The install step is uniform across both — it runs `<packageManager> ci --no-optional` (note: `pnpm ci` requires pnpm 11+). The same `lint`/`build`/`package`/`test` scripts run either way; only the package manager and pnpm's Corepack activation differ.
+By default the build uses **npm** (`npm ci`, then `npm run <script>`). Set `packageManager: pnpm` to use pnpm instead. The install step is uniform across both — it runs `<packageManager> ci` (note: `pnpm ci` requires pnpm 11+). The same `lint`/`build`/`package`/`test` scripts run either way; only the package manager and pnpm's Corepack activation differ.
 
 When `packageManager: pnpm`:
 
-- Commit a `pnpm-lock.yaml` (the build runs `pnpm ci --no-optional`, which requires pnpm 11+).
+- Commit a `pnpm-lock.yaml` (the build runs `pnpm ci`, which requires pnpm 11+).
 - Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@9.12.0"`). The build runs `corepack enable`, and Corepack activates exactly that pnpm version.
 
 ### Private feed (npm and pnpm)

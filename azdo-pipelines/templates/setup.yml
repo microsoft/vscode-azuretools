@@ -74,7 +74,7 @@ steps:
     inputs:
       workingFile: $(working_directory)/.npmrc
 
-  - pwsh: ${{ parameters.packageManager }} ci --no-optional
+  - pwsh: ${{ parameters.packageManager }} ci
     displayName: "👉 Install Dependencies"
     workingDirectory: $(working_directory)
     env:
