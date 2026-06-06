@@ -1,12 +1,4 @@
 parameters:
-  # Package manager used to install dependencies (npm or pnpm)
-  - name: packageManager
-    type: string
-    values:
-      - npm
-      - pnpm
-    default: npm
-
   # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
   # Used to write a build-time .npmrc (registry "<feedBaseUrl>/npm/registry/")
   # when the repo doesn't check one in, so both npm and pnpm install from the
@@ -36,13 +28,13 @@ steps:
 
   # pnpm is activated through Corepack using the version pinned by the consumer's
   # package.json "packageManager" field (e.g. "pnpm@9.x").
-  - ${{ if eq(parameters.packageManager, 'pnpm') }}:
-      - pwsh: |
-          corepack enable
-          node --version
-          pnpm --version
-        displayName: "👉 Activate pnpm (Corepack)"
-        workingDirectory: $(working_directory)
+  - pwsh: |
+      corepack enable
+      node --version
+      pnpm --version
+    displayName: "👉 Activate pnpm (Corepack)"
+    workingDirectory: $(working_directory)
+    condition: and(succeeded(), eq(variables['packageManager'], 'pnpm'))
 
   # Private-feed auth: use a checked-in .npmrc, or write one from feedBaseUrl;
   # authenticate when present, skip otherwise.
@@ -69,7 +61,7 @@ steps:
     inputs:
       workingFile: $(working_directory)/.npmrc
 
-  - pwsh: ${{ parameters.packageManager }} ci
+  - pwsh: $(packageManager) ci
     displayName: "👉 Install Dependencies"
     workingDirectory: $(working_directory)
     env:

@@ -82,7 +82,6 @@ stages:
                 fetchDepth: 1
               - template: ../templates/setup.yml
                 parameters:
-                  packageManager: ${{ parameters.packageManager }}
                   feedBaseUrl: ${{ parameters.feedBaseUrl }}
               - ${{ parameters.additionalSetupSteps }}
               - template: ../templates/lint.yml
