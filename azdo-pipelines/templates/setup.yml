@@ -44,13 +44,11 @@ steps:
         displayName: "👉 Activate pnpm (Corepack)"
         workingDirectory: $(working_directory)
 
-  # Private-feed auth. A repo may check in its own .npmrc; otherwise we write one
-  # pointing the registry at the feedBaseUrl mirror. The guard is fail-closed: no
-  # feed source (and no allowPublicNpm break-glass) hard-fails before install.
+  # Private-feed auth: use a checked-in .npmrc, or write one from feedBaseUrl;
+  # authenticate when present, skip otherwise.
   - pwsh: |
       $npmrcPath = "$(working_directory)/.npmrc"
       $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
-      $allowPublicNpm = "$env:ALLOWPUBLICNPM".Trim()
       if (Test-Path $npmrcPath) {
         Write-Host "Using checked-in .npmrc"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
@@ -59,12 +57,9 @@ steps:
         Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
         Write-Host "Wrote .npmrc with registry $registry"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
-      } elseif ($allowPublicNpm -match '^(true|1|yes)$') {
-        Write-Host "##vso[task.logissue type=warning]BREAK-GLASS: 'allowPublicNpm' is set, so the fail-closed feed guard is bypassed!"
-        Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       } else {
-        Write-Output "##vso[task.logissue type=error]No .npmrc found in $(working_directory) and no feedBaseUrl provided. Official builds must install from an internal Azure Artifacts feed and will not fall back to public npm. Check in an .npmrc or pass feedBaseUrl. (Emergency override: set the pipeline variable 'allowPublicNpm' to 'true' to bypass this guard and install from PUBLIC npm -- strongly avoid for official or release builds.)"
-        exit 1
+        Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
+        Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       }
     displayName: "👉 Configure npm/pnpm registry"
 

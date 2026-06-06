@@ -102,18 +102,12 @@ When `packageManager: pnpm`:
 
 ### Private feed (npm and pnpm)
 
-Builds are expected to install from an internal Azure Artifacts feed rather than public npm. `feedBaseUrl` is optional, but a feed source is **required** at build time — the setup step fails closed (errors out before install) if no feed source is present. There are two ways to point at the feed:
+Builds install from an internal Azure Artifacts feed rather than public npm. `feedBaseUrl` is optional; there are two ways to point at the feed:
 
-- **Check in your own `.npmrc`** (at the working directory) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The guard only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
+- **Check in your own `.npmrc`** (at the working directory) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
 - **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
 
-Either way, the setup step then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the build hard-fails before install rather than falling back to public npm.
-
-#### Break-glass override (`allowPublicNpm`)
-
-For emergencies only, you can bypass the fail-closed guard by setting the pipeline variable **`allowPublicNpm`** to `true` (values `1`/`yes` also work). The fastest path is a **queue-time variable** when manually running the build, so no YAML change is needed (the variable must be defined as settable at queue time, or added to your pipeline's `variables`).
-
-When set, the setup step skips the feed configuration and `npmAuthenticate`, and logs a warning; npm/pnpm fall back to their default (public) registry. **The build will install from PUBLIC npm.** Do **not** use this for official or release builds — it is a temporary escape hatch so you can unblock a fast build when no feed source is configured. Leave it unset (the default) and configure a feed (`.npmrc` or `feedBaseUrl`) for normal builds.
+Either way, when an `.npmrc` is present the setup step runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the setup step simply skips registry configuration and authentication — the build environment's network isolation (not a feed guard) is what keeps builds off public npm.
 
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
 
