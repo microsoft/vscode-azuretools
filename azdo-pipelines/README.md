@@ -25,7 +25,7 @@ Your project must meet the following requirements to use these templates:
    - `test` - Runs tests. Runs after `build` and `package`.
 4. After the `package` script has run, the output must match the required build artifacts (see corresponding release pipeline)
 5. (For compliance) A `tsaoptions.json` file in `.config` (see [Compliance Configuration](#compliance-configuration))
-6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@9.12.0"`) so Corepack activates the pinned pnpm version. See [Using pnpm](#using-pnpm).
+6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`) so Corepack activates the pinned pnpm version. The build installs with `pnpm ci`, which requires pnpm 11+. See [Using pnpm](#using-pnpm).
 
 ## Build Pipeline (`1es-mb-main.yml`)
 
@@ -45,7 +45,6 @@ This template handles building, linting, testing, packaging, and signing your co
 | `testARMServiceConnection`  | string   | `""`                                   | ARM service connection for federated credential tests    |
 | `packageManager`            | string   | `npm`                                  | Package manager for build/test: `npm` or `pnpm`          |
 | `feedBaseUrl`               | string   | `""`                                   | Azure Artifacts feed base URL; routes npm/pnpm installs through the private mirror and injects test feed env vars |
-| `npmFeed`                   | string   | `""`                                   | **Deprecated/no-op** (use `feedBaseUrl`); kept for back-compat |
 
 ### Example
 
@@ -94,23 +93,21 @@ extends:
 
 ### Using pnpm
 
-By default the build uses **npm** (`npm ci --no-optional`, then `npm run <script>`). Set `packageManager: pnpm` to use pnpm instead. The same `lint`/`build`/`package`/`test` scripts run either way; only the install step and pnpm's Corepack activation differ.
+By default the build uses **npm** (`npm ci`, then `npm run <script>`). Set `packageManager: pnpm` to use pnpm instead. The install step is uniform across both — it runs `<packageManager> ci` (note: `pnpm ci` requires pnpm 11+). The same `lint`/`build`/`package`/`test` scripts run either way; only the package manager and pnpm's Corepack activation differ.
 
 When `packageManager: pnpm`:
 
-- Commit a `pnpm-lock.yaml` (the build runs `pnpm install --frozen-lockfile`).
-- Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@9.12.0"`). The build runs `corepack enable`, and Corepack activates exactly that pnpm version.
+- Commit a `pnpm-lock.yaml` (the build runs `pnpm ci`, which requires pnpm 11+).
+- Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`). The build runs `corepack enable`, and Corepack activates exactly that pnpm version. `pnpm ci` requires pnpm 11+.
 
 ### Private feed (npm and pnpm)
 
-Builds always install from an internal Azure Artifacts feed, never public npm. There are two ways to point at it:
+Builds install from an internal Azure Artifacts feed rather than public npm. `feedBaseUrl` is optional; there are two ways to point at the feed:
 
-- **Check in your own `.npmrc`** (at the working directory) with the registry your repo needs. The setup step leaves it untouched.
+- **Check in your own `.npmrc`** (at the working directory) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
 - **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
 
-Either way, the setup step then runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed.
-
-> The legacy `npmFeed` parameter is deprecated and ignored on the build path; use `feedBaseUrl` instead.
+Either way, when an `.npmrc` is present the setup step runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the setup step simply skips registry configuration and authentication — the build environment's network isolation (not a feed guard) is what keeps builds off public npm.
 
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
 

@@ -54,23 +54,16 @@ parameters:
   # Package manager used for install/build/lint/package/test. The same set of
   # script commands (`<pm> run lint|build|package|test`) runs either way; only
   # the install command and pnpm's Corepack activation differ.
-  #   'npm'  (default): `npm ci --no-optional` then `npm run <script>`.
+  #   'npm'  (default): `npm ci` then `npm run <script>`.
   #   'pnpm':           Corepack activates the version pinned by the consumer's
   #                     package.json "packageManager" field, then
-  #                     `pnpm install --frozen-lockfile` and `pnpm run <script>`.
+  #                     `pnpm ci` and `pnpm run <script>`.
   - name: packageManager
     type: string
     values:
       - npm
       - pnpm
     default: npm
-
-  # Deprecated/no-op: private-feed routing is now driven by `feedBaseUrl` (below)
-  # for both npm and pnpm. Retained only so existing consumers that still pass it
-  # don't fail template validation. To use a private mirror, set `feedBaseUrl`.
-  - name: npmFeed
-    type: string
-    default: ""
 
   # Base URL of an Azure Artifacts universal feed (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode)
   # When set, FEED_BASE_URL, FEED_PAT, and PIP_INDEX_URL env vars are injected into the test step
