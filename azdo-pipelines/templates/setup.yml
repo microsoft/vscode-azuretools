@@ -72,11 +72,7 @@ steps:
       - pwsh: pnpm install --frozen-lockfile
         displayName: "👉 Install Dependencies"
         workingDirectory: $(working_directory)
-        env:
-          NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
   - ${{ else }}:
       - pwsh: npm ci
         displayName: "👉 Install Dependencies"
         workingDirectory: $(working_directory)
-        env:
-          NPM_CONFIG_USERCONFIG: $(working_directory)/.npmrc
