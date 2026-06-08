@@ -43,7 +43,7 @@ The reusable workflow accepts the following inputs:
 | Input | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `working_directory` | string | no | `"."` | Directory to run the build/test commands in. |
-| `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value is treated as `npm`. |
+| `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value fails the build at a validation step. |
 
 ### Using PNPM
 

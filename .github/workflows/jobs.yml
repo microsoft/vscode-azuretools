@@ -21,6 +21,14 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v3
+      # GitHub (unlike AzDO) can't enforce an enum on a workflow_call input, so
+      # fail the build when package_manager isn't one we support. The step is
+      # skipped entirely when the value is valid.
+      - name: Validate package_manager
+        if: ${{ inputs.package_manager != 'npm' && inputs.package_manager != 'pnpm' }}
+        run: |
+          echo "::error::Invalid package manager; expected 'npm' or 'pnpm'."
+          exit 1
       # Activate pnpm via Corepack (a plain run step) instead of a Marketplace
       # action so consumers don't need to allowlist a third-party action. This
       # runs in working_directory, so `corepack prepare --activate` downloads and
