@@ -37,16 +37,6 @@ export function getAppServiceScopes(environment: Environment): string[] {
 }
 
 /**
- * Minimal shape of the `authentication` object that the Azure Resources host spreads onto every
- * subscription context (see `createSubscriptionContext` in `@microsoft/vscode-azext-utils`).
- * Declared locally because this package does not depend on the resources API typings.
- */
-interface SubscriptionAuthentication {
-    // Optional because older hosts may provide an `authentication` object without this method.
-    getSessionWithScopes?(scopeListOrRequest: string[], options?: { createIfNone?: boolean }): Promise<unknown>;
-}
-
-/**
  * Creates App Service auth context for the given subscription's cloud environment.
  * Returns both scopes and credentials so callers can avoid recomputing scopes.
  */
@@ -57,11 +47,10 @@ export async function getAppServiceCredentials(subscription: ISubscriptionContex
     // may not have consented to yet. Eagerly acquire a session here allowing an interactive prompt,
     // so the subsequent silent credential acquisition — and the Kudu operation itself — don't fail
     // with "You are not signed in to an Azure account". This is a one-time consent: once granted it
-    // is cached and resolves silently on later calls. The method itself is optional-chained so we
-    // degrade gracefully on older hosts whose `authentication` object predates `getSessionWithScopes`.
+    // is cached and resolves silently on later calls. Optional-chained so we degrade gracefully on
+    // older hosts whose `authentication` object predates `getSessionWithScopes`.
     // See https://github.com/microsoft/vscode-azurefunctions/issues/5073
-    const authentication = (subscription as ISubscriptionContext & { authentication?: SubscriptionAuthentication }).authentication;
-    await authentication?.getSessionWithScopes?.(scopes, { createIfNone: true });
+    await subscription.authentication?.getSessionWithScopes?.(scopes, { createIfNone: true });
 
     return {
         credentials: await subscription.createCredentialsForScopes(scopes) as TokenCredential,
