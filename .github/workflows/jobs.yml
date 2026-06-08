@@ -5,10 +5,6 @@ on:
         required: false
         type: string
         default: "."
-      use_no_optional:
-        required: false
-        type: boolean
-        default: true
       package_manager:
         required: false
         type: string
@@ -42,7 +38,7 @@ jobs:
           cache-dependency-path: ${{ inputs.package_manager == 'pnpm' && format('{0}/pnpm-lock.yaml', inputs.working_directory) || '' }}
 
       # Install
-      - run: ${{ inputs.package_manager }} ci ${{ inputs.use_no_optional && '--no-optional' || '' }}
+      - run: ${{ inputs.package_manager }} ci
 
       # Lint
       - run: ${{ inputs.package_manager }} run lint

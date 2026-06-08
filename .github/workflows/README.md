@@ -43,7 +43,6 @@ The reusable workflow accepts the following inputs:
 | Input | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `working_directory` | string | no | `"."` | Directory to run the build/test commands in. |
-| `use_no_optional` | boolean | no | `true` | When `true`, optional dependencies are skipped during install (`--no-optional`). |
 | `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value is treated as `npm`. |
 
 ### Using PNPM
@@ -52,7 +51,7 @@ By default the workflow uses NPM and behaves exactly as it always has. To opt in
 
 - runs `pnpm/action-setup` before `actions/setup-node`,
 - enables PNPM store caching via `actions/setup-node`,
-- installs with `pnpm ci` (which requires pnpm 11+; adds `--no-optional` when `use_no_optional` is `true`),
+- installs with `pnpm ci` (which requires pnpm 11+),
 - runs your scripts with `pnpm run <script>` and tests with `pnpm test`.
 
 PNPM consumers must:
