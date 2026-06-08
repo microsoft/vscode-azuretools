@@ -142,17 +142,6 @@ export async function createGenericClient(context: IActionContext, clientInfo: t
         credential: credentials,
         endpoint,
         retryOptions,
-        // `@azure/core-rest-pipeline@1.23.0` changed the default `redirectPolicy` to only follow
-        // same-origin redirects, which silently breaks generic requests that rely on cross-origin
-        // redirects (e.g. `aka.ms` shorteners or management-plane URLs that redirect to a data-plane
-        // host). Since `createGenericClient` is intentionally generic, restore the pre-1.23.0 behavior
-        // of following cross-origin redirects by default. The redirect policy always strips the
-        // `Authorization` header before following a redirect, so this does not leak credentials.
-        // Callers can opt out (or otherwise customize redirects) via `options.redirectOptions`.
-        redirectOptions: {
-            allowCrossOriginRedirects: true,
-            ...options?.redirectOptions,
-        },
     });
 
     addAzExtPipeline(context, client.pipeline, endpoint, options?.addStatusCodePolicy);

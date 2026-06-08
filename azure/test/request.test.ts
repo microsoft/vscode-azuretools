@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
+import { createPipelineRequest } from '@azure/core-rest-pipeline';
 import { createTestActionContext } from '@microsoft/vscode-azext-utils';
 import * as assert from 'assert';
 import * as http from 'http';
@@ -116,16 +116,15 @@ suite('request', () => {
 suite('request redirects', () => {
     // A second server on a different port is a different origin, so redirecting from `originUrl`
     // to `targetUrl` exercises the cross-origin redirect behavior changed in
-    // `@azure/core-rest-pipeline@1.23.0`.
+    // `@azure/core-rest-pipeline@1.23.0` (cross-origin redirects are not followed unless callers
+    // opt in via `redirectOptions: { allowCrossOriginRedirects: true }`).
     let originUrl: string;
     let targetUrl: string;
     let originServer: http.Server;
     let targetServer: http.Server;
-    let lastTargetAuthorization: string | undefined;
 
     suiteSetup(() => {
-        targetServer = http.createServer((req, response) => {
-            lastTargetAuthorization = req.headers.authorization;
+        targetServer = http.createServer((_req, response) => {
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end('{ "data": "redirected" }');
         });
@@ -155,12 +154,20 @@ suite('request redirects', () => {
         targetServer.close();
     });
 
-    setup(() => {
-        lastTargetAuthorization = undefined;
+    test('does not follow cross-origin redirect by default', async () => {
+        const client = await createGenericClient(await createTestActionContext(), undefined);
+        const response = await client.sendRequest(createPipelineRequest({
+            method: 'GET',
+            url: originUrl,
+            allowInsecureConnection: true,
+        })) as types.AzExtPipelineResponse;
+        assert.strictEqual(response.status, 302);
     });
 
-    test('follows cross-origin redirect by default', async () => {
-        const client = await createGenericClient(await createTestActionContext(), undefined);
+    test('follows cross-origin redirect when opted in via redirectOptions', async () => {
+        const client = await createGenericClient(await createTestActionContext(), undefined, {
+            redirectOptions: { allowCrossOriginRedirects: true },
+        });
         const response = await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url: originUrl,
@@ -168,30 +175,5 @@ suite('request redirects', () => {
         })) as types.AzExtPipelineResponse;
         assert.strictEqual(response.status, 200);
         assert.strictEqual(JSON.parse(response.bodyAsText!).data, 'redirected');
-    });
-
-    test('strips Authorization header on cross-origin redirect', async () => {
-        const client = await createGenericClient(await createTestActionContext(), undefined);
-        const response = await client.sendRequest(createPipelineRequest({
-            method: 'GET',
-            url: originUrl,
-            allowInsecureConnection: true,
-            headers: createHttpHeaders({ Authorization: '******' }),
-        })) as types.AzExtPipelineResponse;
-        assert.strictEqual(response.status, 200);
-        assert.strictEqual(lastTargetAuthorization, undefined);
-    });
-
-    test('does not follow cross-origin redirect when opted out', async () => {
-        const client = await createGenericClient(await createTestActionContext(), undefined, {
-            redirectOptions: { allowCrossOriginRedirects: false },
-        });
-        const response = await client.sendRequest(createPipelineRequest({
-            method: 'GET',
-            url: originUrl,
-            allowInsecureConnection: true,
-        })) as types.AzExtPipelineResponse;
-        assert.strictEqual(response.status, 302);
-        assert.strictEqual(lastTargetAuthorization, undefined);
     });
 });
