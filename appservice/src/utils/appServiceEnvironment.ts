@@ -42,6 +42,16 @@ export function getAppServiceScopes(environment: Environment): string[] {
  */
 export async function getAppServiceCredentials(subscription: ISubscriptionContext): Promise<{ credentials: TokenCredential, scopes: string[] }> {
     const scopes: string[] = getAppServiceScopes(subscription.environment);
+
+    // App Service (Kudu/SCM) endpoints require a token for the App Service audience, which the user
+    // may not have consented to yet. Eagerly acquire a session here allowing an interactive prompt,
+    // so the subsequent silent credential acquisition — and the Kudu operation itself — don't fail
+    // with "You are not signed in to an Azure account". This is a one-time consent: once granted it
+    // is cached and resolves silently on later calls. Optional-chained so we degrade gracefully on
+    // older hosts whose `authentication` object predates `getSessionWithScopes`.
+    // See https://github.com/microsoft/vscode-azurefunctions/issues/5073
+    await subscription.authentication?.getSessionWithScopes?.(scopes, { createIfNone: true });
+
     return {
         credentials: await subscription.createCredentialsForScopes(scopes) as TokenCredential,
         scopes,
