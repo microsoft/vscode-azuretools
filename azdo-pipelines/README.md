@@ -25,7 +25,7 @@ Your project must meet the following requirements to use these templates:
    - `test` - Runs tests. Runs after `build` and `package`.
 4. After the `package` script has run, the output must match the required build artifacts (see corresponding release pipeline)
 5. (For compliance) A `tsaoptions.json` file in `.config` (see [Compliance Configuration](#compliance-configuration))
-6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@9.12.0"`) so Corepack activates the pinned pnpm version. See [Using pnpm](#using-pnpm).
+6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`) so Corepack activates the pinned pnpm version. The build installs with `pnpm ci`, which requires pnpm 11+. See [Using pnpm](#using-pnpm).
 
 ## Build Pipeline (`1es-mb-main.yml`)
 
@@ -98,7 +98,7 @@ By default the build uses **npm** (`npm ci`, then `npm run <script>`). Set `pack
 When `packageManager: pnpm`:
 
 - Commit a `pnpm-lock.yaml` (the build runs `pnpm ci`, which requires pnpm 11+).
-- Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@9.12.0"`). The build runs `corepack enable`, and Corepack activates exactly that pnpm version.
+- Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`). The build runs `corepack enable`, and Corepack activates exactly that pnpm version. `pnpm ci` requires pnpm 11+.
 
 ### Private feed (npm and pnpm)
 

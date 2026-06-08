@@ -54,10 +54,10 @@ parameters:
   # Package manager used for install/build/lint/package/test. The same set of
   # script commands (`<pm> run lint|build|package|test`) runs either way; only
   # the install command and pnpm's Corepack activation differ.
-  #   'npm'  (default): `npm ci --no-optional` then `npm run <script>`.
+  #   'npm'  (default): `npm ci` then `npm run <script>`.
   #   'pnpm':           Corepack activates the version pinned by the consumer's
   #                     package.json "packageManager" field, then
-  #                     `pnpm install --frozen-lockfile` and `pnpm run <script>`.
+  #                     `pnpm ci` and `pnpm run <script>`.
   - name: packageManager
     type: string
     values:

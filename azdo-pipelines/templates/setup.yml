@@ -27,7 +27,7 @@ steps:
       version: $(nodeVersion)
 
   # pnpm is activated through Corepack using the version pinned by the consumer's
-  # package.json "packageManager" field (e.g. "pnpm@9.x").
+  # package.json "packageManager" field (e.g. "pnpm@11.3.0"; pnpm ci needs 11+).
   - pwsh: |
       corepack enable
       node --version

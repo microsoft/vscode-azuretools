@@ -49,15 +49,15 @@ The reusable workflow accepts the following inputs:
 
 By default the workflow uses NPM and behaves exactly as it always has. To opt into PNPM, set `package_manager: pnpm`. When PNPM is selected the workflow:
 
-- runs `pnpm/action-setup` before `actions/setup-node`,
+- activates pnpm via Corepack (a plain `run` step) before `actions/setup-node`,
 - enables PNPM store caching via `actions/setup-node`,
 - installs with `pnpm ci` (which requires pnpm 11+),
 - runs your scripts with `pnpm run <script>` and tests with `pnpm test`.
 
 PNPM consumers must:
 
-1. Commit a `pnpm-lock.yaml` at the root of your `working_directory` so `--frozen-lockfile` works (the workflow resolves `pnpm/action-setup` and the PNPM cache relative to `working_directory`).
-1. Specify the PNPM version. The easiest way is to add a `packageManager` field to your `package.json` (e.g. `"packageManager": "pnpm@9.x.x"`), which `pnpm/action-setup` reads automatically.
+1. Commit a `pnpm-lock.yaml` at the root of your `working_directory` so `pnpm ci`'s frozen-lockfile install works (the workflow activates pnpm via Corepack and resolves the PNPM cache relative to `working_directory`).
+1. Specify the PNPM version. The easiest way is to add a `packageManager` field to your `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`), which Corepack reads automatically. `pnpm ci` requires pnpm 11+.
 1. Optionally add an `.npmrc` if you need custom PNPM settings (for example `node-linker` or registry configuration).
 
 Example `main.yml` job that opts into PNPM:
