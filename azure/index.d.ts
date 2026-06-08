@@ -527,6 +527,11 @@ export type AzExtGenericClientInfo = AzExtGenericCredentials | { credentials: Az
  *
  * Any additional `CommonClientOptions` on `options` (e.g. `retryOptions`, `redirectOptions`, `httpClient`)
  * are forwarded to the underlying `ServiceClient`.
+ *
+ * Unlike the `@azure/core-rest-pipeline@1.23.0`+ default, cross-origin redirects are followed by
+ * default (e.g. for `aka.ms` shorteners or management-plane URLs that redirect to a data-plane host).
+ * The redirect policy strips the `Authorization` header before following any redirect, so this does
+ * not leak credentials. Pass `redirectOptions: { allowCrossOriginRedirects: false }` to opt out.
  * @param clientInfo The client/credentials info or `undefined` if no credentials are needed
  */
 export declare function createGenericClient(context: IActionContext, clientInfo: AzExtGenericClientInfo | undefined, options?: IGenericClientOptions): Promise<ServiceClient>;
