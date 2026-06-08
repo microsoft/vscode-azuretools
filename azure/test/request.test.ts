@@ -123,35 +123,38 @@ suite('request redirects', () => {
     let originServer: http.Server;
     let targetServer: http.Server;
 
-    suiteSetup(() => {
+    async function listen(server: http.Server): Promise<{ port: number }> {
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        const address = server.address();
+        if (address && typeof address === 'object') {
+            return address;
+        }
+        throw new Error('Invalid address');
+    }
+
+    async function close(server: http.Server): Promise<void> {
+        await new Promise<void>((resolve, reject) => server.close((err) => err ? reject(err) : resolve()));
+    }
+
+    suiteSetup(async () => {
         targetServer = http.createServer((_req, response) => {
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end('{ "data": "redirected" }');
         });
-        targetServer.listen();
-        const targetAddress = targetServer.address();
-        if (targetAddress && typeof targetAddress === 'object') {
-            targetUrl = `http://127.0.0.1:${targetAddress.port}/landing`;
-        } else {
-            throw new Error('Invalid address');
-        }
+        const targetAddress = await listen(targetServer);
+        targetUrl = `http://127.0.0.1:${targetAddress.port}/landing`;
 
         originServer = http.createServer((_req, response) => {
             response.writeHead(302, { Location: targetUrl });
             response.end();
         });
-        originServer.listen();
-        const originAddress = originServer.address();
-        if (originAddress && typeof originAddress === 'object') {
-            originUrl = `http://127.0.0.1:${originAddress.port}`;
-        } else {
-            throw new Error('Invalid address');
-        }
+        const originAddress = await listen(originServer);
+        originUrl = `http://127.0.0.1:${originAddress.port}`;
     });
 
-    suiteTeardown(() => {
-        originServer.close();
-        targetServer.close();
+    suiteTeardown(async () => {
+        await close(originServer);
+        await close(targetServer);
     });
 
     test('does not follow cross-origin redirect by default', async () => {
