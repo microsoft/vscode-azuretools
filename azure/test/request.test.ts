@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { createPipelineRequest } from '@azure/core-rest-pipeline';
 import { createTestActionContext } from '@microsoft/vscode-azext-utils';
 import * as assert from 'assert';
 import * as http from 'http';
 import * as types from '../index';
-import { sendRequestWithTimeout } from '../src/createAzureClient';
+import { createGenericClient, sendRequestWithTimeout } from '../src/createAzureClient';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 type ResponseData = { statusCode: number; contentType?: string; body?: string; } | ((response: http.ServerResponse) => void);
@@ -109,5 +110,73 @@ suite('request', () => {
 
     test('ECONNRESET', async () => {
         await assertThrowsAsync(async () => await sendTestRequest(res => res.destroy()), /socket hang up/i);
+    });
+});
+
+suite('request redirects', () => {
+    // A second server on a different port is a different origin, so redirecting from `originUrl`
+    // to `targetUrl` exercises the cross-origin redirect behavior changed in
+    // `@azure/core-rest-pipeline@1.23.0` (cross-origin redirects are not followed unless callers
+    // opt in via `redirectOptions: { allowCrossOriginRedirects: true }`).
+    let originUrl: string;
+    let targetUrl: string;
+    let originServer: http.Server;
+    let targetServer: http.Server;
+
+    async function listen(server: http.Server): Promise<{ port: number }> {
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        const address = server.address();
+        if (address && typeof address === 'object') {
+            return address;
+        }
+        throw new Error('Invalid address');
+    }
+
+    async function close(server: http.Server): Promise<void> {
+        await new Promise<void>((resolve, reject) => server.close((err) => err ? reject(err) : resolve()));
+    }
+
+    suiteSetup(async () => {
+        targetServer = http.createServer((_req, response) => {
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end('{ "data": "redirected" }');
+        });
+        const targetAddress = await listen(targetServer);
+        targetUrl = `http://127.0.0.1:${targetAddress.port}/landing`;
+
+        originServer = http.createServer((_req, response) => {
+            response.writeHead(302, { Location: targetUrl });
+            response.end();
+        });
+        const originAddress = await listen(originServer);
+        originUrl = `http://127.0.0.1:${originAddress.port}`;
+    });
+
+    suiteTeardown(async () => {
+        await close(originServer);
+        await close(targetServer);
+    });
+
+    test('does not follow cross-origin redirect by default', async () => {
+        const client = await createGenericClient(await createTestActionContext(), undefined);
+        const response = await client.sendRequest(createPipelineRequest({
+            method: 'GET',
+            url: originUrl,
+            allowInsecureConnection: true,
+        })) as types.AzExtPipelineResponse;
+        assert.strictEqual(response.status, 302);
+    });
+
+    test('follows cross-origin redirect when opted in via redirectOptions', async () => {
+        const client = await createGenericClient(await createTestActionContext(), undefined, {
+            redirectOptions: { allowCrossOriginRedirects: true },
+        });
+        const response = await client.sendRequest(createPipelineRequest({
+            method: 'GET',
+            url: originUrl,
+            allowInsecureConnection: true,
+        })) as types.AzExtPipelineResponse;
+        assert.strictEqual(response.status, 200);
+        assert.strictEqual(JSON.parse(response.bodyAsText!).data, 'redirected');
     });
 });
