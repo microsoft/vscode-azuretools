@@ -5,6 +5,7 @@
 
 import * as vscode from 'vscode';
 import { AzureSubscriptionProviderBase as NextAzureSubscriptionProviderBase } from '../next/AzureSubscriptionProviderBase';
+import { createVsCodeCredentialFactory } from '../next/vscodeCredentialFactory';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
@@ -32,9 +33,11 @@ export abstract class AzureSubscriptionProviderBase extends NextAzureSubscriptio
      * @param logger (Optional) A logger to record information to
      */
     public constructor(logger?: vscode.LogOutputChannel) {
+        const azureLogger = logger ? createAzureLoggerForOutputChannel(logger) : undefined;
         super({
             vscode: vscode,
-            logger: logger ? createAzureLoggerForOutputChannel(logger) : undefined,
+            logger: azureLogger,
+            credentialFactory: createVsCodeCredentialFactory(vscode, azureLogger),
         });
     }
 

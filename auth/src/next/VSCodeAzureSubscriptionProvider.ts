@@ -7,13 +7,14 @@ import type * as vscode from 'vscode';
 import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, getCoalescenceKey, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import { CaselessMap } from '../utils/map/CaselessMap';
 import { TwoKeyCaselessMap } from '../utils/map/TwoKeyCaselessMap';
-import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
+import { AzureSubscriptionProviderBase, type AzureSubscriptionProviderOptions } from './AzureSubscriptionProviderBase';
 import { CustomCloudConfigurationSection } from './configuredEnvironment';
 import type { AzureAccount } from './contracts/AzureAccount';
 import type { AzureSubscription, SubscriptionId, TenantId } from './contracts/AzureSubscription';
 import type { RefreshSuggestedEvent, TenantIdAndAccount } from './contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from './contracts/AzureTenant';
 import { dedupeSubscriptions } from './utils/dedupeSubscriptions';
+import { createVsCodeCredentialFactory } from './vscodeCredentialFactory';
 
 const ConfigPrefix = 'azureResourceGroups';
 const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
@@ -33,6 +34,18 @@ export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBa
     private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>(); // Key is from getOptionsCoalescenceKey
 
     private configChangeListener: vscode.Disposable | undefined;
+
+    /**
+     * Constructs a new {@link VSCodeAzureSubscriptionProvider}. If no {@link AzureSubscriptionProviderOptions.credentialFactory}
+     * is supplied, the default VS Code-backed credential factory is injected.
+     * @param options The {@link AzureSubscriptionProviderOptions}, including the injected `vscode` namespace.
+     */
+    public constructor(options: AzureSubscriptionProviderOptions) {
+        super({
+            ...options,
+            credentialFactory: options.credentialFactory ?? createVsCodeCredentialFactory(options.vscode, options.logger),
+        });
+    }
 
     public override dispose(): void {
         this.configChangeListener?.dispose();

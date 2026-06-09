@@ -20,18 +20,29 @@ import type { AzureSubscription } from './contracts/AzureSubscription';
 import type { AzureSubscriptionProvider, RefreshSuggestedEvent, TenantIdAndAccount } from './contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from './contracts/AzureTenant';
 import type { EnvironmentLike } from './contracts/EnvironmentLike';
-import { createChallengeSubscriptionClient, type GetTokenForChallenge } from './createChallengeSubscriptionClient';
+import { createChallengeSubscriptionClient } from './createChallengeSubscriptionClient';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './configuredEnvironment';
 import { dedupeSubscriptions } from './utils/dedupeSubscriptions';
 import { getSessionFromVSCode } from './utils/getSessionFromVSCode';
 import { isNotSignedInError, NotSignedInError } from './utils/NotSignedInError';
-import { VsCodeExtensionCredential } from './VsCodeExtensionCredential';
 
 const EventDebounce = 2 * 1000; // 2 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
 
 const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
 const SubscriptionListConcurrency = 5; // We will try to list subscriptions for at most 5 account+tenants in parallel
+
+/**
+ * A factory that produces the {@link TokenCredential} used to authenticate a given account+tenant. The
+ * returned credential should honor the `tenantId` from `GetTokenOptions` (or be already bound to the
+ * tenant) and may return `null` from `getToken` to signal "not signed in". The base wraps the returned
+ * credential with provider policy (refresh-event suppression and {@link NotSignedInError} on a null silent
+ * token), so factories only need to construct the raw credential.
+ *
+ * @param tenant The account+tenant the credential is for. Either field may be undefined (e.g. when listing
+ * tenants for the home tenant).
+ */
+export type CredentialFactory = (tenant: Partial<TenantIdAndAccount>) => TokenCredential;
 
 /**
  * Options for constructing an {@link AzureSubscriptionProviderBase}.
@@ -44,11 +55,11 @@ export interface AzureSubscriptionProviderOptions {
     readonly vscode: AzureAuthVsCode;
 
     /**
-     * (Optional) A {@link TokenCredential} to use for all subscriptions, instead of constructing a
-     * per-tenant {@link VsCodeExtensionCredential}. Useful for dependency injection and testing scenarios
-     * (e.g. an `AzureDevOpsCredential`).
+     * (Optional) A factory that creates the {@link TokenCredential} for a given account+tenant. Concrete
+     * providers (e.g. the VS Code provider, or an Azure DevOps provider) supply this to control how tokens
+     * are acquired. If omitted, {@link createCredentialForTenant} must be overridden, otherwise it throws.
      */
-    readonly credential?: TokenCredential;
+    readonly credentialFactory?: CredentialFactory;
 
     /**
      * (Optional) An `@azure/logger` logger to record diagnostic information to. Callers who want to route
@@ -78,7 +89,7 @@ function ensureEndingSlash(value: string): string {
 export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider, vscode.Disposable {
     protected readonly vscode: AzureAuthVsCode;
     protected readonly logger: AzureLogger | undefined;
-    private readonly credentialOverride: TokenCredential | undefined;
+    private readonly credentialFactory: CredentialFactory | undefined;
     private readonly httpClient: import('@azure/core-rest-pipeline').HttpClient | undefined;
 
     private sessionChangeListener: vscode.Disposable | undefined;
@@ -92,7 +103,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      */
     public constructor(options: AzureSubscriptionProviderOptions) {
         this.vscode = options.vscode;
-        this.credentialOverride = options.credential;
+        this.credentialFactory = options.credentialFactory;
         this.logger = options.logger;
         this.httpClient = options.httpClient;
         this.refreshSuggestedEmitter = new this.vscode.EventEmitter<RefreshSuggestedEvent>();
@@ -409,51 +420,54 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         // the WWW-Authenticate header itself).
         const challengeFallbackScope = `${endpoint.replace(/\/+$/, '')}/.default`;
 
-        // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can satisfy it. This
-        // forwards the raw WWW-Authenticate header to VS Code's auth API via an interactive getSession.
-        const getTokenForChallenge: GetTokenForChallenge = async (wwwAuthenticate) => {
-            this.suppressRefreshSuggestedEvents = true;
-            const session = await this.getSession(
-                { wwwAuthenticate, fallbackScopes: [challengeFallbackScope] },
-                tenant.tenantId,
-                { createIfNone: true, account: tenant.account },
-            );
-            this.silenceRefreshEvents();
-            return session?.accessToken;
-        };
-
         const context = await createChallengeSubscriptionClient({
             credential,
             endpoint,
             scopes: [managementScope],
             logger: this.logger,
             httpClient: this.httpClient,
-            getTokenForChallenge,
+            getTokenForChallenge: (wwwAuthenticate) => this.getTokenForChallenge(wwwAuthenticate, [challengeFallbackScope], tenant),
         });
 
         return { context, credential };
     }
 
     /**
-     * Creates the {@link TokenCredential} to use for the given account+tenant. If a credential override was
-     * supplied at construction, it is used; otherwise a per-tenant {@link VsCodeExtensionCredential} is
-     * created, wrapped so that refresh events are silenced and an unavailable silent session throws a
-     * {@link NotSignedInError} (preserving the legacy listing semantics).
+     * Acquires a token to satisfy a `WWW-Authenticate` challenge (e.g. an MFA step-up) surfaced by ARM. The
+     * default implementation forwards the raw challenge to VS Code's auth API via an interactive
+     * `getSession` so the user can satisfy it. Subclasses whose auth source cannot satisfy interactive
+     * challenges (e.g. an Azure DevOps federated identity in a pipeline) may override this to throw.
+     *
+     * @param wwwAuthenticate The raw `WWW-Authenticate` header value from the challenge.
+     * @param fallbackScopes Scopes to use if VS Code cannot parse scopes from the header itself.
+     * @param tenant The account+tenant the challenge is for.
+     * @returns The access token that satisfies the challenge, or `undefined` if none could be acquired.
+     */
+    protected async getTokenForChallenge(wwwAuthenticate: string, fallbackScopes: string[], tenant: Partial<TenantIdAndAccount>): Promise<string | undefined> {
+        // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can satisfy it. This
+        // forwards the raw WWW-Authenticate header to VS Code's auth API via an interactive getSession.
+        this.suppressRefreshSuggestedEvents = true;
+        const session = await this.getSession(
+            { wwwAuthenticate, fallbackScopes },
+            tenant.tenantId,
+            { createIfNone: true, account: tenant.account },
+        );
+        this.silenceRefreshEvents();
+        return session?.accessToken;
+    }
+
+    /**
+     * Creates the {@link TokenCredential} to use for the given account+tenant by invoking the configured
+     * {@link CredentialFactory} and wrapping the result with provider policy: refresh events are silenced
+     * around token acquisition, and an unavailable silent session throws a {@link NotSignedInError}
+     * (preserving listing semantics). Subclasses that don't supply a factory must override this method.
      */
     protected createCredentialForTenant(tenant: Partial<TenantIdAndAccount>): TokenCredential {
-        if (this.credentialOverride) {
-            return this.credentialOverride;
+        if (!this.credentialFactory) {
+            throw new Error('No credentialFactory was provided. Pass one in the constructor options or override createCredentialForTenant().');
         }
 
-        const { environment } = this.getEnvironment();
-        const inner = new VsCodeExtensionCredential({
-            authentication: this.vscode.authentication,
-            tenantId: tenant.tenantId,
-            environment: environment,
-            authProviderId: this.getAuthProviderId(),
-            logger: this.logger,
-            sessionOptions: { createIfNone: false, silent: true, account: tenant.account },
-        });
+        const inner = this.credentialFactory(tenant);
 
         return {
             getToken: async (scopes, tokenOptions) => {

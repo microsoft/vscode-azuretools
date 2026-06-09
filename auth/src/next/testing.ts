@@ -4,15 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AccessToken, GetTokenOptions, TokenCredential } from '@azure/core-auth';
-import { type SubscriptionContext } from '@azure/arm-resources-subscriptions/api';
-import type * as vscode from 'vscode';
-import { AzureSubscriptionProviderBase, type AzureSubscriptionProviderOptions } from './AzureSubscriptionProviderBase';
-import type { AzureAccount } from './contracts/AzureAccount';
-import type { TenantIdAndAccount } from './contracts/AzureSubscriptionProvider';
-import type { AzureTenant } from './contracts/AzureTenant';
-import { AzurePublicCloud } from './contracts/EnvironmentLike';
-import { createChallengeSubscriptionClient } from './createChallengeSubscriptionClient';
-import { NotSignedInError } from './utils/NotSignedInError';
 
 /**
  * The resolved initializer values for an {@link AzureDevOpsCredential}.
@@ -128,108 +119,5 @@ export class AzureDevOpsCredential implements TokenCredential {
         azIdentity ??= await import('@azure/identity');
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
         return new azIdentity!.AzurePipelinesCredential(this.options.tenantId, this.options.clientId, this.options.serviceConnectionId, systemAccessToken);
-    }
-}
-
-function ensureEndingSlash(value: string): string {
-    return value.endsWith('/') ? value : `${value}/`;
-}
-
-/**
- * Options for constructing an {@link AzureDevOpsSubscriptionProvider}.
- */
-export type AzureDevOpsSubscriptionProviderOptions = AzureDevOpsCredentialOptions & Omit<AzureSubscriptionProviderOptions, 'credential'>;
-
-/**
- * An {@link AzureSubscriptionProviderBase} that authenticates via an Azure DevOps federated service
- * connection, using an {@link AzureDevOpsCredential}. It exposes a single fixed account and tenant (the
- * service principal), and never fires `onRefreshSuggested`.
- *
- * NOTE: This provider is only usable when running in an Azure DevOps pipeline.
- */
-export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBase {
-    private readonly devOpsCredential: AzureDevOpsCredential;
-    private readonly devOpsTenantId: string;
-    private readonly devOpsHttpClient: import('@azure/core-rest-pipeline').HttpClient | undefined;
-    private signedIn: boolean = false;
-
-    public constructor(options: AzureDevOpsSubscriptionProviderOptions) {
-        const credential = new AzureDevOpsCredential(options);
-        super({ vscode: options.vscode, logger: options.logger, httpClient: options.httpClient, credential });
-        this.devOpsCredential = credential;
-        this.devOpsTenantId = options.tenantId;
-        this.devOpsHttpClient = options.httpClient;
-    }
-
-    /**
-     * For {@link AzureDevOpsSubscriptionProvider}, this event will never fire.
-     */
-    public override onRefreshSuggested = (): vscode.Disposable => { return { dispose: () => { /* empty */ } }; };
-
-    /**
-     * For {@link AzureDevOpsSubscriptionProvider}, this returns a single account with a fixed ID and label.
-     */
-    public override getAccounts(): Promise<AzureAccount[]> {
-        return Promise.resolve([
-            {
-                id: 'test-account-id',
-                label: 'test-account',
-                environment: AzurePublicCloud,
-            },
-        ]);
-    }
-
-    /**
-     * For {@link AzureDevOpsSubscriptionProvider}, this returns an empty array, since the single tenant is
-     * always authenticated.
-     */
-    public override getUnauthenticatedTenantsForAccount(): Promise<AzureTenant[]> {
-        return Promise.resolve([]);
-    }
-
-    /**
-     * For {@link AzureDevOpsSubscriptionProvider}, this returns the single tenant associated with the
-     * service principal.
-     */
-    public override getTenantsForAccount(account: AzureAccount): Promise<AzureTenant[]> {
-        return Promise.resolve([{
-            tenantId: this.devOpsTenantId,
-            account: account,
-        }]);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public override async signIn(): Promise<boolean> {
-        // Acquire a token to ensure the federated credential is usable.
-        const token = await this.devOpsCredential.getToken(`${ensureEndingSlash(AzurePublicCloud.managementEndpointUrl)}.default`);
-        this.signedIn = !!token;
-        return this.signedIn;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected override async getSubscriptionContext(_tenant: Partial<TenantIdAndAccount>): Promise<{ context: SubscriptionContext, credential: TokenCredential }> {
-        if (!this.signedIn) {
-            throw new NotSignedInError();
-        }
-
-        const managementScope = `${ensureEndingSlash(AzurePublicCloud.managementEndpointUrl)}.default`;
-        const endpoint = ensureEndingSlash(AzurePublicCloud.resourceManagerEndpointUrl);
-
-        const context = await createChallengeSubscriptionClient({
-            credential: this.devOpsCredential,
-            endpoint,
-            scopes: [managementScope],
-            logger: this.logger,
-            httpClient: this.devOpsHttpClient,
-            getTokenForChallenge: () => {
-                throw new Error('Getting a session with a challenge is not supported in AzureDevOpsSubscriptionProvider.');
-            },
-        });
-
-        return { context, credential: this.devOpsCredential };
     }
 }

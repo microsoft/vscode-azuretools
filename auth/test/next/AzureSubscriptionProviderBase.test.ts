@@ -92,6 +92,13 @@ function fakeTokenCredential(token: string = 'fake-token'): TokenCredential {
     };
 }
 
+function nullTokenCredential(): TokenCredential {
+    return {
+        getToken: (_scopes: string | string[], _options?: GetTokenOptions): Promise<AccessToken | null> =>
+            Promise.resolve(null),
+    };
+}
+
 interface FakeHttpRoute {
     /** A substring matched against the request URL path. */
     match: string;
@@ -139,6 +146,14 @@ async function createFakeHttpClient(routes: FakeHttpRoute[], challengeOnce?: { m
 
 // A concrete subclass so we can instantiate the abstract base.
 class TestSubscriptionProvider extends AzureSubscriptionProviderBase { }
+
+// Mirrors the Azure DevOps provider: a credential-first source that cannot satisfy interactive challenges,
+// so it overrides getTokenForChallenge to throw rather than prompting via VS Code's auth API.
+class DevOpsStyleProvider extends AzureSubscriptionProviderBase {
+    protected override getTokenForChallenge(): Promise<string | undefined> {
+        throw new Error('Interactive challenges are not supported by this provider.');
+    }
+}
 
 const testAccount = (id: string = 'account-1', label: string = 'user@contoso.com'): AzureAccount => ({ id, label, environment: AzurePublicCloud });
 
@@ -210,29 +225,36 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
     });
 
     suite('createCredentialForTenant', () => {
-        test('returns the override credential when supplied', async () => {
-            const override = fakeTokenCredential('override-token');
+        test('returns the credential from the factory, wrapped with provider policy', async () => {
             const { vscode } = createFakeVsCode();
-            const provider = new TestCredentialProvider({ vscode, credential: override });
+            const provider = new TestCredentialProvider({ vscode, credentialFactory: () => fakeTokenCredential('factory-token') });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             const token = await credential.getToken('scope');
-            assert.strictEqual(token?.token, 'override-token');
+            assert.strictEqual(token?.token, 'factory-token');
             provider.dispose();
         });
 
-        test('default credential throws NotSignedInError when no silent session exists', async () => {
-            const { vscode } = createFakeVsCode({ session: undefined });
+        test('throws when no credentialFactory was provided', () => {
+            const { vscode } = createFakeVsCode();
             const provider = new TestCredentialProvider({ vscode });
+
+            assert.throws(() => provider.exposeCredential({ tenantId: 't1', account: testAccount() }));
+            provider.dispose();
+        });
+
+        test('throws NotSignedInError when the factory credential returns null for a silent token', async () => {
+            const { vscode } = createFakeVsCode();
+            const provider = new TestCredentialProvider({ vscode, credentialFactory: () => nullTokenCredential() });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             await assert.rejects(() => credential.getToken('scope'), (err) => isNotSignedInError(err));
             provider.dispose();
         });
 
-        test('default credential returns a token when a session exists', async () => {
-            const { vscode } = createFakeVsCode({ session: { accessToken: 'session-token' } });
-            const provider = new TestCredentialProvider({ vscode });
+        test('returns a token when the factory credential returns one', async () => {
+            const { vscode } = createFakeVsCode();
+            const provider = new TestCredentialProvider({ vscode, credentialFactory: () => fakeTokenCredential('session-token') });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             const token = await credential.getToken('https://management.azure.com/.default');
@@ -240,9 +262,9 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
             provider.dispose();
         });
 
-        test('default credential does NOT throw on a null result for a CAE claims request (lets the policy handle it)', async () => {
-            const { vscode } = createFakeVsCode({ session: undefined });
-            const provider = new TestCredentialProvider({ vscode });
+        test('does NOT throw on a null result for a CAE claims request (lets the policy handle it)', async () => {
+            const { vscode } = createFakeVsCode();
+            const provider = new TestCredentialProvider({ vscode, credentialFactory: () => nullTokenCredential() });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             const token = await credential.getToken('scope', { claims: '{"access_token":{"foo":"bar"}}' });
@@ -277,7 +299,7 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
                 },
             ]);
 
-            const provider = new TestSubscriptionProvider({ vscode, credential: fakeTokenCredential(), httpClient });
+            const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
 
             const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
 
@@ -301,7 +323,7 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
                 },
             ]);
 
-            const provider = new TestSubscriptionProvider({ vscode, credential: fakeTokenCredential(), httpClient });
+            const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
 
             const tenants = await provider.getTenantsForAccount(testAccount());
             assert.deepStrictEqual(tenants.map(t => t.tenantId).sort(), ['tenant-1', 'tenant-2']);
@@ -315,7 +337,7 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
                 { match: '/subscriptions', wwwAuthenticate: 'Bearer realm="", authorization_uri="https://login.microsoftonline.com/common"' },
             );
 
-            const provider = new TestSubscriptionProvider({ vscode, credential: fakeTokenCredential(), httpClient });
+            const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
 
             const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
 
@@ -347,11 +369,45 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
                 },
             ]);
 
-            const provider = new TestSubscriptionProvider({ vscode, credential: fakeTokenCredential(), httpClient });
+            const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
 
             const subs = await provider.getAvailableSubscriptions();
             // Deduped to 2, sorted by name (Alpha before Beta).
             assert.deepStrictEqual(subs.map(s => s.name), ['Alpha', 'Beta']);
+            provider.dispose();
+        });
+    });
+
+    // Mirrors how a credential-first provider (e.g. the Azure DevOps provider) configures the base: an
+    // injected credential factory plus a getTokenForChallenge override that refuses interactive challenges.
+    suite('credential-first provider (DevOps-style)', () => {
+        test('lists subscriptions end-to-end through the injected credential factory', async () => {
+            const { vscode } = createFakeVsCode();
+            const { httpClient } = await createFakeHttpClient([
+                { match: '/subscriptions', body: { value: [{ subscriptionId: 'sub-1', displayName: 'DevOps Sub', tenantId: 'tenant-1', state: 'Enabled' }] } },
+            ]);
+
+            const provider = new DevOpsStyleProvider({ vscode, credentialFactory: () => fakeTokenCredential('devops-token'), httpClient });
+
+            const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
+
+            assert.strictEqual(subs.length, 1);
+            assert.strictEqual(subs[0].subscriptionId, 'sub-1');
+            assert.ok(typeof subs[0].credential.getToken === 'function');
+            assert.ok(!('authentication' in subs[0]));
+            provider.dispose();
+        });
+
+        test('fails listing when the server issues a challenge it cannot satisfy', async () => {
+            const { vscode } = createFakeVsCode();
+            const { httpClient } = await createFakeHttpClient(
+                [{ match: '/subscriptions', body: { value: [] } }],
+                { match: '/subscriptions', wwwAuthenticate: 'Bearer realm="", authorization_uri="https://login.microsoftonline.com/common"' },
+            );
+
+            const provider = new DevOpsStyleProvider({ vscode, credentialFactory: () => fakeTokenCredential('devops-token'), httpClient });
+
+            await assert.rejects(() => provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() }));
             provider.dispose();
         });
     });
@@ -363,3 +419,4 @@ class TestCredentialProvider extends AzureSubscriptionProviderBase {
         return this.createCredentialForTenant(tenant);
     }
 }
+
