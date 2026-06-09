@@ -4,20 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
+import { getTokenExpiry } from '../next/utils/tryGetTokenExpiration';
 
+/**
+ * Best-effort extraction of the `exp` claim (in milliseconds) from a session's JWT ID token.
+ *
+ * @remarks Thin wrapper around the canonical `./next` {@link getTokenExpiry}, returning only the
+ * `expiresOnTimestamp`.
+ *
+ * @param session The authentication session whose ID token to parse, or `undefined`.
+ * @returns The token expiration time in milliseconds since the epoch, or `0` if it could not be determined.
+ */
 export function tryGetTokenExpiration(session: vscode.AuthenticationSession | undefined): number {
-    try {
-        if (!!session?.idToken) {
-            const idTokenParts = session.idToken.split('.');
-            if (idTokenParts.length === 3) {
-                const payload = JSON.parse(Buffer.from(idTokenParts[1], 'base64url').toString()) as { exp?: number };
-                if (payload.exp !== undefined && Number.isInteger(payload.exp)) {
-                    return payload.exp * 1000; // Convert to milliseconds
-                }
-            }
-        }
-    } catch {
-        // Best effort only
-    }
-    return 0;
+    return getTokenExpiry(session?.idToken).expiresOnTimestamp;
 }

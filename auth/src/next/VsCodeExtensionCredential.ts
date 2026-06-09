@@ -8,6 +8,7 @@ import type { AzureLogger } from '@azure/logger';
 import type * as vscode from 'vscode';
 import type { VsCodeAuthentication } from './contracts/AzureAuthVsCode';
 import { AzurePublicCloud, type EnvironmentLike } from './contracts/EnvironmentLike';
+import { getTokenExpiry } from './utils/tryGetTokenExpiration';
 
 const PublicProviderId = 'microsoft' as const;
 const SovereignProviderId = 'microsoft-sovereign-cloud' as const;
@@ -124,38 +125,5 @@ export class VsCodeExtensionCredential implements TokenCredential {
             return PublicProviderId;
         }
         return SovereignProviderId;
-    }
-}
-
-/**
- * Best-effort extraction of `exp` from a JWT ID token. Returns `expiresOnTimestamp` in milliseconds and
- * `refreshAfterTimestamp` at 2/3 of the remaining lifetime. Falls back to `0` for both if the token is
- * missing or unparseable.
- */
-function getTokenExpiry(idToken: string | undefined): { expiresOnTimestamp: number; refreshAfterTimestamp: number } {
-    if (!idToken) {
-        return { expiresOnTimestamp: 0, refreshAfterTimestamp: 0 };
-    }
-
-    try {
-        const parts = idToken.split('.');
-        if (parts.length < 2 || !parts[1]) {
-            return { expiresOnTimestamp: 0, refreshAfterTimestamp: 0 };
-        }
-
-        // JWT payloads use base64url encoding; Node's Buffer handles this natively
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as { exp?: number };
-        if (typeof payload.exp !== 'number') {
-            return { expiresOnTimestamp: 0, refreshAfterTimestamp: 0 };
-        }
-
-        const expiresOnTimestamp = payload.exp * 1000;
-        const now = Date.now();
-        const remaining = expiresOnTimestamp - now;
-        const refreshAfterTimestamp = remaining > 0 ? now + Math.floor(remaining * 2 / 3) : expiresOnTimestamp;
-
-        return { expiresOnTimestamp, refreshAfterTimestamp };
-    } catch {
-        return { expiresOnTimestamp: 0, refreshAfterTimestamp: 0 };
     }
 }
