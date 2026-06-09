@@ -43,5 +43,9 @@ export async function createAuthorizationManagementClient(context: InternalAzExt
 }
 
 export async function createSubscriptionsClient(context: InternalAzExtClientContext): Promise<SubscriptionClient> {
-    return createAzureSubscriptionClient(context, (await import('@azure/arm-resources-subscriptions')).SubscriptionClient);
+    // The arm package ships both ESM and CJS builds, each with its own type definition for
+    // SubscriptionClient. TypeScript sees those two definitions as different types (the class has a
+    // private field, which makes the check strict), so it complains even though it's really the same
+    // class at runtime. Cast through `unknown` to tell TypeScript they're the same, like the clients above.
+    return <SubscriptionClient><unknown>createAzureSubscriptionClient(context, (await import('@azure/arm-resources-subscriptions')).SubscriptionClient);
 }
