@@ -4,82 +4,84 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import type { AccessToken, GetTokenOptions, TokenCredential } from '@azure/core-auth';
-import { AzureDevOpsCredential, type ResolvedAzureDevOpsCredentialInit } from '../../src/next/testing';
-
-// #region Fakes
-
-function fakeTokenCredential(token: string = 'devops-token'): TokenCredential {
-    return {
-        getToken: (_scopes: string | string[], _options?: GetTokenOptions): Promise<AccessToken> =>
-            Promise.resolve({ token, expiresOnTimestamp: Date.now() + 3600 * 1000 }),
-    };
-}
+import { createAzureDevOpsCredential } from '../../src/next/testing';
 
 const baseInit = { serviceConnectionId: 'service-connection', tenantId: 'tenant-1', clientId: 'client-1' };
 
-// #endregion
+/**
+ * The subset of environment variables this suite manipulates (camelCase to satisfy lint naming rules).
+ */
+interface PipelineEnv {
+    readonly agentBuildDirectory?: string;
+    readonly systemAccessToken?: string;
+    readonly systemOidcRequestUri?: string;
+}
+
+function applyEnv(env: PipelineEnv): void {
+    if (env.agentBuildDirectory === undefined) { delete process.env.AGENT_BUILDDIRECTORY; } else { process.env.AGENT_BUILDDIRECTORY = env.agentBuildDirectory; }
+    if (env.systemAccessToken === undefined) { delete process.env.SYSTEM_ACCESSTOKEN; } else { process.env.SYSTEM_ACCESSTOKEN = env.systemAccessToken; }
+    if (env.systemOidcRequestUri === undefined) { delete process.env.SYSTEM_OIDCREQUESTURI; } else { process.env.SYSTEM_OIDCREQUESTURI = env.systemOidcRequestUri; }
+}
+
+/**
+ * Snapshots the environment variables this suite manipulates, applies the given values, and returns a
+ * callback that restores the previous values.
+ */
+function withPipelineEnv(env: PipelineEnv): () => void {
+    const previous: PipelineEnv = {
+        agentBuildDirectory: process.env.AGENT_BUILDDIRECTORY,
+        systemAccessToken: process.env.SYSTEM_ACCESSTOKEN,
+        systemOidcRequestUri: process.env.SYSTEM_OIDCREQUESTURI,
+    };
+    applyEnv(env);
+    return () => { applyEnv(previous); };
+}
 
 suite('(unit) next/testing', () => {
-    suite('AzureDevOpsCredential', () => {
-        test('throws when required initializer values are missing', () => {
-            assert.throws(() => new AzureDevOpsCredential({ serviceConnectionId: '', tenantId: 't', clientId: 'c' }));
-            assert.throws(() => new AzureDevOpsCredential({ serviceConnectionId: 's', tenantId: '', clientId: 'c' }));
-            assert.throws(() => new AzureDevOpsCredential({ serviceConnectionId: 's', tenantId: 't', clientId: '' }));
+    suite('createAzureDevOpsCredential', () => {
+        test('rejects when required initializer values are missing', async () => {
+            await assert.rejects(() => createAzureDevOpsCredential({ serviceConnectionId: '', tenantId: 't', clientId: 'c', allowOutsidePipeline: true }));
+            await assert.rejects(() => createAzureDevOpsCredential({ serviceConnectionId: 's', tenantId: '', clientId: 'c', allowOutsidePipeline: true }));
+            await assert.rejects(() => createAzureDevOpsCredential({ serviceConnectionId: 's', tenantId: 't', clientId: '', allowOutsidePipeline: true }));
         });
 
-        test('uses the provided credentialFactory and forwards the resolved init', async () => {
-            let received: ResolvedAzureDevOpsCredentialInit | undefined;
-            const credential = new AzureDevOpsCredential({
-                ...baseInit,
-                systemAccessToken: 'system-token',
-                credentialFactory: (init) => {
-                    received = init;
-                    return fakeTokenCredential('from-factory');
-                },
-            });
-
-            const token = await credential.getToken('https://management.azure.com/.default');
-
-            assert.strictEqual(token?.token, 'from-factory');
-            assert.ok(received);
-            assert.strictEqual(received.serviceConnectionId, 'service-connection');
-            assert.strictEqual(received.tenantId, 'tenant-1');
-            assert.strictEqual(received.clientId, 'client-1');
-            assert.strictEqual(received.systemAccessToken, 'system-token');
-        });
-
-        test('throws when a credentialFactory is provided but no system access token is available', async () => {
-            const previous = process.env.SYSTEM_ACCESSTOKEN;
-            delete process.env.SYSTEM_ACCESSTOKEN;
+        test('rejects when created outside of a pipeline', async () => {
+            const restore = withPipelineEnv({ agentBuildDirectory: undefined, systemAccessToken: 'system-token' });
             try {
-                const credential = new AzureDevOpsCredential({
-                    ...baseInit,
-                    credentialFactory: () => fakeTokenCredential(),
-                });
-                await assert.rejects(() => credential.getToken('scope'));
+                await assert.rejects(() => createAzureDevOpsCredential(baseInit), /outside of an Azure DevOps pipeline/);
             } finally {
-                if (previous !== undefined) {
-                    process.env.SYSTEM_ACCESSTOKEN = previous;
-                }
+                restore();
             }
         });
 
-        test('lazily creates the inner credential only once', async () => {
-            let factoryCalls = 0;
-            const credential = new AzureDevOpsCredential({
-                ...baseInit,
-                systemAccessToken: 'system-token',
-                credentialFactory: () => {
-                    factoryCalls++;
-                    return fakeTokenCredential();
-                },
-            });
+        test('rejects when no system access token is available', async () => {
+            const restore = withPipelineEnv({ agentBuildDirectory: 'agent', systemAccessToken: undefined });
+            try {
+                await assert.rejects(() => createAzureDevOpsCredential(baseInit), /SYSTEM_ACCESSTOKEN/);
+            } finally {
+                restore();
+            }
+        });
 
-            await credential.getToken('scope');
-            await credential.getToken('scope');
+        test('returns an AzurePipelinesCredential when running in a pipeline', async () => {
+            const restore = withPipelineEnv({ agentBuildDirectory: 'agent', systemAccessToken: 'system-token', systemOidcRequestUri: 'https://example.com/oidc' });
+            try {
+                const credential = await createAzureDevOpsCredential(baseInit);
+                assert.strictEqual(credential.constructor.name, 'AzurePipelinesCredential');
+                assert.strictEqual(typeof credential.getToken, 'function');
+            } finally {
+                restore();
+            }
+        });
 
-            assert.strictEqual(factoryCalls, 1);
+        test('honors an explicit systemAccessToken and allowOutsidePipeline', async () => {
+            const restore = withPipelineEnv({ agentBuildDirectory: undefined, systemAccessToken: undefined, systemOidcRequestUri: 'https://example.com/oidc' });
+            try {
+                const credential = await createAzureDevOpsCredential({ ...baseInit, systemAccessToken: 'explicit-token', allowOutsidePipeline: true });
+                assert.strictEqual(credential.constructor.name, 'AzurePipelinesCredential');
+            } finally {
+                restore();
+            }
         });
     });
 });

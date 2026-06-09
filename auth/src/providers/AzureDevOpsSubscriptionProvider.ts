@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import type { TokenCredential } from '@azure/core-auth';
 import { AzureSubscriptionProviderBase } from '../next/AzureSubscriptionProviderBase';
 import type { AzureAccount } from '../next/contracts/AzureAccount';
 import type { AzureTenant } from '../next/contracts/AzureTenant';
 import { AzurePublicCloud, type EnvironmentLike } from '../next/contracts/EnvironmentLike';
-import { AzureDevOpsCredential } from '../next/testing';
+import { createAzureDevOpsCredential } from '../next/testing';
 import { createAzureLoggerForOutputChannel } from './azureLoggerForOutputChannel';
 
 export interface AzureDevOpsSubscriptionProviderInitializer {
@@ -52,12 +53,19 @@ function ensureEndingSlash(value: string): string {
  * Reference: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
  */
 export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBase {
-    private readonly devOpsCredential: AzureDevOpsCredential;
+    private readonly devOpsCredential: TokenCredential;
     private readonly devOpsTenantId: string;
 
     public constructor({ serviceConnectionId, tenantId, clientId }: AzureDevOpsSubscriptionProviderInitializer, logger?: vscode.LogOutputChannel) {
-        // `AzureDevOpsCredential` validates that the initializer values are present.
-        const credential = new AzureDevOpsCredential({ serviceConnectionId, tenantId, clientId });
+        // Lazily create (and memoize) the underlying Azure DevOps credential on first token request, so
+        // `@azure/identity` is only loaded when actually needed.
+        let inner: Promise<TokenCredential> | undefined;
+        const credential: TokenCredential = {
+            getToken: (scopes, options) => {
+                inner ??= createAzureDevOpsCredential({ serviceConnectionId, tenantId, clientId });
+                return inner.then((c) => c.getToken(scopes, options));
+            },
+        };
         super({
             vscode: vscode,
             logger: logger ? createAzureLoggerForOutputChannel(logger) : undefined,

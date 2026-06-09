@@ -11,7 +11,7 @@ export type * from '../contracts/AzureSubscriptionProviderRequestOptions'; // Th
 export type * from './contracts/AzureTenant';
 export * from './contracts/EnvironmentLike';
 
-// The `AzureDevOpsCredential` is intentionally not exported here; it must be imported from
+// `createAzureDevOpsCredential` is intentionally not exported here; it must be imported from
 // `'@microsoft/vscode-azext-azureauth/next/testing'` so `@azure/identity` is not always bundled.
 export * from './AzureSubscriptionProviderBase';
 export * from './VSCodeAzureSubscriptionProvider';
