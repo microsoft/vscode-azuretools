@@ -3,523 +3,136 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createSubscription, type SubscriptionContext } from '@azure/arm-resources-subscriptions/api';
-import { list as listSubscriptions } from '@azure/arm-resources-subscriptions/api/subscriptions';
-import { list as listTenants } from '@azure/arm-resources-subscriptions/api/tenants';
-import type { GetTokenOptions, TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package
-import { inspect } from 'util';
 import * as vscode from 'vscode';
+import { AzureSubscriptionProviderBase as NextAzureSubscriptionProviderBase } from '../next/AzureSubscriptionProviderBase';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
-import type { AzureSubscriptionProvider, RefreshSuggestedEvent, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
-import { DefaultOptions, DefaultSignInOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions, type SignInOptions } from '../contracts/AzureSubscriptionProviderRequestOptions';
+import type { AzureSubscriptionProvider, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions';
 import type { AzureTenant } from '../contracts/AzureTenant';
-import { BearerChallengePolicy } from '../utils/BearerChallengePolicy';
-import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
-import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
-import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
-import { getSignalForToken } from '../utils/getSignalForToken';
+import { getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
-import { Limiter } from '../utils/Limiter';
-import { isNotSignedInError, NotSignedInError } from '../utils/NotSignedInError';
-import { screen } from '../utils/screen';
-import { tryGetTokenExpiration } from '../utils/tryGetTokenExpiration';
-
-const EventDebounce = 2 * 1000; // 2 seconds minimum between `onRefreshSuggested` events
-const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
-
-const TenantListConcurrency = 3; // We will try to list tenants for at most 3 accounts in parallel
-const SubscriptionListConcurrency = 5; // We will try to list subscriptions for at most 5 account+tenants in parallel
+import { NotSignedInError } from '../utils/NotSignedInError';
+import { createAzureLoggerForOutputChannel } from './azureLoggerForOutputChannel';
 
 /**
  * Base class for Azure subscription providers that use VS Code authentication.
  * Handles actual communication with Azure via the Azure SDK, as well as
  * controlling the firing of `onRefreshSuggested` events.
+ *
+ * @remarks This is a thin wrapper around the new (`./next`) {@link NextAzureSubscriptionProviderBase}.
+ * It injects the real `vscode` namespace and projects the new contracts back to the legacy ones, re-adding
+ * the per-subscription {@link AzureAuthentication} and mapping the cloud environment to the
+ * `@azure/ms-rest-azure-env`-based `ExtendedEnvironment`.
  */
-export abstract class AzureSubscriptionProviderBase implements AzureSubscriptionProvider, vscode.Disposable {
-    private sessionChangeListener: vscode.Disposable | undefined;
-    private readonly refreshSuggestedEmitter = new vscode.EventEmitter<RefreshSuggestedEvent>();
-    private lastRefreshSuggestedTime: number = 0;
-    private suppressRefreshSuggestedEvents: boolean = false;
-
+export abstract class AzureSubscriptionProviderBase extends NextAzureSubscriptionProviderBase implements AzureSubscriptionProvider {
     /**
      * Constructs a new {@link AzureSubscriptionProviderBase}.
      * @param logger (Optional) A logger to record information to
      */
-    public constructor(private readonly logger?: vscode.LogOutputChannel) { }
-
-    public dispose(): void {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-        }
-        this.sessionChangeListener?.dispose();
-        this.refreshSuggestedEmitter.dispose();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public onRefreshSuggested(callback: (evtArgs: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        this.sessionChangeListener ??= vscode.authentication.onDidChangeSessions(evt => {
-            if (evt.provider.id === getConfiguredAuthProviderId()) {
-                this.fireRefreshSuggestedIfNeeded({ reason: 'sessionChange' });
-            }
+    public constructor(logger?: vscode.LogOutputChannel) {
+        super({
+            vscode: vscode,
+            logger: logger ? createAzureLoggerForOutputChannel(logger) : undefined,
         });
-
-        return this.refreshSuggestedEmitter.event(callback, thisArg, disposables);
-    }
-
-    protected fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
-        // subscriptionFilterChange is an explicit user action and must never be suppressed,
-        // otherwise re-selecting a subscription shortly after unselecting one gets swallowed
-        // by the debounce/silence window that the first refresh triggered.
-        if (evtArgs.reason !== 'subscriptionFilterChange' &&
-            (this.suppressRefreshSuggestedEvents || Date.now() < this.lastRefreshSuggestedTime + EventDebounce)) {
-            // Suppress and/or debounce events to avoid flooding
-            return false;
-        }
-
-        this.log(`Firing onRefreshSuggested event due to reason: ${evtArgs.reason}`);
-        this.lastRefreshSuggestedTime = Date.now();
-        this.refreshSuggestedEmitter.fire(evtArgs);
-        return true;
     }
 
     /**
      * @inheritdoc
      */
-    public async signIn(tenant?: Partial<TenantIdAndAccount>, options: SignInOptions = DefaultSignInOptions): Promise<boolean> {
-        const prompt = options.promptIfNeeded ?? DefaultSignInOptions.promptIfNeeded;
-
-        if (prompt) {
-            // If interactive, suppress without timeout until sign in is done (it can take a while when done interactively)
-            this.suppressRefreshSuggestedEvents = true;
-        } else {
-            // If silent, suppress with normal timeout
-            this.silenceRefreshEvents();
-        }
-
-        let session: vscode.AuthenticationSession | undefined;
-        try {
-            session = await getSessionFromVSCode(
-                undefined,
-                tenant?.tenantId,
-                {
-                    account: tenant?.account,
-                    clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
-                    createIfNone: prompt,
-                    silent: !prompt,
-                }
-            );
-        } catch (err) {
-            throw maybeImproveSignInError(err, tenant?.tenantId);
-        }
-
-        if (prompt) {
-            // Interactive sign in can take a while, so silence events for a bit longer
-            this.silenceRefreshEvents();
-        }
-
-        return !!session;
+    public override async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
+        // The listing methods are virtual, so the subscriptions produced by the base implementation are
+        // already projected to the legacy shape (with `authentication`) by `getSubscriptionsForTenant`.
+        return (await super.getAvailableSubscriptions(options)) as AzureSubscription[];
     }
 
     /**
      * @inheritdoc
      */
-    public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
-        try {
-            const availableSubscriptions: AzureSubscription[] = [];
-
-            const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
-            const tenantListPromises: Promise<void>[] = [];
-
-            const subscriptionListLimiter = new Limiter<void>(SubscriptionListConcurrency);
-            const subscriptionListPromisesFlat: Promise<void>[] = [];
-
-            let tenantsProcessed = 0;
-            const maximumTenants = options.maximumTenants ?? DefaultOptions.maximumTenants;
-
-            const accounts = await this.getAccounts(options);
-
-            for (const account of accounts) {
-                this.throwIfCancelled(options.token);
-                tenantListPromises.push(tenantListLimiter.queue(async () => {
-                    try {
-                        if (tenantsProcessed >= maximumTenants) {
-                            this.logForAccount(account, `Skipping account because maximum tenants of ${maximumTenants} has been reached`);
-                            return;
-                        }
-
-                        const tenants = await this.getTenantsForAccount(account, options);
-
-                        for (const tenant of tenants) {
-                            this.throwIfCancelled(options.token);
-
-                            if (tenantsProcessed >= maximumTenants) {
-                                this.logForAccount(account, `Skipping remaining tenants because maximum tenants of ${maximumTenants} has been reached`);
-                                break;
-                            }
-                            tenantsProcessed++;
-
-                            subscriptionListPromisesFlat.push(subscriptionListLimiter.queue(async () => {
-                                try {
-                                    const subscriptions = await this.getSubscriptionsForTenant(tenant, options);
-                                    availableSubscriptions.push(...subscriptions);
-                                } catch (err) {
-                                    if (isNotSignedInError(err)) {
-                                        this.logForTenant(tenant, 'Skipping account+tenant because it is not signed in');
-                                        return;
-                                    }
-                                    // Don't rethrow--skip tenants that fail for other reasons
-                                    // (e.g., locked account) so remaining tenants can still be listed
-                                    this.errorForTenant(tenant, 'Skipping account+tenant due to error', err);
-                                }
-                            }));
-                        }
-                    } catch (err) {
-                        if (isNotSignedInError(err)) {
-                            this.logForAccount(account, 'Skipping account because it is not signed in');
-                            return;
-                        }
-                        // Log and skip accounts that fail for other reasons (e.g., locked account)
-                        this.errorForAccount(account, 'Skipping account due to error', err);
-                    }
-                }));
-            }
-
-            await Promise.all(tenantListPromises);
-            await Promise.all(subscriptionListPromisesFlat);
-
-            return dedupeSubscriptions(availableSubscriptions);
-        } catch (err) {
-            // Intentionally not eating NotSignedInError here, if it is thrown by getAccounts()
-            this.remapLogRethrow(err, options.token);
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+    public override async getAccounts(options: GetAccountsOptions = DefaultOptions): Promise<AzureAccount[]> {
+        const accounts = await super.getAccounts(options);
+        const environment = getConfiguredAzureEnv();
+        return accounts.map(account => ({ ...account, environment }));
     }
 
     /**
      * @inheritdoc
      */
-    public async getAccounts(options: GetAccountsOptions = DefaultOptions): Promise<AzureAccount[]> {
-        try {
-            const startTime = Date.now();
-            this.log('Fetching accounts...');
-            this.silenceRefreshEvents();
-
-            const environment = getConfiguredAzureEnv();
-
-            const results = (await vscode.authentication.getAccounts(getConfiguredAuthProviderId())).map(account => {
-                return {
-                    ...account,
-                    environment,
-                };
-            });
-
-            if (results.length === 0) {
-                this.log('No accounts found');
-                throw new NotSignedInError();
-            }
-
-            this.log(`Fetched ${results.length} accounts (before filter) in ${Date.now() - startTime}ms`);
-            return Array.from(results);
-        } catch (err) {
-            // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
-            this.remapLogRethrow(err, options.token);
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+    public override async getUnauthenticatedTenantsForAccount(account: AzureAccount, options: Omit<GetTenantsForAccountOptions, 'filter'> = DefaultOptions): Promise<AzureTenant[]> {
+        const tenants = await super.getUnauthenticatedTenantsForAccount(account, options);
+        return tenants.map(tenant => ({ ...tenant, account }));
     }
 
     /**
      * @inheritdoc
      */
-    public async getUnauthenticatedTenantsForAccount(account: AzureAccount, options: Omit<GetTenantsForAccountOptions, 'filter'> = DefaultOptions): Promise<AzureTenant[]> {
-        try {
-            const startTime = Date.now();
-
-            const tenantListLimiter = new Limiter<void>(TenantListConcurrency);
-            const tenantListPromises: Promise<void>[] = [];
-
-            const allTenants = await this.getTenantsForAccount(account, { ...options, filter: false });
-
-            const unauthenticatedTenants: AzureTenant[] = [];
-            for (const tenant of allTenants) {
-                tenantListPromises.push(tenantListLimiter.queue(async () => {
-                    this.throwIfCancelled(options.token);
-                    this.silenceRefreshEvents();
-                    const session = await getSessionFromVSCode(
-                        undefined,
-                        tenant.tenantId,
-                        {
-                            account: account,
-                            createIfNone: false,
-                            silent: true,
-                        }
-                    );
-
-                    if (!session) {
-                        unauthenticatedTenants.push(tenant);
-                    }
-                }));
-            }
-
-            await Promise.all(tenantListPromises);
-
-            this.logForAccount(account, `Found ${unauthenticatedTenants.length} unauthenticated tenants in ${Date.now() - startTime}ms`);
-
-            return unauthenticatedTenants;
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+    public override async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
+        const tenants = await super.getTenantsForAccount(account, options);
+        return tenants.map(tenant => ({ ...tenant, account }));
     }
 
     /**
      * @inheritdoc
      */
-    public async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
-        try {
-            const startTime = Date.now();
-            this.logForAccount(account, 'Fetching tenants for account...');
+    public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
+        const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
+        const environment = getConfiguredAzureEnv();
+        const authentication = this.buildAuthentication(tenant);
 
-            const { context } = this.getSubscriptionContext({ account: account, tenantId: undefined });
-
-            const allTenants: AzureTenant[] = [];
-
-            for await (const tenant of listTenants(context, { abortSignal: getSignalForToken(options.token) })) {
-                allTenants.push({
-                    ...tenant,
-                    tenantId: tenant.tenantId!, // eslint-disable-line @typescript-eslint/no-non-null-assertion -- This is never null in practice
-                    account: account,
-                });
-            }
-
-            this.logForAccount(account, `Fetched ${allTenants.length} tenants (before filter) in ${Date.now() - startTime}ms`);
-            return allTenants;
-        } catch (err) {
-            this.remapLogRethrow(err, options.token);
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+        return subscriptions.map(subscription => ({
+            authentication: authentication,
+            environment: environment,
+            isCustomCloud: environment.isCustomCloud,
+            name: subscription.name,
+            subscriptionId: subscription.subscriptionId,
+            tenantId: subscription.tenantId,
+            credential: subscription.credential,
+            account: tenant.account,
+        }));
     }
 
     /**
-     * @inheritdoc
+     * Builds the {@link AzureAuthentication} exposed on each {@link AzureSubscription} for the given
+     * account+tenant. Subclasses (e.g. the Azure DevOps provider) may override this to supply a different
+     * means of acquiring sessions.
+     *
+     * @param tenant The account+tenant to build authentication for.
+     * @returns An {@link AzureAuthentication} for the given account+tenant.
      */
-    public async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
-        try {
-            const startTime = Date.now();
-            this.logForTenant(tenant, 'Fetching subscriptions for account+tenant...');
-
-            const { context, credential, authentication } = this.getSubscriptionContext(tenant);
-            const environment = getConfiguredAzureEnv();
-
-            const allSubs: AzureSubscription[] = [];
-
-            for await (const subscription of listSubscriptions(context, { abortSignal: getSignalForToken(options.token) })) {
-                allSubs.push({
-                    authentication: authentication,
-                    environment: environment,
-                    credential: credential,
-                    isCustomCloud: environment.isCustomCloud,
-                    /* eslint-disable @typescript-eslint/no-non-null-assertion */
-                    name: subscription.displayName!,
-                    subscriptionId: subscription.subscriptionId!,
-                    /* eslint-enable @typescript-eslint/no-non-null-assertion */
-                    tenantId: subscription.tenantId || tenant.tenantId, // In rare cases, a subscription may be listed but come from a different tenant
-                    account: tenant.account,
-                });
-            }
-
-            this.logForTenant(tenant, `Fetched ${allSubs.length} subscriptions (before filter) in ${Date.now() - startTime}ms`);
-            return allSubs;
-        } catch (err) {
-            this.remapLogRethrow(err, options.token);
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
-    }
-
-    /**
-     * Gets a {@link SubscriptionContext} plus extras for the given account+tenant.
-     * @param tenant (Optional) The account+tenant to get a subscription context for. If not specified, the default account and home tenant
-     * will be used.
-     * @returns A {@link SubscriptionContext}, {@link TokenCredential}, and {@link AzureAuthentication} for the given account+tenant.
-     */
-    protected getSubscriptionContext(tenant: Partial<TenantIdAndAccount>): { context: SubscriptionContext, credential: TokenCredential, authentication: AzureAuthentication } {
-        // Credential ignores requested scopes and always uses default scopes (managementEndpointUrl),
-        // matching the scope used during signIn(). This avoids a refresh token round-trip that can
-        // fail when MSAL has stale cache entries for a different scope.
-        const credential: TokenCredential = {
-            getToken: async (_scopes: string | string[], options?: GetTokenOptions) => {
+    protected buildAuthentication(tenant: Partial<TenantIdAndAccount>): AzureAuthentication {
+        return {
+            getSession: async () => {
                 this.silenceRefreshEvents();
-                const session = await getSessionFromVSCode(undefined, options?.tenantId || tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
+                const session = await this.getSession(undefined, tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
                 if (!session) {
                     throw new NotSignedInError();
                 }
-                return {
-                    token: session.accessToken,
-                    expiresOnTimestamp: tryGetTokenExpiration(session),
-                };
-            }
-        };
-
-        const rawEndpoint = getConfiguredAzureEnv().resourceManagerEndpointUrl;
-        const endpoint = rawEndpoint.endsWith('/') ? rawEndpoint : `${rawEndpoint}/`;
-        const context = createSubscription(credential, { endpoint });
-
-        context.pipeline.addPolicy(
-            new BearerChallengePolicy(
-                async (challenge) => {
+                return session;
+            },
+            getSessionWithScopes: async (scopeListOrRequest, options) => {
+                // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can satisfy
+                // it. For a plain scope list we stay silent by default, but allow callers to opt in to an
+                // interactive consent prompt via `options.createIfNone` (used, for example, to consent to
+                // the App Service audience before a deployment).
+                // See https://github.com/microsoft/vscode-azurefunctions/issues/5073
+                const createIfNone = isAuthenticationWwwAuthenticateRequest(scopeListOrRequest) || !!options?.createIfNone;
+                if (createIfNone) {
+                    // Interactive consent can take a while, so suppress without timeout until it is done,
+                    // then silence for a bit longer afterwards (same pattern as `signIn`).
+                    this.beginInteractiveRefreshSuppression();
+                } else {
                     this.silenceRefreshEvents();
-                    const session = await getSessionFromVSCode(challenge, tenant.tenantId, { createIfNone: true, account: tenant.account });
-                    return session?.accessToken;
-                },
-                endpoint,
-            ),
-            { phase: 'Sign', afterPolicies: ['bearerTokenAuthenticationPolicy'] },
-        );
-
-        return {
-            context: context,
-            credential: credential,
-            authentication: {
-                getSession: async () => {
+                }
+                const session = await this.getSession(scopeListOrRequest, tenant.tenantId, { ...(createIfNone ? { createIfNone: true } : { silent: true }), account: tenant.account });
+                if (createIfNone) {
                     this.silenceRefreshEvents();
-                    const session = await getSessionFromVSCode(undefined, tenant.tenantId, { createIfNone: false, silent: true, account: tenant.account });
-                    if (!session) {
-                        throw new NotSignedInError();
-                    }
-                    return session;
-                },
-                getSessionWithScopes: async (scopeListOrRequest, options) => {
-                    // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can
-                    // satisfy it. For a plain scope list we stay silent by default, but allow callers to
-                    // opt in to an interactive consent prompt via `options.createIfNone` (used, for example,
-                    // to consent to the App Service audience before a deployment).
-                    // See https://github.com/microsoft/vscode-azurefunctions/issues/5073
-                    const createIfNone = isAuthenticationWwwAuthenticateRequest(scopeListOrRequest) || !!options?.createIfNone;
-                    if (createIfNone) {
-                        // Interactive consent can take a while, so suppress without timeout until it is
-                        // done, then silence for a bit longer afterwards (same pattern as `signIn`).
-                        this.suppressRefreshSuggestedEvents = true;
-                    } else {
-                        this.silenceRefreshEvents();
-                    }
-                    const session = await getSessionFromVSCode(scopeListOrRequest, tenant.tenantId, { ...(createIfNone ? { createIfNone: true } : { silent: true }), account: tenant.account });
-                    if (createIfNone) {
-                        this.silenceRefreshEvents();
-                    }
-                    if (!session) {
-                        throw new NotSignedInError();
-                    }
-                    return session;
-                },
-            }
+                }
+                if (!session) {
+                    throw new NotSignedInError();
+                }
+                return session;
+            },
         };
     }
-
-    protected log(message: string): void {
-        this.logger?.info(`[auth] ${message}`);
-    }
-
-    protected logForAccount(account: AzureAccount, message: string): void {
-        this.logger?.info(`[auth] [account: ${screen(account)}] ${message}`);
-    }
-
-    protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.info(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
-    }
-
-    protected warnForAccount(account: AzureAccount, message: string): void {
-        this.logger?.warn(`[auth] [account: ${screen(account)}] ${message}`);
-    }
-
-    protected warnForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.warn(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
-    }
-
-    protected errorForAccount(account: AzureAccount, message: string, err: unknown): void {
-        this.logger?.error(`[auth] [account: ${screen(account)}] ${message}`);
-        if (err instanceof Error) {
-            this.logger?.error(err);
-        } else {
-            this.logger?.error(`[auth] [account: ${screen(account)}] ${inspect(err)}`);
-        }
-    }
-
-    protected errorForTenant(tenant: TenantIdAndAccount, message: string, err: unknown): void {
-        this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
-        if (err instanceof Error) {
-            this.logger?.error(err);
-        } else {
-            this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${inspect(err)}`);
-        }
-    }
-
-    protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
-        if (token?.isCancellationRequested) {
-            throw new vscode.CancellationError();
-        }
-    }
-
-    private timeout: NodeJS.Timeout | undefined;
-    private silenceRefreshEvents(): void {
-        this.suppressRefreshSuggestedEvents = true;
-
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-        }
-
-        this.timeout = setTimeout(() => {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-            this.suppressRefreshSuggestedEvents = false;
-        }, EventSilenceTime);
-    }
-
-    private remapLogRethrow(err: unknown, token: vscode.CancellationToken | undefined): never {
-        this.throwIfCancelled(token);
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        this.logger?.error(`[auth] Error occurred: ${err}`);
-        throw err;
-    }
-}
-
-/**
- * Inspects an error thrown during sign-in and returns a more user-friendly
- * error when possible (e.g. native broker errors), otherwise returns the
- * original error unchanged.
- */
-function maybeImproveSignInError(err: unknown, tenantId: string | undefined): unknown {
-    if (!(err instanceof Error)) {
-        return err;
-    }
-
-    const message = err.message;
-
-    // The native MSAL broker surfaces opaque "platform_broker_error" messages
-    // that don't tell the user what went wrong. Re-wrap with actionable text.
-    if (message.includes('platform_broker_error')) {
-        const tenantHint = tenantId
-            ? vscode.l10n.t(' for tenant "{0}"', tenantId)
-            : '';
-        const improved = new Error(
-            vscode.l10n.t(
-                'Sign-in failed{0}. The tenant may have expired or is no longer valid. Please verify the tenant is still active and try again.',
-                tenantHint,
-            ),
-            { cause: err },
-        );
-        if (err.stack && improved.stack) {
-            improved.stack += `\nCaused by: ${err.stack}`;
-        }
-        return improved;
-    }
-
-    return err;
 }

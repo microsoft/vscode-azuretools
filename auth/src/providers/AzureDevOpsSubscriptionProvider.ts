@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type SubscriptionContext, createSubscription } from '@azure/arm-resources-subscriptions/api';
+import { type SubscriptionContext } from '@azure/arm-resources-subscriptions/api';
 import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import type` to avoid actually loading the package
 import * as azureEnv from '@azure/ms-rest-azure-env'; // This package is so small that it's not worth lazy loading
 import * as crypto from 'crypto';
@@ -12,6 +12,8 @@ import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
+import { AzureDevOpsCredential } from '../next/testing';
+import { createChallengeSubscriptionClient } from '../next/createChallengeSubscriptionClient';
 import { ExtendedEnvironment } from '../utils/configuredAzureEnv';
 import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
 import { NotSignedInError } from '../utils/NotSignedInError';
@@ -42,7 +44,9 @@ export function createAzureDevOpsSubscriptionProviderFactory(initializer: AzureD
     };
 }
 
-let azIdentity: typeof import('@azure/identity') | undefined;
+function ensureEndingSlash(value: string): string {
+    return value.endsWith('/') ? value : `${value}/`;
+}
 
 /**
  * AzureSubscriptionProvider implemented to authenticate via federated DevOps service connection, using workflow identity federation
@@ -51,35 +55,25 @@ let azIdentity: typeof import('@azure/identity') | undefined;
  * Reference: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
  */
 export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBase {
-    private _tokenCredential: TokenCredential | undefined;
-    private _serviceConnectionId: string;
-    private _tenantId: string;
-    private _clientId: string;
+    private readonly devOpsCredential: AzureDevOpsCredential;
+    private readonly devOpsTenantId: string;
+    private signedIn: boolean = false;
 
     public constructor({ serviceConnectionId, tenantId, clientId }: AzureDevOpsSubscriptionProviderInitializer, logger?: vscode.LogOutputChannel) {
         super(logger);
 
-        if (!serviceConnectionId || !tenantId || !clientId) {
-            throw new Error(`Missing initializer values to identify Azure DevOps federated service connection\n
-                Values provided:\n
-                serviceConnectionId: ${serviceConnectionId ? "✅" : "❌"}\n
-                tenantId: ${tenantId ? "✅" : "❌"}\n
-                clientId: ${clientId ? "✅" : "❌"}\n
-            `);
-        }
-
-        this._serviceConnectionId = serviceConnectionId;
-        this._tenantId = tenantId;
-        this._clientId = clientId;
+        // `AzureDevOpsCredential` validates that the initializer values are present.
+        this.devOpsCredential = new AzureDevOpsCredential({ serviceConnectionId, tenantId, clientId });
+        this.devOpsTenantId = tenantId;
     }
 
     /**
-     * For {@link AzureSubscriptionProviderBase}, this event will never fire
+     * For {@link AzureDevOpsSubscriptionProvider}, this event will never fire
      */
-    public override onRefreshSuggested = () => { return { dispose: () => { /* empty */ } }; };
+    public override onRefreshSuggested = (): vscode.Disposable => { return { dispose: () => { /* empty */ } }; };
 
     /**
-     * For {@link AzureSubscriptionProviderBase}, this returns a single account with a fixed ID and label
+     * For {@link AzureDevOpsSubscriptionProvider}, this returns a single account with a fixed ID and label
      */
     public override getAccounts(): Promise<AzureAccount[]> {
         return Promise.resolve([
@@ -92,7 +86,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     }
 
     /**
-     * For {@link AzureSubscriptionProviderBase}, this returns an empty array
+     * For {@link AzureDevOpsSubscriptionProvider}, this returns an empty array
      */
     public override getUnauthenticatedTenantsForAccount(): Promise<AzureTenant[]> {
         // For DevOps federated service connection, there is only one tenant associated with the service principal, and we will be authenticated
@@ -100,11 +94,11 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
     }
 
     /**
-     * For {@link AzureSubscriptionProviderBase}, this returns a single tenant associated with the service principal
+     * For {@link AzureDevOpsSubscriptionProvider}, this returns a single tenant associated with the service principal
      */
     public override getTenantsForAccount(account: AzureAccount): Promise<AzureTenant[]> {
         return Promise.resolve([{
-            tenantId: this._tenantId,
+            tenantId: this.devOpsTenantId,
             account: account,
         }]);
     }
@@ -113,24 +107,50 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
      * @inheritdoc
      */
     public override async signIn(): Promise<boolean> {
-        this._tokenCredential ??= await getTokenCredential(this._serviceConnectionId, this._tenantId, this._clientId);
-        return !!this._tokenCredential;
+        // Acquire a token to ensure the federated credential is usable.
+        const token = await this.devOpsCredential.getToken(`${ensureEndingSlash(azureEnv.Environment.AzureCloud.managementEndpointUrl)}.default`);
+        this.signedIn = !!token;
+        return this.signedIn;
     }
 
     /**
      * @inheritdoc
      */
-    protected override getSubscriptionContext(tenant: TenantIdAndAccount): { context: SubscriptionContext, credential: TokenCredential, authentication: AzureAuthentication } {
-        if (!this._tokenCredential) {
+    protected override async getSubscriptionContext(_tenant: Partial<TenantIdAndAccount>): Promise<{ context: SubscriptionContext, credential: TokenCredential }> {
+        if (!this.signedIn) {
             throw new NotSignedInError();
         }
 
+        const managementScope = `${ensureEndingSlash(azureEnv.Environment.AzureCloud.managementEndpointUrl)}.default`;
+        const endpoint = ensureEndingSlash(azureEnv.Environment.AzureCloud.resourceManagerEndpointUrl);
+
+        const context = await createChallengeSubscriptionClient({
+            credential: this.devOpsCredential,
+            endpoint,
+            scopes: [managementScope],
+            logger: this.logger,
+            getTokenForChallenge: () => {
+                throw new Error('Getting a session with a challenge is not supported in AzureDevOpsSubscriptionProvider.');
+            },
+        });
+
+        return { context, credential: this.devOpsCredential };
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected override buildAuthentication(tenant: Partial<TenantIdAndAccount>): AzureAuthentication {
         const getSessionWithScopes = async (scopes: string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
+            if (!this.signedIn) {
+                throw new NotSignedInError();
+            }
+
             if (isAuthenticationWwwAuthenticateRequest(scopes)) {
                 throw new Error('Getting session with challenge is not supported in AzureDevOpsSubscriptionProvider.');
             }
 
-            const token = await this._tokenCredential?.getToken(scopes);
+            const token = await this.devOpsCredential.getToken(scopes);
 
             if (!token) {
                 throw new NotSignedInError();
@@ -139,42 +159,16 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
             return {
                 accessToken: token.token,
                 id: crypto.randomUUID(),
-                account: tenant.account,
+                account: tenant.account!, // eslint-disable-line @typescript-eslint/no-non-null-assertion -- The account is always provided when listing subscriptions
                 scopes: scopes,
             } satisfies vscode.AuthenticationSession;
         };
 
         return {
-            context: createSubscription(this._tokenCredential),
-            credential: this._tokenCredential,
-            authentication: {
-                getSession: () => {
-                    return getSessionWithScopes([azureEnv.Environment.AzureCloud.managementEndpointUrl + '/.default']);
-                },
-                getSessionWithScopes: getSessionWithScopes,
-            }
+            getSession: () => {
+                return getSessionWithScopes([azureEnv.Environment.AzureCloud.managementEndpointUrl + '/.default']);
+            },
+            getSessionWithScopes: getSessionWithScopes,
         };
-    }
-}
-
-/**
-* @param serviceConnectionId The resource ID of the Azure DevOps federated service connection,
-*   which can be found on the `resourceId` field of the URL at the address bar when viewing the service connection in the Azure DevOps portal
-* @param tenantId The `Tenant ID` field of the service connection properties
-* @param clientId The `Service Principal Id` field of the service connection properties
-*/
-async function getTokenCredential(serviceConnectionId: string, tenantId: string, clientId: string): Promise<TokenCredential> {
-    if (!process.env.AGENT_BUILDDIRECTORY) {
-        // Assume that AGENT_BUILDDIRECTORY is set if running in an Azure DevOps pipeline.
-        // So when not running in an Azure DevOps pipeline, throw an error since we cannot use the DevOps federated service connection credential.
-        throw new Error('Cannot create DevOps federated service connection credential outside of an Azure DevOps pipeline.');
-    } else if (!process.env.SYSTEM_ACCESSTOKEN) {
-        throw new Error('Cannot create DevOps federated service connection credential because the SYSTEM_ACCESSTOKEN environment variable is not set.');
-    } else {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore @azure/identity contains a bug where this type mismatches between CJS and ESM, we must ignore it. We also can't do @ts-expect-error because the error only happens when building CJS.
-        azIdentity ??= await import('@azure/identity');
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
-        return new azIdentity!.AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, process.env.SYSTEM_ACCESSTOKEN);
     }
 }
