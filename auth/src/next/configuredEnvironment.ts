@@ -21,8 +21,15 @@ enum CloudEnvironmentSettingValue {
     Custom = 'custom',
 }
 
-const PublicAuthProviderId = 'microsoft';
-const SovereignAuthProviderId = 'microsoft-sovereign-cloud';
+/**
+ * The VS Code authentication provider ID for the public Azure cloud.
+ */
+export const PublicAuthProviderId = 'microsoft';
+
+/**
+ * The VS Code authentication provider ID for sovereign/custom Azure clouds.
+ */
+export const SovereignAuthProviderId = 'microsoft-sovereign-cloud';
 
 /**
  * The result of resolving the configured Azure cloud environment.

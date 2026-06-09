@@ -8,10 +8,8 @@ import type { AzureLogger } from '@azure/logger';
 import type * as vscode from 'vscode';
 import type { VsCodeAuthentication } from './contracts/AzureAuthVsCode';
 import { AzurePublicCloud, type EnvironmentLike } from './contracts/EnvironmentLike';
+import { PublicAuthProviderId, SovereignAuthProviderId } from './configuredEnvironment';
 import { getTokenExpiry } from './utils/tryGetTokenExpiration';
-
-const PublicProviderId = 'microsoft' as const;
-const SovereignProviderId = 'microsoft-sovereign-cloud' as const;
 
 /**
  * Options for constructing a {@link VsCodeExtensionCredential}.
@@ -122,8 +120,8 @@ export class VsCodeExtensionCredential implements TokenCredential {
             return this.options.authProviderId;
         }
         if (!this.options.environment || this.options.environment.name === AzurePublicCloud.name) {
-            return PublicProviderId;
+            return PublicAuthProviderId;
         }
-        return SovereignProviderId;
+        return SovereignAuthProviderId;
     }
 }
