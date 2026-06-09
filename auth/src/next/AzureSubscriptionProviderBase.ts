@@ -285,7 +285,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             }
 
             this.log(`Fetched ${results.length} accounts (before filter) in ${Date.now() - startTime}ms`);
-            return Array.from(results);
+            return results;
         } catch (err) {
             // Cancellation is not actually supported by vscode.authentication.getAccounts, but just in case it is added in the future...
             this.remapLogRethrow(err, options.token);
@@ -529,30 +529,33 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         this.logger?.info(`[auth] ${message}`);
     }
 
+    private accountScope(account: AzureAccount): string {
+        return `[account: ${screen(account)}]`;
+    }
+
+    private tenantScope(tenant: TenantIdAndAccount): string {
+        return `[account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}]`;
+    }
+
     protected logForAccount(account: AzureAccount, message: string): void {
-        this.logger?.info(`[auth] [account: ${screen(account)}] ${message}`);
+        this.log(`${this.accountScope(account)} ${message}`);
     }
 
     protected logForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.info(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+        this.log(`${this.tenantScope(tenant)} ${message}`);
     }
 
-    protected warnForAccount(account: AzureAccount, message: string): void {
-        this.logger?.warning(`[auth] [account: ${screen(account)}] ${message}`);
-    }
-
-    protected warnForTenant(tenant: TenantIdAndAccount, message: string): void {
-        this.logger?.warning(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
+    private emitError(scope: string, message: string, err: unknown): void {
+        this.logger?.error(`[auth] ${scope} ${message}`);
+        this.logger?.error(`[auth] ${scope} ${err instanceof Error ? (err.stack ?? err.message) : inspect(err)}`);
     }
 
     protected errorForAccount(account: AzureAccount, message: string, err: unknown): void {
-        this.logger?.error(`[auth] [account: ${screen(account)}] ${message}`);
-        this.logger?.error(`[auth] [account: ${screen(account)}] ${err instanceof Error ? (err.stack ?? err.message) : inspect(err)}`);
+        this.emitError(this.accountScope(account), message, err);
     }
 
     protected errorForTenant(tenant: TenantIdAndAccount, message: string, err: unknown): void {
-        this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${message}`);
-        this.logger?.error(`[auth] [account: ${screen(tenant.account)}] [tenant: ${screen(tenant)}] ${err instanceof Error ? (err.stack ?? err.message) : inspect(err)}`);
+        this.emitError(this.tenantScope(tenant), message, err);
     }
 
     protected throwIfCancelled(token: vscode.CancellationToken | undefined): void {
