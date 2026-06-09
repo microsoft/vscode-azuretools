@@ -16,6 +16,7 @@ export * from './contracts/EnvironmentLike';
 export * from './AzureSubscriptionProviderBase';
 export * from './VSCodeAzureSubscriptionProvider';
 export * from './VsCodeExtensionCredential';
+export * from './challengeBearerTokenPolicy';
 export * from './configuredEnvironment';
 export * from './createChallengeSubscriptionClient';
 export * from './utils/dedupeSubscriptions';

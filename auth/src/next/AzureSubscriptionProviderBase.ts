@@ -345,7 +345,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             const startTime = Date.now();
             this.logForAccount(account, 'Fetching tenants for account...');
 
-            const { context } = await this.getSubscriptionContext({ account: account, tenantId: undefined });
+            const { context } = this.getSubscriptionContext({ account: account, tenantId: undefined });
 
             const allTenants: AzureTenant[] = [];
 
@@ -374,7 +374,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             const startTime = Date.now();
             this.logForTenant(tenant, 'Fetching subscriptions for account+tenant...');
 
-            const { context, credential } = await this.getSubscriptionContext(tenant);
+            const { context, credential } = this.getSubscriptionContext(tenant);
             const { environment, isCustomCloud } = this.getEnvironment();
 
             const allSubs: AzureSubscription[] = [];
@@ -408,7 +408,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * default account and home tenant will be used.
      * @returns A {@link SubscriptionContext} and {@link TokenCredential} for the given account+tenant.
      */
-    protected async getSubscriptionContext(tenant: Partial<TenantIdAndAccount>): Promise<{ context: SubscriptionContext, credential: TokenCredential }> {
+    protected getSubscriptionContext(tenant: Partial<TenantIdAndAccount>): { context: SubscriptionContext, credential: TokenCredential } {
         const { environment } = this.getEnvironment();
 
         const credential = this.createCredentialForTenant(tenant);
@@ -420,7 +420,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         // the WWW-Authenticate header itself).
         const challengeFallbackScope = `${endpoint.replace(/\/+$/, '')}/.default`;
 
-        const context = await createChallengeSubscriptionClient({
+        const context = createChallengeSubscriptionClient({
             credential,
             endpoint,
             scopes: [managementScope],

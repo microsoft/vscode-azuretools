@@ -8,5 +8,5 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     azExtEslintStrictTypeChecked,
-    lazyImportRuleConfig(['@azure/*', '!@azure/ms-rest-azure-env', '!@azure/arm-resources-subscriptions']),
+    lazyImportRuleConfig(['@azure/*', '!@azure/ms-rest-azure-env', '!@azure/arm-resources-subscriptions', '!@azure/core-rest-pipeline']),
 ]);
