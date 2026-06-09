@@ -3,25 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { TokenCredential } from '@azure/core-auth';
 import type { Environment } from '@azure/ms-rest-azure-env';
+import type { AzureSubscription as NextAzureSubscription } from '../next/contracts/AzureSubscription';
 import type { AzureAccount } from './AzureAccount';
 import type { AzureAuthentication } from './AzureAuthentication';
 
-/**
- * A type representing an Azure subscription ID, not including the tenant ID.
- */
-export type SubscriptionId = Readonly<string>;
-
-/**
- * A type representing an Azure tenant ID.
- */
-export type TenantId = Readonly<string>;
+export type { SubscriptionId, TenantId } from '../next/contracts/AzureSubscription';
 
 /**
  * Represents an Azure subscription.
+ *
+ * @remarks Extends the `./next` {@link NextAzureSubscription} with the legacy {@link authentication} member,
+ * a concrete `@azure/ms-rest-azure-env` {@link Environment}, and the legacy {@link AzureAccount}.
  */
-export interface AzureSubscription {
+export interface AzureSubscription extends Omit<NextAzureSubscription, 'environment' | 'account'> {
     /**
      * Access to the authentication session associated with this subscription.
      */
@@ -31,31 +26,6 @@ export interface AzureSubscription {
      * The Azure environment to which this subscription belongs.
      */
     readonly environment: Environment;
-
-    /**
-     * Whether this subscription belongs to a custom cloud.
-     */
-    readonly isCustomCloud: boolean;
-
-    /**
-     * The display name of this subscription.
-     */
-    readonly name: string;
-
-    /**
-     * The ID of this subscription.
-     */
-    readonly subscriptionId: SubscriptionId;
-
-    /**
-     * The ID of the tenant to which this subscription belongs.
-     */
-    readonly tenantId: TenantId;
-
-    /**
-     * The credential for authentication to this subscription. Compatible with Azure track 2 SDKs.
-     */
-    readonly credential: TokenCredential;
 
     /**
      * The account associated with this subscription.

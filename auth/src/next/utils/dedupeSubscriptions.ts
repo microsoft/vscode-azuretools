@@ -3,7 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AzureSubscription } from '../contracts/AzureSubscription';
+/**
+ * The minimal shape of a subscription required to deduplicate it. Both the `./next` and legacy `.`
+ * {@link AzureSubscription} types satisfy this, so this function works for either.
+ */
+export interface DedupableSubscription {
+    readonly account: { readonly id: string };
+    readonly tenantId: string;
+    readonly subscriptionId: string;
+    readonly name: string;
+}
 
 /**
  * Deduplicates (and sorts) a list of Azure subscriptions.
@@ -17,8 +26,8 @@ import type { AzureSubscription } from '../contracts/AzureSubscription';
  *
  * @param subscriptions The list of subscriptions to deduplicate
  */
-export function dedupeSubscriptions(subscriptions: AzureSubscription[]): AzureSubscription[] {
-    const deduped = new Map<string, AzureSubscription>();
+export function dedupeSubscriptions<T extends DedupableSubscription>(subscriptions: T[]): T[] {
+    const deduped = new Map<string, T>();
     for (const sub of subscriptions) {
         deduped.set(
             `${sub.account.id}/${sub.tenantId}/${sub.subscriptionId}`,

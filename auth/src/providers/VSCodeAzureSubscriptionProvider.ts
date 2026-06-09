@@ -4,266 +4,91 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import { VSCodeAzureSubscriptionProvider as NextVSCodeAzureSubscriptionProvider } from '../next/VSCodeAzureSubscriptionProvider';
 import type { AzureAccount } from '../contracts/AzureAccount';
-import type { AzureSubscription, SubscriptionId, TenantId } from '../contracts/AzureSubscription';
-import type { RefreshSuggestedEvent, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
-import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, getCoalescenceKey, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
+import type { AzureAuthentication } from '../contracts/AzureAuthentication';
+import type { AzureSubscription } from '../contracts/AzureSubscription';
+import type { TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import type { AzureTenant } from '../contracts/AzureTenant';
-import { CustomCloudConfigurationSection } from '../utils/configuredAzureEnv';
-import { dedupeSubscriptions } from '../utils/dedupeSubscriptions';
-import { CaselessMap } from '../utils/map/CaselessMap';
-import { TwoKeyCaselessMap } from '../utils/map/TwoKeyCaselessMap';
-import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
-
-const ConfigPrefix = 'azureResourceGroups';
-const SelectedSubscriptionsConfigKey = 'selectedSubscriptions';
+import { createAzureLoggerForOutputChannel } from './azureLoggerForOutputChannel';
+import { buildLegacyAuthentication, projectAccount, projectSubscription, projectTenant } from './projectToLegacy';
 
 /**
- * Extension of {@link AzureSubscriptionProviderBase} that adds caching of accounts, tenants, and subscriptions,
- * as well as filtering and deduplication according to configured settings. Additionally, promise
- * coalescence is added for {@link getAvailableSubscriptions}.
+ * Extension of {@link NextVSCodeAzureSubscriptionProvider} that adds caching of accounts, tenants, and
+ * subscriptions, as well as filtering and deduplication according to configured settings. Additionally,
+ * promise coalescence is added for {@link getAvailableSubscriptions}.
+ *
+ * @remarks This is a thin wrapper around the new (`./next`) provider, inheriting all of its caching,
+ * filtering, and coalescence behavior. It only projects the new contracts back to the legacy ones,
+ * re-adding the per-subscription {@link AzureAuthentication} and mapping the cloud environment to the
+ * `@azure/ms-rest-azure-env`-based `ExtendedEnvironment`.
  *
  * @note See important notes about caching on {@link BaseOptions.noCache}
  */
-export class VSCodeAzureSubscriptionProvider extends AzureSubscriptionProviderBase {
-    private readonly accountCache = new CaselessMap<AzureAccount>(); // Key is the account ID
-    private readonly tenantCache = new CaselessMap<AzureTenant[]>(); // Key is the account ID
-    private readonly subscriptionCache = new TwoKeyCaselessMap<AzureSubscription[]>(); // Keys are account ID and tenant ID
-
-    private readonly availableSubscriptionsPromises = new Map<string, Promise<AzureSubscription[]>>(); // Key is from getOptionsCoalescenceKey
-
-    private configChangeListener: vscode.Disposable | undefined;
-
-    public override dispose(): void {
-        this.configChangeListener?.dispose();
-        super.dispose();
-    }
-
+export class VSCodeAzureSubscriptionProvider extends NextVSCodeAzureSubscriptionProvider {
     /**
-     * @inheritdoc
+     * Constructs a new {@link VSCodeAzureSubscriptionProvider}.
+     * @param logger (Optional) A logger to record information to
      */
-    public override onRefreshSuggested(callback: (reason: RefreshSuggestedEvent) => unknown, thisArg?: unknown, disposables?: vscode.Disposable[]): vscode.Disposable {
-        this.configChangeListener ??= vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(`${ConfigPrefix}.${SelectedSubscriptionsConfigKey}`)) {
-                this.fireRefreshSuggestedIfNeeded({ reason: 'subscriptionFilterChange' });
-            } else if (e.affectsConfiguration(CustomCloudConfigurationSection)) {
-                this.accountCache.clear();
-                this.tenantCache.clear();
-                this.subscriptionCache.clear();
-                this.log('Cleared all caches due to cloud environment change');
-                this.fireRefreshSuggestedIfNeeded({ reason: 'cloudChange' });
-            }
+    public constructor(logger?: vscode.LogOutputChannel) {
+        super({
+            vscode: vscode,
+            logger: logger ? createAzureLoggerForOutputChannel(logger) : undefined,
         });
-
-        return super.onRefreshSuggested(callback, thisArg, disposables);
-    }
-
-    protected override fireRefreshSuggestedIfNeeded(evtArgs: RefreshSuggestedEvent): boolean {
-        const actuallyFired = super.fireRefreshSuggestedIfNeeded(evtArgs);
-
-        if (actuallyFired && evtArgs.reason === 'sessionChange') {
-            // Clear just the account cache--tenants and subscriptions are probably still valid,
-            // but the session change event may been have fired due to account sign out
-            this.accountCache.clear();
-        }
-
-        return actuallyFired;
     }
 
     /**
      * @inheritdoc
      */
-    public async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
-        try {
-            const key = getCoalescenceKey(options);
-            if (key && this.availableSubscriptionsPromises.has(key)) {
-                return await this.availableSubscriptionsPromises.get(key)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just checked it has the key
-            } else {
-                try {
-                    const promise = super.getAvailableSubscriptions(options);
-
-                    if (key) {
-                        this.availableSubscriptionsPromises.set(key, promise);
-                    }
-
-                    return await promise;
-                } finally {
-                    if (key) {
-                        this.availableSubscriptionsPromises.delete(key);
-                    }
-                }
-            }
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+    public override async getAvailableSubscriptions(options: GetAvailableSubscriptionsOptions = DefaultOptions): Promise<AzureSubscription[]> {
+        // The listing methods are virtual, so the subscriptions collected by the base implementation are
+        // already projected to the legacy shape (with `authentication`) by `getSubscriptionsForTenant`.
+        return (await super.getAvailableSubscriptions(options)) as AzureSubscription[];
     }
 
     /**
      * @inheritdoc
      */
     public override async getAccounts(options: GetAccountsOptions = DefaultOptions): Promise<AzureAccount[]> {
-        try {
-            if (options.noCache ?? DefaultOptions.noCache) {
-                this.accountCache.clear();
-            }
+        return (await super.getAccounts(options)).map(projectAccount);
+    }
 
-            // If needed, refill the cache
-            if (this.accountCache.size === 0) {
-                const accounts = await super.getAccounts(options);
-                accounts.forEach(account => this.accountCache.set(account.id, account));
-                this.log(`Cached ${accounts.length} accounts`);
-            } else {
-                this.log('Using cached accounts');
-            }
-
-            let results = Array.from(this.accountCache.values());
-
-            // If needed, filter according to configured filters
-            if (options.filter ?? DefaultOptions.filter) {
-                const accountFilters = await this.getAccountFilters();
-                if (accountFilters.length > 0) {
-                    this.log(`Filtering accounts to ${accountFilters.length} configured accounts`);
-                    results = results.filter(account => accountFilters.includes(account.id.toLowerCase()));
-                }
-            }
-
-            this.log(`Returning ${results.length} accounts.`);
-
-            return results.sort((a, b) => a.label.localeCompare(b.label));
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+    /**
+     * @inheritdoc
+     */
+    public override async getUnauthenticatedTenantsForAccount(account: AzureAccount, options: Omit<GetTenantsForAccountOptions, 'filter'> = DefaultOptions): Promise<AzureTenant[]> {
+        return (await super.getUnauthenticatedTenantsForAccount(account, options)).map(tenant => projectTenant(tenant, account));
     }
 
     /**
      * @inheritdoc
      */
     public override async getTenantsForAccount(account: AzureAccount, options: GetTenantsForAccountOptions = DefaultOptions): Promise<AzureTenant[]> {
-        try {
-            // If needed, delete the cache for this account
-            if (options.noCache ?? DefaultOptions.noCache) {
-                this.tenantCache.delete(account.id);
-            }
-
-            // If needed, refill the cache
-            if (!this.tenantCache.has(account.id)) {
-                const tenants = await super.getTenantsForAccount(account, options);
-                this.tenantCache.set(account.id, tenants);
-                this.logForAccount(account, `Cached ${tenants.length} tenants for account`);
-            } else {
-                this.logForAccount(account, 'Using cached tenants for account');
-            }
-
-            let results: AzureTenant[] = this.tenantCache.get(account.id)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
-
-            // If needed, filter according to configured filters
-            if (options.filter ?? DefaultOptions.filter) {
-                const tenantFilters = await this.getTenantFilters();
-                if (tenantFilters.length > 0) {
-                    this.logForAccount(account, `Filtering tenants for account to ${tenantFilters.length} configured tenants`);
-                    results = results.filter(tenant => tenantFilters.includes(tenant.tenantId.toLowerCase()));
-                }
-            }
-
-            this.logForAccount(account, `Returning ${results.length} tenants for account`);
-
-            // Finally, sort
-            return results.sort((a, b) => {
-                if (a.displayName && b.displayName) {
-                    return a.displayName.localeCompare(b.displayName);
-                }
-                return a.tenantId.localeCompare(b.tenantId);
-            });
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+        return (await super.getTenantsForAccount(account, options)).map(tenant => projectTenant(tenant, account));
     }
 
     /**
      * @inheritdoc
      */
     public override async getSubscriptionsForTenant(tenant: TenantIdAndAccount, options: GetSubscriptionsForTenantOptions = DefaultOptions): Promise<AzureSubscription[]> {
-        try {
-            // If needed, delete the cache for this account+tenant
-            if (options.noCache ?? DefaultOptions.noCache) {
-                this.subscriptionCache.delete(tenant.account.id, tenant.tenantId);
-            }
-
-            // If needed, refill the cache
-            if (!this.subscriptionCache.has(tenant.account.id, tenant.tenantId)) {
-                const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
-                this.subscriptionCache.set(tenant.account.id, tenant.tenantId, subscriptions);
-                this.logForTenant(tenant, `Cached ${subscriptions.length} subscriptions for account+tenant`);
-            } else {
-                this.logForTenant(tenant, 'Using cached subscriptions for account+tenant');
-            }
-
-            let results: AzureSubscription[] = this.subscriptionCache.get(tenant.account.id, tenant.tenantId)!; // eslint-disable-line @typescript-eslint/no-non-null-assertion -- We just filled it
-
-            // If needed, filter according to configured filters
-            if (options.filter ?? DefaultOptions.filter) {
-                const subscriptionFilters = await this.getSubscriptionFilters();
-                if (subscriptionFilters.length > 0) {
-                    this.logForTenant(tenant, `Filtering subscriptions for account+tenant to ${subscriptionFilters.length} configured subscriptions`);
-                    results = results.filter(sub => subscriptionFilters.includes(sub.subscriptionId.toLowerCase()));
-                }
-            }
-
-            // If needed, dedupe according to options
-            if (options.dedupe ?? DefaultOptions.dedupe) {
-                this.logForTenant(tenant, 'Deduping subscriptions for account+tenant');
-                results = dedupeSubscriptions(results);
-            }
-
-            this.logForTenant(tenant, `Returning ${results.length} subscriptions for account+tenant`);
-
-            // Finally, sort
-            return results.sort((a, b) => a.name.localeCompare(b.name));
-        } finally {
-            this.throwIfCancelled(options.token);
-        }
+        const subscriptions = await super.getSubscriptionsForTenant(tenant, options);
+        const authentication = this.buildAuthentication(tenant);
+        return subscriptions.map(subscription => projectSubscription(subscription, tenant, authentication));
     }
 
     /**
-     * Gets the account filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
-     * override the settings with a custom filter, implement a child class with filter methods overridden.
+     * Builds the {@link AzureAuthentication} exposed on each {@link AzureSubscription} for the given
+     * account+tenant. Subclasses may override this to supply a different means of acquiring sessions.
      *
-     * If no values are returned by `getAccountFilters()`, then all accounts will be scanned for subscriptions.
-     *
-     * @returns A list of account IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
+     * @param tenant The account+tenant to build authentication for.
+     * @returns An {@link AzureAuthentication} for the given account+tenant.
      */
-    protected getAccountFilters(): Promise<string[]> {
-        // TODO: implement account filtering based on configuration if needed
-        return Promise.resolve([]);
-    }
-
-    /**
-     * Gets the tenant filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
-     * override the settings with a custom filter, implement a child class with filter methods overridden.
-     *
-     * If no values are returned by `getTenantFilters()`, then all tenants will be scanned for subscriptions.
-     *
-     * @returns A list of unique tenant IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
-     */
-    protected getTenantFilters(): Promise<TenantId[]> {
-        const config = vscode.workspace.getConfiguration(ConfigPrefix);
-        const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
-        const tenantIds = fullSubscriptionIds.map(id => id.split('/')[0].toLowerCase());
-        return Promise.resolve(Array.from(new Set(tenantIds)));
-    }
-
-    /**
-     * Gets the subscription filters that are configured in `azureResourceGroups.selectedSubscriptions`. To
-     * override the settings with a custom filter, implement a child class with filter methods overridden.
-     *
-     * If no values are returned by `getSubscriptionFilters()`, then all subscriptions will be scanned.
-     *
-     * @returns A list of unique subscription IDs that are configured in `azureResourceGroups.selectedSubscriptions`.
-     */
-    protected getSubscriptionFilters(): Promise<SubscriptionId[]> {
-        const config = vscode.workspace.getConfiguration(ConfigPrefix);
-        const fullSubscriptionIds = config.get<string[]>(SelectedSubscriptionsConfigKey, []);
-        const subscriptionIds = fullSubscriptionIds.map(id => id.split('/')[1].toLowerCase());
-        return Promise.resolve(Array.from(new Set(subscriptionIds)));
+    protected buildAuthentication(tenant: Partial<TenantIdAndAccount>): AzureAuthentication {
+        return buildLegacyAuthentication(tenant, {
+            getSession: (scopeOrListOrRequest, tenantId, sessionOptions) => this.getSession(scopeOrListOrRequest, tenantId, sessionOptions),
+            silenceRefreshEvents: () => { this.silenceRefreshEvents(); },
+            beginInteractiveRefreshSuppression: () => { this.beginInteractiveRefreshSuppression(); },
+        });
     }
 }
