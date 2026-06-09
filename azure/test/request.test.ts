@@ -123,6 +123,12 @@ suite('request redirects', () => {
     let originServer: http.Server;
     let targetServer: http.Server;
 
+    // These tests assert the library's default (production) redirect behavior. When the feed mirror
+    // is configured (CI sets FEED_BASE_URL/FEED_PAT), `FeedMirrorPolicy` overrides the redirect
+    // policy on every generic client, so clear those vars here to test the real default.
+    let savedFeedBaseUrl: string | undefined;
+    let savedFeedPat: string | undefined;
+
     async function listen(server: http.Server): Promise<{ port: number }> {
         await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
         const address = server.address();
@@ -137,6 +143,11 @@ suite('request redirects', () => {
     }
 
     suiteSetup(async () => {
+        savedFeedBaseUrl = process.env.FEED_BASE_URL;
+        savedFeedPat = process.env.FEED_PAT;
+        delete process.env.FEED_BASE_URL;
+        delete process.env.FEED_PAT;
+
         targetServer = http.createServer((_req, response) => {
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end('{ "data": "redirected" }');
@@ -153,6 +164,12 @@ suite('request redirects', () => {
     });
 
     suiteTeardown(async () => {
+        if (savedFeedBaseUrl !== undefined) {
+            process.env.FEED_BASE_URL = savedFeedBaseUrl;
+        }
+        if (savedFeedPat !== undefined) {
+            process.env.FEED_PAT = savedFeedPat;
+        }
         await close(originServer);
         await close(targetServer);
     });
