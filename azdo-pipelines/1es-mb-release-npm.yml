@@ -124,26 +124,11 @@ extends:
               # NOTE: Template references / the npmAuthenticate task don't combine cleanly with
               # `condition:` for dryRun, so dryRun and npmFeed remain compile-time checks here.
               - ${{ if and(ne(parameters.npmFeed, ''), eq(parameters.dryRun, false)) }}:
-                  - pwsh: |
-                      $collectionUri = "$(System.CollectionUri)".TrimEnd("/")
-                      $feed = "${{ parameters.npmFeed }}"
-                      if ($feed -like "*/*") {
-                        $parts = $feed -split "/", 2
-                        $registry = "$collectionUri/$($parts[0])/_packaging/$($parts[1])/npm/registry/"
-                      } else {
-                        $registry = "$collectionUri/_packaging/$feed/npm/registry/"
-                      }
-                      $npmrcPath = Join-Path "$(tgzFolderName)" ".npmrc"
-                      Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
-                      Write-Host "Wrote .npmrc for internal feed with registry $registry"
-                    displayName: "👉 Configure internal feed registry"
-                    condition: succeeded()
-
-                  - task: npmAuthenticate@0
-                    displayName: "👉 Authenticate to internal feed"
-                    condition: succeeded()
-                    inputs:
-                      workingFile: "$(tgzFolderName)/.npmrc"
+                  - template: azdo-pipelines/templates/write-npmrc-auth.yml@azExtTemplates
+                    parameters:
+                      workingDirectory: $(tgzFolderName)
+                      npmFeed: ${{ parameters.npmFeed }}
+                      respectCheckedInNpmrc: false
 
                   - pwsh: |
                       npm publish "$(tgzFileName)" --userconfig "$(tgzFolderName)/.npmrc" --ignore-scripts
