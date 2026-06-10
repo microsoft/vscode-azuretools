@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzureSubscriptionProviderBase as NextAzureSubscriptionProviderBase } from '../next/AzureSubscriptionProviderBase';
+import { AzureSubscriptionProviderBase as NextAzureSubscriptionProviderBase, type CredentialFactory } from '../next/AzureSubscriptionProviderBase';
 import { createVsCodeCredentialFactory } from '../next/vscodeCredentialFactory';
 import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
@@ -29,13 +29,16 @@ export abstract class AzureSubscriptionProviderBase extends NextAzureSubscriptio
     /**
      * Constructs a new {@link AzureSubscriptionProviderBase}.
      * @param logger (Optional) A logger to record information to
+     * @param credentialFactory (Optional) A factory that creates the token credential for a given
+     * account+tenant. Subclasses (e.g. the Azure DevOps provider) supply this to control how tokens are
+     * acquired. If omitted, the default VS Code credential factory is used.
      */
-    public constructor(logger?: vscode.LogOutputChannel) {
+    public constructor(logger?: vscode.LogOutputChannel, credentialFactory?: CredentialFactory) {
         const azureLogger = logger ? createAzureLoggerForOutputChannel(logger) : undefined;
         super({
             vscode: vscode,
             logger: azureLogger,
-            credentialFactory: createVsCodeCredentialFactory(vscode, azureLogger),
+            credentialFactory: credentialFactory ?? createVsCodeCredentialFactory(vscode, azureLogger),
         });
     }
 

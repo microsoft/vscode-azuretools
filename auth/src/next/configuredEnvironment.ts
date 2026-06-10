@@ -89,8 +89,17 @@ export function getConfiguredAuthProviderId(vscode: { readonly workspace: VsCode
     const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
     const environmentSettingValue = authProviderConfig.get<string | undefined>(CloudEnvironmentSettingName);
 
-    // Unset or empty means public cloud; any explicit value (China/USGov/custom) means sovereign cloud.
-    return !environmentSettingValue ? PublicAuthProviderId : SovereignAuthProviderId;
+    // Only the recognized sovereign/custom values map to the sovereign provider. Anything else--unset,
+    // empty, or an unrecognized/legacy value (e.g. "AzureCloud")--resolves to public cloud, matching the
+    // fallback in `getConfiguredAzureEnv` so the environment and provider id stay consistent.
+    switch (environmentSettingValue) {
+        case CloudEnvironmentSettingValue.ChinaCloud:
+        case CloudEnvironmentSettingValue.USGovernment:
+        case CloudEnvironmentSettingValue.Custom:
+            return SovereignAuthProviderId;
+        default:
+            return PublicAuthProviderId;
+    }
 }
 
 /**

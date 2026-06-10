@@ -105,6 +105,16 @@ describe('(unit) configuredEnvironment', () => {
             expect(getConfiguredAuthProviderId(vscode)).to.equal('microsoft-sovereign-cloud');
         });
 
+        it('returns sovereign for US Government cloud', () => {
+            const { vscode } = createVsCode({ environment: 'USGovernment' });
+            expect(getConfiguredAuthProviderId(vscode)).to.equal('microsoft-sovereign-cloud');
+        });
+
+        it('returns microsoft for an unrecognized (legacy) value, consistent with getConfiguredAzureEnv', () => {
+            const { vscode } = createVsCode({ environment: 'AzureCloud' });
+            expect(getConfiguredAuthProviderId(vscode)).to.equal('microsoft');
+        });
+
         it('returns sovereign for custom cloud even if its name matches a built-in cloud', () => {
             const { vscode } = createVsCode({ environment: 'custom', customEnvironment: { ...AzurePublicCloud } });
             // The setting value is what matters, not the (potentially spoofed) environment name

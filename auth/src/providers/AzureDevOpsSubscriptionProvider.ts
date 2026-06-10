@@ -3,14 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 import type { TokenCredential } from '@azure/core-auth';
-import { AzureSubscriptionProviderBase } from '../next/AzureSubscriptionProviderBase';
-import type { AzureAccount } from '../next/contracts/AzureAccount';
-import type { AzureTenant } from '../next/contracts/AzureTenant';
+import { AzureSubscriptionProviderBase } from './AzureSubscriptionProviderBase';
+import type { AzureAccount } from '../contracts/AzureAccount';
+import type { AzureAuthentication } from '../contracts/AzureAuthentication';
+import type { TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
+import type { AzureTenant } from '../contracts/AzureTenant';
 import { AzurePublicCloud, type EnvironmentLike } from '../next/contracts/EnvironmentLike';
 import { createAzureDevOpsCredential } from '../next/testing';
-import { createAzureLoggerForOutputChannel } from './azureLoggerForOutputChannel';
+import { isAuthenticationWwwAuthenticateRequest } from '../next/utils/isAuthenticationWwwAuthenticateRequest';
+import { getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
+import { NotSignedInError } from '../utils/NotSignedInError';
 
 export interface AzureDevOpsSubscriptionProviderInitializer {
     /**
@@ -42,13 +47,15 @@ function ensureEndingSlash(value: string): string {
 }
 
 /**
- * A credential-first {@link AzureSubscriptionProviderBase} that authenticates via a federated Azure DevOps
- * service connection, using workflow identity federation. It supplies an {@link AzureDevOpsCredential} as
- * the provider's credential factory and exposes a single fixed account and tenant (the service principal).
- * The produced subscriptions expose their {@link TokenCredential} via `credential`; the legacy
- * per-subscription `authentication` member is not provided.
+ * An {@link AzureSubscriptionProviderBase} that authenticates via a federated Azure DevOps service
+ * connection, using workflow identity federation. It supplies an Azure DevOps credential as the provider's
+ * credential factory and exposes a single fixed account and tenant (the service principal).
  *
- * To learn how to configure your DevOps environment to use this provider, refer to the README.md.
+ * @remarks This is exposed from the legacy `./azdo` entrypoint, so its subscriptions keep the legacy shape:
+ * each exposes its {@link TokenCredential} via `credential` *and* a per-subscription {@link AzureAuthentication}
+ * (whose sessions are derived from the federated credential). To learn how to configure your DevOps
+ * environment to use this provider, refer to the README.md.
+ *
  * NOTE: This provider is only usable when running in an Azure DevOps pipeline.
  * Reference: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
  */
@@ -66,11 +73,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
                 return inner.then((c) => c.getToken(scopes, options));
             },
         };
-        super({
-            vscode: vscode,
-            logger: logger ? createAzureLoggerForOutputChannel(logger) : undefined,
-            credentialFactory: () => credential,
-        });
+        super(logger, () => credential);
         this.devOpsCredential = credential;
         this.devOpsTenantId = tenantId;
     }
@@ -95,7 +98,7 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
             {
                 id: 'test-account-id',
                 label: 'test-account',
-                environment: AzurePublicCloud,
+                environment: getConfiguredAzureEnv(),
             },
         ]);
     }
@@ -127,6 +130,36 @@ export class AzureDevOpsSubscriptionProvider extends AzureSubscriptionProviderBa
         // interactive sign-in, so this just probes the credential.
         const token = await this.devOpsCredential.getToken(`${ensureEndingSlash(AzurePublicCloud.managementEndpointUrl)}.default`);
         return !!token;
+    }
+
+    /**
+     * For {@link AzureDevOpsSubscriptionProvider}, the {@link AzureAuthentication} exposed on each
+     * subscription derives its sessions from the federated DevOps credential rather than from a VS Code
+     * sign-in. Challenge requests cannot be satisfied (there is no user to prompt in a pipeline), so they throw.
+     */
+    protected override buildAuthentication(tenant: Partial<TenantIdAndAccount>): AzureAuthentication {
+        const getSessionWithScopes = async (scopeListOrRequest: string[] | vscode.AuthenticationWwwAuthenticateRequest): Promise<vscode.AuthenticationSession> => {
+            if (isAuthenticationWwwAuthenticateRequest(scopeListOrRequest)) {
+                throw new Error('Getting a session with a challenge is not supported in AzureDevOpsSubscriptionProvider.');
+            }
+
+            const token = await this.devOpsCredential.getToken(scopeListOrRequest);
+            if (!token) {
+                throw new NotSignedInError();
+            }
+
+            return {
+                accessToken: token.token,
+                id: crypto.randomUUID(),
+                account: tenant.account ?? { id: 'test-account-id', label: 'test-account' },
+                scopes: scopeListOrRequest,
+            } satisfies vscode.AuthenticationSession;
+        };
+
+        return {
+            getSession: () => getSessionWithScopes([`${ensureEndingSlash(AzurePublicCloud.managementEndpointUrl)}.default`]),
+            getSessionWithScopes: getSessionWithScopes,
+        };
     }
 
     /**

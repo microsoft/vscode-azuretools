@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AzureSubscriptionProvider as NextAzureSubscriptionProvider } from '../next/contracts/AzureSubscriptionProvider';
-import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions } from '../next/contracts/AzureSubscriptionProviderRequestOptions';
+import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions, SignInOptions } from '../next/contracts/AzureSubscriptionProviderRequestOptions';
 import type { AzureAccount } from './AzureAccount';
 import type { AzureSubscription } from './AzureSubscription';
 import type { AzureTenant } from './AzureTenant';
@@ -24,6 +24,14 @@ export type TenantIdAndAccount = Required<Pick<AzureTenant, 'tenantId' | 'accoun
  * a per-subscription `authentication` and a concrete `@azure/ms-rest-azure-env` environment.
  */
 export interface AzureSubscriptionProvider extends NextAzureSubscriptionProvider {
+    /**
+     * @inheritdoc
+     *
+     * @remarks Redeclared so the `tenant` parameter uses the legacy {@link TenantIdAndAccount} (which carries
+     * the legacy {@link AzureAccount}) rather than inheriting the `./next` signature.
+     */
+    signIn(tenant?: TenantIdAndAccount, options?: SignInOptions): Promise<boolean>;
+
     /**
      * @inheritdoc
      */
