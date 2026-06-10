@@ -129,7 +129,6 @@ extends:
                     parameters:
                       workingDirectory: $(tgzFolderName)
                       feedBaseUrl: ${{ parameters.feedBaseUrl }}
-                      respectCheckedInNpmrc: false
 
                   - pwsh: |
                       npm publish "$(tgzFileName)" --userconfig "$(tgzFolderName)/.npmrc" --ignore-scripts

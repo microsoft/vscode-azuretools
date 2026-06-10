@@ -10,20 +10,15 @@ parameters:
     type: string
     default: ""
 
-  # When true, an existing (checked-in) .npmrc is used as-is instead of being overwritten.
-  - name: respectCheckedInNpmrc
-    type: boolean
-    default: true
-
 steps:
-  # Write an .npmrc pointing at the internal registry (unless a checked-in one is respected),
-  # then signal whether authentication is needed.
+  # Respect a checked-in .npmrc if present; otherwise write one from feedBaseUrl.
+  # Then signal whether authentication is needed.
   - pwsh: |
       $npmrcPath = Join-Path "${{ parameters.workingDirectory }}" ".npmrc"
       $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
 
       $registry = $null
-      if ("${{ parameters.respectCheckedInNpmrc }}" -eq "True" -and (Test-Path $npmrcPath)) {
+      if (Test-Path $npmrcPath) {
         Write-Host "Using checked-in .npmrc"
       } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
         $registry = "$feedBaseUrl/npm/registry/"
