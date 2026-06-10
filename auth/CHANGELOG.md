@@ -1,5 +1,12 @@
 # Change Log
 
+## 7.0.0-alpha.1 - 2026-06-10
+
+* Add a new dependency-injected `./next` entrypoint. It accepts an injected `vscode` namespace (used for both the authentication namespace and the configuration lookup), an input `TokenCredential` via a credential factory, and an `@azure/logger` logger instead of a `vscode.OutputChannel`. It no longer depends on the deprecated `@azure/ms-rest-azure-env`, and its `AzureSubscription` exposes only its `TokenCredential` (no `getSession`/`getSessionWithScopes`).
+* Add a `VsCodeExtensionCredential` (`TokenCredential`) whose `vscode` authentication namespace is injectable, and a `./next/testing` entrypoint providing `createAzureDevOpsCredential` (wrapping `@azure/identity`'s `AzurePipelinesCredential`) so `@azure/identity` is not always bundled.
+* Replace the internal `MFAChallengePolicy` with the SDK's built-in `bearerTokenAuthenticationPolicy`, exposed as a reusable `createChallengeBearerTokenPolicy` / `applyChallengeBearerTokenPolicy` so other Azure clients can reuse the same challenge handling.
+* The legacy `.` entrypoint is now a thin wrapper around `./next`, preserving its existing public API (localized errors, the `ms-rest-azure-env`-based `Environment`, and the per-subscription `authentication` member).
+
 ## 6.1.0-alpha.2 - 2026-06-02
 
 * Add an optional `options` parameter to `getSessionWithScopes`. Passing `{ createIfNone: true }` allows an interactive consent prompt when a session for the requested scopes has not yet been granted, instead of failing silently. This enables callers to eagerly obtain consent for a non-management audience (e.g. the App Service audience used for Kudu/SCM deployments) before it is first needed. See [microsoft/vscode-azurefunctions#5073](https://github.com/microsoft/vscode-azurefunctions/issues/5073)
