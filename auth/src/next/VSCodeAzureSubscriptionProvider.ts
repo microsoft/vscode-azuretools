@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, getCoalescenceKey, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
-import { CaselessMap } from '../utils/map/CaselessMap';
-import { TwoKeyCaselessMap } from '../utils/map/TwoKeyCaselessMap';
+import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, getCoalescenceKey, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from './contracts/AzureSubscriptionProviderRequestOptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
+import { CaselessMap } from './utils/map/CaselessMap';
+import { TwoKeyCaselessMap } from './utils/map/TwoKeyCaselessMap';
 import { AzureSubscriptionProviderBase, type AzureSubscriptionProviderOptions } from './AzureSubscriptionProviderBase';
 import { CustomCloudConfigurationSection } from './configuredEnvironment';
 import type { AzureAccount } from './contracts/AzureAccount';

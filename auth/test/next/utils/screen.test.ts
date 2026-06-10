@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import type { AzureAccount } from '../../src/contracts/AzureAccount';
-import { screen } from '../../src/utils/screen';
+import type { AzureAccount } from '../../../src/contracts/AzureAccount';
+import { screen } from '../../../src/next/utils/screen';
 
 suite('(unit) screen()', () => {
     suite('accounts', () => {

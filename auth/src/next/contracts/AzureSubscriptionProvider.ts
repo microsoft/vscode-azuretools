@@ -8,7 +8,7 @@ import type { NotSignedInError } from '../utils/NotSignedInError'; // eslint-dis
 import type { dedupeSubscriptions } from '../utils/dedupeSubscriptions'; // eslint-disable-line @typescript-eslint/no-unused-vars -- It is used in the doc comments
 import type { AzureAccount } from './AzureAccount';
 import type { AzureSubscription } from './AzureSubscription';
-import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions, SignInOptions } from '../../contracts/AzureSubscriptionProviderRequestOptions';
+import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions, SignInOptions } from './AzureSubscriptionProviderRequestOptions';
 import type { AzureTenant } from './AzureTenant';
 
 /**

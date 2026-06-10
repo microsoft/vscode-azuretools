@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { getTokenExpiry } from '../../src/next/utils/tryGetTokenExpiration';
+import { getTokenExpiry } from '../../../src/next/utils/getTokenExpiry';
 
 suite('(unit) getTokenExpiry()', () => {
     function createToken(payload: object): string {

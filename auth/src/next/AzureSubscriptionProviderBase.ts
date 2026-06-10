@@ -10,10 +10,10 @@ import type { TokenCredential } from '@azure/core-auth'; // Keep this as `import
 import type { AzureLogger } from '@azure/logger';
 import { inspect } from 'util';
 import type * as vscode from 'vscode';
-import { DefaultOptions, DefaultSignInOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions, type SignInOptions } from '../contracts/AzureSubscriptionProviderRequestOptions';
-import { getSignalForToken } from '../utils/getSignalForToken';
-import { Limiter } from '../utils/Limiter';
-import { screen } from '../utils/screen';
+import { DefaultOptions, DefaultSignInOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions, type SignInOptions } from './contracts/AzureSubscriptionProviderRequestOptions';
+import { getSignalForToken } from './utils/getSignalForToken';
+import { Limiter } from './utils/Limiter';
+import { screen } from './utils/screen';
 import type { AzureAuthVsCode } from './contracts/AzureAuthVsCode';
 import type { AzureAccount } from './contracts/AzureAccount';
 import type { AzureSubscription } from './contracts/AzureSubscription';

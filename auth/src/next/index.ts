@@ -7,7 +7,7 @@ export type * from './contracts/AzureAccount';
 export type * from './contracts/AzureAuthVsCode';
 export * from './contracts/AzureSubscription';
 export * from './contracts/AzureSubscriptionProvider';
-export type * from '../contracts/AzureSubscriptionProviderRequestOptions'; // The types are exported, but the `DefaultOptions` constant and `getCoalescenceKey` function are internal only
+export type * from './contracts/AzureSubscriptionProviderRequestOptions'; // The types are exported, but the `DefaultOptions` constant and `getCoalescenceKey` function are internal only
 export type * from './contracts/AzureTenant';
 export * from './contracts/EnvironmentLike';
 

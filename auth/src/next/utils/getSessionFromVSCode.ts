@@ -5,7 +5,7 @@
 
 import type * as vscode from 'vscode';
 import type { VsCodeAuthentication } from '../contracts/AzureAuthVsCode';
-import { isAuthenticationWwwAuthenticateRequest } from '../../utils/isAuthenticationWwwAuthenticateRequest';
+import { isAuthenticationWwwAuthenticateRequest } from './isAuthenticationWwwAuthenticateRequest';
 
 function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { CaselessMap } from '../../../src/utils/map/CaselessMap';
+import { CaselessMap } from '../../../../src/next/utils/map/CaselessMap';
 
 suite('(unit) CaselessMap', () => {
     suite('set get delete has', () => {

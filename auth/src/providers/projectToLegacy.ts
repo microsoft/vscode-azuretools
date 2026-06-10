@@ -13,7 +13,7 @@ import type { AzureSubscription } from '../contracts/AzureSubscription';
 import type { TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { getConfiguredAzureEnv } from '../utils/configuredAzureEnv';
-import { isAuthenticationWwwAuthenticateRequest } from '../utils/isAuthenticationWwwAuthenticateRequest';
+import { isAuthenticationWwwAuthenticateRequest } from '../next/utils/isAuthenticationWwwAuthenticateRequest';
 import { NotSignedInError } from '../utils/NotSignedInError';
 
 /**

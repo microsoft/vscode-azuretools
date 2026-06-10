@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { TwoKeyCaselessMap } from '../../../src/utils/map/TwoKeyCaselessMap';
+import { TwoKeyCaselessMap } from '../../../../src/next/utils/map/TwoKeyCaselessMap';
 
 suite('(unit) TwoKeyCaselessMap', () => {
     suite('set get delete has', () => {

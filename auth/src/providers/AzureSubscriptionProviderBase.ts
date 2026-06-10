@@ -10,7 +10,7 @@ import type { AzureAccount } from '../contracts/AzureAccount';
 import type { AzureAuthentication } from '../contracts/AzureAuthentication';
 import type { AzureSubscription } from '../contracts/AzureSubscription';
 import type { AzureSubscriptionProvider, TenantIdAndAccount } from '../contracts/AzureSubscriptionProvider';
-import { DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../contracts/AzureSubscriptionProviderRequestOptions';
+import { DefaultOptions, type GetAccountsOptions, type GetAvailableSubscriptionsOptions, type GetSubscriptionsForTenantOptions, type GetTenantsForAccountOptions } from '../next/contracts/AzureSubscriptionProviderRequestOptions';
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { createAzureLoggerForOutputChannel } from './azureLoggerForOutputChannel';
 import { buildLegacyAuthentication, projectAccount, projectSubscription, projectTenant } from './projectToLegacy';

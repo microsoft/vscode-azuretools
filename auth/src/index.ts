@@ -7,15 +7,22 @@ export * from './contracts/AzureAccount';
 export * from './contracts/AzureAuthentication';
 export * from './contracts/AzureSubscription';
 export * from './contracts/AzureSubscriptionProvider';
-export type * from './contracts/AzureSubscriptionProviderRequestOptions'; // The types are exported, but the `DefaultOptions` constant and `getCoalescenceKey` function are internal only
+export type * from './next/contracts/AzureSubscriptionProviderRequestOptions'; // The types are exported, but the `DefaultOptions` constant and `getCoalescenceKey` function are internal only
 export * from './contracts/AzureTenant';
 // The `AzureDevOpsSubscriptionProvider` is intentionally not exported, it must be imported from `'@microsoft/vscode-azext-azureauth/azdo'`
 export * from './providers/AzureSubscriptionProviderBase';
 export * from './providers/VSCodeAzureSubscriptionProvider';
 export * from './utils/BearerChallengePolicy';
 export * from './utils/configuredAzureEnv';
-export * from './utils/dedupeSubscriptions';
-export * from './utils/getMetricsForTelemetry';
+export { CustomCloudConfigurationSection } from './next/configuredEnvironment';
+export * from './next/utils/dedupeSubscriptions';
+export * from './next/utils/getMetricsForTelemetry';
+export * from './next/utils/getSignalForToken';
+export * from './next/utils/isAuthenticationWwwAuthenticateRequest';
+export * from './next/utils/Limiter';
+export * from './next/utils/map/CaselessMap';
+export * from './next/utils/map/TwoKeyCaselessMap';
+export * from './next/utils/screen';
 export * from './utils/getSessionFromVSCode';
 export * from './utils/NotSignedInError';
 export * from './utils/signInToTenant';

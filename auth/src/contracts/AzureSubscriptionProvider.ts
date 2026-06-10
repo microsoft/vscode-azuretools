@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { AzureSubscriptionProvider as NextAzureSubscriptionProvider } from '../next/contracts/AzureSubscriptionProvider';
-import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions } from './AzureSubscriptionProviderRequestOptions';
+import type { GetAccountsOptions, GetAvailableSubscriptionsOptions, GetSubscriptionsForTenantOptions, GetTenantsForAccountOptions } from '../next/contracts/AzureSubscriptionProviderRequestOptions';
 import type { AzureAccount } from './AzureAccount';
 import type { AzureSubscription } from './AzureSubscription';
 import type { AzureTenant } from './AzureTenant';

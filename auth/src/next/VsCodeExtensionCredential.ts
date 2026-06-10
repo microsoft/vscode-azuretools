@@ -9,7 +9,7 @@ import type * as vscode from 'vscode';
 import type { VsCodeAuthentication } from './contracts/AzureAuthVsCode';
 import { AzurePublicCloud, type EnvironmentLike } from './contracts/EnvironmentLike';
 import { PublicAuthProviderId, SovereignAuthProviderId } from './configuredEnvironment';
-import { getTokenExpiry } from './utils/tryGetTokenExpiration';
+import { getTokenExpiry } from './utils/getTokenExpiry';
 
 /**
  * Options for constructing a {@link VsCodeExtensionCredential}.
