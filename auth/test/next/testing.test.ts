@@ -3,8 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
+import { expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import { createAzureDevOpsCredential } from '../../src/next/testing';
+
+use(chaiAsPromised);
 
 const baseInit = { serviceConnectionId: 'service-connection', tenantId: 'tenant-1', clientId: 'client-1' };
 
@@ -37,48 +40,48 @@ function withPipelineEnv(env: PipelineEnv): () => void {
     return () => { applyEnv(previous); };
 }
 
-suite('(unit) next/testing', () => {
-    suite('createAzureDevOpsCredential', () => {
-        test('rejects when required initializer values are missing', async () => {
-            await assert.rejects(() => createAzureDevOpsCredential({ serviceConnectionId: '', tenantId: 't', clientId: 'c', allowOutsidePipeline: true }));
-            await assert.rejects(() => createAzureDevOpsCredential({ serviceConnectionId: 's', tenantId: '', clientId: 'c', allowOutsidePipeline: true }));
-            await assert.rejects(() => createAzureDevOpsCredential({ serviceConnectionId: 's', tenantId: 't', clientId: '', allowOutsidePipeline: true }));
+describe('(unit) next/testing', () => {
+    describe('createAzureDevOpsCredential', () => {
+        it('rejects when required initializer values are missing', async () => {
+            await expect(createAzureDevOpsCredential({ serviceConnectionId: '', tenantId: 't', clientId: 'c', allowOutsidePipeline: true })).to.be.rejected;
+            await expect(createAzureDevOpsCredential({ serviceConnectionId: 's', tenantId: '', clientId: 'c', allowOutsidePipeline: true })).to.be.rejected;
+            await expect(createAzureDevOpsCredential({ serviceConnectionId: 's', tenantId: 't', clientId: '', allowOutsidePipeline: true })).to.be.rejected;
         });
 
-        test('rejects when created outside of a pipeline', async () => {
+        it('rejects when created outside of a pipeline', async () => {
             const restore = withPipelineEnv({ agentBuildDirectory: undefined, systemAccessToken: 'system-token' });
             try {
-                await assert.rejects(() => createAzureDevOpsCredential(baseInit), /outside of an Azure DevOps pipeline/);
+                await expect(createAzureDevOpsCredential(baseInit)).to.be.rejectedWith(/outside of an Azure DevOps pipeline/);
             } finally {
                 restore();
             }
         });
 
-        test('rejects when no system access token is available', async () => {
+        it('rejects when no system access token is available', async () => {
             const restore = withPipelineEnv({ agentBuildDirectory: 'agent', systemAccessToken: undefined });
             try {
-                await assert.rejects(() => createAzureDevOpsCredential(baseInit), /SYSTEM_ACCESSTOKEN/);
+                await expect(createAzureDevOpsCredential(baseInit)).to.be.rejectedWith(/SYSTEM_ACCESSTOKEN/);
             } finally {
                 restore();
             }
         });
 
-        test('returns an AzurePipelinesCredential when running in a pipeline', async () => {
+        it('returns an AzurePipelinesCredential when running in a pipeline', async () => {
             const restore = withPipelineEnv({ agentBuildDirectory: 'agent', systemAccessToken: 'system-token', systemOidcRequestUri: 'https://example.com/oidc' });
             try {
                 const credential = await createAzureDevOpsCredential(baseInit);
-                assert.strictEqual(credential.constructor.name, 'AzurePipelinesCredential');
-                assert.strictEqual(typeof credential.getToken, 'function');
+                expect(credential.constructor.name).to.equal('AzurePipelinesCredential');
+                expect(typeof credential.getToken).to.equal('function');
             } finally {
                 restore();
             }
         });
 
-        test('honors an explicit systemAccessToken and allowOutsidePipeline', async () => {
+        it('honors an explicit systemAccessToken and allowOutsidePipeline', async () => {
             const restore = withPipelineEnv({ agentBuildDirectory: undefined, systemAccessToken: undefined, systemOidcRequestUri: 'https://example.com/oidc' });
             try {
                 const credential = await createAzureDevOpsCredential({ ...baseInit, systemAccessToken: 'explicit-token', allowOutsidePipeline: true });
-                assert.strictEqual(credential.constructor.name, 'AzurePipelinesCredential');
+                expect(credential.constructor.name).to.equal('AzurePipelinesCredential');
             } finally {
                 restore();
             }

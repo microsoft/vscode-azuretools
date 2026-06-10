@@ -3,182 +3,182 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
+import { expect } from 'chai';
 import { CaselessMap } from '../../../../src/next/utils/map/CaselessMap';
 
-suite('(unit) CaselessMap', () => {
-    suite('set get delete has', () => {
-        test('set works case insensitively', () => {
+describe('(unit) CaselessMap', () => {
+    describe('set get delete has', () => {
+        it('set works case insensitively', () => {
             const map = new CaselessMap<string>();
 
             map.set('FooBar', 'value1');
-            assert.strictEqual(map.get('foobar'), 'value1', 'lowercase key should retrieve value');
-            assert.strictEqual(map.get('FOOBAR'), 'value1', 'uppercase key should retrieve value');
-            assert.strictEqual(map.get('FooBar'), 'value1', 'mixed case key should retrieve value');
-            assert.strictEqual(map.get('fOObAR'), 'value1', 'random case key should retrieve value');
+            expect(map.get('foobar'), 'lowercase key should retrieve value').to.equal('value1');
+            expect(map.get('FOOBAR'), 'uppercase key should retrieve value').to.equal('value1');
+            expect(map.get('FooBar'), 'mixed case key should retrieve value').to.equal('value1');
+            expect(map.get('fOObAR'), 'random case key should retrieve value').to.equal('value1');
         });
 
-        test('set overwrites existing value with different case', () => {
+        it('set overwrites existing value with different case', () => {
             const map = new CaselessMap<number>();
 
             map.set('Key', 1);
             map.set('KEY', 2);
             map.set('key', 3);
 
-            assert.strictEqual(map.size, 1, 'should only have one entry');
-            assert.strictEqual(map.get('KEY'), 3, 'should have latest value');
+            expect(map.size, 'should only have one entry').to.equal(1);
+            expect(map.get('KEY'), 'should have latest value').to.equal(3);
             // The key returned should be the most recent one set
-            assert.strictEqual(Array.from(map.keys())[0], 'key', 'should have latest key case');
+            expect(Array.from(map.keys())[0], 'should have latest key case').to.equal('key');
         });
 
-        test('key case is updated on each overwrite', () => {
+        it('key case is updated on each overwrite', () => {
             const map = new CaselessMap<string>();
 
             map.set('OriginalCase', 'value1');
-            assert.strictEqual(Array.from(map.keys())[0], 'OriginalCase', 'should preserve original case');
+            expect(Array.from(map.keys())[0], 'should preserve original case').to.equal('OriginalCase');
 
             map.set('ORIGINALCASE', 'value2');
-            assert.strictEqual(Array.from(map.keys())[0], 'ORIGINALCASE', 'should update to uppercase');
+            expect(Array.from(map.keys())[0], 'should update to uppercase').to.equal('ORIGINALCASE');
 
             map.set('originalcase', 'value3');
-            assert.strictEqual(Array.from(map.keys())[0], 'originalcase', 'should update to lowercase');
+            expect(Array.from(map.keys())[0], 'should update to lowercase').to.equal('originalcase');
 
             map.set('OrIgInAlCaSe', 'value4');
-            assert.strictEqual(Array.from(map.keys())[0], 'OrIgInAlCaSe', 'should update to mixed case');
+            expect(Array.from(map.keys())[0], 'should update to mixed case').to.equal('OrIgInAlCaSe');
 
             // Verify all return the same value
-            assert.strictEqual(map.get('OriginalCase'), 'value4');
-            assert.strictEqual(map.get('ORIGINALCASE'), 'value4');
-            assert.strictEqual(map.get('originalcase'), 'value4');
-            assert.strictEqual(map.get('OrIgInAlCaSe'), 'value4');
+            expect(map.get('OriginalCase')).to.equal('value4');
+            expect(map.get('ORIGINALCASE')).to.equal('value4');
+            expect(map.get('originalcase')).to.equal('value4');
+            expect(map.get('OrIgInAlCaSe')).to.equal('value4');
 
             // Verify size stayed at 1
-            assert.strictEqual(map.size, 1);
+            expect(map.size).to.equal(1);
         });
 
-        test('get returns undefined for non-existent key', () => {
+        it('get returns undefined for non-existent key', () => {
             const map = new CaselessMap<string>();
 
-            assert.strictEqual(map.get('nonexistent'), undefined);
-            assert.strictEqual(map.get(''), undefined);
+            expect(map.get('nonexistent')).to.equal(undefined);
+            expect(map.get('')).to.equal(undefined);
         });
 
-        test('has works case insensitively', () => {
+        it('has works case insensitively', () => {
             const map = new CaselessMap<string>();
 
             map.set('TestKey', 'value');
 
-            assert.strictEqual(map.has('testkey'), true);
-            assert.strictEqual(map.has('TESTKEY'), true);
-            assert.strictEqual(map.has('TestKey'), true);
-            assert.strictEqual(map.has('tEsTkEy'), true);
-            assert.strictEqual(map.has('nonexistent'), false);
+            expect(map.has('testkey')).to.equal(true);
+            expect(map.has('TESTKEY')).to.equal(true);
+            expect(map.has('TestKey')).to.equal(true);
+            expect(map.has('tEsTkEy')).to.equal(true);
+            expect(map.has('nonexistent')).to.equal(false);
         });
 
-        test('delete works case insensitively', () => {
+        it('delete works case insensitively', () => {
             const map = new CaselessMap<string>();
 
             map.set('DeleteMe', 'value');
-            assert.strictEqual(map.has('DeleteMe'), true);
+            expect(map.has('DeleteMe')).to.equal(true);
 
             const deleted = map.delete('deleteme');
-            assert.strictEqual(deleted, true, 'delete should return true');
-            assert.strictEqual(map.has('DeleteMe'), false, 'key should be gone');
-            assert.strictEqual(map.size, 0, 'size should be 0');
+            expect(deleted, 'delete should return true').to.equal(true);
+            expect(map.has('DeleteMe'), 'key should be gone').to.equal(false);
+            expect(map.size, 'size should be 0').to.equal(0);
         });
 
-        test('delete returns false for non-existent key', () => {
+        it('delete returns false for non-existent key', () => {
             const map = new CaselessMap<string>();
 
             const deleted = map.delete('nonexistent');
-            assert.strictEqual(deleted, false);
+            expect(deleted).to.equal(false);
         });
 
-        test('set returns this for chaining', () => {
+        it('set returns this for chaining', () => {
             const map = new CaselessMap<string>();
 
             const result = map.set('key1', 'value1').set('key2', 'value2').set('key3', 'value3');
 
-            assert.strictEqual(result, map, 'should return same instance');
-            assert.strictEqual(map.size, 3);
+            expect(result, 'should return same instance').to.equal(map);
+            expect(map.size).to.equal(3);
         });
 
-        test('handles empty string as key', () => {
+        it('handles empty string as key', () => {
             const map = new CaselessMap<string>();
 
             map.set('', 'empty');
-            assert.strictEqual(map.get(''), 'empty');
-            assert.strictEqual(map.has(''), true);
-            assert.strictEqual(map.delete(''), true);
-            assert.strictEqual(map.has(''), false);
+            expect(map.get('')).to.equal('empty');
+            expect(map.has('')).to.equal(true);
+            expect(map.delete('')).to.equal(true);
+            expect(map.has('')).to.equal(false);
         });
 
-        test('handles special characters in keys case insensitively', () => {
+        it('handles special characters in keys case insensitively', () => {
             const map = new CaselessMap<string>();
 
             map.set('Key-With_Special.Chars!', 'value');
-            assert.strictEqual(map.get('key-with_special.chars!'), 'value');
-            assert.strictEqual(map.get('KEY-WITH_SPECIAL.CHARS!'), 'value');
+            expect(map.get('key-with_special.chars!')).to.equal('value');
+            expect(map.get('KEY-WITH_SPECIAL.CHARS!')).to.equal('value');
         });
 
-        test('handles unicode characters case insensitively', () => {
+        it('handles unicode characters case insensitively', () => {
             const map = new CaselessMap<string>();
 
             map.set('Café', 'value');
-            assert.strictEqual(map.get('café'), 'value');
-            assert.strictEqual(map.get('CAFÉ'), 'value');
+            expect(map.get('café')).to.equal('value');
+            expect(map.get('CAFÉ')).to.equal('value');
         });
     });
 
-    suite('size', () => {
-        test('size is 0 for empty map', () => {
+    describe('size', () => {
+        it('size is 0 for empty map', () => {
             const map = new CaselessMap<string>();
-            assert.strictEqual(map.size, 0);
+            expect(map.size).to.equal(0);
         });
 
-        test('size increases with set', () => {
+        it('size increases with set', () => {
             const map = new CaselessMap<string>();
 
             map.set('key1', 'value1');
-            assert.strictEqual(map.size, 1);
+            expect(map.size).to.equal(1);
 
             map.set('key2', 'value2');
-            assert.strictEqual(map.size, 2);
+            expect(map.size).to.equal(2);
 
             map.set('key3', 'value3');
-            assert.strictEqual(map.size, 3);
+            expect(map.size).to.equal(3);
         });
 
-        test('size does not increase when overwriting', () => {
+        it('size does not increase when overwriting', () => {
             const map = new CaselessMap<string>();
 
             map.set('Key', 'value1');
-            assert.strictEqual(map.size, 1);
+            expect(map.size).to.equal(1);
 
             map.set('key', 'value2');
-            assert.strictEqual(map.size, 1, 'size should still be 1');
+            expect(map.size, 'size should still be 1').to.equal(1);
 
             map.set('KEY', 'value3');
-            assert.strictEqual(map.size, 1, 'size should still be 1');
+            expect(map.size, 'size should still be 1').to.equal(1);
         });
 
-        test('size decreases with delete', () => {
+        it('size decreases with delete', () => {
             const map = new CaselessMap<string>();
 
             map.set('key1', 'value1');
             map.set('key2', 'value2');
-            assert.strictEqual(map.size, 2);
+            expect(map.size).to.equal(2);
 
             map.delete('key1');
-            assert.strictEqual(map.size, 1);
+            expect(map.size).to.equal(1);
 
             map.delete('KEY2');
-            assert.strictEqual(map.size, 0);
+            expect(map.size).to.equal(0);
         });
     });
 
-    suite('iterators', () => {
-        test('keys() preserve original case', () => {
+    describe('iterators', () => {
+        it('keys() preserve original case', () => {
             const map = new CaselessMap<string>();
 
             map.set('FooBar', 'value1');
@@ -186,22 +186,22 @@ suite('(unit) CaselessMap', () => {
             map.set('ALLCAPS', 'value3');
 
             const keys = Array.from(map.keys()).sort();
-            assert.deepStrictEqual(keys, ['ALLCAPS', 'BazQux', 'FooBar']);
+            expect(keys).to.deep.equal(['ALLCAPS', 'BazQux', 'FooBar']);
         });
 
-        test('entries() keys preserve original case', () => {
+        it('entries() keys preserve original case', () => {
             const map = new CaselessMap<string>();
 
             map.set('MixedCase', 'value1');
             map.set('UPPERCASE', 'value2');
 
             const entries = Array.from(map.entries());
-            assert.strictEqual(entries.length, 2);
+            expect(entries.length).to.equal(2);
             const keys = entries.map(([key]) => key).sort();
-            assert.deepStrictEqual(keys, ['MixedCase', 'UPPERCASE']);
+            expect(keys).to.deep.equal(['MixedCase', 'UPPERCASE']);
         });
 
-        test('values() returns all values', () => {
+        it('values() returns all values', () => {
             const map = new CaselessMap<number>();
 
             map.set('key1', 1);
@@ -209,51 +209,51 @@ suite('(unit) CaselessMap', () => {
             map.set('key3', 3);
 
             const values = Array.from(map.values()).sort();
-            assert.deepStrictEqual(values, [1, 2, 3]);
+            expect(values).to.deep.equal([1, 2, 3]);
         });
 
-        test('Symbol.iterator keys preserve original case', () => {
+        it('Symbol.iterator keys preserve original case', () => {
             const map = new CaselessMap<string>();
 
             map.set('Key1', 'value1');
             map.set('Key2', 'value2');
 
             const entries = Array.from(map);
-            assert.strictEqual(entries.length, 2);
+            expect(entries.length).to.equal(2);
             const keys = entries.map(([key]) => key).sort();
-            assert.deepStrictEqual(keys, ['Key1', 'Key2']);
+            expect(keys).to.deep.equal(['Key1', 'Key2']);
         });
 
-        test('iterators work on empty map', () => {
+        it('iterators work on empty map', () => {
             const map = new CaselessMap<string>();
 
-            assert.deepStrictEqual(Array.from(map.keys()), []);
-            assert.deepStrictEqual(Array.from(map.values()), []);
-            assert.deepStrictEqual(Array.from(map.entries()), []);
-            assert.deepStrictEqual(Array.from(map), []);
+            expect(Array.from(map.keys())).to.deep.equal([]);
+            expect(Array.from(map.values())).to.deep.equal([]);
+            expect(Array.from(map.entries())).to.deep.equal([]);
+            expect(Array.from(map)).to.deep.equal([]);
         });
 
-        test('iterators reflect current state after modifications', () => {
+        it('iterators reflect current state after modifications', () => {
             const map = new CaselessMap<string>();
 
             map.set('key1', 'value1');
             map.set('key2', 'value2');
 
             let keys = Array.from(map.keys()).sort();
-            assert.deepStrictEqual(keys, ['key1', 'key2']);
+            expect(keys).to.deep.equal(['key1', 'key2']);
 
             map.delete('key1');
             keys = Array.from(map.keys());
-            assert.deepStrictEqual(keys, ['key2']);
+            expect(keys).to.deep.equal(['key2']);
 
             map.set('key3', 'value3');
             keys = Array.from(map.keys()).sort();
-            assert.deepStrictEqual(keys, ['key2', 'key3']);
+            expect(keys).to.deep.equal(['key2', 'key3']);
         });
     });
 
-    suite('forEach', () => {
-        test('forEach iterates over all entries', () => {
+    describe('forEach', () => {
+        it('forEach iterates over all entries', () => {
             const map = new CaselessMap<string>();
 
             map.set('key1', 'value1');
@@ -265,10 +265,10 @@ suite('(unit) CaselessMap', () => {
                 visited.push([key, value]);
             });
 
-            assert.strictEqual(visited.length, 3);
+            expect(visited.length).to.equal(3);
         });
 
-        test('forEach keys preserve original case', () => {
+        it('forEach keys preserve original case', () => {
             const map = new CaselessMap<string>();
 
             map.set('MixedCase', 'value1');
@@ -279,10 +279,10 @@ suite('(unit) CaselessMap', () => {
                 keys.push(key);
             });
 
-            assert.deepStrictEqual(keys.sort(), ['ALLCAPS', 'MixedCase']);
+            expect(keys.sort()).to.deep.equal(['ALLCAPS', 'MixedCase']);
         });
 
-        test('forEach respects thisArg', () => {
+        it('forEach respects thisArg', () => {
             const map = new CaselessMap<string>();
 
             map.set('key', 'value');
@@ -292,22 +292,22 @@ suite('(unit) CaselessMap', () => {
                 this.called = true;
             }, thisArg);
 
-            assert.strictEqual(thisArg.called, true);
+            expect(thisArg.called).to.equal(true);
         });
 
-        test('forEach receives correct parameters', () => {
+        it('forEach receives correct parameters', () => {
             const map = new CaselessMap<number>();
 
             map.set('TestKey', 42);
 
             map.forEach((value, key, mapArg) => {
-                assert.strictEqual(value, 42);
-                assert.strictEqual(key, 'TestKey');
-                assert.strictEqual(mapArg, map);
+                expect(value).to.equal(42);
+                expect(key).to.equal('TestKey');
+                expect(mapArg).to.equal(map);
             });
         });
 
-        test('forEach does nothing on empty map', () => {
+        it('forEach does nothing on empty map', () => {
             const map = new CaselessMap<string>();
 
             let called = false;
@@ -315,61 +315,61 @@ suite('(unit) CaselessMap', () => {
                 called = true;
             });
 
-            assert.strictEqual(called, false);
+            expect(called).to.equal(false);
         });
     });
 
-    suite('clear', () => {
-        test('clear removes all entries', () => {
+    describe('clear', () => {
+        it('clear removes all entries', () => {
             const map = new CaselessMap<string>();
 
             map.set('key1', 'value1');
             map.set('key2', 'value2');
             map.set('key3', 'value3');
 
-            assert.strictEqual(map.size, 3);
+            expect(map.size).to.equal(3);
 
             map.clear();
 
-            assert.strictEqual(map.size, 0);
-            assert.strictEqual(map.has('key1'), false);
-            assert.strictEqual(map.has('key2'), false);
-            assert.strictEqual(map.has('key3'), false);
-            assert.deepStrictEqual(Array.from(map.keys()), []);
+            expect(map.size).to.equal(0);
+            expect(map.has('key1')).to.equal(false);
+            expect(map.has('key2')).to.equal(false);
+            expect(map.has('key3')).to.equal(false);
+            expect(Array.from(map.keys())).to.deep.equal([]);
         });
 
-        test('clear on empty map does nothing', () => {
+        it('clear on empty map does nothing', () => {
             const map = new CaselessMap<string>();
 
             map.clear();
 
-            assert.strictEqual(map.size, 0);
+            expect(map.size).to.equal(0);
         });
 
-        test('map is usable after clear', () => {
+        it('map is usable after clear', () => {
             const map = new CaselessMap<string>();
 
             map.set('key1', 'value1');
             map.clear();
             map.set('key2', 'value2');
 
-            assert.strictEqual(map.size, 1);
-            assert.strictEqual(map.get('key2'), 'value2');
-            assert.strictEqual(map.has('key1'), false);
+            expect(map.size).to.equal(1);
+            expect(map.get('key2')).to.equal('value2');
+            expect(map.has('key1')).to.equal(false);
         });
     });
 
-    suite('Symbol.toStringTag', () => {
-        test('has correct toStringTag', () => {
+    describe('Symbol.toStringTag', () => {
+        it('has correct toStringTag', () => {
             const map = new CaselessMap<string>();
 
-            assert.strictEqual(map[Symbol.toStringTag], 'CaselessMap');
-            assert.strictEqual(Object.prototype.toString.call(map), '[object CaselessMap]');
+            expect(map[Symbol.toStringTag]).to.equal('CaselessMap');
+            expect(Object.prototype.toString.call(map)).to.equal('[object CaselessMap]');
         });
     });
 
-    suite('complex scenarios', () => {
-        test('handles multiple value types', () => {
+    describe('complex scenarios', () => {
+        it('handles multiple value types', () => {
             const map = new CaselessMap<string | number | boolean | object | null | undefined>();
 
             map.set('string', 'text');
@@ -379,15 +379,15 @@ suite('(unit) CaselessMap', () => {
             map.set('null', null);
             map.set('undefined', undefined);
 
-            assert.strictEqual(map.get('STRING'), 'text');
-            assert.strictEqual(map.get('NUMBER'), 42);
-            assert.strictEqual(map.get('BOOLEAN'), true);
-            assert.deepStrictEqual(map.get('OBJECT'), { nested: 'value' });
-            assert.strictEqual(map.get('NULL'), null);
-            assert.strictEqual(map.get('UNDEFINED'), undefined);
+            expect(map.get('STRING')).to.equal('text');
+            expect(map.get('NUMBER')).to.equal(42);
+            expect(map.get('BOOLEAN')).to.equal(true);
+            expect(map.get('OBJECT')).to.deep.equal({ nested: 'value' });
+            expect(map.get('NULL')).to.equal(null);
+            expect(map.get('UNDEFINED')).to.equal(undefined);
         });
 
-        test('stress test with many entries', () => {
+        it('stress test with many entries', () => {
             const map = new CaselessMap<number>();
             const count = 1000;
 
@@ -396,52 +396,52 @@ suite('(unit) CaselessMap', () => {
                 map.set(`Key${i}`, i);
             }
 
-            assert.strictEqual(map.size, count);
+            expect(map.size).to.equal(count);
 
             // Verify random access with different cases
-            assert.strictEqual(map.get('key500'), 500);
-            assert.strictEqual(map.get('KEY750'), 750);
-            assert.strictEqual(map.get('Key250'), 250);
+            expect(map.get('key500')).to.equal(500);
+            expect(map.get('KEY750')).to.equal(750);
+            expect(map.get('Key250')).to.equal(250);
 
             // Delete half
             for (let i = 0; i < count / 2; i++) {
                 map.delete(`KEY${i}`);
             }
 
-            assert.strictEqual(map.size, count / 2);
-            assert.strictEqual(map.has('key0'), false);
-            assert.strictEqual(map.has('key999'), true);
+            expect(map.size).to.equal(count / 2);
+            expect(map.has('key0')).to.equal(false);
+            expect(map.has('key999')).to.equal(true);
         });
 
-        test('preserves value references', () => {
+        it('preserves value references', () => {
             const map = new CaselessMap<{ value: number }>();
             const obj = { value: 42 };
 
             map.set('Key', obj);
 
             const retrieved = map.get('key');
-            assert.strictEqual(retrieved, obj, 'should be same reference');
+            expect(retrieved, 'should be same reference').to.equal(obj);
 
             // Modify through reference
-            retrieved.value = 100;
+            retrieved!.value = 100;
 
-            assert.strictEqual(map.get('KEY')?.value, 100);
+            expect(map.get('KEY')?.value).to.equal(100);
         });
 
-        test('independent instances do not interfere', () => {
+        it('independent instances do not interfere', () => {
             const map1 = new CaselessMap<string>();
             const map2 = new CaselessMap<string>();
 
             map1.set('key', 'value1');
             map2.set('key', 'value2');
 
-            assert.strictEqual(map1.get('key'), 'value1');
-            assert.strictEqual(map2.get('key'), 'value2');
+            expect(map1.get('key')).to.equal('value1');
+            expect(map2.get('key')).to.equal('value2');
 
             map1.delete('key');
 
-            assert.strictEqual(map1.has('key'), false);
-            assert.strictEqual(map2.has('key'), true);
+            expect(map1.has('key')).to.equal(false);
+            expect(map2.has('key')).to.equal(true);
         });
     });
 });

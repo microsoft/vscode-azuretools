@@ -59,8 +59,12 @@
     },
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
+        "@types/chai": "^5.2.3",
+        "@types/chai-as-promised": "^8.0.2",
         "@types/node": "22.x",
-        "@types/vscode": "1.106.0"
+        "@types/vscode": "1.106.0",
+        "chai": "^6.2.2",
+        "chai-as-promised": "^8.0.2"
     },
     "dependencies": {
         "@azure/arm-resources-subscriptions": "^3.0.0-beta.1",
@@ -74,7 +78,7 @@
         "tag": "alpha"
     },
     "mocha": {
-        "ui": "tdd",
+        "ui": "bdd",
         "node-option": [
             "experimental-transform-types",
             "disable-warning=ExperimentalWarning",

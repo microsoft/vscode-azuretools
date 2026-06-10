@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
+import { expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import type { AccessToken, GetTokenOptions, TokenCredential } from '@azure/core-auth';
 import type { HttpClient, PipelineRequest, PipelineResponse } from '@azure/core-rest-pipeline';
 import type * as vscode from 'vscode';
@@ -11,6 +12,8 @@ import { AzureSubscriptionProviderBase, type AzureSubscriptionProviderOptions } 
 import type { AzureAccount } from '../../src/next/contracts/AzureAccount';
 import { AzurePublicCloud } from '../../src/next/contracts/EnvironmentLike';
 import { isNotSignedInError } from '../../src/next/utils/NotSignedInError';
+
+use(chaiAsPromised);
 
 // #region Fakes
 
@@ -159,29 +162,30 @@ const testAccount = (id: string = 'account-1', label: string = 'user@contoso.com
 
 // #endregion
 
-suite('(unit) next/AzureSubscriptionProviderBase', () => {
-    suite('getAccounts', () => {
-        test('maps accounts and attaches the configured environment', async () => {
+describe('(unit) next/AzureSubscriptionProviderBase', () => {
+    describe('getAccounts', () => {
+        it('maps accounts and attaches the configured environment', async () => {
             const { vscode } = createFakeVsCode({ accounts: [testAccount()] });
             const provider = new TestSubscriptionProvider({ vscode });
 
             const accounts = await provider.getAccounts();
 
-            assert.strictEqual(accounts.length, 1);
-            assert.strictEqual(accounts[0].id, 'account-1');
-            assert.strictEqual(accounts[0].environment.name, 'AzureCloud');
+            expect(accounts.length).to.equal(1);
+            expect(accounts[0].id).to.equal('account-1');
+            expect(accounts[0].environment.name).to.equal('AzureCloud');
             provider.dispose();
         });
 
-        test('throws NotSignedInError when there are no accounts', async () => {
+        it('throws NotSignedInError when there are no accounts', async () => {
             const { vscode } = createFakeVsCode({ accounts: [] });
             const provider = new TestSubscriptionProvider({ vscode });
 
-            await assert.rejects(() => provider.getAccounts(), (err) => isNotSignedInError(err));
+            const error = await expect(provider.getAccounts()).to.be.rejected;
+            expect(isNotSignedInError(error)).to.equal(true);
             provider.dispose();
         });
 
-        test('resolves the sovereign (China) environment from configuration', async () => {
+        it('resolves the sovereign (China) environment from configuration', async () => {
             const { vscode } = createFakeVsCode({
                 accounts: [testAccount()],
                 configuration: { 'microsoft-sovereign-cloud': { environment: 'ChinaCloud' } },
@@ -189,103 +193,105 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
             const provider = new TestSubscriptionProvider({ vscode });
 
             const accounts = await provider.getAccounts();
-            assert.strictEqual(accounts[0].environment.name, 'AzureChinaCloud');
+            expect(accounts[0].environment.name).to.equal('AzureChinaCloud');
             provider.dispose();
         });
     });
 
-    suite('signIn', () => {
-        test('returns true when a session is acquired', async () => {
+    describe('signIn', () => {
+        it('returns true when a session is acquired', async () => {
             const { vscode } = createFakeVsCode({ session: { accessToken: 'tok' } });
             const provider = new TestSubscriptionProvider({ vscode });
 
-            assert.strictEqual(await provider.signIn(), true);
+            expect(await provider.signIn()).to.equal(true);
             provider.dispose();
         });
 
-        test('returns false when no session is acquired', async () => {
+        it('returns false when no session is acquired', async () => {
             const { vscode } = createFakeVsCode({ session: undefined });
             const provider = new TestSubscriptionProvider({ vscode });
 
-            assert.strictEqual(await provider.signIn(), false);
+            expect(await provider.signIn()).to.equal(false);
             provider.dispose();
         });
 
-        test('uses createIfNone for interactive sign-in and silent for non-interactive', async () => {
+        it('uses createIfNone for interactive sign-in and silent for non-interactive', async () => {
             const { vscode, getSessionCalls } = createFakeVsCode({ session: { accessToken: 'tok' } });
             const provider = new TestSubscriptionProvider({ vscode });
 
             await provider.signIn(undefined, { promptIfNeeded: true });
-            assert.strictEqual(getSessionCalls[0].options?.createIfNone, true);
+            expect(getSessionCalls[0].options?.createIfNone).to.equal(true);
 
             await provider.signIn(undefined, { promptIfNeeded: false });
-            assert.strictEqual(getSessionCalls[1].options?.silent, true);
+            expect(getSessionCalls[1].options?.silent).to.equal(true);
             provider.dispose();
         });
     });
 
-    suite('createCredentialForTenant', () => {
-        test('returns the credential from the factory, wrapped with provider policy', async () => {
+    describe('createCredentialForTenant', () => {
+        it('returns the credential from the factory, wrapped with provider policy', async () => {
             const { vscode } = createFakeVsCode();
             const provider = new TestCredentialProvider({ vscode, credentialFactory: () => fakeTokenCredential('factory-token') });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             const token = await credential.getToken('scope');
-            assert.strictEqual(token?.token, 'factory-token');
+            expect(token?.token).to.equal('factory-token');
             provider.dispose();
         });
 
-        test('throws when no credentialFactory was provided', () => {
+        it('throws when no credentialFactory was provided', () => {
             const { vscode } = createFakeVsCode();
             const provider = new TestCredentialProvider({ vscode });
 
-            assert.throws(() => provider.exposeCredential({ tenantId: 't1', account: testAccount() }));
+            expect(() => provider.exposeCredential({ tenantId: 't1', account: testAccount() })).to.throw();
             provider.dispose();
         });
 
-        test('throws NotSignedInError when the factory credential returns null for a silent token', async () => {
+        it('throws NotSignedInError when the factory credential returns null for a silent token', async () => {
             const { vscode } = createFakeVsCode();
             const provider = new TestCredentialProvider({ vscode, credentialFactory: () => nullTokenCredential() });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
-            await assert.rejects(() => credential.getToken('scope'), (err) => isNotSignedInError(err));
+            const error = await expect(credential.getToken('scope')).to.be.rejected;
+            expect(isNotSignedInError(error)).to.equal(true);
             provider.dispose();
         });
 
-        test('returns a token when the factory credential returns one', async () => {
+        it('returns a token when the factory credential returns one', async () => {
             const { vscode } = createFakeVsCode();
             const provider = new TestCredentialProvider({ vscode, credentialFactory: () => fakeTokenCredential('session-token') });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             const token = await credential.getToken('https://management.azure.com/.default');
-            assert.strictEqual(token?.token, 'session-token');
+            expect(token?.token).to.equal('session-token');
             provider.dispose();
         });
 
-        test('does NOT throw on a null result for a CAE claims request (lets the policy handle it)', async () => {
+        it('does NOT throw on a null result for a CAE claims request (lets the policy handle it)', async () => {
             const { vscode } = createFakeVsCode();
             const provider = new TestCredentialProvider({ vscode, credentialFactory: () => nullTokenCredential() });
 
             const credential = provider.exposeCredential({ tenantId: 't1', account: testAccount() });
             const token = await credential.getToken('scope', { claims: '{"access_token":{"foo":"bar"}}' });
-            assert.strictEqual(token, null);
+            expect(token).to.equal(null);
             provider.dispose();
         });
     });
 
-    suite('cancellation', () => {
-        test('throws the injected CancellationError when the token is already cancelled', async () => {
+    describe('cancellation', () => {
+        it('throws the injected CancellationError when the token is already cancelled', async () => {
             const { vscode } = createFakeVsCode({ accounts: [testAccount()] });
             const provider = new TestSubscriptionProvider({ vscode });
             const token = { isCancellationRequested: true, onCancellationRequested: () => ({ dispose: () => { /* noop */ } }) } as unknown as vscode.CancellationToken;
 
-            await assert.rejects(() => provider.getAccounts({ token }), (err) => err instanceof FakeCancellationError);
+            const error = await expect(provider.getAccounts({ token })).to.be.rejected;
+            expect(error).to.be.instanceOf(FakeCancellationError);
             provider.dispose();
         });
     });
 
-    suite('subscription listing (end-to-end through the SDK pipeline)', () => {
-        test('lists and maps subscriptions for a tenant', async () => {
+    describe('subscription listing (end-to-end through the SDK pipeline)', () => {
+        it('lists and maps subscriptions for a tenant', async () => {
             const { vscode } = createFakeVsCode();
             const { httpClient } = await createFakeHttpClient([
                 {
@@ -303,18 +309,18 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
 
             const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
 
-            assert.strictEqual(subs.length, 2);
-            assert.deepStrictEqual(subs.map(s => s.subscriptionId).sort(), ['sub-1', 'sub-2']);
-            assert.strictEqual(subs[0].account.id, 'account-1');
-            assert.strictEqual(subs[0].environment.name, 'AzureCloud');
-            assert.strictEqual(subs[0].isCustomCloud, false);
-            assert.ok(typeof subs[0].credential.getToken === 'function');
+            expect(subs.length).to.equal(2);
+            expect(subs.map(s => s.subscriptionId).sort()).to.deep.equal(['sub-1', 'sub-2']);
+            expect(subs[0].account.id).to.equal('account-1');
+            expect(subs[0].environment.name).to.equal('AzureCloud');
+            expect(subs[0].isCustomCloud).to.equal(false);
+            expect(typeof subs[0].credential.getToken === 'function').to.be.ok;
             // The new contract does not expose `authentication`.
-            assert.ok(!('authentication' in subs[0]));
+            expect(!('authentication' in subs[0])).to.be.ok;
             provider.dispose();
         });
 
-        test('lists tenants for an account', async () => {
+        it('lists tenants for an account', async () => {
             const { vscode } = createFakeVsCode();
             const { httpClient } = await createFakeHttpClient([
                 {
@@ -326,11 +332,11 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
             const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
 
             const tenants = await provider.getTenantsForAccount(testAccount());
-            assert.deepStrictEqual(tenants.map(t => t.tenantId).sort(), ['tenant-1', 'tenant-2']);
+            expect(tenants.map(t => t.tenantId).sort()).to.deep.equal(['tenant-1', 'tenant-2']);
             provider.dispose();
         });
 
-        test('retries with an interactive challenge token on a 401 WWW-Authenticate response', async () => {
+        it('retries with an interactive challenge token on a 401 WWW-Authenticate response', async () => {
             const { vscode, getSessionCalls } = createFakeVsCode({ session: { accessToken: 'challenge-token' } });
             const { httpClient, challengeCount } = await createFakeHttpClient(
                 [{ match: '/subscriptions', body: { value: [{ subscriptionId: 'sub-1', displayName: 'After Challenge', tenantId: 'tenant-1', state: 'Enabled' }] } }],
@@ -341,19 +347,19 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
 
             const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
 
-            assert.strictEqual(challengeCount(), 1, 'a challenge should have been issued once');
-            assert.strictEqual(subs.length, 1);
-            assert.strictEqual(subs[0].name, 'After Challenge');
+            expect(challengeCount(), 'a challenge should have been issued once').to.equal(1);
+            expect(subs.length).to.equal(1);
+            expect(subs[0].name).to.equal('After Challenge');
             // The interactive challenge handler should have called getSession with a challenge request.
             const challengeCall = getSessionCalls.find(c => typeof c.scopeListOrRequest === 'object' && !Array.isArray(c.scopeListOrRequest));
-            assert.ok(challengeCall, 'expected an interactive getSession for the challenge');
-            assert.strictEqual(challengeCall.options?.createIfNone, true);
+            expect(challengeCall, 'expected an interactive getSession for the challenge').to.be.ok;
+            expect(challengeCall!.options?.createIfNone).to.equal(true);
             provider.dispose();
         });
     });
 
-    suite('getAvailableSubscriptions', () => {
-        test('aggregates and dedupes subscriptions across tenants', async () => {
+    describe('getAvailableSubscriptions', () => {
+        it('aggregates and dedupes subscriptions across tenants', async () => {
             const { vscode } = createFakeVsCode({ accounts: [testAccount()] });
             const { httpClient } = await createFakeHttpClient([
                 { match: '/tenants', body: { value: [{ tenantId: 'tenant-1', displayName: 'Contoso' }] } },
@@ -373,15 +379,15 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
 
             const subs = await provider.getAvailableSubscriptions();
             // Deduped to 2, sorted by name (Alpha before Beta).
-            assert.deepStrictEqual(subs.map(s => s.name), ['Alpha', 'Beta']);
+            expect(subs.map(s => s.name)).to.deep.equal(['Alpha', 'Beta']);
             provider.dispose();
         });
     });
 
     // Mirrors how a credential-first provider (e.g. the Azure DevOps provider) configures the base: an
     // injected credential factory plus a getTokenForChallenge override that refuses interactive challenges.
-    suite('credential-first provider (DevOps-style)', () => {
-        test('lists subscriptions end-to-end through the injected credential factory', async () => {
+    describe('credential-first provider (DevOps-style)', () => {
+        it('lists subscriptions end-to-end through the injected credential factory', async () => {
             const { vscode } = createFakeVsCode();
             const { httpClient } = await createFakeHttpClient([
                 { match: '/subscriptions', body: { value: [{ subscriptionId: 'sub-1', displayName: 'DevOps Sub', tenantId: 'tenant-1', state: 'Enabled' }] } },
@@ -391,14 +397,14 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
 
             const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
 
-            assert.strictEqual(subs.length, 1);
-            assert.strictEqual(subs[0].subscriptionId, 'sub-1');
-            assert.ok(typeof subs[0].credential.getToken === 'function');
-            assert.ok(!('authentication' in subs[0]));
+            expect(subs.length).to.equal(1);
+            expect(subs[0].subscriptionId).to.equal('sub-1');
+            expect(typeof subs[0].credential.getToken === 'function').to.be.ok;
+            expect(!('authentication' in subs[0])).to.be.ok;
             provider.dispose();
         });
 
-        test('fails listing when the server issues a challenge it cannot satisfy', async () => {
+        it('fails listing when the server issues a challenge it cannot satisfy', async () => {
             const { vscode } = createFakeVsCode();
             const { httpClient } = await createFakeHttpClient(
                 [{ match: '/subscriptions', body: { value: [] } }],
@@ -407,7 +413,7 @@ suite('(unit) next/AzureSubscriptionProviderBase', () => {
 
             const provider = new DevOpsStyleProvider({ vscode, credentialFactory: () => fakeTokenCredential('devops-token'), httpClient });
 
-            await assert.rejects(() => provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() }));
+            await expect(provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() })).to.be.rejected;
             provider.dispose();
         });
     });

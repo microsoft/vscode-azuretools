@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
+import { expect } from 'chai';
 import type * as vscode from 'vscode';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv, setConfiguredAzureEnv } from '../../src/next/configuredEnvironment';
 import { AzureChinaCloud, AzurePublicCloud, AzureUSGovernmentCloud, type EnvironmentLike } from '../../src/next/contracts/EnvironmentLike';
@@ -38,30 +38,30 @@ function createVsCode(settings: Record<string, unknown>) {
     return { vscode: vscodeShim, updates };
 }
 
-suite('(unit) configuredEnvironment', () => {
-    suite('getConfiguredAzureEnv', () => {
-        test('returns public cloud when unset', () => {
+describe('(unit) configuredEnvironment', () => {
+    describe('getConfiguredAzureEnv', () => {
+        it('returns public cloud when unset', () => {
             const { vscode } = createVsCode({});
             const result = getConfiguredAzureEnv(vscode);
-            assert.strictEqual(result.environment, AzurePublicCloud);
-            assert.strictEqual(result.isCustomCloud, false);
+            expect(result.environment).to.equal(AzurePublicCloud);
+            expect(result.isCustomCloud).to.equal(false);
         });
 
-        test('returns China cloud', () => {
+        it('returns China cloud', () => {
             const { vscode } = createVsCode({ environment: 'ChinaCloud' });
             const result = getConfiguredAzureEnv(vscode);
-            assert.strictEqual(result.environment, AzureChinaCloud);
-            assert.strictEqual(result.isCustomCloud, false);
+            expect(result.environment).to.equal(AzureChinaCloud);
+            expect(result.isCustomCloud).to.equal(false);
         });
 
-        test('returns US Government cloud', () => {
+        it('returns US Government cloud', () => {
             const { vscode } = createVsCode({ environment: 'USGovernment' });
             const result = getConfiguredAzureEnv(vscode);
-            assert.strictEqual(result.environment, AzureUSGovernmentCloud);
-            assert.strictEqual(result.isCustomCloud, false);
+            expect(result.environment).to.equal(AzureUSGovernmentCloud);
+            expect(result.isCustomCloud).to.equal(false);
         });
 
-        test('returns custom cloud and preserves optional fields', () => {
+        it('returns custom cloud and preserves optional fields', () => {
             const custom: EnvironmentLike = {
                 name: 'MyCloud',
                 portalUrl: 'https://portal.mycloud.example/',
@@ -74,60 +74,60 @@ suite('(unit) configuredEnvironment', () => {
             };
             const { vscode } = createVsCode({ environment: 'custom', customEnvironment: custom });
             const result = getConfiguredAzureEnv(vscode);
-            assert.strictEqual(result.isCustomCloud, true);
-            assert.deepStrictEqual(result.environment, custom);
-            assert.strictEqual(result.environment.storageEndpointSuffix, 'storage.mycloud.example');
-            assert.strictEqual(result.environment.keyVaultDnsSuffix, '.vault.mycloud.example');
+            expect(result.isCustomCloud).to.equal(true);
+            expect(result.environment).to.deep.equal(custom);
+            expect(result.environment.storageEndpointSuffix).to.equal('storage.mycloud.example');
+            expect(result.environment.keyVaultDnsSuffix).to.equal('.vault.mycloud.example');
         });
 
-        test('throws when custom cloud is selected but not configured', () => {
+        it('throws when custom cloud is selected but not configured', () => {
             const { vscode } = createVsCode({ environment: 'custom' });
-            assert.throws(() => getConfiguredAzureEnv(vscode), /custom cloud choice is not configured/);
+            expect(() => getConfiguredAzureEnv(vscode)).to.throw(/custom cloud choice is not configured/);
         });
     });
 
-    suite('getConfiguredAuthProviderId', () => {
-        test('returns microsoft for public cloud (unset)', () => {
+    describe('getConfiguredAuthProviderId', () => {
+        it('returns microsoft for public cloud (unset)', () => {
             const { vscode } = createVsCode({});
-            assert.strictEqual(getConfiguredAuthProviderId(vscode), 'microsoft');
+            expect(getConfiguredAuthProviderId(vscode)).to.equal('microsoft');
         });
 
-        test('returns sovereign for China cloud', () => {
+        it('returns sovereign for China cloud', () => {
             const { vscode } = createVsCode({ environment: 'ChinaCloud' });
-            assert.strictEqual(getConfiguredAuthProviderId(vscode), 'microsoft-sovereign-cloud');
+            expect(getConfiguredAuthProviderId(vscode)).to.equal('microsoft-sovereign-cloud');
         });
 
-        test('returns sovereign for custom cloud even if its name matches a built-in cloud', () => {
+        it('returns sovereign for custom cloud even if its name matches a built-in cloud', () => {
             const { vscode } = createVsCode({ environment: 'custom', customEnvironment: { ...AzurePublicCloud } });
             // The setting value is what matters, not the (potentially spoofed) environment name
-            assert.strictEqual(getConfiguredAuthProviderId(vscode), 'microsoft-sovereign-cloud');
+            expect(getConfiguredAuthProviderId(vscode)).to.equal('microsoft-sovereign-cloud');
         });
     });
 
-    suite('setConfiguredAzureEnv', () => {
-        test('clears the setting for public cloud (undefined)', async () => {
+    describe('setConfiguredAzureEnv', () => {
+        it('clears the setting for public cloud (undefined)', async () => {
             const { vscode, updates } = createVsCode({ environment: 'ChinaCloud' });
             await setConfiguredAzureEnv(vscode, undefined);
-            assert.deepStrictEqual(updates, [{ key: 'environment', value: undefined, target: 1 }]);
+            expect(updates).to.deep.equal([{ key: 'environment', value: undefined, target: 1 }]);
         });
 
-        test('clears the setting for explicit AzureCloud', async () => {
+        it('clears the setting for explicit AzureCloud', async () => {
             const { vscode, updates } = createVsCode({});
             await setConfiguredAzureEnv(vscode, 'AzureCloud');
-            assert.deepStrictEqual(updates, [{ key: 'environment', value: undefined, target: 1 }]);
+            expect(updates).to.deep.equal([{ key: 'environment', value: undefined, target: 1 }]);
         });
 
-        test('sets the setting for a sovereign cloud', async () => {
+        it('sets the setting for a sovereign cloud', async () => {
             const { vscode, updates } = createVsCode({});
             await setConfiguredAzureEnv(vscode, 'USGovernment');
-            assert.deepStrictEqual(updates, [{ key: 'environment', value: 'USGovernment', target: 1 }]);
+            expect(updates).to.deep.equal([{ key: 'environment', value: 'USGovernment', target: 1 }]);
         });
 
-        test('sets environment=custom and customEnvironment for a custom cloud', async () => {
+        it('sets environment=custom and customEnvironment for a custom cloud', async () => {
             const { vscode, updates } = createVsCode({});
             const custom = { ...AzureChinaCloud, name: 'MyCloud' };
             await setConfiguredAzureEnv(vscode, custom);
-            assert.deepStrictEqual(updates, [
+            expect(updates).to.deep.equal([
                 { key: 'environment', value: 'custom', target: 1 },
                 { key: 'customEnvironment', value: custom, target: 1 },
             ]);

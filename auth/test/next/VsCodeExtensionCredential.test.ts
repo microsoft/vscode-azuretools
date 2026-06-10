@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
+import { expect } from 'chai';
 import type * as vscode from 'vscode';
 import { AzureChinaCloud, AzurePublicCloud } from '../../src/next/contracts/EnvironmentLike';
 import { VsCodeExtensionCredential, type VsCodeExtensionCredentialOptions } from '../../src/next/VsCodeExtensionCredential';
@@ -32,143 +32,143 @@ function makeIdToken(payload: object, encoding: 'base64' | 'base64url' = 'base64
     return `header.${body}.signature`;
 }
 
-suite('(unit) VsCodeExtensionCredential', () => {
-    test('uses the "microsoft" provider for the default (public) cloud', async () => {
+describe('(unit) VsCodeExtensionCredential', () => {
+    it('uses the "microsoft" provider for the default (public) cloud', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken('https://management.azure.com/.default');
-        assert.strictEqual(calls.length, 1);
-        assert.strictEqual(calls[0].providerId, 'microsoft');
+        expect(calls.length).to.equal(1);
+        expect(calls[0].providerId).to.equal('microsoft');
     });
 
-    test('uses the sovereign provider for non-public environments', async () => {
+    it('uses the sovereign provider for non-public environments', async () => {
         const { credential, calls } = createCredential({ environment: AzureChinaCloud }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.strictEqual(calls[0].providerId, 'microsoft-sovereign-cloud');
+        expect(calls[0].providerId).to.equal('microsoft-sovereign-cloud');
     });
 
-    test('uses the "microsoft" provider when environment is explicitly public cloud', async () => {
+    it('uses the "microsoft" provider when environment is explicitly public cloud', async () => {
         const { credential, calls } = createCredential({ environment: AzurePublicCloud }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.strictEqual(calls[0].providerId, 'microsoft');
+        expect(calls[0].providerId).to.equal('microsoft');
     });
 
-    test('honors an explicit authProviderId over the environment', async () => {
+    it('honors an explicit authProviderId over the environment', async () => {
         const { credential, calls } = createCredential({ environment: AzurePublicCloud, authProviderId: 'my-custom-provider' }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.strictEqual(calls[0].providerId, 'my-custom-provider');
+        expect(calls[0].providerId).to.equal('my-custom-provider');
     });
 
-    test('passes a single scope through as an array', async () => {
+    it('passes a single scope through as an array', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.deepStrictEqual(calls[0].scopeListOrRequest, ['scope1']);
+        expect(calls[0].scopeListOrRequest).to.deep.equal(['scope1']);
     });
 
-    test('passes multiple scopes through as an array', async () => {
+    it('passes multiple scopes through as an array', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken(['scope1', 'scope2']);
-        assert.deepStrictEqual(calls[0].scopeListOrRequest, ['scope1', 'scope2']);
+        expect(calls[0].scopeListOrRequest).to.deep.equal(['scope1', 'scope2']);
     });
 
-    test('adds VSCODE_TENANT scope from constructor tenantId', async () => {
+    it('adds VSCODE_TENANT scope from constructor tenantId', async () => {
         const { credential, calls } = createCredential({ tenantId: 'my-tenant' }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.ok((calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:my-tenant'));
+        expect((calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:my-tenant')).to.be.ok;
     });
 
-    test('prefers GetTokenOptions.tenantId over constructor tenantId', async () => {
+    it('prefers GetTokenOptions.tenantId over constructor tenantId', async () => {
         const { credential, calls } = createCredential({ tenantId: 'default-tenant' }, { accessToken: 'tok' });
         await credential.getToken('scope1', { tenantId: 'override-tenant' });
-        assert.ok((calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:override-tenant'));
-        assert.ok(!(calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:default-tenant'));
+        expect((calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:override-tenant')).to.be.ok;
+        expect(!(calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:default-tenant')).to.be.ok;
     });
 
-    test('does not add a tenant scope when no tenantId is provided', async () => {
+    it('does not add a tenant scope when no tenantId is provided', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.ok(!(calls[0].scopeListOrRequest as string[]).some(s => s.startsWith('VSCODE_TENANT:')));
+        expect(!(calls[0].scopeListOrRequest as string[]).some(s => s.startsWith('VSCODE_TENANT:'))).to.be.ok;
     });
 
-    test('forwards sessionOptions for normal requests', async () => {
+    it('forwards sessionOptions for normal requests', async () => {
         const { credential, calls } = createCredential({ sessionOptions: { silent: true } }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        assert.deepStrictEqual(calls[0].options, { silent: true });
+        expect(calls[0].options).to.deep.equal({ silent: true });
     });
 
-    test('returns null when getSession returns undefined', async () => {
+    it('returns null when getSession returns undefined', async () => {
         const { credential } = createCredential();
         const result = await credential.getToken('scope1');
-        assert.strictEqual(result, null);
+        expect(result).to.equal(null);
     });
 
-    test('returns an AccessToken when a session is available', async () => {
+    it('returns an AccessToken when a session is available', async () => {
         const { credential } = createCredential(undefined, { accessToken: 'my-token-value' });
         const result = await credential.getToken('scope1');
-        assert.ok(result);
-        assert.strictEqual(result.token, 'my-token-value');
-        assert.strictEqual(result.tokenType, 'Bearer');
-        assert.strictEqual(result.expiresOnTimestamp, 0);
+        expect(result).to.be.ok;
+        expect(result!.token).to.equal('my-token-value');
+        expect(result!.tokenType).to.equal('Bearer');
+        expect(result!.expiresOnTimestamp).to.equal(0);
     });
 
-    test('extracts expiresOnTimestamp from the idToken exp claim', async () => {
+    it('extracts expiresOnTimestamp from the idToken exp claim', async () => {
         const exp = Math.floor(Date.now() / 1000) + 3600;
         const { credential } = createCredential(undefined, { accessToken: 'tok', idToken: makeIdToken({ exp }) });
         const result = await credential.getToken('scope1');
-        assert.strictEqual(result!.expiresOnTimestamp, exp * 1000);
+        expect(result!.expiresOnTimestamp).to.equal(exp * 1000);
     });
 
-    test('sets refreshAfterTimestamp to ~2/3 of remaining lifetime', async () => {
+    it('sets refreshAfterTimestamp to ~2/3 of remaining lifetime', async () => {
         const now = Date.now();
         const exp = Math.floor(now / 1000) + 3600;
         const { credential } = createCredential(undefined, { accessToken: 'tok', idToken: makeIdToken({ exp }) });
         const result = await credential.getToken('scope1');
         const expectedRefresh = now + Math.floor((exp * 1000 - now) * 2 / 3);
-        assert.ok(Math.abs(result!.refreshAfterTimestamp! - expectedRefresh) < 2000);
+        expect(Math.abs(result!.refreshAfterTimestamp! - expectedRefresh) < 2000).to.be.ok;
     });
 
-    test('falls back to 0 when idToken is malformed', async () => {
+    it('falls back to 0 when idToken is malformed', async () => {
         const { credential } = createCredential(undefined, { accessToken: 'tok', idToken: 'not-a-jwt' });
         const result = await credential.getToken('scope1');
-        assert.strictEqual(result!.expiresOnTimestamp, 0);
-        assert.strictEqual(result!.refreshAfterTimestamp, 0);
+        expect(result!.expiresOnTimestamp).to.equal(0);
+        expect(result!.refreshAfterTimestamp).to.equal(0);
     });
 
-    test('decodes base64url-encoded idToken payloads', async () => {
+    it('decodes base64url-encoded idToken payloads', async () => {
         const exp = Math.floor(Date.now() / 1000) + 3600;
         const { credential } = createCredential(undefined, { accessToken: 'tok', idToken: makeIdToken({ exp }, 'base64url') });
         const result = await credential.getToken('scope1');
-        assert.strictEqual(result!.expiresOnTimestamp, exp * 1000);
+        expect(result!.expiresOnTimestamp).to.equal(exp * 1000);
     });
 
-    test('sets refreshAfterTimestamp to expiresOnTimestamp for an already-expired token', async () => {
+    it('sets refreshAfterTimestamp to expiresOnTimestamp for an already-expired token', async () => {
         const exp = Math.floor(Date.now() / 1000) - 60;
         const { credential } = createCredential(undefined, { accessToken: 'tok', idToken: makeIdToken({ exp }) });
         const result = await credential.getToken('scope1');
-        assert.strictEqual(result!.expiresOnTimestamp, exp * 1000);
-        assert.strictEqual(result!.refreshAfterTimestamp, exp * 1000);
+        expect(result!.expiresOnTimestamp).to.equal(exp * 1000);
+        expect(result!.refreshAfterTimestamp).to.equal(exp * 1000);
     });
 
-    suite('claims challenge (MFA / Conditional Access)', () => {
-        test('performs an interactive getSession with a reconstructed WWW-Authenticate request', async () => {
+    describe('claims challenge (MFA / Conditional Access)', () => {
+        it('performs an interactive getSession with a reconstructed WWW-Authenticate request', async () => {
             const { credential, calls } = createCredential(undefined, { accessToken: 'challenge-tok' });
             const claims = '{"access_token":{"foo":"bar"}}';
             await credential.getToken('scope1', { claims });
 
-            assert.strictEqual(calls.length, 1);
+            expect(calls.length).to.equal(1);
             const request = calls[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
-            assert.ok(typeof request === 'object' && 'wwwAuthenticate' in request, 'should send a challenge request');
-            assert.ok(request.wwwAuthenticate.includes('error="insufficient_claims"'));
+            expect(typeof request === 'object' && 'wwwAuthenticate' in request, 'should send a challenge request').to.be.ok;
+            expect(request.wwwAuthenticate.includes('error="insufficient_claims"')).to.be.ok;
             // The reconstructed header should carry the claims base64-encoded so VS Code can parse them
-            assert.ok(request.wwwAuthenticate.includes(Buffer.from(claims).toString('base64')));
-            assert.deepStrictEqual(request.fallbackScopes, ['scope1']);
-            assert.strictEqual(calls[0].options?.createIfNone, true, 'challenge sign-in must be interactive');
+            expect(request.wwwAuthenticate.includes(Buffer.from(claims).toString('base64'))).to.be.ok;
+            expect(request.fallbackScopes).to.deep.equal(['scope1']);
+            expect(calls[0].options?.createIfNone, 'challenge sign-in must be interactive').to.equal(true);
         });
 
-        test('includes the tenant scope in the challenge request fallback scopes', async () => {
+        it('includes the tenant scope in the challenge request fallback scopes', async () => {
             const { credential, calls } = createCredential({ tenantId: 'tid' }, { accessToken: 'tok' });
             await credential.getToken('scope1', { claims: '{}' });
             const request = calls[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
-            assert.ok(request.fallbackScopes!.includes('VSCODE_TENANT:tid'));
+            expect(request.fallbackScopes!.includes('VSCODE_TENANT:tid')).to.be.ok;
         });
     });
 });
