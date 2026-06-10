@@ -85,7 +85,7 @@ export function createAzureClient<T extends ServiceClient>(clientContext: Intern
     return client;
 }
 
-export function createAzureSubscriptionClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtSubscriptionClientType<T>): T {
+export function createAzureSubscriptionClient<T extends { pipeline: Pipeline }>(clientContext: InternalAzExtClientContext, clientType: types.AzExtSubscriptionClientType<T>): T {
     const context = parseClientContext(clientContext);
     const client = new clientType(context.credentials, {
         endpoint: context.environment.resourceManagerEndpointUrl
