@@ -267,7 +267,7 @@ extends:
     approverAliases: ${{ variables.npmReleaseApproverAliases }}
     gitHubServiceConnection: ${{ variables.gitHubServiceConnection }}
     releaseApprovalEnvironment: ${{ variables.npmReleaseApprovalEnvironment }}
-    # npmFeed: DevDiv/azcode # Also publish the package to an internal Azure Artifacts feed
+    # npmFeed: ${{ variables.npmFeed }} # Also publish the package to an internal Azure Artifacts feed
 ```
 
 ## Compliance Configuration
