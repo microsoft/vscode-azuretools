@@ -3,28 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from 'chai';
+import { mock } from 'node:test';
+import { expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import type * as vscode from 'vscode';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv, setConfiguredAzureEnv } from '../../src/next/configuredEnvironment';
 import { AzureChinaCloud, AzurePublicCloud, AzureUSGovernmentCloud, type EnvironmentLike } from '../../src/next/contracts/EnvironmentLike';
 
+use(chaiAsPromised);
+
 interface UpdateCall { key: string; value: unknown; target: unknown }
 
 function createVsCode(settings: Record<string, unknown>) {
-    const updates: UpdateCall[] = [];
+    const update = mock.fn((key: string, value: unknown, _target?: unknown) => {
+        if (value === undefined) {
+            settings[key] = undefined;
+        } else {
+            settings[key] = value;
+        }
+        return Promise.resolve();
+    });
+
     const vscodeShim = {
         workspace: {
             getConfiguration: (_section?: string) => ({
                 get: <T>(key: string, defaultValue?: T): T => (key in settings ? settings[key] as T : defaultValue as T),
-                update: (key: string, value: unknown, target: unknown) => {
-                    updates.push({ key, value, target });
-                    if (value === undefined) {
-                        settings[key] = undefined;
-                    } else {
-                        settings[key] = value;
-                    }
-                    return Promise.resolve();
-                },
+                update,
             }),
             onDidChangeConfiguration: () => ({ dispose: () => { /* noop */ } }),
         } as unknown as typeof vscode.workspace,
@@ -35,6 +39,10 @@ function createVsCode(settings: Record<string, unknown>) {
         } as unknown as typeof vscode.l10n,
         ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 } as unknown as typeof vscode.ConfigurationTarget,
     };
+
+    const updates = (): UpdateCall[] =>
+        update.mock.calls.map(c => ({ key: c.arguments[0], value: c.arguments[1], target: c.arguments[2] }));
+
     return { vscode: vscodeShim, updates };
 }
 
@@ -108,29 +116,34 @@ describe('(unit) configuredEnvironment', () => {
         it('clears the setting for public cloud (undefined)', async () => {
             const { vscode, updates } = createVsCode({ environment: 'ChinaCloud' });
             await setConfiguredAzureEnv(vscode, undefined);
-            expect(updates).to.deep.equal([{ key: 'environment', value: undefined, target: 1 }]);
+            expect(updates()).to.deep.equal([{ key: 'environment', value: undefined, target: 1 }]);
         });
 
         it('clears the setting for explicit AzureCloud', async () => {
             const { vscode, updates } = createVsCode({});
             await setConfiguredAzureEnv(vscode, 'AzureCloud');
-            expect(updates).to.deep.equal([{ key: 'environment', value: undefined, target: 1 }]);
+            expect(updates()).to.deep.equal([{ key: 'environment', value: undefined, target: 1 }]);
         });
 
         it('sets the setting for a sovereign cloud', async () => {
             const { vscode, updates } = createVsCode({});
             await setConfiguredAzureEnv(vscode, 'USGovernment');
-            expect(updates).to.deep.equal([{ key: 'environment', value: 'USGovernment', target: 1 }]);
+            expect(updates()).to.deep.equal([{ key: 'environment', value: 'USGovernment', target: 1 }]);
         });
 
         it('sets environment=custom and customEnvironment for a custom cloud', async () => {
             const { vscode, updates } = createVsCode({});
             const custom = { ...AzureChinaCloud, name: 'MyCloud' };
             await setConfiguredAzureEnv(vscode, custom);
-            expect(updates).to.deep.equal([
+            expect(updates()).to.deep.equal([
                 { key: 'environment', value: 'custom', target: 1 },
                 { key: 'customEnvironment', value: custom, target: 1 },
             ]);
+        });
+
+        it('throws for an invalid cloud value', async () => {
+            const { vscode } = createVsCode({});
+            await expect(setConfiguredAzureEnv(vscode, 42 as unknown as Parameters<typeof setConfiguredAzureEnv>[1])).to.be.rejectedWith(/Invalid cloud value/);
         });
     });
 });

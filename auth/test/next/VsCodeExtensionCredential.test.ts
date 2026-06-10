@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { mock } from 'node:test';
 import { expect } from 'chai';
 import type * as vscode from 'vscode';
 import { AzureChinaCloud, AzurePublicCloud } from '../../src/next/contracts/EnvironmentLike';
@@ -15,15 +16,16 @@ interface GetSessionCall {
 }
 
 function createCredential(options?: Partial<VsCodeExtensionCredentialOptions>, sessionResult?: Partial<vscode.AuthenticationSession>) {
-    const calls: GetSessionCall[] = [];
-    const authentication = {
-        getSession: (providerId: string, scopeListOrRequest: readonly string[] | vscode.AuthenticationWwwAuthenticateRequest, opts?: vscode.AuthenticationGetSessionOptions) => {
-            calls.push({ providerId, scopeListOrRequest, options: opts });
-            return Promise.resolve(sessionResult as vscode.AuthenticationSession | undefined);
-        },
-    } as unknown as VsCodeExtensionCredentialOptions['authentication'];
+    const getSession = mock.fn(
+        (_providerId: string, _scopeListOrRequest: readonly string[] | vscode.AuthenticationWwwAuthenticateRequest, _opts?: vscode.AuthenticationGetSessionOptions) =>
+            Promise.resolve(sessionResult as vscode.AuthenticationSession | undefined),
+    );
+    const authentication = { getSession } as unknown as VsCodeExtensionCredentialOptions['authentication'];
 
     const credential = new VsCodeExtensionCredential({ authentication, ...options });
+    const calls = (): GetSessionCall[] =>
+        getSession.mock.calls.map(c => ({ providerId: c.arguments[0], scopeListOrRequest: c.arguments[1], options: c.arguments[2] }));
+
     return { credential, calls };
 }
 
@@ -36,63 +38,63 @@ describe('(unit) VsCodeExtensionCredential', () => {
     it('uses the "microsoft" provider for the default (public) cloud', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken('https://management.azure.com/.default');
-        expect(calls.length).to.equal(1);
-        expect(calls[0].providerId).to.equal('microsoft');
+        expect(calls().length).to.equal(1);
+        expect(calls()[0].providerId).to.equal('microsoft');
     });
 
     it('uses the sovereign provider for non-public environments', async () => {
         const { credential, calls } = createCredential({ environment: AzureChinaCloud }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect(calls[0].providerId).to.equal('microsoft-sovereign-cloud');
+        expect(calls()[0].providerId).to.equal('microsoft-sovereign-cloud');
     });
 
     it('uses the "microsoft" provider when environment is explicitly public cloud', async () => {
         const { credential, calls } = createCredential({ environment: AzurePublicCloud }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect(calls[0].providerId).to.equal('microsoft');
+        expect(calls()[0].providerId).to.equal('microsoft');
     });
 
     it('honors an explicit authProviderId over the environment', async () => {
         const { credential, calls } = createCredential({ environment: AzurePublicCloud, authProviderId: 'my-custom-provider' }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect(calls[0].providerId).to.equal('my-custom-provider');
+        expect(calls()[0].providerId).to.equal('my-custom-provider');
     });
 
     it('passes a single scope through as an array', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect(calls[0].scopeListOrRequest).to.deep.equal(['scope1']);
+        expect(calls()[0].scopeListOrRequest).to.deep.equal(['scope1']);
     });
 
     it('passes multiple scopes through as an array', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken(['scope1', 'scope2']);
-        expect(calls[0].scopeListOrRequest).to.deep.equal(['scope1', 'scope2']);
+        expect(calls()[0].scopeListOrRequest).to.deep.equal(['scope1', 'scope2']);
     });
 
     it('adds VSCODE_TENANT scope from constructor tenantId', async () => {
         const { credential, calls } = createCredential({ tenantId: 'my-tenant' }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect((calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:my-tenant')).to.be.ok;
+        expect((calls()[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:my-tenant')).to.be.ok;
     });
 
     it('prefers GetTokenOptions.tenantId over constructor tenantId', async () => {
         const { credential, calls } = createCredential({ tenantId: 'default-tenant' }, { accessToken: 'tok' });
         await credential.getToken('scope1', { tenantId: 'override-tenant' });
-        expect((calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:override-tenant')).to.be.ok;
-        expect(!(calls[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:default-tenant')).to.be.ok;
+        expect((calls()[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:override-tenant')).to.be.ok;
+        expect(!(calls()[0].scopeListOrRequest as string[]).includes('VSCODE_TENANT:default-tenant')).to.be.ok;
     });
 
     it('does not add a tenant scope when no tenantId is provided', async () => {
         const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect(!(calls[0].scopeListOrRequest as string[]).some(s => s.startsWith('VSCODE_TENANT:'))).to.be.ok;
+        expect(!(calls()[0].scopeListOrRequest as string[]).some(s => s.startsWith('VSCODE_TENANT:'))).to.be.ok;
     });
 
     it('forwards sessionOptions for normal requests', async () => {
         const { credential, calls } = createCredential({ sessionOptions: { silent: true } }, { accessToken: 'tok' });
         await credential.getToken('scope1');
-        expect(calls[0].options).to.deep.equal({ silent: true });
+        expect(calls()[0].options).to.deep.equal({ silent: true });
     });
 
     it('returns null when getSession returns undefined', async () => {
@@ -154,21 +156,44 @@ describe('(unit) VsCodeExtensionCredential', () => {
             const claims = '{"access_token":{"foo":"bar"}}';
             await credential.getToken('scope1', { claims });
 
-            expect(calls.length).to.equal(1);
-            const request = calls[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
+            expect(calls().length).to.equal(1);
+            const request = calls()[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
             expect(typeof request === 'object' && 'wwwAuthenticate' in request, 'should send a challenge request').to.be.ok;
             expect(request.wwwAuthenticate.includes('error="insufficient_claims"')).to.be.ok;
             // The reconstructed header should carry the claims base64-encoded so VS Code can parse them
             expect(request.wwwAuthenticate.includes(Buffer.from(claims).toString('base64'))).to.be.ok;
             expect(request.fallbackScopes).to.deep.equal(['scope1']);
-            expect(calls[0].options?.createIfNone, 'challenge sign-in must be interactive').to.equal(true);
+            expect(calls()[0].options?.createIfNone, 'challenge sign-in must be interactive').to.equal(true);
         });
 
         it('includes the tenant scope in the challenge request fallback scopes', async () => {
             const { credential, calls } = createCredential({ tenantId: 'tid' }, { accessToken: 'tok' });
             await credential.getToken('scope1', { claims: '{}' });
-            const request = calls[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
+            const request = calls()[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
             expect(request.fallbackScopes!.includes('VSCODE_TENANT:tid')).to.be.ok;
+        });
+    });
+
+    describe('logging', () => {
+        function createLogger() {
+            const info = mock.fn((_m: string) => { /* noop */ });
+            const logger = { info } as unknown as VsCodeExtensionCredentialOptions['logger'];
+            return { logger, infos: () => info.mock.calls.map(c => c.arguments[0]) };
+        }
+
+        it('logs the token lifecycle for a normal (non-challenge) request', async () => {
+            const { logger, infos } = createLogger();
+            const { credential } = createCredential({ logger }, { accessToken: 'tok' });
+            await credential.getToken('scope1');
+            expect(infos().some(m => m.includes('getToken start'))).to.be.ok;
+            expect(infos().some(m => m.includes('token acquired'))).to.be.ok;
+        });
+
+        it('logs the challenge path when claims are supplied', async () => {
+            const { logger, infos } = createLogger();
+            const { credential } = createCredential({ logger }, { accessToken: 'tok' });
+            await credential.getToken('scope1', { claims: '{}' });
+            expect(infos().some(m => m.includes('getToken challenge'))).to.be.ok;
         });
     });
 });

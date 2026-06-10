@@ -3,15 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { mock } from 'node:test';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import type { AccessToken, GetTokenOptions, TokenCredential } from '@azure/core-auth';
 import type { HttpClient, PipelineRequest, PipelineResponse } from '@azure/core-rest-pipeline';
+import type { AzureLogger } from '@azure/logger';
 import type * as vscode from 'vscode';
 import { AzureSubscriptionProviderBase, type AzureSubscriptionProviderOptions } from '../../src/next/AzureSubscriptionProviderBase';
 import type { AzureAccount } from '../../src/next/contracts/AzureAccount';
+import type { AzureSubscription } from '../../src/next/contracts/AzureSubscription';
+import type { RefreshSuggestedEvent, TenantIdAndAccount } from '../../src/next/contracts/AzureSubscriptionProvider';
+import type { AzureTenant } from '../../src/next/contracts/AzureTenant';
 import { AzurePublicCloud } from '../../src/next/contracts/EnvironmentLike';
-import { isNotSignedInError } from '../../src/next/utils/NotSignedInError';
+import { isNotSignedInError, NotSignedInError } from '../../src/next/utils/NotSignedInError';
 
 use(chaiAsPromised);
 
@@ -50,22 +55,27 @@ interface FakeVsCodeOptions {
     accounts?: vscode.AuthenticationSessionAccountInformation[];
     session?: Partial<vscode.AuthenticationSession> | undefined;
     configuration?: Record<string, Record<string, unknown>>;
+    getSessionError?: unknown;
 }
 
 function createFakeVsCode(options: FakeVsCodeOptions = {}) {
-    const getSessionCalls: GetSessionCall[] = [];
     const accounts = options.accounts ?? [];
     const config = options.configuration ?? {};
 
-    const vscodeShim = {
-        authentication: {
-            getAccounts: (_providerId: string) => Promise.resolve(accounts),
-            getSession: (providerId: string, scopeListOrRequest: readonly string[] | vscode.AuthenticationWwwAuthenticateRequest, opts?: vscode.AuthenticationGetSessionOptions) => {
-                getSessionCalls.push({ providerId, scopeListOrRequest, options: opts });
-                return Promise.resolve(options.session as vscode.AuthenticationSession | undefined);
-            },
-            onDidChangeSessions: (_listener: unknown) => ({ dispose: () => { /* noop */ } }),
+    const getAccounts = mock.fn((_providerId: string) => Promise.resolve(accounts));
+    const getSession = mock.fn(
+        (_providerId: string, _scopeListOrRequest: readonly string[] | vscode.AuthenticationWwwAuthenticateRequest, _opts?: vscode.AuthenticationGetSessionOptions) => {
+            if ('getSessionError' in options) {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- Tests intentionally reject with non-Error values to exercise error handling
+                return Promise.reject(options.getSessionError);
+            }
+            return Promise.resolve(options.session as vscode.AuthenticationSession | undefined);
         },
+    );
+    const onDidChangeSessions = mock.fn((_listener: (e: unknown) => unknown) => ({ dispose: () => { /* noop */ } }));
+
+    const vscodeShim = {
+        authentication: { getAccounts, getSession, onDidChangeSessions },
         workspace: {
             getConfiguration: (section?: string) => ({
                 get: <T>(key: string, defaultValue?: T): T => {
@@ -85,7 +95,14 @@ function createFakeVsCode(options: FakeVsCodeOptions = {}) {
         ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 },
     } as unknown as AzureSubscriptionProviderOptions['vscode'];
 
-    return { vscode: vscodeShim, getSessionCalls };
+    const getSessionCalls = (): GetSessionCall[] =>
+        getSession.mock.calls.map(c => ({ providerId: c.arguments[0], scopeListOrRequest: c.arguments[1], options: c.arguments[2] }));
+
+    return {
+        vscode: vscodeShim,
+        getSessionCalls,
+        fireSessionChange: (providerId: string) => onDidChangeSessions.mock.calls.at(-1)?.arguments[0]({ provider: { id: providerId } }),
+    };
 }
 
 function fakeTokenCredential(token: string = 'fake-token'): TokenCredential {
@@ -116,35 +133,34 @@ interface FakeHttpRoute {
  */
 async function createFakeHttpClient(routes: FakeHttpRoute[], challengeOnce?: { match: string; wwwAuthenticate: string }): Promise<{ httpClient: HttpClient; challengeCount: () => number }> {
     const { createHttpHeaders } = await import('@azure/core-rest-pipeline');
-    let challengesIssued = 0;
     const challengedUrls = new Set<string>();
 
-    const httpClient: HttpClient = {
-        sendRequest: (request: PipelineRequest): Promise<PipelineResponse> => {
-            const url = request.url;
+    const sendRequest = mock.fn((request: PipelineRequest): Promise<PipelineResponse> => {
+        const url = request.url;
 
-            if (challengeOnce && url.includes(challengeOnce.match) && !challengedUrls.has(url)) {
-                challengedUrls.add(url);
-                challengesIssued++;
-                return Promise.resolve({
-                    request,
-                    status: 401,
-                    headers: createHttpHeaders({ 'WWW-Authenticate': challengeOnce.wwwAuthenticate }),
-                    bodyAsText: '',
-                });
-            }
-
-            const route = routes.find(r => url.includes(r.match));
+        if (challengeOnce && url.includes(challengeOnce.match) && !challengedUrls.has(url)) {
+            challengedUrls.add(url);
             return Promise.resolve({
                 request,
-                status: route?.status ?? 200,
-                headers: createHttpHeaders({ 'content-type': 'application/json' }),
-                bodyAsText: JSON.stringify(route?.body ?? { value: [] }),
+                status: 401,
+                headers: createHttpHeaders({ 'WWW-Authenticate': challengeOnce.wwwAuthenticate }),
+                bodyAsText: '',
             });
-        },
-    };
+        }
 
-    return { httpClient, challengeCount: () => challengesIssued };
+        const route = routes.find(r => url.includes(r.match));
+        return Promise.resolve({
+            request,
+            status: route?.status ?? 200,
+            headers: createHttpHeaders({ 'content-type': 'application/json' }),
+            bodyAsText: JSON.stringify(route?.body ?? { value: [] }),
+        });
+    });
+
+    return {
+        httpClient: { sendRequest },
+        challengeCount: () => challengedUrls.size,
+    };
 }
 
 // A concrete subclass so we can instantiate the abstract base.
@@ -220,10 +236,10 @@ describe('(unit) next/AzureSubscriptionProviderBase', () => {
             const provider = new TestSubscriptionProvider({ vscode });
 
             await provider.signIn(undefined, { promptIfNeeded: true });
-            expect(getSessionCalls[0].options?.createIfNone).to.equal(true);
+            expect(getSessionCalls()[0].options?.createIfNone).to.equal(true);
 
             await provider.signIn(undefined, { promptIfNeeded: false });
-            expect(getSessionCalls[1].options?.silent).to.equal(true);
+            expect(getSessionCalls()[1].options?.silent).to.equal(true);
             provider.dispose();
         });
     });
@@ -351,7 +367,7 @@ describe('(unit) next/AzureSubscriptionProviderBase', () => {
             expect(subs.length).to.equal(1);
             expect(subs[0].name).to.equal('After Challenge');
             // The interactive challenge handler should have called getSession with a challenge request.
-            const challengeCall = getSessionCalls.find(c => typeof c.scopeListOrRequest === 'object' && !Array.isArray(c.scopeListOrRequest));
+            const challengeCall = getSessionCalls().find(c => typeof c.scopeListOrRequest === 'object' && !Array.isArray(c.scopeListOrRequest));
             expect(challengeCall, 'expected an interactive getSession for the challenge').to.be.ok;
             expect(challengeCall!.options?.createIfNone).to.equal(true);
             provider.dispose();
@@ -425,4 +441,349 @@ class TestCredentialProvider extends AzureSubscriptionProviderBase {
         return this.createCredentialForTenant(tenant);
     }
 }
+
+// Exposes the protected refresh/logging helpers so they can be tested in isolation.
+class HelperProvider extends AzureSubscriptionProviderBase {
+    public callSilence(): void { this.silenceRefreshEvents(); }
+    public callBeginInteractive(): void { this.beginInteractiveRefreshSuppression(); }
+    public callFire(evtArgs: RefreshSuggestedEvent): boolean { return this.fireRefreshSuggestedIfNeeded(evtArgs); }
+    public callLogForAccount(account: AzureAccount, message: string): void { this.logForAccount(account, message); }
+    public callLogForTenant(tenant: TenantIdAndAccount, message: string): void { this.logForTenant(tenant, message); }
+    public callErrorForAccount(account: AzureAccount, message: string, err: unknown): void { this.errorForAccount(account, message, err); }
+    public callErrorForTenant(tenant: TenantIdAndAccount, message: string, err: unknown): void { this.errorForTenant(tenant, message, err); }
+}
+
+// Overrides the data sources so the aggregation/skip/error logic in getAvailableSubscriptions can be
+// driven without the SDK.
+class ControllableProvider extends AzureSubscriptionProviderBase {
+    public accountsResult: AzureAccount[] = [];
+    public accountsError: Error | undefined;
+    public readonly tenantsByAccount = new Map<string, AzureTenant[] | Error>();
+    public readonly subsByTenant = new Map<string, AzureSubscription[] | Error>();
+
+    public override getAccounts(): Promise<AzureAccount[]> {
+        if (this.accountsError) {
+            return Promise.reject(this.accountsError);
+        }
+        return Promise.resolve(this.accountsResult);
+    }
+
+    public override getTenantsForAccount(account: AzureAccount): Promise<AzureTenant[]> {
+        const result = this.tenantsByAccount.get(account.id);
+        if (result instanceof Error) {
+            return Promise.reject(result);
+        }
+        return Promise.resolve(result ?? []);
+    }
+
+    public override getSubscriptionsForTenant(tenant: TenantIdAndAccount): Promise<AzureSubscription[]> {
+        const result = this.subsByTenant.get(`${tenant.account.id}/${tenant.tenantId}`);
+        if (result instanceof Error) {
+            return Promise.reject(result);
+        }
+        return Promise.resolve(result ?? []);
+    }
+}
+
+function createLogger() {
+    const info = mock.fn((_m: string) => { /* noop */ });
+    const error = mock.fn((_m: string) => { /* noop */ });
+    const logger = { info, error } as unknown as AzureLogger;
+    return {
+        logger,
+        infos: () => info.mock.calls.map(c => c.arguments[0]),
+        errors: () => error.mock.calls.map(c => c.arguments[0]),
+    };
+}
+
+const testTenant = (tenantId: string = 'tenant-1', accountId: string = 'account-1'): TenantIdAndAccount => ({ tenantId, account: testAccount(accountId) });
+const testAzureTenant = (tenantId: string, account: AzureAccount = testAccount()): AzureTenant => ({ tenantId, account });
+const testSubscription = (subscriptionId: string, tenant: TenantIdAndAccount): AzureSubscription => ({
+    name: subscriptionId,
+    subscriptionId,
+    tenantId: tenant.tenantId,
+    account: tenant.account,
+    environment: AzurePublicCloud,
+    isCustomCloud: false,
+    credential: fakeTokenCredential(),
+});
+
+describe('(unit) next/AzureSubscriptionProviderBase sign-in error remapping', () => {
+    it('rethrows a generic sign-in error unchanged', async () => {
+        const { vscode } = createFakeVsCode({ getSessionError: new Error('boom') });
+        const provider = new TestSubscriptionProvider({ vscode });
+
+        const error = await expect(provider.signIn({ tenantId: 't1' })).to.be.rejected;
+        expect((error as Error).message).to.equal('boom');
+        provider.dispose();
+    });
+
+    it('rethrows a non-Error rejection unchanged', async () => {
+        const { vscode } = createFakeVsCode({ getSessionError: 'string failure' });
+        const provider = new TestSubscriptionProvider({ vscode });
+
+        const error = await expect(provider.signIn({ tenantId: 't1' })).to.be.rejected;
+        expect(error).to.equal('string failure');
+        provider.dispose();
+    });
+
+    it('improves a native broker error and includes the tenant hint', async () => {
+        const { vscode } = createFakeVsCode({ getSessionError: new Error('platform_broker_error: opaque') });
+        const provider = new TestSubscriptionProvider({ vscode });
+
+        const error = await expect(provider.signIn({ tenantId: 'my-tenant' })).to.be.rejected;
+        expect((error as Error).message).to.match(/expired or is no longer valid/);
+        expect((error as Error).message).to.include('my-tenant');
+        provider.dispose();
+    });
+
+    it('improves a native broker error without a tenant hint when no tenant is given', async () => {
+        const { vscode } = createFakeVsCode({ getSessionError: new Error('platform_broker_error: opaque') });
+        const provider = new TestSubscriptionProvider({ vscode });
+
+        const error = await expect(provider.signIn()).to.be.rejected;
+        expect((error as Error).message).to.match(/expired or is no longer valid/);
+        expect((error as Error).message).to.not.include('for tenant');
+        provider.dispose();
+    });
+});
+
+describe('(unit) next/AzureSubscriptionProviderBase refresh suppression', () => {
+    it('debounces a second event fired immediately after the first', () => {
+        const { vscode } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode });
+
+        expect(provider.callFire({ reason: 'sessionChange' })).to.equal(true);
+        expect(provider.callFire({ reason: 'sessionChange' })).to.equal(false);
+        provider.dispose();
+    });
+
+    it('never suppresses a subscriptionFilterChange', () => {
+        const { vscode } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode });
+
+        provider.callFire({ reason: 'sessionChange' });
+        expect(provider.callFire({ reason: 'subscriptionFilterChange' })).to.equal(true);
+        provider.dispose();
+    });
+
+    it('suppresses events after beginInteractiveRefreshSuppression', () => {
+        const { vscode } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode });
+
+        provider.callBeginInteractive();
+        expect(provider.callFire({ reason: 'sessionChange' })).to.equal(false);
+        provider.dispose();
+    });
+
+    it('fires onRefreshSuggested when a matching session change occurs', () => {
+        const { vscode, fireSessionChange } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode });
+
+        const reasons: string[] = [];
+        provider.onRefreshSuggested(e => reasons.push(e.reason));
+
+        fireSessionChange('microsoft');
+
+        expect(reasons).to.deep.equal(['sessionChange']);
+        provider.dispose();
+    });
+
+    it('ignores session changes from a different auth provider', () => {
+        const { vscode, fireSessionChange } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode });
+
+        const reasons: string[] = [];
+        provider.onRefreshSuggested(e => reasons.push(e.reason));
+
+        fireSessionChange('some-other-provider');
+
+        expect(reasons).to.deep.equal([]);
+        provider.dispose();
+    });
+
+    it('clears suppression when the silence timer elapses', () => {
+        const originalSetTimeout = global.setTimeout;
+        const pending: Array<() => void> = [];
+        (global as unknown as { setTimeout: unknown }).setTimeout = ((cb: () => void) => { pending.push(cb); return 0; });
+
+        try {
+            const { vscode } = createFakeVsCode();
+            const provider = new HelperProvider({ vscode });
+
+            provider.callSilence();
+            expect(provider.callFire({ reason: 'sessionChange' }), 'suppressed while silenced').to.equal(false);
+
+            pending.forEach(cb => { cb(); }); // elapse the silence timer
+
+            expect(provider.callFire({ reason: 'sessionChange' }), 'fires after silence elapses').to.equal(true);
+            provider.dispose();
+        } finally {
+            global.setTimeout = originalSetTimeout;
+        }
+    });
+});
+
+describe('(unit) next/AzureSubscriptionProviderBase scoped logging helpers', () => {
+    it('logs account- and tenant-scoped messages', () => {
+        const { logger, infos } = createLogger();
+        const { vscode } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode, logger });
+
+        provider.callLogForAccount(testAccount(), 'account message');
+        provider.callLogForTenant(testTenant(), 'tenant message');
+
+        expect(infos().some(m => m.includes('[account:') && m.includes('account message'))).to.be.ok;
+        expect(infos().some(m => m.includes('[tenant:') && m.includes('tenant message'))).to.be.ok;
+        provider.dispose();
+    });
+
+    it('logs account- and tenant-scoped errors with the error detail', () => {
+        const { logger, errors } = createLogger();
+        const { vscode } = createFakeVsCode();
+        const provider = new HelperProvider({ vscode, logger });
+
+        provider.callErrorForAccount(testAccount(), 'account failed', new Error('account boom'));
+        provider.callErrorForTenant(testTenant(), 'tenant failed', new Error('tenant boom'));
+
+        expect(errors().some(m => m.includes('account failed'))).to.be.ok;
+        expect(errors().some(m => m.includes('account boom'))).to.be.ok;
+        expect(errors().some(m => m.includes('tenant failed'))).to.be.ok;
+        expect(errors().some(m => m.includes('tenant boom'))).to.be.ok;
+        provider.dispose();
+    });
+});
+
+describe('(unit) next/AzureSubscriptionProviderBase getAvailableSubscriptions resilience', () => {
+    it('stops processing tenants once maximumTenants is reached', async () => {
+        const { vscode } = createFakeVsCode();
+        const provider = new ControllableProvider({ vscode });
+        const account = testAccount();
+        const t1 = testTenant('tenant-1');
+        const t2 = testTenant('tenant-2');
+
+        provider.accountsResult = [account];
+        provider.tenantsByAccount.set(account.id, [testAzureTenant('tenant-1'), testAzureTenant('tenant-2')]);
+        provider.subsByTenant.set(`${account.id}/tenant-1`, [testSubscription('sub-1', t1)]);
+        provider.subsByTenant.set(`${account.id}/tenant-2`, [testSubscription('sub-2', t2)]);
+
+        const subs = await provider.getAvailableSubscriptions({ maximumTenants: 1, filter: false });
+
+        expect(subs.map(s => s.subscriptionId)).to.deep.equal(['sub-1']);
+        provider.dispose();
+    });
+
+    it('skips a tenant that is not signed in and logs the rest', async () => {
+        const { logger, infos } = createLogger();
+        const { vscode } = createFakeVsCode();
+        const provider = new ControllableProvider({ vscode, logger });
+        const account = testAccount();
+
+        provider.accountsResult = [account];
+        provider.tenantsByAccount.set(account.id, [testAzureTenant('tenant-1'), testAzureTenant('tenant-2')]);
+        provider.subsByTenant.set(`${account.id}/tenant-1`, new NotSignedInError('nope'));
+        provider.subsByTenant.set(`${account.id}/tenant-2`, [testSubscription('sub-2', testTenant('tenant-2'))]);
+
+        const subs = await provider.getAvailableSubscriptions({ filter: false });
+
+        expect(subs.map(s => s.subscriptionId)).to.deep.equal(['sub-2']);
+        expect(infos().some(m => m.includes('not signed in'))).to.be.ok;
+        provider.dispose();
+    });
+
+    it('skips a tenant that errors for another reason and logs the error', async () => {
+        const { logger, errors } = createLogger();
+        const { vscode } = createFakeVsCode();
+        const provider = new ControllableProvider({ vscode, logger });
+        const account = testAccount();
+
+        provider.accountsResult = [account];
+        provider.tenantsByAccount.set(account.id, [testAzureTenant('tenant-1'), testAzureTenant('tenant-2')]);
+        provider.subsByTenant.set(`${account.id}/tenant-1`, new Error('locked'));
+        provider.subsByTenant.set(`${account.id}/tenant-2`, [testSubscription('sub-2', testTenant('tenant-2'))]);
+
+        const subs = await provider.getAvailableSubscriptions({ filter: false });
+
+        expect(subs.map(s => s.subscriptionId)).to.deep.equal(['sub-2']);
+        expect(errors().some(m => m.includes('Skipping account+tenant due to error'))).to.be.ok;
+        provider.dispose();
+    });
+
+    it('skips an account whose tenant listing reports not signed in', async () => {
+        const { logger, infos } = createLogger();
+        const { vscode } = createFakeVsCode();
+        const provider = new ControllableProvider({ vscode, logger });
+        const good = testAccount('account-good');
+        const bad = testAccount('account-bad');
+
+        provider.accountsResult = [good, bad];
+        provider.tenantsByAccount.set(good.id, [testAzureTenant('tenant-1', good)]);
+        provider.tenantsByAccount.set(bad.id, new NotSignedInError('nope'));
+        provider.subsByTenant.set(`${good.id}/tenant-1`, [testSubscription('sub-1', testTenant('tenant-1', good.id))]);
+
+        const subs = await provider.getAvailableSubscriptions({ filter: false });
+
+        expect(subs.map(s => s.subscriptionId)).to.deep.equal(['sub-1']);
+        expect(infos().some(m => m.includes('not signed in'))).to.be.ok;
+        provider.dispose();
+    });
+
+    it('skips an account whose tenant listing errors and logs the error', async () => {
+        const { logger, errors } = createLogger();
+        const { vscode } = createFakeVsCode();
+        const provider = new ControllableProvider({ vscode, logger });
+        const good = testAccount('account-good');
+        const bad = testAccount('account-bad');
+
+        provider.accountsResult = [good, bad];
+        provider.tenantsByAccount.set(good.id, [testAzureTenant('tenant-1', good)]);
+        provider.tenantsByAccount.set(bad.id, new Error('account locked'));
+        provider.subsByTenant.set(`${good.id}/tenant-1`, [testSubscription('sub-1', testTenant('tenant-1', good.id))]);
+
+        const subs = await provider.getAvailableSubscriptions({ filter: false });
+
+        expect(subs.map(s => s.subscriptionId)).to.deep.equal(['sub-1']);
+        expect(errors().some(m => m.includes('Skipping account due to error'))).to.be.ok;
+        provider.dispose();
+    });
+
+    it('rethrows when account enumeration itself fails', async () => {
+        const { vscode } = createFakeVsCode();
+        const provider = new ControllableProvider({ vscode });
+        provider.accountsError = new NotSignedInError('not signed in');
+
+        const error = await expect(provider.getAvailableSubscriptions({ filter: false })).to.be.rejected;
+        expect(isNotSignedInError(error)).to.equal(true);
+        provider.dispose();
+    });
+});
+
+describe('(unit) next/AzureSubscriptionProviderBase getUnauthenticatedTenantsForAccount', () => {
+    it('returns tenants that have no silent session', async () => {
+        const { vscode } = createFakeVsCode({ session: undefined });
+        const { httpClient } = await createFakeHttpClient([
+            { match: '/tenants', body: { value: [{ tenantId: 'tenant-1', displayName: 'A' }, { tenantId: 'tenant-2', displayName: 'B' }] } },
+        ]);
+        const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
+
+        const tenants = await provider.getUnauthenticatedTenantsForAccount(testAccount());
+
+        expect(tenants.map(t => t.tenantId).sort()).to.deep.equal(['tenant-1', 'tenant-2']);
+        provider.dispose();
+    });
+
+    it('returns no tenants when every tenant has a session', async () => {
+        const { vscode } = createFakeVsCode({ session: { accessToken: 'tok' } });
+        const { httpClient } = await createFakeHttpClient([
+            { match: '/tenants', body: { value: [{ tenantId: 'tenant-1', displayName: 'A' }] } },
+        ]);
+        const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
+
+        const tenants = await provider.getUnauthenticatedTenantsForAccount(testAccount());
+
+        expect(tenants).to.deep.equal([]);
+        provider.dispose();
+    });
+});
+
 

@@ -297,5 +297,6 @@ out
 dist
 esm
 code-model-*
+coverage
 
 .DS_Store

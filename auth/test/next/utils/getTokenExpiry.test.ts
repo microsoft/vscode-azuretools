@@ -35,6 +35,14 @@ describe('(unit) getTokenExpiry()', () => {
         expect(refreshAfterTimestamp).to.equal(0);
     });
 
+    it('returns 0 when the payload segment is not valid JSON (parse throws)', () => {
+        // Well-formed JWT shape (3 segments) but the payload decodes to non-JSON text, so JSON.parse throws.
+        const payload = Buffer.from('not json at all').toString('base64url');
+        const { expiresOnTimestamp, refreshAfterTimestamp } = getTokenExpiry(`header.${payload}.signature`);
+        expect(expiresOnTimestamp).to.equal(0);
+        expect(refreshAfterTimestamp).to.equal(0);
+    });
+
     it('sets refreshAfterTimestamp to ~2/3 of remaining lifetime', () => {
         const now = Date.now();
         const exp = Math.floor(now / 1000) + 3600;
