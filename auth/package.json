@@ -78,7 +78,6 @@
         "tag": "alpha"
     },
     "mocha": {
-        "ui": "bdd",
         "node-option": [
             "experimental-transform-types",
             "disable-warning=ExperimentalWarning",
