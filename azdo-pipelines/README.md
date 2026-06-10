@@ -203,6 +203,8 @@ This template releases an NPM package via ESRP.
 | `releaseApprovalEnvironment` | string  | `""`                  | AzDO environment for release approval              |
 | `feedBaseUrl`                | string  | `""`                  | Azure Artifacts feed base URL for an internal NPM mirror; when set, the package is also published here after the ESRP publish succeeds (same-org feeds authenticate with the build identity) |
 
+> **Note:** When `feedBaseUrl` is set, authentication to a same-org Azure Artifacts feed is automatic (no service connection needed), but **publish permission is not granted automatically**. The pipeline's build identity must be added to the feed as a **Feed Publisher (Contributor)**; otherwise `npm publish` fails with a `403`. In Azure DevOps, go to **Artifacts → (your feed) → ⚙ Feed settings → Permissions → Add users/groups** and grant **Feed Publisher (Contributor)** to the build service identity that runs the release — typically `{Project} Build Service ({org})` for a project-scoped feed (or `Project Collection Build Service ({org})` if collection-scoped). If you're unsure which identity to grant, the `403` error from a first run names the exact account that was denied.
+
 ### Required Build Artifacts
 
 The build pipeline must produce the following artifacts for NPM release:
