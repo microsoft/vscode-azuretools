@@ -29,14 +29,8 @@ parameters:
 
   # Azure Artifacts feed for an internal NPM mirror (e.g. FeedName or ProjectName/FeedName).
   # When set, the package is also published to this feed after the ESRP publish to npmjs.org succeeds.
+  # Same-org feeds authenticate with the build identity, so no service connection is needed.
   - name: npmFeed
-    type: string
-    default: ""
-
-  # (Optional) Service connection used to authenticate to the internal NPM feed.
-  # Only needed for feeds outside the current organization; same-org Azure Artifacts
-  # feeds authenticate with the build identity and require no service connection.
-  - name: npmReleaseServiceConnection
     type: string
     default: ""
 
@@ -150,9 +144,6 @@ extends:
                     condition: succeeded()
                     inputs:
                       workingFile: "$(tgzFolderName)/.npmrc"
-                      # Same-org feeds use the build identity; supply a service connection only for external/cross-org feeds
-                      ${{ if ne(parameters.npmReleaseServiceConnection, '') }}:
-                        customEndpoint: ${{ parameters.npmReleaseServiceConnection }}
 
                   - pwsh: |
                       npm publish "$(tgzFileName)" --userconfig "$(tgzFolderName)/.npmrc" --ignore-scripts
