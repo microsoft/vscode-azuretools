@@ -130,15 +130,14 @@ extends:
                       workingDirectory: $(tgzFolderName)
                       feedBaseUrl: ${{ parameters.feedBaseUrl }}
 
-                  - pwsh: |
-                      npm publish "$(tgzFileName)" --userconfig "$(tgzFolderName)/.npmrc" --ignore-scripts
-                      if ($LASTEXITCODE -ne 0) {
-                          Write-Error "Failed to publish package to internal feed."
-                          exit 1
-                      }
+                  - task: Npm@1
                     displayName: "👉 Publish NPM package to internal feed"
-                    workingDirectory: "$(tgzFolderName)"
-                    condition: succeeded()
+                    inputs:
+                      command: custom
+                      workingDir: "$(tgzFolderName)"
+                      # Publish the exact pre-built tarball, skipping lifecycle scripts; auth comes
+                      # from the .npmrc written/authenticated by write-npmrc-auth.yml above.
+                      customCommand: publish "$(tgzFileName)" --ignore-scripts
 
               # (Optional) Create a draft release on GitHub containing the package
               - ${{ if ne(parameters.gitHubServiceConnection, '') }}:
