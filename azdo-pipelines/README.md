@@ -201,7 +201,7 @@ This template releases an NPM package via ESRP.
 | `releasePool`                | object  | Windows MicroBuild pool | Pool for the release job                         |
 | `gitHubServiceConnection`    | string  | `""`                  | Service connection for creating GitHub releases    |
 | `releaseApprovalEnvironment` | string  | `""`                  | AzDO environment for release approval              |
-| `npmFeed`                    | string  | `""`                  | Azure Artifacts feed for an internal NPM mirror; when set, the package is also published here after the ESRP publish succeeds (same-org feeds authenticate with the build identity) |
+| `feedBaseUrl`                | string  | `""`                  | Azure Artifacts feed base URL for an internal NPM mirror; when set, the package is also published here after the ESRP publish succeeds (same-org feeds authenticate with the build identity) |
 
 ### Required Build Artifacts
 
@@ -267,7 +267,7 @@ extends:
     approverAliases: ${{ variables.npmReleaseApproverAliases }}
     gitHubServiceConnection: ${{ variables.gitHubServiceConnection }}
     releaseApprovalEnvironment: ${{ variables.npmReleaseApprovalEnvironment }}
-    # npmFeed: ${{ variables.npmFeed }} # Also publish the package to an internal Azure Artifacts feed
+    # feedBaseUrl: ${{ variables.feedBaseUrl }} # Also publish the package to an internal Azure Artifacts feed
 ```
 
 ## Compliance Configuration

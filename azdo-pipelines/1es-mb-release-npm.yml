@@ -27,10 +27,11 @@ parameters:
   - name: approverAliases
     type: string
 
-  # Azure Artifacts feed for an internal NPM mirror (e.g. FeedName or ProjectName/FeedName).
+  # Base URL of an Azure Artifacts universal feed for an internal NPM mirror
+  # (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
   # When set, the package is also published to this feed after the ESRP publish to npmjs.org succeeds.
   # Same-org feeds authenticate with the build identity, so no service connection is needed.
-  - name: npmFeed
+  - name: feedBaseUrl
     type: string
     default: ""
 
@@ -122,12 +123,12 @@ extends:
               # (Optional) Publish the same tarball to an internal Azure Artifacts feed,
               # but only after the ESRP publish above has completed successfully.
               # NOTE: Template references / the npmAuthenticate task don't combine cleanly with
-              # `condition:` for dryRun, so dryRun and npmFeed remain compile-time checks here.
-              - ${{ if and(ne(parameters.npmFeed, ''), eq(parameters.dryRun, false)) }}:
+              # `condition:` for dryRun, so dryRun and feedBaseUrl remain compile-time checks here.
+              - ${{ if and(ne(parameters.feedBaseUrl, ''), eq(parameters.dryRun, false)) }}:
                   - template: azdo-pipelines/templates/write-npmrc-auth.yml@azExtTemplates
                     parameters:
                       workingDirectory: $(tgzFolderName)
-                      npmFeed: ${{ parameters.npmFeed }}
+                      feedBaseUrl: ${{ parameters.feedBaseUrl }}
                       respectCheckedInNpmrc: false
 
                   - pwsh: |

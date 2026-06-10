@@ -10,12 +10,6 @@ parameters:
     type: string
     default: ""
 
-  # Azure Artifacts feed name (e.g. FeedName or ProjectName/FeedName).
-  # When set (and feedBaseUrl is not), the registry is derived from System.CollectionUri.
-  - name: npmFeed
-    type: string
-    default: ""
-
   # When true, an existing (checked-in) .npmrc is used as-is instead of being overwritten.
   - name: respectCheckedInNpmrc
     type: boolean
@@ -27,21 +21,12 @@ steps:
   - pwsh: |
       $npmrcPath = Join-Path "${{ parameters.workingDirectory }}" ".npmrc"
       $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
-      $npmFeed = "${{ parameters.npmFeed }}"
 
       $registry = $null
       if ("${{ parameters.respectCheckedInNpmrc }}" -eq "True" -and (Test-Path $npmrcPath)) {
         Write-Host "Using checked-in .npmrc"
       } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
         $registry = "$feedBaseUrl/npm/registry/"
-      } elseif (-not [string]::IsNullOrWhiteSpace($npmFeed)) {
-        $collectionUri = "$(System.CollectionUri)".TrimEnd("/")
-        if ($npmFeed -like "*/*") {
-          $parts = $npmFeed -split "/", 2
-          $registry = "$collectionUri/$($parts[0])/_packaging/$($parts[1])/npm/registry/"
-        } else {
-          $registry = "$collectionUri/_packaging/$npmFeed/npm/registry/"
-        }
       }
 
       if ($registry) {
@@ -53,7 +38,7 @@ steps:
       if ($needsAuth) {
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
       } else {
-        Write-Host "No .npmrc and no feed configured; skipping registry configuration and authentication"
+        Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       }
     displayName: "👉 Configure npm/pnpm registry"
