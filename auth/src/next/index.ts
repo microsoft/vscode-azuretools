@@ -22,3 +22,4 @@ export * from './createChallengeSubscriptionClient';
 export * from './utils/dedupeSubscriptions';
 export * from './utils/getSessionFromVSCode';
 export * from './utils/NotSignedInError';
+export * from './utils/signInToTenant';
