@@ -3,9 +3,11 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import { execFileSync } from "child_process";
 import type { CopilotClient, CopilotSession } from "@github/copilot-sdk";
 import type * as vscode from "vscode";
 import { InvalidCopilotResponseError } from "../errors";
+import { ensureCopilotCliInstalled } from "./installCopilotCli";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
@@ -14,8 +16,29 @@ async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
     return await import("@github/copilot-sdk");
 }
 
-function getCopilotCliPath(): string {
-    return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
+/** @internal Exported for testing. */
+export function getCopilotCliPath(): string {
+    try {
+        return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
+    } catch {
+        // The platform-specific binary package is not present. Fall back to a globally
+        // installed `copilot` CLI on PATH.
+        // We must resolve the full path because CopilotClient uses existsSync()
+        // which does not search PATH for bare command names.
+        try {
+            const fullPath = execFileSync(
+                process.platform === 'win32' ? 'where' : 'which',
+                ['copilot'],
+                { encoding: 'utf-8' },
+            ).trim().split('\n')[0];
+            if (fullPath) {
+                return fullPath;
+            }
+        } catch {
+            // which/where failed, fall back to bare command name
+        }
+        return 'copilot';
+    }
 }
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
@@ -71,7 +94,7 @@ export async function doGithubCopilotInteraction(primaryPrompt: string, relevant
         mode: "immediate"
     });
 
-    if (!response || !response.data) {
+    if (!response?.data) {
         throw new InvalidCopilotResponseError();
     }
 
@@ -81,6 +104,11 @@ export async function doGithubCopilotInteraction(primaryPrompt: string, relevant
 export async function getCopilotSession(relevantContext?: string): Promise<CopilotSession> {
     if (session) {
         return session;
+    }
+
+    const installed = await ensureCopilotCliInstalled();
+    if (!installed) {
+        throw new InvalidCopilotResponseError();
     }
 
     const { CopilotClient } = await loadCopilotSdk();
@@ -116,7 +144,7 @@ export async function disposeCopilotSession(): Promise<void> {
 
 function extractSubscriptionIdFromContext(context: string): string | undefined {
     const regex = /https:\/\/management\.[^/]+\/subscriptions\/([0-9a-fA-F-]{36})/;
-    const match = context.match(regex);
+    const match = regex.exec(context);
     return match ? match[1] : undefined;
 }
 
