@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as vscode from 'vscode';
-import type { VsCodeAuthentication } from '../contracts/AzureAuthVsCode';
-import { isAuthenticationWwwAuthenticateRequest } from './isAuthenticationWwwAuthenticateRequest';
+import type { VsCodeAuthentication } from '../next/contracts/AzureAuthVsCode';
+import { isAuthenticationWwwAuthenticateRequest } from '../next/utils/isAuthenticationWwwAuthenticateRequest';
 
 function ensureEndingSlash(value: string): string {
     return value.endsWith('/') ? value : `${value}/`;
@@ -86,7 +86,7 @@ export interface GetSessionContext {
 }
 
 /**
- * A dependency-injected version of the legacy `getSessionFromVSCode`. Wraps
+ * A dependency-injected core for the legacy `getSessionFromVSCode`. Wraps
  * {@link vscode.authentication.getSession} and handles:
  * * Passing the configured auth provider id
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
@@ -98,6 +98,6 @@ export interface GetSessionContext {
  * @param options - see {@link vscode.AuthenticationGetSessionOptions}
  * @returns An authentication session if available, or undefined if there are no sessions
  */
-export async function getSessionFromVSCode(context: GetSessionContext, scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
+export async function getSessionFromVSCodeCore(context: GetSessionContext, scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
     return await context.authentication.getSession(context.authProviderId, formScopesArg(context.defaultScopeResource, scopeOrListOrRequest, tenantId), options);
 }

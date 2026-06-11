@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import { getSessionFromVSCode as nextGetSessionFromVSCode } from "../next/utils/getSessionFromVSCode";
+import { getSessionFromVSCodeCore } from "./getSessionFromVSCodeCore";
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./configuredAzureEnv";
 
 /**
@@ -12,8 +12,8 @@ import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./configured
  * * Passing the configured auth provider id
  * * Getting the list of scopes, adding the tenant id to the scope list if needed
  *
- * @remarks This is a thin wrapper around the dependency-injected `./next` `getSessionFromVSCode`, binding
- * it to the real `vscode` namespace and the configured auth provider id / default scope resource.
+ * @remarks This binds the dependency-injected {@link getSessionFromVSCodeCore} to the real `vscode`
+ * namespace and the configured auth provider id / default scope resource.
  *
  * @param scopeOrListOrRequest - top-level resource scopes (e.g. http://management.azure.com, http://storage.azure.com) or .default scopes. All resources/scopes will be normalized to the `.default` scope for each resource.
  * Use `vscode.AuthenticationWwwAuthenticateRequest` if you need to pass in a challenge (WWW-Authenticate header). Note: Use of `vscode.AuthenticationWwwAuthenticateRequest` requires VS Code 1.105.0 or newer.
@@ -22,7 +22,7 @@ import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from "./configured
  * @returns An authentication session if available, or undefined if there are no sessions
  */
 export async function getSessionFromVSCode(scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-    return await nextGetSessionFromVSCode(
+    return await getSessionFromVSCodeCore(
         {
             authentication: vscode.authentication,
             authProviderId: getConfiguredAuthProviderId(),

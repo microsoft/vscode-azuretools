@@ -11,6 +11,7 @@ import type { HttpClient, PipelineRequest, PipelineResponse } from '@azure/core-
 import type { AzureLogger } from '@azure/logger';
 import type * as vscode from 'vscode';
 import { AzureSubscriptionProviderBase, type AzureSubscriptionProviderOptions } from '../../src/next/AzureSubscriptionProviderBase';
+import { createVsCodeCredentialFactory } from '../../src/next/vscodeCredentialFactory';
 import type { AzureAccount } from '../../src/next/contracts/AzureAccount';
 import type { AzureSubscription } from '../../src/next/contracts/AzureSubscription';
 import type { RefreshSuggestedEvent, TenantIdAndAccount } from '../../src/next/contracts/AzureSubscriptionProvider';
@@ -163,8 +164,14 @@ async function createFakeHttpClient(routes: FakeHttpRoute[], challengeOnce?: { m
     };
 }
 
-// A concrete subclass so we can instantiate the abstract base.
-class TestSubscriptionProvider extends AzureSubscriptionProviderBase { }
+// A concrete subclass so we can instantiate the abstract base. Defaults to the real VS Code credential
+// factory (bound to the fake `vscode`) so sign-in/probe/challenge exercise the credential, matching how
+// the production providers are wired.
+class TestSubscriptionProvider extends AzureSubscriptionProviderBase {
+    public constructor(options: AzureSubscriptionProviderOptions) {
+        super({ credentialFactory: createVsCodeCredentialFactory(options.vscode), ...options });
+    }
+}
 
 // Mirrors the Azure DevOps provider: a credential-first source that cannot satisfy interactive challenges,
 // so it overrides getTokenForChallenge to throw rather than prompting via VS Code's auth API.
@@ -359,14 +366,15 @@ describe('(unit) next/AzureSubscriptionProviderBase', () => {
                 { match: '/subscriptions', wwwAuthenticate: 'Bearer realm="", authorization_uri="https://login.microsoftonline.com/common"' },
             );
 
-            const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
+            const provider = new TestSubscriptionProvider({ vscode, httpClient });
 
             const subs = await provider.getSubscriptionsForTenant({ tenantId: 'tenant-1', account: testAccount() });
 
             expect(challengeCount(), 'a challenge should have been issued once').to.equal(1);
             expect(subs.length).to.equal(1);
             expect(subs[0].name).to.equal('After Challenge');
-            // The interactive challenge handler should have called getSession with a challenge request.
+            // The interactive challenge handler should have driven the credential to call getSession with a
+            // challenge request (an object rather than a scope array).
             const challengeCall = getSessionCalls().find(c => typeof c.scopeListOrRequest === 'object' && !Array.isArray(c.scopeListOrRequest));
             expect(challengeCall, 'expected an interactive getSession for the challenge').to.be.ok;
             expect(challengeCall!.options?.createIfNone).to.equal(true);
@@ -764,7 +772,13 @@ describe('(unit) next/AzureSubscriptionProviderBase getUnauthenticatedTenantsFor
         const { httpClient } = await createFakeHttpClient([
             { match: '/tenants', body: { value: [{ tenantId: 'tenant-1', displayName: 'A' }, { tenantId: 'tenant-2', displayName: 'B' }] } },
         ]);
-        const provider = new TestSubscriptionProvider({ vscode, credentialFactory: () => fakeTokenCredential(), httpClient });
+        // The home-tenant credential (no tenantId) lists tenants successfully; the per-tenant probe
+        // credentials return null, so both tenants are reported as unauthenticated.
+        const provider = new TestSubscriptionProvider({
+            vscode,
+            credentialFactory: (t) => t.tenantId ? nullTokenCredential() : fakeTokenCredential(),
+            httpClient,
+        });
 
         const tenants = await provider.getUnauthenticatedTenantsForAccount(testAccount());
 

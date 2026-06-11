@@ -174,6 +174,60 @@ describe('(unit) VsCodeExtensionCredential', () => {
         });
     });
 
+    describe('per-call session options (VsCodeGetTokenOptions)', () => {
+        it('merges per-call createIfNone/silent/clearSessionPreference/account over constructor sessionOptions', async () => {
+            const account = { id: 'acct', label: 'user' } as vscode.AuthenticationSessionAccountInformation;
+            const { credential, calls } = createCredential(
+                { sessionOptions: { silent: true, createIfNone: false } },
+                { accessToken: 'tok' },
+            );
+            await credential.getToken('scope1', { createIfNone: true, silent: false, clearSessionPreference: true, account });
+
+            const opts = calls()[0].options!;
+            expect(opts.createIfNone).to.equal(true);
+            expect(opts.silent).to.equal(false);
+            expect(opts.clearSessionPreference).to.equal(true);
+            expect(opts.account).to.equal(account);
+        });
+
+        it('keeps constructor sessionOptions when no per-call options are supplied', async () => {
+            const { credential, calls } = createCredential(
+                { sessionOptions: { silent: true, createIfNone: false } },
+                { accessToken: 'tok' },
+            );
+            await credential.getToken('scope1');
+            expect(calls()[0].options?.silent).to.equal(true);
+            expect(calls()[0].options?.createIfNone).to.equal(false);
+        });
+
+        it('honors the SDK-requested scopes without `.default` normalization', async () => {
+            const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
+            await credential.getToken('https://storage.azure.com/user_impersonation');
+            expect(calls()[0].scopeListOrRequest).to.deep.equal(['https://storage.azure.com/user_impersonation']);
+        });
+    });
+
+    describe('raw WWW-Authenticate challenge', () => {
+        it('forces an interactive getSession with the supplied raw header', async () => {
+            const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
+            await credential.getToken('scope1', { wwwAuthenticate: 'Bearer realm="", error="interaction_required"', createIfNone: true });
+
+            const request = calls()[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
+            expect(typeof request === 'object' && 'wwwAuthenticate' in request).to.be.ok;
+            expect(request.wwwAuthenticate).to.equal('Bearer realm="", error="interaction_required"');
+            expect(calls()[0].options?.createIfNone).to.equal(true);
+            expect(calls()[0].options?.silent).to.equal(undefined);
+        });
+
+        it('uses explicit fallbackScopes for the challenge request when provided', async () => {
+            const { credential, calls } = createCredential(undefined, { accessToken: 'tok' });
+            await credential.getToken('scope1', { wwwAuthenticate: 'Bearer realm=""', fallbackScopes: ['https://management.azure.com/.default'] });
+            const request = calls()[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
+            expect(request.fallbackScopes).to.deep.equal(['https://management.azure.com/.default']);
+        });
+    });
+
+
     describe('logging', () => {
         function createLogger() {
             const info = mock.fn((_m: string) => { /* noop */ });

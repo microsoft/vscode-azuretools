@@ -45,9 +45,53 @@ export interface VsCodeExtensionCredentialOptions {
 
     /**
      * (Optional) Options forwarded to {@link vscode.authentication.getSession} for non-challenge requests.
-     * Controls session creation behavior (e.g. `silent`, `createIfNone`).
+     * Controls session creation behavior (e.g. `silent`, `createIfNone`). Per-call options passed to
+     * {@link VsCodeExtensionCredential.getToken} via {@link VsCodeGetTokenOptions} are merged on top of these.
      */
     readonly sessionOptions?: vscode.AuthenticationGetSessionOptions;
+}
+
+/**
+ * Options for {@link VsCodeExtensionCredential.getToken}. Extends the standard {@link GetTokenOptions} with
+ * VS Code authentication controls so callers (e.g. the subscription provider's sign-in and silent
+ * session-probing paths) can drive the underlying `getSession` behavior through the credential rather than
+ * talking to the VS Code authentication API directly.
+ */
+export interface VsCodeGetTokenOptions extends GetTokenOptions {
+    /**
+     * (Optional) Whether to create a new session (interactively) if none exists. Mutually exclusive with
+     * {@link silent}.
+     */
+    createIfNone?: boolean;
+
+    /**
+     * (Optional) Whether to acquire the session silently (no prompt). Mutually exclusive with
+     * {@link createIfNone}.
+     */
+    silent?: boolean;
+
+    /**
+     * (Optional) Whether to clear the user's session preference before acquiring the session.
+     */
+    clearSessionPreference?: boolean;
+
+    /**
+     * (Optional) The account to acquire the session for.
+     */
+    account?: vscode.AuthenticationSessionAccountInformation;
+
+    /**
+     * (Optional) A raw `WWW-Authenticate` header value describing a challenge (e.g. an MFA step-up) that
+     * must be satisfied interactively. When set, the credential forces an interactive `getSession`. Use
+     * {@link fallbackScopes} to supply scopes if VS Code cannot parse them from the header itself.
+     */
+    wwwAuthenticate?: string;
+
+    /**
+     * (Optional) Scopes to use when satisfying a {@link wwwAuthenticate} challenge if VS Code cannot parse
+     * scopes from the header itself.
+     */
+    fallbackScopes?: string[];
 }
 
 /**
@@ -68,9 +112,10 @@ export class VsCodeExtensionCredential implements TokenCredential {
 
     /**
      * Acquire an access token for the given scopes via the VS Code authentication API. Returns `null` when
-     * no session is available.
+     * no session is available. Honors the SDK-requested scopes as-is (only a `VSCODE_TENANT:<id>` scope is
+     * appended); it does not normalize or override them.
      */
-    public async getToken(scopes: string | string[], options?: GetTokenOptions): Promise<AccessToken | null> {
+    public async getToken(scopes: string | string[], options?: VsCodeGetTokenOptions): Promise<AccessToken | null> {
         const scopesArray = Array.isArray(scopes) ? [...scopes] : [scopes];
 
         const provider = this.getProviderId();
@@ -80,24 +125,42 @@ export class VsCodeExtensionCredential implements TokenCredential {
             scopesArray.push(`VSCODE_TENANT:${tenantId}`);
         }
 
-        // A "claims" challenge (e.g. Conditional Access / MFA step-up) must be satisfiable interactively,
-        // so reconstruct a WWW-Authenticate request from the claims and force an interactive sign-in.
-        const claims = options?.claims;
+        // Merge per-call session controls on top of the constructor-provided sessionOptions.
+        const sessionOptions: vscode.AuthenticationGetSessionOptions = { ...this.options.sessionOptions };
+        if (options?.account !== undefined) {
+            sessionOptions.account = options.account;
+        }
+        if (options?.clearSessionPreference !== undefined) {
+            sessionOptions.clearSessionPreference = options.clearSessionPreference;
+        }
+        if (options?.createIfNone !== undefined) {
+            sessionOptions.createIfNone = options.createIfNone;
+        }
+        if (options?.silent !== undefined) {
+            sessionOptions.silent = options.silent;
+        }
+
+        // A challenge (a CAE/MFA "claims" challenge surfaced by the SDK, or a raw `WWW-Authenticate` header
+        // forwarded for a non-CAE challenge) must be satisfiable interactively, so build a
+        // WWW-Authenticate request and force an interactive sign-in.
+        const wwwAuthenticate = options?.wwwAuthenticate ??
+            (options?.claims ? `Bearer realm="", error="insufficient_claims", claims="${Buffer.from(options.claims).toString('base64')}"` : undefined);
+
         let session: vscode.AuthenticationSession | undefined;
-        if (claims) {
+        if (wwwAuthenticate) {
             this.options.logger?.info(`[auth] getToken challenge provider=${provider} tenant=${tenantId ?? '<default>'} scopes=${JSON.stringify(scopesArray)}`);
             const request: vscode.AuthenticationWwwAuthenticateRequest = {
-                wwwAuthenticate: `Bearer realm="", error="insufficient_claims", claims="${Buffer.from(claims).toString('base64')}"`,
-                fallbackScopes: scopesArray,
+                wwwAuthenticate,
+                fallbackScopes: options?.fallbackScopes ? [...options.fallbackScopes] : scopesArray,
             };
             // `createIfNone` and `silent` are mutually exclusive, so drop any silent/non-interactive option
             // before forcing an interactive prompt to satisfy the challenge.
-            const interactiveOptions: vscode.AuthenticationGetSessionOptions = { ...this.options.sessionOptions, createIfNone: true };
+            const interactiveOptions: vscode.AuthenticationGetSessionOptions = { ...sessionOptions, createIfNone: true };
             delete interactiveOptions.silent;
             session = await this.options.authentication.getSession(provider, request, interactiveOptions);
         } else {
             this.options.logger?.info(`[auth] getToken start provider=${provider} tenant=${tenantId ?? '<default>'} scopes=${JSON.stringify(scopesArray)}`);
-            session = await this.options.authentication.getSession(provider, scopesArray, this.options.sessionOptions);
+            session = await this.options.authentication.getSession(provider, scopesArray, sessionOptions);
         }
 
         if (!session) {

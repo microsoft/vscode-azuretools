@@ -13,6 +13,7 @@ import { type BaseOptions, DefaultOptions, type GetAccountsOptions, type GetAvai
 import type { AzureTenant } from '../contracts/AzureTenant';
 import { createAzureLoggerForOutputChannel } from './azureLoggerForOutputChannel';
 import { buildLegacyAuthentication, projectAccount, projectSubscription, projectTenant } from './projectToLegacy';
+import { getSessionFromVSCode } from '../utils/getSessionFromVSCode';
 
 /**
  * Extension of {@link NextVSCodeAzureSubscriptionProvider} that adds caching of accounts, tenants, and
@@ -86,7 +87,7 @@ export class VSCodeAzureSubscriptionProvider extends NextVSCodeAzureSubscription
      */
     protected buildAuthentication(tenant: Partial<TenantIdAndAccount>): AzureAuthentication {
         return buildLegacyAuthentication(tenant, {
-            getSession: (scopeOrListOrRequest, tenantId, sessionOptions) => this.getSession(scopeOrListOrRequest, tenantId, sessionOptions),
+            getSession: (scopeOrListOrRequest, tenantId, sessionOptions) => getSessionFromVSCode(scopeOrListOrRequest, tenantId, sessionOptions),
             silenceRefreshEvents: () => { this.silenceRefreshEvents(); },
             beginInteractiveRefreshSuppression: () => { this.beginInteractiveRefreshSuppression(); },
         });

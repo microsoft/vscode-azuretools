@@ -6,7 +6,7 @@
 import { mock } from 'node:test';
 import { expect } from 'chai';
 import type * as vscode from 'vscode';
-import { getSessionFromVSCode, type GetSessionContext } from '../../../src/next/utils/getSessionFromVSCode';
+import { getSessionFromVSCodeCore, type GetSessionContext } from '../../src/utils/getSessionFromVSCodeCore';
 
 interface GetSessionCall {
     providerId: string;
@@ -35,22 +35,22 @@ function createContext() {
     return { context, calls };
 }
 
-describe('(unit) getSessionFromVSCode()', () => {
+describe('(unit) getSessionFromVSCodeCore()', () => {
     it('passes the configured auth provider id', async () => {
         const { context, calls } = createContext();
-        await getSessionFromVSCode(context, 'https://management.azure.com/');
+        await getSessionFromVSCodeCore(context, 'https://management.azure.com/');
         expect(calls()[0].providerId).to.equal('microsoft');
     });
 
     it('normalizes a single string scope to a `.default` array', async () => {
         const { context, calls } = createContext();
-        await getSessionFromVSCode(context, 'https://management.azure.com/');
+        await getSessionFromVSCodeCore(context, 'https://management.azure.com/');
         expect(calls()[0].scopeListOrRequest).to.deep.equal(['https://management.azure.com/.default']);
     });
 
     it('passes an array of scopes through, normalizing each to `.default`', async () => {
         const { context, calls } = createContext();
-        await getSessionFromVSCode(context, ['https://management.azure.com/', 'https://storage.azure.com/.default']);
+        await getSessionFromVSCodeCore(context, ['https://management.azure.com/', 'https://storage.azure.com/.default']);
         expect(calls()[0].scopeListOrRequest).to.deep.equal([
             'https://management.azure.com/.default',
             'https://storage.azure.com/.default',
@@ -59,13 +59,13 @@ describe('(unit) getSessionFromVSCode()', () => {
 
     it('falls back to the default scope resource when no scopes are supplied', async () => {
         const { context, calls } = createContext();
-        await getSessionFromVSCode(context);
+        await getSessionFromVSCodeCore(context);
         expect(calls()[0].scopeListOrRequest).to.deep.equal([`${DefaultScopeResource}/.default`]);
     });
 
     it('adds the VSCODE_TENANT scope when a tenantId is provided', async () => {
         const { context, calls } = createContext();
-        await getSessionFromVSCode(context, 'https://management.azure.com/', 'my-tenant');
+        await getSessionFromVSCodeCore(context, 'https://management.azure.com/', 'my-tenant');
         expect(calls()[0].scopeListOrRequest).to.deep.equal([
             'https://management.azure.com/.default',
             'VSCODE_TENANT:my-tenant',
@@ -78,7 +78,7 @@ describe('(unit) getSessionFromVSCode()', () => {
             wwwAuthenticate: 'Bearer realm=""',
             fallbackScopes: ['https://management.azure.com/'],
         };
-        await getSessionFromVSCode(context, request, 'tid');
+        await getSessionFromVSCodeCore(context, request, 'tid');
         const sent = calls()[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
         expect(sent.wwwAuthenticate).to.equal('Bearer realm=""');
         expect(sent.fallbackScopes).to.deep.equal([
@@ -90,7 +90,7 @@ describe('(unit) getSessionFromVSCode()', () => {
     it('uses the default scope resource for a challenge request with no fallbackScopes', async () => {
         const { context, calls } = createContext();
         const request: vscode.AuthenticationWwwAuthenticateRequest = { wwwAuthenticate: 'Bearer realm=""' };
-        await getSessionFromVSCode(context, request);
+        await getSessionFromVSCodeCore(context, request);
         const sent = calls()[0].scopeListOrRequest as vscode.AuthenticationWwwAuthenticateRequest;
         expect(sent.fallbackScopes).to.deep.equal([`${DefaultScopeResource}/.default`]);
     });

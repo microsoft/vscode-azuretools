@@ -23,8 +23,8 @@ import type { EnvironmentLike } from './contracts/EnvironmentLike';
 import { createChallengeSubscriptionClient } from './createChallengeSubscriptionClient';
 import { getConfiguredAuthProviderId, getConfiguredAzureEnv } from './configuredEnvironment';
 import { dedupeSubscriptions } from './utils/dedupeSubscriptions';
-import { getSessionFromVSCode } from './utils/getSessionFromVSCode';
 import { isNotSignedInError, NotSignedInError } from './utils/NotSignedInError';
+import type { VsCodeGetTokenOptions } from './VsCodeExtensionCredential';
 
 const EventDebounce = 2 * 1000; // 2 seconds minimum between `onRefreshSuggested` events
 const EventSilenceTime = 5 * 1000; // 5 seconds after sign-in to silence `onRefreshSuggested` events
@@ -161,18 +161,20 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.silenceRefreshEvents();
         }
 
-        let session: vscode.AuthenticationSession | undefined;
+        let token: import('@azure/core-auth').AccessToken | null;
         try {
-            session = await this.getSession(
-                undefined,
-                tenant?.tenantId,
-                {
-                    account: tenant?.account,
-                    clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
-                    createIfNone: prompt,
-                    silent: !prompt,
-                }
-            );
+            // Authenticate through the injected credential (the whole point of the credential abstraction)
+            // rather than talking to VS Code's auth API directly. The default management `.default` scope
+            // is used to acquire/probe the account+tenant session.
+            const credential = this.getCredentialForTenant(tenant ?? {});
+            const tokenOptions: VsCodeGetTokenOptions = {
+                tenantId: tenant?.tenantId,
+                account: tenant?.account,
+                clearSessionPreference: options.clearSessionPreference ?? DefaultSignInOptions.clearSessionPreference,
+                createIfNone: prompt,
+                silent: !prompt,
+            };
+            token = await credential.getToken(this.getManagementScope(), tokenOptions);
         } catch (err) {
             throw this.maybeImproveSignInError(err, tenant?.tenantId);
         }
@@ -182,7 +184,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
             this.silenceRefreshEvents();
         }
 
-        return !!session;
+        return !!token;
     }
 
     /**
@@ -311,17 +313,21 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 tenantListPromises.push(tenantListLimiter.queue(async () => {
                     this.throwIfCancelled(options.token);
                     this.silenceRefreshEvents();
-                    const session = await this.getSession(
-                        undefined,
-                        tenant.tenantId,
+                    // Probe for an existing session through the injected credential (silent, no prompt). A
+                    // `null` token means the tenant has no usable session, i.e. it is unauthenticated. Use
+                    // the raw credential so the `NotSignedInError` wrapping on the listing credential does
+                    // not turn a "no session" result into a throw.
+                    const token = await this.getCredentialForTenant({ tenantId: tenant.tenantId, account }).getToken(
+                        this.getManagementScope(),
                         {
+                            tenantId: tenant.tenantId,
                             account: account,
                             createIfNone: false,
                             silent: true,
-                        }
+                        } as VsCodeGetTokenOptions
                     );
 
-                    if (!session) {
+                    if (!token) {
                         unauthenticatedTenants.push(tenant);
                     }
                 }));
@@ -413,7 +419,7 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
 
         const credential = this.createCredentialForTenant(tenant);
 
-        const managementScope = `${ensureEndingSlash(environment.managementEndpointUrl)}.default`;
+        const managementScope = this.getManagementScope();
         const endpoint = ensureEndingSlash(environment.resourceManagerEndpointUrl);
         // For challenge fallback scopes, mirror the legacy `BearerChallengePolicy`, which derived the
         // fallback scope from the resource manager endpoint (used only if VS Code cannot parse scopes from
@@ -423,6 +429,9 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
         const context = createChallengeSubscriptionClient({
             credential,
             endpoint,
+            // This client lists ARM subscriptions/tenants, so the management `.default` scope is the
+            // correct (and intentional) scope here. Per-resource clients built by callers honor whatever
+            // scopes their SDK requests via the credential; we do not override those.
             scopes: [managementScope],
             logger: this.logger,
             httpClient: this.httpClient,
@@ -433,10 +442,18 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
     }
 
     /**
+     * The management `.default` scope for the configured cloud, used as the default scope for sign-in,
+     * silent session probing, and the ARM subscriptions/tenants listing client.
+     */
+    protected getManagementScope(): string {
+        return `${ensureEndingSlash(this.getEnvironment().environment.managementEndpointUrl)}.default`;
+    }
+
+    /**
      * Acquires a token to satisfy a `WWW-Authenticate` challenge (e.g. an MFA step-up) surfaced by ARM. The
-     * default implementation forwards the raw challenge to VS Code's auth API via an interactive
-     * `getSession` so the user can satisfy it. Subclasses whose auth source cannot satisfy interactive
-     * challenges (e.g. an Azure DevOps federated identity in a pipeline) may override this to throw.
+     * default implementation forwards the raw challenge to the injected credential, which performs an
+     * interactive sign-in so the user can satisfy it. Subclasses whose auth source cannot satisfy
+     * interactive challenges (e.g. an Azure DevOps federated identity in a pipeline) may override this to throw.
      *
      * @param wwwAuthenticate The raw `WWW-Authenticate` header value from the challenge.
      * @param fallbackScopes Scopes to use if VS Code cannot parse scopes from the header itself.
@@ -444,30 +461,48 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
      * @returns The access token that satisfies the challenge, or `undefined` if none could be acquired.
      */
     protected async getTokenForChallenge(wwwAuthenticate: string, fallbackScopes: string[], tenant: Partial<TenantIdAndAccount>): Promise<string | undefined> {
-        // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can satisfy it. This
-        // forwards the raw WWW-Authenticate header to VS Code's auth API via an interactive getSession.
+        // A challenge (e.g. an MFA step-up) must always be able to prompt so the user can satisfy it.
+        // Forward the raw WWW-Authenticate header through the credential, which forces an interactive
+        // sign-in. Use the raw credential so a cancelled prompt (null) is not turned into a
+        // NotSignedInError--let the bearer policy handle it.
         this.suppressRefreshSuggestedEvents = true;
-        const session = await this.getSession(
-            { wwwAuthenticate, fallbackScopes },
-            tenant.tenantId,
-            { createIfNone: true, account: tenant.account },
-        );
-        this.silenceRefreshEvents();
-        return session?.accessToken;
+        try {
+            const token = await this.getCredentialForTenant(tenant).getToken(fallbackScopes, {
+                tenantId: tenant.tenantId,
+                account: tenant.account,
+                wwwAuthenticate,
+                fallbackScopes,
+                createIfNone: true,
+            } as VsCodeGetTokenOptions);
+            return token?.token;
+        } finally {
+            this.silenceRefreshEvents();
+        }
     }
 
     /**
-     * Creates the {@link TokenCredential} to use for the given account+tenant by invoking the configured
-     * {@link CredentialFactory} and wrapping the result with provider policy: refresh events are silenced
-     * around token acquisition, and an unavailable silent session throws a {@link NotSignedInError}
+     * Creates the raw {@link TokenCredential} for the given account+tenant by invoking the configured
+     * {@link CredentialFactory}, without the provider policy wrapping applied by
+     * {@link createCredentialForTenant}. Used for sign-in, silent session probing, and challenge handling,
+     * where a `null`/missing token must be observable rather than thrown. Subclasses that don't supply a
+     * factory must override this method (and/or {@link createCredentialForTenant}).
+     */
+    protected getCredentialForTenant(tenant: Partial<TenantIdAndAccount>): TokenCredential {
+        if (!this.credentialFactory) {
+            throw new Error('No credentialFactory was provided. Pass one in the constructor options or override getCredentialForTenant().');
+        }
+
+        return this.credentialFactory(tenant);
+    }
+
+    /**
+     * Creates the {@link TokenCredential} to use for the given account+tenant by invoking
+     * {@link getCredentialForTenant} and wrapping the result with provider policy: refresh events are
+     * silenced around token acquisition, and an unavailable silent session throws a {@link NotSignedInError}
      * (preserving listing semantics). Subclasses that don't supply a factory must override this method.
      */
     protected createCredentialForTenant(tenant: Partial<TenantIdAndAccount>): TokenCredential {
-        if (!this.credentialFactory) {
-            throw new Error('No credentialFactory was provided. Pass one in the constructor options or override createCredentialForTenant().');
-        }
-
-        const inner = this.credentialFactory(tenant);
+        const inner = this.getCredentialForTenant(tenant);
 
         return {
             getToken: async (scopes, tokenOptions) => {
@@ -492,23 +527,6 @@ export abstract class AzureSubscriptionProviderBase implements AzureSubscription
                 return token;
             },
         };
-    }
-
-    /**
-     * Acquires a VS Code authentication session using the injected authentication namespace, the configured
-     * auth provider, and the configured environment's default scope resource.
-     */
-    protected getSession(scopeOrListOrRequest?: string | string[] | vscode.AuthenticationWwwAuthenticateRequest, tenantId?: string, options?: vscode.AuthenticationGetSessionOptions): Promise<vscode.AuthenticationSession | undefined> {
-        return getSessionFromVSCode(
-            {
-                authentication: this.vscode.authentication,
-                authProviderId: this.getAuthProviderId(),
-                defaultScopeResource: this.getEnvironment().environment.managementEndpointUrl,
-            },
-            scopeOrListOrRequest,
-            tenantId,
-            options,
-        );
     }
 
     /**
