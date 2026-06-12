@@ -104,7 +104,7 @@ When `packageManager: pnpm`:
 
 Builds install from an internal Azure Artifacts feed rather than public npm. `feedBaseUrl` is optional; there are two ways to point at the feed:
 
-- **Check in your own `.npmrc`** (at the working directory) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
+- **Check in your own `.npmrc`** (in the working directory, or at the repo root as a fallback) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
 - **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
 
 Either way, when an `.npmrc` is present the setup step runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the setup step simply skips registry configuration and authentication — the build environment's network isolation (not a feed guard) is what keeps builds off public npm.

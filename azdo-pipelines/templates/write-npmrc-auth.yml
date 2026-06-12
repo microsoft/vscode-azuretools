@@ -11,26 +11,30 @@ parameters:
     default: ""
 
 steps:
-  # Respect a checked-in .npmrc if present; otherwise write one from feedBaseUrl.
-  # Then signal whether authentication is needed.
+  # Respect a checked-in .npmrc if present (in the working directory, or falling back to
+  # the repo root); otherwise write one from feedBaseUrl. Then signal whether auth is needed
+  # and which file to authenticate.
   - pwsh: |
-      $npmrcPath = Join-Path "${{ parameters.workingDirectory }}" ".npmrc"
+      $workingNpmrc = Join-Path "${{ parameters.workingDirectory }}" ".npmrc"
+      $rootNpmrc = Join-Path "$(Build.SourcesDirectory)" ".npmrc"
       $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
 
-      $registry = $null
-      if (Test-Path $npmrcPath) {
-        Write-Host "Using checked-in .npmrc"
+      $npmrcPath = $null
+      if (Test-Path $workingNpmrc) {
+        Write-Host "Using checked-in .npmrc in working directory: $workingNpmrc"
+        $npmrcPath = $workingNpmrc
+      } elseif (Test-Path $rootNpmrc) {
+        Write-Host "Using checked-in .npmrc at repo root: $rootNpmrc"
+        $npmrcPath = $rootNpmrc
       } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
         $registry = "$feedBaseUrl/npm/registry/"
-      }
-
-      if ($registry) {
-        Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
+        Set-Content -Path $workingNpmrc -Value "registry=$registry`nalways-auth=true`n"
         Write-Host "Wrote .npmrc with registry $registry"
+        $npmrcPath = $workingNpmrc
       }
 
-      $needsAuth = Test-Path $npmrcPath
-      if ($needsAuth) {
+      if ($npmrcPath) {
+        Write-Host "##vso[task.setvariable variable=npmrcFile]$npmrcPath"
         Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
       } else {
         Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
@@ -42,4 +46,4 @@ steps:
     displayName: "👉 Authenticate NPM"
     condition: and(succeeded(), eq(variables['needsNpmAuth'], 'true'))
     inputs:
-      workingFile: ${{ parameters.workingDirectory }}/.npmrc
+      workingFile: $(npmrcFile)
