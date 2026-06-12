@@ -12,8 +12,8 @@ parameters:
 
 steps:
   # Respect a checked-in .npmrc if present (in the working directory, or falling back to
-  # the repo root); otherwise write one from feedBaseUrl. Then signal whether auth is needed
-  # and which file to authenticate.
+  # the repo root); otherwise write one from feedBaseUrl. Sets npmrcFile to the resolved
+  # path, which gates and targets the authentication step below.
   - pwsh: |
       $workingNpmrc = Join-Path "${{ parameters.workingDirectory }}" ".npmrc"
       $rootNpmrc = Join-Path "$(Build.SourcesDirectory)" ".npmrc"
@@ -35,15 +35,13 @@ steps:
 
       if ($npmrcPath) {
         Write-Host "##vso[task.setvariable variable=npmrcFile]$npmrcPath"
-        Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
       } else {
         Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
-        Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
       }
     displayName: "👉 Configure npm/pnpm registry"
 
   - task: npmAuthenticate@0
     displayName: "👉 Authenticate NPM"
-    condition: and(succeeded(), eq(variables['needsNpmAuth'], 'true'))
+    condition: and(succeeded(), ne(variables['npmrcFile'], ''))
     inputs:
       workingFile: $(npmrcFile)
