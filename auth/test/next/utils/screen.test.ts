@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from 'chai';
-import type { AzureAccount } from '../../../src/contracts/AzureAccount';
+import type { AzureAccount } from '../../../src/next/contracts/AzureAccount';
 import { screen } from '../../../src/next/utils/screen';
 
 describe('(unit) screen()', () => {

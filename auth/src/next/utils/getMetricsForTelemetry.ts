@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AzureSubscriptionProvider } from '../../contracts/AzureSubscriptionProvider';
+import type { AzureSubscriptionProvider } from '../contracts/AzureSubscriptionProvider';
 
 /**
  * Telemetry metrics about Azure authentication.
