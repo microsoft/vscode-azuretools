@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { ext } from './extensionVariables';
 import { WebviewBaseController } from './WebviewBaseController';
@@ -220,7 +221,23 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
 
     private async _handleCreateProject(template: IProjectTemplate, language: string, location: string): Promise<void> {
         try {
-            await this.createProject(template, language, location);
+            // An empty/non-absolute `location` (no folder open and none picked) would
+            // resolve against the process cwd and write to the drive root (EPERM).
+            // Prompt for a destination before handing off to the consumer's createProject.
+            let projectPath = location;
+            if (!projectPath || !path.isAbsolute(projectPath)) {
+                const selectedFolder = await this.browseFolder();
+                if (!selectedFolder) {
+                    // User dismissed the picker — return to the gallery silently.
+                    this.postMessageToWebview({ type: 'projectCreationFailed', error: '' });
+                    return;
+                }
+                projectPath = selectedFolder;
+                // Reflect the chosen folder in the webview's location field.
+                this.postMessageToWebview({ type: 'folderSelected', path: projectPath, source: 'template' });
+            }
+
+            await this.createProject(template, language, projectPath);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             this.postMessageToWebview({ type: 'projectCreationFailed', error: msg });
