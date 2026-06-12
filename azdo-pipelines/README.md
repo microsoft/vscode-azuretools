@@ -104,7 +104,7 @@ When `packageManager: pnpm`:
 
 Builds install from an internal Azure Artifacts feed rather than public npm. `feedBaseUrl` is optional; there are two ways to point at the feed:
 
-- **Check in your own `.npmrc`** (at the working directory) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
+- **Check in your own `.npmrc`** (in the working directory, or at the repo root as a fallback) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
 - **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
 
 Either way, when an `.npmrc` is present the setup step runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the setup step simply skips registry configuration and authentication — the build environment's network isolation (not a feed guard) is what keeps builds off public npm.
@@ -201,6 +201,9 @@ This template releases an NPM package via ESRP.
 | `releasePool`                | object  | Windows MicroBuild pool | Pool for the release job                         |
 | `gitHubServiceConnection`    | string  | `""`                  | Service connection for creating GitHub releases    |
 | `releaseApprovalEnvironment` | string  | `""`                  | AzDO environment for release approval              |
+| `feedBaseUrl`                | string  | `""`                  | Azure Artifacts feed base URL for an internal NPM mirror; when set, the package is also published here after the ESRP publish succeeds (same-org feeds authenticate with the build identity) |
+
+> **Note:** When `feedBaseUrl` is set, authentication to a same-org Azure Artifacts feed is automatic (no service connection needed), but **publish permission is not granted automatically**. The pipeline's build identity must be added to the feed as a **Feed Publisher (Contributor)**; otherwise `npm publish` fails with a `403`. In Azure DevOps, go to **Artifacts → (your feed) → ⚙ Feed settings → Permissions → Add users/groups** and grant **Feed Publisher (Contributor)** to the build service identity that runs the release — typically `{Project} Build Service ({org})` for a project-scoped feed (or `Project Collection Build Service ({org})` if collection-scoped). If you're unsure which identity to grant, the `403` error from a first run names the exact account that was denied.
 
 ### Required Build Artifacts
 
@@ -266,6 +269,7 @@ extends:
     approverAliases: ${{ variables.npmReleaseApproverAliases }}
     gitHubServiceConnection: ${{ variables.gitHubServiceConnection }}
     releaseApprovalEnvironment: ${{ variables.npmReleaseApprovalEnvironment }}
+    # feedBaseUrl: ${{ variables.feedBaseUrl }} # Also publish the package to an internal Azure Artifacts feed
 ```
 
 ## Compliance Configuration
