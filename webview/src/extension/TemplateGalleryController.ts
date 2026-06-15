@@ -221,19 +221,27 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
 
     private async _handleCreateProject(template: IProjectTemplate, language: string, location: string): Promise<void> {
         try {
-            // An empty/non-absolute `location` (no folder open and none picked) would
-            // resolve against the process cwd and write to the drive root (EPERM).
-            // Prompt for a destination before handing off to the consumer's createProject.
-            let projectPath = location;
+            let projectPath = location?.trim() ?? '';
+
+            // Resolve a relative location against the open workspace so the user's
+            // input is preserved instead of being discarded.
+            if (projectPath && !path.isAbsolute(projectPath)) {
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                if (workspaceFolder) {
+                    projectPath = path.join(workspaceFolder.uri.fsPath, projectPath);
+                }
+            }
+
+            // Prompt when there's still no usable absolute path, otherwise copying
+            // resolves against the process cwd and writes to the drive root (EPERM).
             if (!projectPath || !path.isAbsolute(projectPath)) {
                 const selectedFolder = await this.browseFolder();
                 if (!selectedFolder) {
-                    // User dismissed the picker — return to the gallery silently.
+                    // User dismissed the picker; return to the gallery silently.
                     this.postMessageToWebview({ type: 'projectCreationFailed', error: '' });
                     return;
                 }
                 projectPath = selectedFolder;
-                // Reflect the chosen folder in the webview's location field.
                 this.postMessageToWebview({ type: 'folderSelected', path: projectPath, source: 'template' });
             }
 
