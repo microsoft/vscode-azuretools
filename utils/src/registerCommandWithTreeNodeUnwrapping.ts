@@ -12,7 +12,7 @@ export function registerCommandWithTreeNodeUnwrapping<T>(commandId: string, tree
 }
 
 export function unwrapTreeNodeCommandCallback<T>(treeNodeCallback: TreeNodeCommandCallback<T>): TreeNodeCommandCallback<T> {
-    return async (context: IActionContext, ...args: unknown[]) => {
+    return (context: IActionContext, ...args: unknown[]) => {
         return treeNodeCallback(context, ...unwrapArgs<T>(args));
     };
 }

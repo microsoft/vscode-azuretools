@@ -51,7 +51,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                         }
                     } catch (e) {
                         const pe: types.IParsedError = parseError(e);
-                        reject(pe.message);
+                        reject(new Error(pe.message, { cause: e }));
                     }
 
                     inputBox.enabled = true;
@@ -101,9 +101,10 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
 
     options.ignoreFocusOut ??= true;
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- validateInput is a user-supplied callback that does not rely on `this`; captured before reassignment below
     const validateInput = options.validateInput;
     if (validateInput) {
-        options.validateInput = async (v): Promise<InputBoxValidationResult> => validOnTimeoutOrException(async () => await validateInput(v));
+        options.validateInput = (v): Thenable<InputBoxValidationResult> => validOnTimeoutOrException(() => Promise.resolve(validateInput(v)));
     }
 
     if (!inputBox.password) {

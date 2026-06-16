@@ -61,7 +61,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                     } catch (e: unknown) {
                         const error = parseError(e);
                         // if we fail to set telemetry properties, we don't want to throw an error and prevent the command from executing
-                        ext.outputChannel.appendLine(`registerCommand: Failed to set telemetry properties: ${e}`);
+                        ext.outputChannel.appendLine(`registerCommand: Failed to set telemetry properties: ${String(e)}`);
                         context.telemetry.properties.telemetryError = error.message;
                     }
                 }

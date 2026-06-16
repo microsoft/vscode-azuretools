@@ -15,7 +15,7 @@ suite('registerHandler', () => {
 
     let disposables: Disposable[] = [];
     teardown(() => {
-        disposables.forEach(d => d.dispose());
+        disposables.forEach(d => { d.dispose(); });
         disposables = [];
     });
 

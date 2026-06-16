@@ -85,6 +85,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- callWithTelemetryAndErrorHandling returns children unless it throws
             return (await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
@@ -196,8 +197,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return <T><unknown>treeItem;
     }
 
-    public async getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
-        return treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent;
+    public getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
+        return Promise.resolve(treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent);
     }
 
     public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IFindTreeItemContext): Promise<T | undefined> {

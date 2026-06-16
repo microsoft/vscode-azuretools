@@ -81,7 +81,7 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
             throw error;
         }
 
-        throw new Error(maskValue(parsedError.message, valueToMask));
+        throw new Error(maskValue(parsedError.message, valueToMask), { cause: error });
     }
 }
 

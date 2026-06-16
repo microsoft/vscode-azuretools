@@ -9,6 +9,7 @@ import type * as types from '../index';
 import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, TestInput, TestUserInput } from '../src';
 
 interface ITestWizardContext extends types.IActionContext {
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- index signature must also allow IActionContext properties
     [key: string]: unknown | boolean | string | undefined;
 }
 
@@ -86,8 +87,9 @@ class ExecuteStep2 extends AzureWizardExecuteStep<ITestWizardContext> {
     public priority: number = 200;
 
     private _key: string = executeKey2;
-    public async execute(wizardContext: ITestWizardContext): Promise<void> {
+    public execute(wizardContext: ITestWizardContext): Promise<void> {
         wizardContext[this._key] = 'executeValue2';
+        return Promise.resolve();
     }
 
     public shouldExecute(wizardContext: ITestWizardContext): boolean {
@@ -100,7 +102,7 @@ class ExecuteStep1 extends AzureWizardExecuteStep<ITestWizardContext> {
     public priority: number = 100;
 
     private _key: string = executeKey1;
-    public async execute(wizardContext: ITestWizardContext): Promise<void> {
+    public execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey2]) {
             assert.fail('ExecuteStep1 should be executed before ExecuteStep2');
         } else if (wizardContext[this._key]) {
@@ -108,6 +110,7 @@ class ExecuteStep1 extends AzureWizardExecuteStep<ITestWizardContext> {
         }
 
         wizardContext[this._key] = 'executeValue1';
+        return Promise.resolve();
     }
 
     public shouldExecute(wizardContext: ITestWizardContext): boolean {
@@ -120,12 +123,13 @@ class SubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
     public priority: number = 50;
 
     private _key: string = subExecuteKey;
-    public async execute(wizardContext: ITestWizardContext): Promise<void> {
+    public execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey1] || wizardContext[executeKey2]) {
             assert.fail('SubExecuteStep should be executed before ExecuteStep1 or ExecuteStep2');
         }
 
         wizardContext[this._key] = 'subExecuteValue';
+        return Promise.resolve();
     }
 
     public shouldExecute(wizardContext: ITestWizardContext): boolean {
@@ -137,12 +141,13 @@ class SubSubExecuteStep extends AzureWizardExecuteStep<ITestWizardContext> {
     public priority: number = 25;
 
     private _key: string = 'subSubExecute';
-    public async execute(wizardContext: ITestWizardContext): Promise<void> {
+    public execute(wizardContext: ITestWizardContext): Promise<void> {
         if (wizardContext[executeKey1] || wizardContext[executeKey2] || wizardContext[subExecuteKey]) {
             assert.fail('SubSubExecuteStep should be executed before ExecuteStep1, ExecuteStep2, and SubExecuteStep');
         }
 
         wizardContext[this._key] = 'subSubExecuteValue';
+        return Promise.resolve();
     }
 
     public shouldExecute(wizardContext: ITestWizardContext): boolean {
@@ -167,11 +172,11 @@ abstract class QuickPickStepWithSubWizardBase extends QuickPickStepBase {
         }
     }
 
-    public async getSubWizard(wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
+    public getSubWizard(wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
         if (!wizardContext[this.key]) {
-            return this.getSubWizardInternal();
+            return Promise.resolve(this.getSubWizardInternal());
         } else {
-            return undefined;
+            return Promise.resolve(undefined);
         }
     }
 
@@ -233,13 +238,13 @@ class QuickPickStepAndNoPromptWithSubWizardOnlyIfPrevIsPick1 extends QuickPickSt
         return false;
     }
 
-    public async getSubWizard(wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
+    public getSubWizard(wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
         if (wizardContext[this.prevKey] === 'Pick 1') {
-            return {
+            return Promise.resolve({
                 promptSteps: [new SubQuickPickStep1(), new SubQuickPickStep2()]
-            };
+            });
         } else {
-            return undefined;
+            return Promise.resolve(undefined);
         }
     }
 }
@@ -270,10 +275,10 @@ class QuickPickStepSubWizardNoExecute extends AzureWizardPromptStep<ITestWizardC
 
     }
 
-    public async getSubWizard(_wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
-        return {
+    public getSubWizard(_wizardContext: ITestWizardContext): Promise<types.IWizardOptions<ITestWizardContext> | undefined> {
+        return Promise.resolve({
             promptSteps: [new SubInputBoxStep()]
-        };
+        });
     }
 
     public shouldPrompt(wizardContext: ITestWizardContext): boolean {
@@ -290,10 +295,10 @@ class StepWithSubWizardAndNoPrompt extends AzureWizardPromptStep<ITestWizardCont
         return false;
     }
 
-    public async getSubWizard(): Promise<types.IWizardOptions<ITestWizardContext>> {
-        return {
+    public getSubWizard(): Promise<types.IWizardOptions<ITestWizardContext>> {
+        return Promise.resolve({
             executeSteps: [new SubExecuteStep()]
-        };
+        });
     }
 }
 
@@ -732,7 +737,7 @@ suite("AzureWizard tests", () => {
         const context: ITestWizardContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
 
         const stepThatSuppressesAndFails = new class extends AzureWizardPromptStep<ITestWizardContext> {
-            async prompt(wizardContext: ITestWizardContext): Promise<void> {
+            prompt(wizardContext: ITestWizardContext): Promise<void> {
                 wizardContext.suppressLoadingPrompt = true;
                 try {
                     // Ensure suppressLoadingPrompt is reset even when the step throws

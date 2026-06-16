@@ -102,8 +102,8 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
     public postEvent(eventName: string, props: Map<string, string>): void {
         const properties: { [key: string]: string } = {};
 
-        for (const key of props.keys()) {
-            properties[key] = props.get(key)!;
+        for (const [key, value] of props) {
+            properties[key] = value;
         }
 
         Object.assign(properties, this.sharedProperties);

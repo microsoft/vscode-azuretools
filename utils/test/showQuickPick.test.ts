@@ -29,11 +29,12 @@ suite("showQuickPick", () => {
 
                 get<T>(key: string): T | undefined;
                 get<T>(key: string, defaultValue: T): T;
-                get<T>(key: any, defaultValue?: any): T   | undefined {
-                    return this.fakeKeys[key] ?? defaultValue;
+                get<T>(key: string, defaultValue?: T): T | undefined {
+                    return (this.fakeKeys[key] as T | undefined) ?? defaultValue;
                 }
-                async update(key: string, value: any): Promise<void> {
+                update(key: string, value: unknown): Promise<void> {
                     this.fakeKeys[key] = value;
+                    return Promise.resolve();
                 }
 
             }

@@ -10,15 +10,15 @@ import type { AzExtResourceType, AzureResource, AzureSubscription } from '@micro
 
 // These are assumptions made about the nodes in the tree
 
-export type SubscriptionItem = ResourceGroupsItem & {
+export type SubscriptionItem = {
     subscription: AzureSubscription;
 }
 
-export type GroupingItem = ResourceGroupsItem & {
+export type GroupingItem = {
     resourceType?: AzExtResourceType
 }
 
-export type AzureResourceItem = ResourceGroupsItem & {
+export type AzureResourceItem = {
     resource: AzureResource;
 };
 

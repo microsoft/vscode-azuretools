@@ -23,35 +23,42 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
         const recentlyUsedKey: string | undefined = await getRecentlyUsedKey(options);
         const groups: QuickPickGroup[] = [];
 
-        // eslint-disable-next-line no-async-promise-executor
-        const result = await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
+        const result = await new Promise<TPick | TPick[]>((resolve, reject): void => {
             disposables.push(
-                quickPick.onDidAccept(async () => {
-                    try {
-                        if (options.canPickMany) {
-                            resolve(Array.from(quickPick.selectedItems));
-                        } else {
-                            const selectedItem: TPick | undefined = quickPick.selectedItems[0];
+                quickPick.onDidAccept(() => {
+                    void (async (): Promise<void> => {
+                        try {
+                            if (options.canPickMany) {
+                                resolve(Array.from(quickPick.selectedItems));
+                            } else {
+                                const selectedItem: TPick | undefined = quickPick.selectedItems[0];
 
-                            if (selectedItem) {
-                                if (selectedItem.onPicked) {
-                                    await selectedItem.onPicked();
-                                } else {
-                                    resolve(selectedItem);
+                                if (selectedItem) {
+                                    if (selectedItem.onPicked) {
+                                        await selectedItem.onPicked();
+                                    } else {
+                                        resolve(selectedItem);
+                                    }
                                 }
                             }
+                        } catch (error) {
+                            reject(error instanceof Error ? error : new Error(String(error)));
                         }
-                    } catch (error) {
-                        reject(error);
-                    }
+                    })();
                 }),
-                quickPick.onDidTriggerButton(async btn => {
-                    if (btn === QuickInputButtons.Back) {
-                        reject(new GoBackError());
-                    } else if (btn === AzExtQuickInputButtons.LearnMore) {
-                        await openUrl(nonNullProp(options, 'learnMoreLink'));
-                        context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
-                    }
+                quickPick.onDidTriggerButton(btn => {
+                    void (async (): Promise<void> => {
+                        try {
+                            if (btn === QuickInputButtons.Back) {
+                                reject(new GoBackError());
+                            } else if (btn === AzExtQuickInputButtons.LearnMore) {
+                                await openUrl(nonNullProp(options, 'learnMoreLink'));
+                                context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
+                            }
+                        } catch (error) {
+                            reject(error instanceof Error ? error : new Error(String(error)));
+                        }
+                    })();
                 }),
                 quickPick.onDidHide(() => {
                     reject(new UserCancelledError());
@@ -62,24 +69,26 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
             quickPick.busy = true;
             quickPick.enabled = false;
             quickPick.show();
-            try {
-                quickPick.items = await createQuickPickItems<TPick>(picks, options, groups, recentlyUsedKey);
+            void (async (): Promise<void> => {
+                try {
+                    quickPick.items = await createQuickPickItems<TPick>(picks, options, groups, recentlyUsedKey);
 
-                if (shouldDisplayGroups(groups)) {
-                    // If grouping is enabled, make the first actual pick active by default, rather than the group label pick
-                    quickPick.activeItems = [<TPick>groups[0].picks[0]];
-                }
+                    if (shouldDisplayGroups(groups)) {
+                        // If grouping is enabled, make the first actual pick active by default, rather than the group label pick
+                        quickPick.activeItems = [<TPick>groups[0].picks[0]];
+                    }
 
-                if (options.canPickMany && options.isPickSelected) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    quickPick.selectedItems = quickPick.items.filter(p => options.isPickSelected!(p));
+                    if (options.canPickMany && options.isPickSelected) {
+                        const isPickSelected = options.isPickSelected;
+                        quickPick.selectedItems = quickPick.items.filter(p => isPickSelected(p));
+                    }
+                    quickPick.placeholder = options.placeHolder;
+                    quickPick.busy = false;
+                    quickPick.enabled = true;
+                } catch (err) {
+                    reject(err instanceof Error ? err : new Error(String(err)));
                 }
-                quickPick.placeholder = options.placeHolder;
-                quickPick.busy = false;
-                quickPick.enabled = true;
-            } catch (err) {
-                reject(err);
-            }
+            })();
         });
 
         if (recentlyUsedKey && !Array.isArray(result) && !result.suppressPersistence) {

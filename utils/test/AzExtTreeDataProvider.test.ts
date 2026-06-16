@@ -14,7 +14,7 @@ import { AzExtTreeItem } from '../src/tree/AzExtTreeItem';
 abstract class ParentTreeItemBase extends AzExtParentTreeItem {
     private _childIndex: number = 0;
 
-    public async loadMoreChildrenImpl(clearCache: boolean, _context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public loadMoreChildrenImpl(clearCache: boolean, _context: types.IActionContext): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._childIndex = 0;
         }
@@ -28,7 +28,7 @@ abstract class ParentTreeItemBase extends AzExtParentTreeItem {
             children.push(this.createChildTreeItem(this._childIndex));
         }
 
-        return children;
+        return Promise.resolve(children);
     }
 
     public hasMoreChildrenImpl(): boolean {

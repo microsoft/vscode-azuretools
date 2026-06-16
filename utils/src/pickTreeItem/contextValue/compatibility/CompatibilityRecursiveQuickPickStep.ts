@@ -124,6 +124,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
     }
 
     protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+        // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- create pick data is unioned with arbitrary tree item data
         const picks: types.IAzureQuickPickItem<unknown | CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));

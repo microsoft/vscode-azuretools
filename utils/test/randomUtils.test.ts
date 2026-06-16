@@ -8,7 +8,7 @@ import { randomUtils } from '../src/utils/randomUtils';
 
 
 suite('randomUtils', function (this: Mocha.Suite): void {
-    test('getRandomHexString', async () => {
+    test('getRandomHexString', () => {
         // An even number length
         assert.strictEqual(randomUtils.getRandomHexString(6).length, 6);
 
