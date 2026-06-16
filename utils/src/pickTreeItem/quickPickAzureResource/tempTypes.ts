@@ -10,15 +10,18 @@ import type { AzExtResourceType, AzureResource, AzureSubscription } from '@micro
 
 // These are assumptions made about the nodes in the tree
 
-export type SubscriptionItem = {
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- intentional: these temporary types intersect with ResourceGroupsItem to mirror the real Resources extension interfaces
+export type SubscriptionItem = ResourceGroupsItem & {
     subscription: AzureSubscription;
 }
 
-export type GroupingItem = {
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- intentional: these temporary types intersect with ResourceGroupsItem to mirror the real Resources extension interfaces
+export type GroupingItem = ResourceGroupsItem & {
     resourceType?: AzExtResourceType
 }
 
-export type AzureResourceItem = {
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- intentional: these temporary types intersect with ResourceGroupsItem to mirror the real Resources extension interfaces
+export type AzureResourceItem = ResourceGroupsItem & {
     resource: AzureResource;
 };
 

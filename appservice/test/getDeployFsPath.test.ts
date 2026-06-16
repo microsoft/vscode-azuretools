@@ -27,7 +27,6 @@ suite("getDeployFsPath", () => {
                 test(testFolder.name, async () => {
                     const context = await createTestActionContext();
                     const actual = await context.ui.runWithInputs(getInputs(testFolder), async () => {
-                         
                         return await getDeployFsPath(context, getTarget(testFolder));
                     });
                     assert.strictEqual(path.basename(actual.originalDeployFsPath), testFolder.name);

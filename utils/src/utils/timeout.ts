@@ -33,25 +33,15 @@ export function rejectOnTimeout<T>(timeoutMs: number, action: () => Promise<T> |
             },
             timeoutMs);
 
-        let value: T;
-        let error: unknown;
-
-        try {
-            void (async (): Promise<void> => {
-                try {
-                    value = await action();
-                    clearTimeout(timer);
-                    resolve(value);
-                } catch (err) {
-                    error = err;
-                    clearTimeout(timer);
-                    reject(error instanceof Error ? error : new Error(String(error)));
-                }
-            })();
-        } catch (err) {
-            error = err;
-            clearTimeout(timer);
-            reject(error instanceof Error ? error : new Error(String(error)));
-        }
+        void (async (): Promise<void> => {
+            try {
+                resolve(await action());
+            } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- propagate the caught value as-is; it may not be an Error instance
+                reject(err);
+            } finally {
+                clearTimeout(timer);
+            }
+        })();
     });
 }
