@@ -48,7 +48,7 @@ export async function runWithZipStream(context: IActionContext, options: {
         options.progress?.report({ message: creatingZip });
 
         const zipFile: yazl.ZipFile = new yazl.ZipFile();
-        let filesToZip: string[] = [];
+        let filesToZip: string[];
         let sizeOfZipFile: number = 0;
 
         const zipByteCounter = new PassThrough();

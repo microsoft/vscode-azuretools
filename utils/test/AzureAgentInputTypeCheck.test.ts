@@ -19,7 +19,7 @@ class MockAzureUserInput implements IAzureUserInput {
     }
     showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
-    showWarningMessage<T>(): Promise<T> | Promise<T> {
+    showWarningMessage<T>(): Promise<T>   {
         throw new Error("Method not implemented.");
     }
     showOpenDialog(_options: AzExtOpenDialogOptions): Promise<Uri[]> {
@@ -42,7 +42,7 @@ class MockAzureAgentInput implements IAzureAgentInput {
     }
     showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
-    showWarningMessage<T>(): Promise<T> | Promise<T> {
+    showWarningMessage<T>(): Promise<T>   {
         throw new Error("Method not implemented.");
     }
     showOpenDialog(_options: AzExtOpenDialogOptions): Promise<Uri[]> {

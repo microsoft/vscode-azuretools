@@ -36,8 +36,8 @@ export namespace validationUtils {
             return vscode.l10n.t('The value must be {0} characters or less.', rc.upperLimitIncl);
         } else {
             return rc.lowerLimitIncl === rc.upperLimitIncl ?
-                vscode.l10n.t('The value must be {0} characters long.', <number>rc.lowerLimitIncl) :
-                vscode.l10n.t('The value must be between {0} and {1} characters long.', <number>rc.lowerLimitIncl, <number>rc.upperLimitIncl);
+                vscode.l10n.t('The value must be {0} characters long.', rc.lowerLimitIncl!) :
+                vscode.l10n.t('The value must be between {0} and {1} characters long.', rc.lowerLimitIncl!, rc.upperLimitIncl!);
         }
     }
 }

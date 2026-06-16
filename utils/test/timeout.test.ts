@@ -124,7 +124,7 @@ suite("timeout Tests", () => {
                 error = err as Error;
             }
 
-            assert.equal(error && error.message, "rejected");
+            assert.equal(error?.message, "rejected");
         });
     });
 });

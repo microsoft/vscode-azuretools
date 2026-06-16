@@ -53,7 +53,7 @@ export async function getAppServiceCredentials(subscription: ISubscriptionContex
     await subscription.authentication?.getSessionWithScopes?.(scopes, { createIfNone: true });
 
     return {
-        credentials: await subscription.createCredentialsForScopes(scopes) as TokenCredential,
+        credentials: await subscription.createCredentialsForScopes(scopes),
         scopes,
     };
 }

@@ -403,7 +403,7 @@ export class SiteClient implements IAppSettingsClient {
             const dr = { ...r };
             dr.receivedTime = new Date(r.received_time);
             return dr;
-        }) as KuduModels.DeployResult[];
+        });
     }
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
@@ -436,7 +436,7 @@ export class SiteClient implements IAppSettingsClient {
             le.logTime = new Date(obj.log_time);
             le.detailsUrl = obj.details_url;
             return le;
-        }) as KuduModels.LogEntry[];
+        });
     }
 
     // no equivalent ARM call
@@ -456,7 +456,7 @@ export class SiteClient implements IAppSettingsClient {
             le.logTime = new Date(e.log_time);
             le.detailsUrl = e.details_url;
             return le;
-        }) as KuduModels.LogEntry[];
+        });
     }
 
     public async vfsGetItem(context: IActionContext, url: string): Promise<AzExtPipelineResponse> {

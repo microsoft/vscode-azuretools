@@ -35,7 +35,7 @@ export namespace AzExtFsExtra {
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
-            if (pError && pError.errorType === 'FileNotFound') {
+            if (pError?.errorType === 'FileNotFound') {
                 // drop down below to create the directory
             } else {
                 throw err;
@@ -53,7 +53,7 @@ export namespace AzExtFsExtra {
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
-            if (pError && pError.errorType === 'FileNotFound') {
+            if (pError?.errorType === 'FileNotFound') {
                 const dir: string = path.dirname(uri.fsPath);
                 await ensureDir(dir);
             } else {

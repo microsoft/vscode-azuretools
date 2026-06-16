@@ -7,7 +7,7 @@
  * Limit string 's' to at most 'n' lines
  */
 export function limitLines(s: string, n: number): string {
-    const match: RegExpMatchArray | null = s.match(new RegExp(`((\\r\\n|\\n)?.*$){0,${n}}`, 'm'));
+    const match: RegExpMatchArray | null = new RegExp(`((\\r\\n|\\n)?.*$){0,${n}}`, 'm').exec(s);
     return match ? match[0] : '';
 }
 

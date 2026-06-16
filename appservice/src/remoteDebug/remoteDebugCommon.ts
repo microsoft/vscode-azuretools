@@ -21,7 +21,7 @@ export function reportMessage(message: string, progress: vscode.Progress<{ messa
 export async function setRemoteDebug(context: IActionContext, isRemoteDebuggingToBeEnabled: boolean, confirmMessage: string, noopMessage: string | undefined, site: ParsedSite, siteConfig: SiteConfigResource, progress: vscode.Progress<{ message: string }>, token: vscode.CancellationToken, learnMoreLink?: string): Promise<void> {
     const client = await site.createClient(context);
     const state: string | undefined = await client.getState();
-    if (state && state.toLowerCase() === 'stopped') {
+    if (state?.toLowerCase() === 'stopped') {
         throw new Error(vscode.l10n.t('The app must be running, but is currently in state "Stopped". Start the app to continue.'));
     }
 

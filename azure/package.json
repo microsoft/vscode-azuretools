@@ -58,16 +58,15 @@
     "devDependencies": {
         "@azure/core-auth": "^1.10.1",
         "@azure/core-paging": "^1.6.2",
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
+        "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/node": "22.x",
         "@types/semver": "^7.7.1",
         "@types/vscode": "1.105.0",
         "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*"
+        "@vscode/test-electron": "*",
+        "tsx": "*"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5",
-        "esbuild": "^0.28.0",
-        "tsx": "^4.22.0"
+        "serialize-javascript": "^7.0.5"
     }
 }

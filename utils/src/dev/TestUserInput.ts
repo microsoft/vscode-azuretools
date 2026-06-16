@@ -72,7 +72,7 @@ export class TestUserInput implements types.TestUserInput {
     }
 
     public setInputs(inputs: (string | RegExp | types.TestInput)[]): void {
-        this._inputs = <(string | RegExp | TestInput)[]>inputs;
+        this._inputs = inputs;
     }
 
     public validateAllInputsUsed(): void {

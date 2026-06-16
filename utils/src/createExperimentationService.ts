@@ -103,7 +103,7 @@ class ExperimentationTelemetry implements tas.IExperimentationTelemetry {
         const properties: { [key: string]: string } = {};
 
         for (const key of props.keys()) {
-            properties[key] = <string>props.get(key);
+            properties[key] = props.get(key)!;
         }
 
         Object.assign(properties, this.sharedProperties);

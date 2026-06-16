@@ -40,13 +40,11 @@
     },
     "devDependencies": {
         "@azure/arm-appservice": "^18.0.0",
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.12",
+        "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/node": "22.x",
         "@types/vscode": "1.105.0"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5",
-        "esbuild": "^0.28.0",
-        "tsx": "^4.22.0"
+        "serialize-javascript": "^7.0.5"
     }
 }

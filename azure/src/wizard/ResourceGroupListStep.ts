@@ -40,7 +40,7 @@ export class ResourceGroupListStep<T extends types.IResourceGroupWizardContext> 
 
     public static async isNameAvailable<T extends types.IResourceGroupWizardContext>(wizardContext: T, name: string): Promise<boolean> {
         const resourceGroupsTask: Promise<ResourceGroup[]> = ResourceGroupListStep.getResourceGroups(wizardContext);
-        return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name !== undefined && rg.name.toLowerCase() === name.toLowerCase());
+        return !(await resourceGroupsTask).some((rg: ResourceGroup) => rg.name?.toLowerCase() === name.toLowerCase());
     }
 
     public async prompt(wizardContext: T): Promise<void> {

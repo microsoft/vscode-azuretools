@@ -696,11 +696,11 @@ suite("AzureWizard tests", () => {
                 wizardContext.suppressLoadingPrompt = true;
                 try {
                     // Simulate inner wizard prompts (these would fire onDidFinishPrompt)
-                    wizardContext['innerResult'] = (await wizardContext.ui.showQuickPick(
+                    wizardContext.innerResult = (await wizardContext.ui.showQuickPick(
                         [{ label: 'Inner Pick 1' }, { label: 'Inner Pick 2' }],
                         { placeHolder: 'Inner wizard pick' }
                     )).label;
-                    wizardContext['innerInput'] = await wizardContext.ui.showInputBox({ prompt: 'Inner wizard input' });
+                    wizardContext.innerInput = await wizardContext.ui.showInputBox({ prompt: 'Inner wizard input' });
                 } finally {
                     wizardContext.suppressLoadingPrompt = false;
                 }

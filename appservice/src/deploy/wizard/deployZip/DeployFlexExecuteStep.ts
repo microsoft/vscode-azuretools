@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Site } from "@azure/arm-appservice";
-import { RequestBodyType, createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
+import { createHttpHeaders, createPipelineRequest } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse, AzExtRequestPrepareOptions, createGenericClient } from "@microsoft/vscode-azext-azureutils";
 import { publisherName } from "../../../constants";
 import { InnerDeployContext } from "../../IDeployContext";
@@ -18,7 +18,7 @@ export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
 
         const RemoteBuild: boolean = site.properties?.functionAppConfig?.runtime.name === 'python';
         const callback = async (zipStream: NodeJS.ReadableStream) => {
-            return await kuduClient.flexDeploy(context, (() => zipStream) as RequestBodyType, {
+            return await kuduClient.flexDeploy(context, (() => zipStream), {
                 RemoteBuild,
                 Deployer: publisherName
             });

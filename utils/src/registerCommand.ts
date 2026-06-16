@@ -51,7 +51,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                     if (metadata) {
                         const candidate = (metadata as Record<string, unknown>).__injectedContext;
                         if (candidate && typeof candidate === "object") {
-                            injectedContext = candidate as Partial<types.IActionContext>;
+                            injectedContext = candidate;
                         }
                         args.splice(args.indexOf(metadata), 1); // remove only the metadata
                     }

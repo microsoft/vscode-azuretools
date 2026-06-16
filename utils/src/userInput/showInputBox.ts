@@ -80,7 +80,7 @@ function createInputBox(context: IInternalActionContext, options: types.AzExtInp
     const inputBox: InputBox = window.createInputBox();
 
     const wizard = context.ui.wizard;
-    if (wizard && wizard.showTitle) {
+    if (wizard?.showTitle) {
         inputBox.title = wizard.title;
         if (!wizard.hideStepCount && wizard.title) {
             inputBox.step = wizard.currentStep;

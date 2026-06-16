@@ -47,5 +47,6 @@ export async function createSubscriptionsClient(context: InternalAzExtClientCont
     // SubscriptionClient. TypeScript sees those two definitions as different types (the class has a
     // private field, which makes the check strict), so it complains even though it's really the same
     // class at runtime. Cast through `unknown` to tell TypeScript they're the same, like the clients above.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- needed for the CJS build, where the types genuinely differ
     return <SubscriptionClient><unknown>createAzureSubscriptionClient(context, (await import('@azure/arm-resources-subscriptions')).SubscriptionClient);
 }
