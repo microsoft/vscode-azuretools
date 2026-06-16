@@ -24,24 +24,19 @@ export async function valueOnTimeout<T>(timeoutMs: number, timeoutValue: T, acti
 /**
  * Returns the result of awaiting a specified action. Rejects if the action throws or if the time-out occurs.
  */
-export function rejectOnTimeout<T>(timeoutMs: number, action: () => Promise<T> | T, callerTimeOutMessage?: string): Promise<T> {
-    return new Promise<T>((resolve, reject): void => {
-        let timer: NodeJS.Timeout | undefined = setTimeout(
+export async function rejectOnTimeout<T>(timeoutMs: number, action: () => Promise<T> | T, callerTimeOutMessage?: string): Promise<T> {
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_resolve, reject): void => {
+        timer = setTimeout(
             () => {
-                timer = undefined;
                 reject(new TimeoutError(callerTimeOutMessage || vscode.l10n.t('Execution timed out.')));
             },
             timeoutMs);
-
-        void (async (): Promise<void> => {
-            try {
-                resolve(await action());
-            } catch (err) {
-                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- propagate the caught value as-is; it may not be an Error instance
-                reject(err);
-            } finally {
-                clearTimeout(timer);
-            }
-        })();
     });
+
+    try {
+        return await Promise.race([action(), timeout]);
+    } finally {
+        clearTimeout(timer);
+    }
 }
