@@ -42,7 +42,8 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                                 }
                             }
                         } catch (error) {
-                            reject(error instanceof Error ? error : new Error(String(error)));
+                            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- pass the caught value through as-is; it may not be an Error instance
+                            reject(error);
                         }
                     })();
                 }),
@@ -56,7 +57,8 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                                 context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
                             }
                         } catch (error) {
-                            reject(error instanceof Error ? error : new Error(String(error)));
+                            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- pass the caught value through as-is; it may not be an Error instance
+                            reject(error);
                         }
                     })();
                 }),
@@ -86,7 +88,8 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                     quickPick.busy = false;
                     quickPick.enabled = true;
                 } catch (err) {
-                    reject(err instanceof Error ? err : new Error(String(err)));
+                    // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- pass the caught value through as-is; it may not be an Error instance
+                    reject(err);
                 }
             })();
         });
