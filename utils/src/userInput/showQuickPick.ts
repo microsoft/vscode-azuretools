@@ -23,8 +23,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
         const recentlyUsedKey: string | undefined = await getRecentlyUsedKey(options);
         const groups: QuickPickGroup[] = [];
 
-        // eslint-disable-next-line no-async-promise-executor
-        const result = await new Promise<TPick | TPick[]>(async (resolve, reject): Promise<void> => {
+        const result = await new Promise<TPick | TPick[]>((resolve, reject): void => {
             disposables.push(
                 quickPick.onDidAccept(async () => {
                     try {
@@ -42,6 +41,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                             }
                         }
                     } catch (error) {
+                        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- pass the caught value through as-is; it may not be an Error instance
                         reject(error);
                     }
                 }),
@@ -62,7 +62,8 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
             quickPick.busy = true;
             quickPick.enabled = false;
             quickPick.show();
-            try {
+
+            const loadItems = async (): Promise<void> => {
                 quickPick.items = await createQuickPickItems<TPick>(picks, options, groups, recentlyUsedKey);
 
                 if (shouldDisplayGroups(groups)) {
@@ -71,15 +72,14 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                 }
 
                 if (options.canPickMany && options.isPickSelected) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    quickPick.selectedItems = quickPick.items.filter(p => options.isPickSelected!(p));
+                    const isPickSelected = options.isPickSelected;
+                    quickPick.selectedItems = quickPick.items.filter(p => isPickSelected(p));
                 }
                 quickPick.placeholder = options.placeHolder;
                 quickPick.busy = false;
                 quickPick.enabled = true;
-            } catch (err) {
-                reject(err);
-            }
+            };
+            loadItems().catch(reject);
         });
 
         if (recentlyUsedKey && !Array.isArray(result) && !result.suppressPersistence) {
@@ -97,7 +97,7 @@ export function createQuickPick<TPick extends types.IAzureQuickPickItem<unknown>
     const quickPick: QuickPick<TPick> = window.createQuickPick<TPick>();
 
     const wizard = context.ui.wizard;
-    if (wizard && wizard.showTitle) {
+    if (wizard?.showTitle) {
         quickPick.title = wizard.title;
         if (!wizard.hideStepCount && wizard.title) {
             quickPick.step = wizard.currentStep;

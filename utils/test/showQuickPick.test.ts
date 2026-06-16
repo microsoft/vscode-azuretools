@@ -29,11 +29,12 @@ suite("showQuickPick", () => {
 
                 get<T>(key: string): T | undefined;
                 get<T>(key: string, defaultValue: T): T;
-                get<T>(key: any, defaultValue?: any): T | T | undefined {
-                    return this.fakeKeys[key] ?? defaultValue;
+                get<T>(key: string, defaultValue?: T): T | undefined {
+                    return (this.fakeKeys[key] as T | undefined) ?? defaultValue;
                 }
-                async update(key: string, value: any): Promise<void> {
+                update(key: string, value: unknown): Promise<void> {
                     this.fakeKeys[key] = value;
+                    return Promise.resolve();
                 }
 
             }
@@ -50,12 +51,12 @@ suite("showQuickPick", () => {
                     expected: string[]
                 }
             ): Promise<void> {
-                const input: types.IAzureQuickPickItem<string>[] = options.input.map(p => <types.IAzureQuickPickItem<string>>{
+                const input: types.IAzureQuickPickItem<string>[] = options.input.map(p => ({
                     label: p.label,
                     data: p.label,
                     suppressPersistence: p.suppressPersistance,
                     priority: p.priority,
-                });
+                }));
                 const fakeState = new FakeMemento();
                 if (options.recentlyUsed) {
                     fakeState.fakeKeys[options.recentlyUsed] = await getrecentlyUsed(options.recentlyUsed);

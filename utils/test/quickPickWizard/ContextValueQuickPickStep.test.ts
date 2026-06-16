@@ -143,5 +143,5 @@ async function runWizardWithStep(step: ContextValueQuickPickStep<QuickPickWizard
     });
 
     await wizard.prompt();
-    return getLastNode(wizardContext) as TestTreeNode;
+    return getLastNode(wizardContext)!;
 }

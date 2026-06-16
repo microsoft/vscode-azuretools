@@ -79,7 +79,7 @@ async function runInstallCommand(installCommand: InstallCommand): Promise<void> 
 
     const outputStream = new Writable({
         write(chunk, _encoding, callback) {
-            ext.outputChannel.appendLog(chunk.toString());
+            ext.outputChannel.appendLog(String(chunk));
             callback();
         },
     });

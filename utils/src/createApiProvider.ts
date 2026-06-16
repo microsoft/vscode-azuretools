@@ -26,7 +26,7 @@ export function createApiProvider(azExts: (AzureExtensionApiFactory | AzureExten
         if (isAzureExtensionApiFactory(azExt)) {
             return azExt;
         } else {
-            return <AzureExtensionApiFactory>{
+            return {
                 apiVersion: azExt.apiVersion,
                 createApi: () => azExt,
             };

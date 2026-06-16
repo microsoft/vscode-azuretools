@@ -113,7 +113,7 @@ export class LocationListStep<T extends ILocationWizardContextInternal> extends 
         if (location.type === 'EdgeZone') {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             locationName = location.metadata!.homeLocation!;
-            extendedLocation = <ExtendedLocation>location;
+            extendedLocation = location;
         }
         return {
             location: locationName,

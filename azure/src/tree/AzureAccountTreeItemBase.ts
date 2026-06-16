@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addExtensionValueToMask, AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtTreeItem, AzureWizardPromptStep, GenericTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, nonNullProp, nonNullValue, registerEvent, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { addExtensionValueToMask, AzExtParentTreeItem, AzExtTreeItem, AzureWizardPromptStep, GenericTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, nonNullProp, nonNullValue, registerEvent, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as semver from 'semver';
 import { commands, Disposable, Extension, extensions, l10n, MessageItem, ProgressLocation, ThemeIcon, window } from 'vscode';
 import * as types from '../../index';
@@ -143,7 +143,7 @@ export abstract class AzureAccountTreeItemBase extends AzExtParentTreeItem imple
                     // filter.subscription.subscriptionId is just the guid and is used in all other cases when creating clients for managing Azure resources
                     const subscriptionId: string = nonNullProp(filter.subscription, 'subscriptionId');
                     return await this.createSubscriptionTreeItem({
-                        credentials: <AzExtServiceClientCredentials>filter.session.credentials2,
+                        credentials: filter.session.credentials2,
                         createCredentialsForScopes: () => { return Promise.resolve(filter.session.credentials2); },
                         subscriptionDisplayName: nonNullProp(filter.subscription, 'displayName'),
                         subscriptionId,

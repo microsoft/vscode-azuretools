@@ -60,14 +60,16 @@ export async function openReadOnlyContent(node: { label: string, fullId: string 
     return await contentProvider.openReadOnlyContent(node, content, fileExtension, options);
 }
 
-export async function disposeReadOnlyContents(): Promise<void> {
+export function disposeReadOnlyContents(): Promise<void> {
     const contentProvider = getContentProvider();
     contentProvider.disposeAll();
+    return Promise.resolve();
 }
 
-export async function disposeReadOnlyContent(uri: Uri): Promise<void> {
+export function disposeReadOnlyContent(uri: Uri): Promise<void> {
     const contentProvider = getContentProvider();
     contentProvider.dispose(uri);
+    return Promise.resolve();
 }
 
 export class ReadOnlyContent {
@@ -85,9 +87,10 @@ export class ReadOnlyContent {
         return this._content;
     }
 
-    public async append(content: string): Promise<void> {
+    public append(content: string): Promise<void> {
         this._content += content;
         this._emitter.fire(this.uri);
+        return Promise.resolve();
     }
 
     public clear(): void {
@@ -132,9 +135,9 @@ class ReadOnlyContentProvider implements TextDocumentContentProvider {
         return readOnlyContent;
     }
 
-    public async provideTextDocumentContent(uri: Uri, _token: CancellationToken): Promise<string> {
+    public provideTextDocumentContent(uri: Uri, _token: CancellationToken): Promise<string> {
         const readOnlyContent: ReadOnlyContent = nonNullValue(this._contentMap.get(uri.toString()), 'ReadOnlyContentProvider._contentMap.get');
-        return readOnlyContent.content;
+        return Promise.resolve(readOnlyContent.content);
     }
 
     public dispose(uri: Uri): void {

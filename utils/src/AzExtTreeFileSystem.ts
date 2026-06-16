@@ -70,19 +70,19 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         });
     }
 
-    public async readDirectory(_uri: Uri): Promise<[string, FileType][]> {
+    public readDirectory(_uri: Uri): Promise<[string, FileType][]> {
         throw unsupportedError;
     }
 
-    public async createDirectory(_uri: Uri): Promise<void> {
+    public createDirectory(_uri: Uri): Promise<void> {
         throw unsupportedError;
     }
 
-    public async delete(_uri: Uri): Promise<void> {
+    public delete(_uri: Uri): Promise<void> {
         throw unsupportedError;
     }
 
-    public async rename(_uri: Uri): Promise<void> {
+    public rename(_uri: Uri): Promise<void> {
         throw unsupportedError;
     }
 
@@ -127,7 +127,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         return Uri.parse(`${this.scheme}:///${filePath}?${query}`);
     }
 
-    protected async lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
+    protected lookup(context: types.IActionContext, uri: Uri): Promise<TItem> {
         const item: TItem | undefined = this.findItem(this.getQueryFromUri(uri));
         if (!item) {
             context.telemetry.suppressAll = true;
@@ -135,7 +135,7 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
             context.errorHandling.suppressDisplay = true;
             throw FileSystemError.FileNotFound(uri);
         } else {
-            return item;
+            return Promise.resolve(item);
         }
     }
 

@@ -14,7 +14,7 @@ import { AzExtTreeItem } from '../src/tree/AzExtTreeItem';
 abstract class ParentTreeItemBase extends AzExtParentTreeItem {
     private _childIndex: number = 0;
 
-    public async loadMoreChildrenImpl(clearCache: boolean, _context: types.IActionContext): Promise<AzExtTreeItem[]> {
+    public loadMoreChildrenImpl(clearCache: boolean, _context: types.IActionContext): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._childIndex = 0;
         }
@@ -28,7 +28,7 @@ abstract class ParentTreeItemBase extends AzExtParentTreeItem {
             children.push(this.createChildTreeItem(this._childIndex));
         }
 
-        return children;
+        return Promise.resolve(children);
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -102,7 +102,7 @@ suite("AzExtTreeDataProvider", () => {
         assert.equal(root.hasMoreChildrenImpl(), false);
 
         const first: MiddleTreeItem = middle[0];
-        const leaves: AzExtTreeItem[] = <MiddleTreeItem[]>await first.loadAllChildren(context);
+        const leaves: AzExtTreeItem[] = await first.loadAllChildren(context);
         assert.equal(leaves.length, 10);
         assert.equal(first.hasMoreChildrenImpl(), false);
     });
@@ -147,7 +147,7 @@ suite("AzExtTreeDataProvider", () => {
             await resetTree();
 
             const result: AzExtTreeItem | undefined = await tree.findTreeItem(testCase.id, { ...context, loadAll: testCase.loadAll });
-            assert.equal(result && result.label, testCase.expectedLabel);
+            assert.equal(result?.label, testCase.expectedLabel);
 
             const middles: MiddleTreeItem[] = <MiddleTreeItem[]>await root.getCachedChildren(context);
             assert.equal(middles.length, testCase.expectedLeafCounts.length);

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
+import { AzureSubscription, GetSessionWithScopesOptions } from '@microsoft/vscode-azureresources-api';
 import * as vscode from 'vscode';
 import { AzExtServiceClientCredentials, ISubscriptionContext } from '../../index';
 
@@ -39,10 +39,10 @@ export function createSubscriptionContext(subscription: AzureSubscription): ISub
         userId: '', // TODO
         subscriptionPath: subscription.subscriptionId,
         ...subscription,
-        credentials: createCredential(subscription.authentication.getSession),
-        createCredentialsForScopes: async (scopeListOrRequest: string[] | vscode.AuthenticationWwwAuthenticateRequest) => {
-            // Have to use bind here because we need to pass a `getSessions` function with a `scopes` parameter to `createCredential`
-            return createCredential(subscription.authentication.getSessionWithScopes.bind(subscription.authentication, scopeListOrRequest));
+        credentials: createCredential(() => subscription.authentication.getSession()),
+        createCredentialsForScopes: (scopeListOrRequest: string[] | vscode.AuthenticationWwwAuthenticateRequest): Promise<AzExtServiceClientCredentials> => {
+            // Have to use an arrow here because we need to pass a `getSessions` function with a `scopes` parameter to `createCredential`
+            return Promise.resolve(createCredential((options?: unknown) => subscription.authentication.getSessionWithScopes(scopeListOrRequest, options as GetSessionWithScopesOptions | undefined)));
         }
     };
 }

@@ -283,16 +283,18 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     }
 
     private displayActivityOutput(output: types.ExecuteActivityOutput, options: types.AzureWizardExecuteStepOptions): void {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- aligns ExecuteActivity output suppression with this package enum
+        const suppressActivityOutput = options.suppressActivityOutput as ActivityOutputType | undefined;
         if (output.item &&
-            options.suppressActivityOutput !== ActivityOutputType.Item &&
-            options.suppressActivityOutput !== ActivityOutputType.All
+            suppressActivityOutput !== ActivityOutputType.Item &&
+            suppressActivityOutput !== ActivityOutputType.All
         ) {
             this._context.activityChildren?.push(output.item);
         }
 
         if (output.message &&
-            options.suppressActivityOutput !== ActivityOutputType.Message &&
-            options.suppressActivityOutput !== ActivityOutputType.All
+            suppressActivityOutput !== ActivityOutputType.Message &&
+            suppressActivityOutput !== ActivityOutputType.All
         ) {
             ext.outputChannel?.appendLog(output.message);
         }

@@ -51,7 +51,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                     if (metadata) {
                         const candidate = (metadata as Record<string, unknown>).__injectedContext;
                         if (candidate && typeof candidate === "object") {
-                            injectedContext = candidate as Partial<types.IActionContext>;
+                            injectedContext = candidate;
                         }
                         args.splice(args.indexOf(metadata), 1); // remove only the metadata
                     }
@@ -61,7 +61,7 @@ export function registerCommand(commandId: string, callback: (context: types.IAc
                     } catch (e: unknown) {
                         const error = parseError(e);
                         // if we fail to set telemetry properties, we don't want to throw an error and prevent the command from executing
-                        ext.outputChannel.appendLine(`registerCommand: Failed to set telemetry properties: ${e}`);
+                        ext.outputChannel.appendLine(`registerCommand: Failed to set telemetry properties: ${String(e)}`);
                         context.telemetry.properties.telemetryError = error.message;
                     }
                 }

@@ -35,9 +35,13 @@ export namespace validationUtils {
         } else if (!rc?.lowerLimitIncl && rc?.upperLimitIncl) {
             return vscode.l10n.t('The value must be {0} characters or less.', rc.upperLimitIncl);
         } else {
-            return rc.lowerLimitIncl === rc.upperLimitIncl ?
-                vscode.l10n.t('The value must be {0} characters long.', <number>rc.lowerLimitIncl) :
-                vscode.l10n.t('The value must be between {0} and {1} characters long.', <number>rc.lowerLimitIncl, <number>rc.upperLimitIncl);
+            // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- both limits are defined in this branch
+            const lowerLimitIncl = rc.lowerLimitIncl as number;
+            // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- both limits are defined in this branch
+            const upperLimitIncl = rc.upperLimitIncl as number;
+            return lowerLimitIncl === upperLimitIncl ?
+                vscode.l10n.t('The value must be {0} characters long.', lowerLimitIncl) :
+                vscode.l10n.t('The value must be between {0} and {1} characters long.', lowerLimitIncl, upperLimitIncl);
         }
     }
 }

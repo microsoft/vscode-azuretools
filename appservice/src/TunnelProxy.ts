@@ -132,7 +132,7 @@ export class TunnelProxy {
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             ext.outputChannel.appendLog(`[Tunnel] Checking status, error: ${parsedError.message}`);
-            throw new Error(l10n.t('Error getting tunnel status: {0}', parsedError.errorType));
+            throw new Error(l10n.t('Error getting tunnel status: {0}', parsedError.errorType), { cause: error });
         }
 
         if (tunnelStatus.state === AppState.STARTED) {
@@ -171,7 +171,7 @@ export class TunnelProxy {
                 return;
             } catch (error) {
                 if (!(error instanceof RetryableTunnelStatusError)) {
-                    throw new Error(l10n.t('Unable to establish connection to application: {0}', parseError(error).message));
+                    throw new Error(l10n.t('Unable to establish connection to application: {0}', parseError(error).message), { cause: error });
                 } // else allow retry
             }
 

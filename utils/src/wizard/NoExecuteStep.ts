@@ -11,7 +11,7 @@ export class NoExecuteStep<T extends IActionContext> extends AzureWizardExecuteS
     public priority: number = 200;
 
     private _key: string = "NoExecute";
-    public async execute(_wizardContext: T): Promise<void> {
+    public execute(_wizardContext: T): Promise<void> {
         throw new UserCancelledError(this._key);
     }
 

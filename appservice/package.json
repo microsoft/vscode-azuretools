@@ -60,7 +60,7 @@
     },
     "devDependencies": {
         "@azure/core-client": "^1.7.2",
-        "@microsoft/vscode-azext-eng": "1.0.0-alpha.8",
+        "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/fs-extra": "^9.0.13",
         "@types/node": "22.x",
         "@types/p-retry": "^2.0.0",
@@ -68,7 +68,8 @@
         "@types/ws": "^8.5.3",
         "@types/yazl": "^2.4.2",
         "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*"
+        "@vscode/test-electron": "*",
+        "tsx": "*"
     },
     "overrides": {
         "serialize-javascript": "^7.0.5"

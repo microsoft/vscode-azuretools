@@ -19,7 +19,7 @@ class MockAzureUserInput implements IAzureUserInput {
     }
     showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
-    showWarningMessage<T>(): Promise<T> | Promise<T> {
+    showWarningMessage<T>(): Promise<T>   {
         throw new Error("Method not implemented.");
     }
     showOpenDialog(_options: AzExtOpenDialogOptions): Promise<Uri[]> {
@@ -42,7 +42,7 @@ class MockAzureAgentInput implements IAzureAgentInput {
     }
     showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     showWarningMessage<T extends MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
-    showWarningMessage<T>(): Promise<T> | Promise<T> {
+    showWarningMessage<T>(): Promise<T>   {
         throw new Error("Method not implemented.");
     }
     showOpenDialog(_options: AzExtOpenDialogOptions): Promise<Uri[]> {
@@ -57,11 +57,11 @@ const mockAzureUserInput: IAzureUserInput = new MockAzureUserInput();
 const mockAzureAgentInput: IAzureAgentInput = new MockAzureAgentInput();
 
 suite("Azure Agent Input Type Check", () => {
-    test("Azure Agent Input Can Be Used as Azure User Input", async () => {
+    test("Azure Agent Input Can Be Used as Azure User Input", () => {
         const azureUserInputSetFromAgentInput: IAzureUserInput = mockAzureAgentInput;
         assert.equal(azureUserInputSetFromAgentInput, mockAzureAgentInput);
     });
-    test("Azure User Input Can Be Used as Azure Agent Input", async () => {
+    test("Azure User Input Can Be Used as Azure Agent Input", () => {
         const azureAgentInputSetFromUserInput: IAzureAgentInput = mockAzureUserInput;
         assert.equal(azureAgentInputSetFromUserInput, mockAzureUserInput);
     });
