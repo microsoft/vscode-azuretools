@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, EventEmitter, MessageItem, Uri, WorkspaceFolder } from 'vscode';
+import { Event, EventEmitter, MessageItem, MessageOptions, Uri, WorkspaceFolder } from 'vscode';
 import * as types from '../../index';
 import { UserCancelledError } from '../errors';
 import { IInternalActionContext, IInternalAzureWizard } from './IInternalActionContext';
@@ -97,8 +97,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
 
     public async showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Promise<T>;
     public async showWarningMessage<T extends MessageItem>(message: string, options: types.IAzureMessageOptions, ...items: T[]): Promise<T>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public async showWarningMessage<T extends MessageItem>(message: string, ...args: any[]): Promise<T> {
+    public async showWarningMessage<T extends MessageItem>(message: string, ...args: [MessageOptions, ...T[]] | T[]): Promise<T> {
         let stepName: string | undefined;
         const firstArg: unknown = args[0];
         if (typeof firstArg === 'object' && firstArg && 'stepName' in firstArg) {
@@ -111,7 +110,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
         try {
             this._isPrompting = true;
-            const result = await showWarningMessage<T>(this._context, message, ...args);
+            const result = await showWarningMessage<T>(this._context, message, ...(args as T[]));
             this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         } finally {

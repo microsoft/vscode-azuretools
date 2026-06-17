@@ -135,8 +135,8 @@ async function runInstallCommand(installCommand: InstallCommand): Promise<void> 
     ext.outputChannel.appendLog(vscode.l10n.t('Installing GitHub Copilot CLI via "{0}"...', installCommand.command));
 
     const outputStream = new Writable({
-        write(chunk: Buffer, _encoding, callback) {
-            ext.outputChannel.appendLog(chunk.toString());
+        write(chunk, _encoding, callback) {
+            ext.outputChannel.appendLog(String(chunk));
             callback();
         },
     });

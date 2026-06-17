@@ -35,7 +35,7 @@ export namespace AzExtFsExtra {
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
-            if (pError && pError.errorType === 'FileNotFound') {
+            if (pError?.errorType === 'FileNotFound') {
                 // drop down below to create the directory
             } else {
                 throw err;
@@ -53,7 +53,7 @@ export namespace AzExtFsExtra {
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
-            if (pError && pError.errorType === 'FileNotFound') {
+            if (pError?.errorType === 'FileNotFound') {
                 const dir: string = path.dirname(uri.fsPath);
                 await ensureDir(dir);
             } else {
@@ -96,7 +96,7 @@ export namespace AzExtFsExtra {
         } catch (err) {
             const pError = parseError(err);
             if (pError.errorType === 'SyntaxError') {
-                throw new Error(`Error parsing JSON file: ${resource}. ${pError.message}`);
+                throw new Error(`Error parsing JSON file: ${String(resource)}. ${pError.message}`, { cause: err });
             }
             else {
                 throw err;
@@ -104,7 +104,7 @@ export namespace AzExtFsExtra {
         }
     }
 
-    export async function writeJSON(resource: Uri | string, contents: string | unknown, space: string | number = 2): Promise<void> {
+    export async function writeJSON(resource: Uri | string, contents: unknown, space: string | number = 2): Promise<void> {
         if (typeof contents === 'string') {
             // ensure string is in JSON object format and has proper spaces
             contents = JSON.parse(contents);

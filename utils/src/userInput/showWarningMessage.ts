@@ -12,20 +12,23 @@ import { IInternalActionContext } from './IInternalActionContext';
 
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, ...items: T[]): Promise<T>;
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, options: MessageOptions, ...items: T[]): Promise<T>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, ...args: any[]): Promise<T> {
-    const learnMoreLink: string | undefined = args[0] && (<types.IAzureMessageOptions>args[0]).learnMoreLink;
+export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, ...args: [MessageOptions, ...T[]] | T[]): Promise<T> {
+    const firstArg = args[0];
+    const hasOptions = firstArg && !('title' in firstArg);
+    const options: MessageOptions | undefined = hasOptions ? firstArg : undefined;
+    const items: MessageItem[] = (hasOptions ? args.slice(1) : args) as MessageItem[];
+    const learnMoreLink: string | undefined = options && (<types.IAzureMessageOptions>options).learnMoreLink;
     if (learnMoreLink) {
-        args.push(DialogResponses.learnMore);
+        items.push(DialogResponses.learnMore);
     }
 
     const back: MessageItem = { title: l10n.t('Back') };
     if (context.ui.wizard?.showBackButton) {
-        args.push(back);
+        items.push(back);
     }
 
     while (true) {
-        const result: T = await window.showWarningMessage(message, ...args);
+        const result: MessageItem | undefined = options ? await window.showWarningMessage(message, options, ...items) : await window.showWarningMessage(message, ...items);
         if (learnMoreLink && result === DialogResponses.learnMore) {
             context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
             await openUrl(learnMoreLink);
@@ -34,7 +37,7 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
         } else if (result === back) {
             throw new GoBackError();
         } else {
-            return result;
+            return <T>result;
         }
     }
 }

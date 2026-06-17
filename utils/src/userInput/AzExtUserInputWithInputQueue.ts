@@ -122,8 +122,7 @@ export class AzExtUserInputWithInputQueue implements AzExtUserInputWithInputQueu
 
     public async showWarningMessage<T extends vscode.MessageItem>(message: string, ...items: T[]): Promise<T>;
     public async showWarningMessage<T extends vscode.MessageItem>(message: string, options: IAzureMessageOptions, ...items: T[]): Promise<T>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public async showWarningMessage<T extends vscode.MessageItem>(message: string, ...args: any[]): Promise<T> {
+    public async showWarningMessage<T extends vscode.MessageItem>(message: string, ...args: [vscode.MessageOptions, ...T[]] | T[]): Promise<T> {
         let stepName: string | undefined;
         const firstArg: unknown = args[0];
         if (typeof firstArg === 'object' && firstArg && 'stepName' in firstArg) {
@@ -139,7 +138,7 @@ export class AzExtUserInputWithInputQueue implements AzExtUserInputWithInputQueu
         let result: T;
         const nextItemInQueue = (this._inputsQueue.shift() as T | null | undefined);
         if (!nextItemInQueue) {
-            result = await this._realAzureUserInput.showWarningMessage(message, ...args);
+            result = await this._realAzureUserInput.showWarningMessage<T>(message, ...(args as T[]));
         } else {
             result = nextItemInQueue;
             this._onDidFinishPromptEmitter.fire({ value: result });

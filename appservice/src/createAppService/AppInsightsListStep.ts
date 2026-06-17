@@ -41,7 +41,7 @@ export class AppInsightsListStep extends AzureWizardPromptStep<IAppServiceWizard
 
     public static async isNameAvailable(context: IAppServiceWizardContext, name: string): Promise<boolean> {
         const components: ApplicationInsightsComponent[] = await AppInsightsListStep.getAppInsightsComponents(context);
-        return !components.some((ai: ApplicationInsightsComponent) => ai.name !== undefined && ai.name.toLowerCase() === name.toLowerCase());
+        return !components.some((ai: ApplicationInsightsComponent) => ai.name?.toLowerCase() === name.toLowerCase());
     }
 
     public async prompt(context: IAppServiceWizardContext): Promise<void> {

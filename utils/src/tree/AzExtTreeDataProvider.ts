@@ -31,7 +31,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
     constructor(rootTreeItem: AzExtParentTreeItem, loadMoreCommandId: string) {
         this._loadMoreCommandId = loadMoreCommandId;
         this._rootTreeItem = rootTreeItem;
-        rootTreeItem.treeDataProvider = <IAzExtTreeDataProviderInternal>this;
+        rootTreeItem.treeDataProvider = this;
     }
 
     public get onDidChangeTreeData(): Event<AzExtTreeItem | undefined> {
@@ -85,7 +85,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
     public async getChildren(arg?: AzExtParentTreeItem): Promise<AzExtTreeItem[]> {
         try {
-            return <AzExtTreeItem[]>await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- callWithTelemetryAndErrorHandling returns children unless it throws
+            return (await callWithTelemetryAndErrorHandling('AzureTreeDataProvider.getChildren', async (context: types.IActionContext) => {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
                 context.errorHandling.forceIncludeInReportIssueCommand = true;
@@ -131,7 +132,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
                 context.telemetry.measurements.childCount = result.length;
                 return result;
-            });
+            }))!;
         } catch (error) {
             return [new GenericTreeItem(arg, {
                 label: l10n.t('Error: {0}', parseError(error).message),
@@ -148,7 +149,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         }
 
         if (isAzExtParentTreeItem(treeItem)) {
-            (<AzExtParentTreeItem>treeItem).clearCache();
+            treeItem.clearCache();
         }
 
         this.refreshUIOnly(treeItem);
@@ -180,7 +181,7 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
 
         while (!treeItem.matchesContextValue(expectedContextValues)) {
             if (isAzExtParentTreeItem(treeItem)) {
-                const pickedItems: AzExtTreeItem | AzExtTreeItem[] = await (<AzExtParentTreeItem>treeItem).pickChildTreeItem(expectedContextValues, context);
+                const pickedItems: AzExtTreeItem | AzExtTreeItem[] = await treeItem.pickChildTreeItem(expectedContextValues, context);
                 if (Array.isArray(pickedItems)) {
                     // canPickMany is only supported at the last stage of the picker, so automatically return if this is an array
                     return <T[]><unknown>pickedItems;
@@ -196,8 +197,8 @@ export class AzExtTreeDataProvider implements IAzExtTreeDataProviderInternal, ty
         return <T><unknown>treeItem;
     }
 
-    public async getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
-        return treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent;
+    public getParent(treeItem: AzExtTreeItem): Promise<AzExtTreeItem | undefined> {
+        return Promise.resolve(treeItem.parent === this._rootTreeItem ? undefined : treeItem.parent);
     }
 
     public async findTreeItem<T extends types.AzExtTreeItem>(fullId: string, context: types.IFindTreeItemContext): Promise<T | undefined> {

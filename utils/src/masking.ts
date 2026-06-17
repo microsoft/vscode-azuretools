@@ -81,6 +81,7 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
             throw error;
         }
 
+        // eslint-disable-next-line preserve-caught-error -- intentionally omit `cause`: the caught error may contain unmasked PII and must not be attached to the rethrown error
         throw new Error(maskValue(parsedError.message, valueToMask));
     }
 }

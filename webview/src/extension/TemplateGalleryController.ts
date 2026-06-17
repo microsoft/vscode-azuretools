@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { ext } from './extensionVariables';
 import { WebviewBaseController } from './WebviewBaseController';
@@ -220,7 +221,31 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
 
     private async _handleCreateProject(template: IProjectTemplate, language: string, location: string): Promise<void> {
         try {
-            await this.createProject(template, language, location);
+            let projectPath = location?.trim() ?? '';
+
+            // Resolve a relative location against the open workspace so the user's
+            // input is preserved instead of being discarded.
+            if (projectPath && !path.isAbsolute(projectPath)) {
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                if (workspaceFolder) {
+                    projectPath = path.join(workspaceFolder.uri.fsPath, projectPath);
+                }
+            }
+
+            // Prompt when there's still no usable absolute path, otherwise copying
+            // resolves against the process cwd and writes to the drive root (EPERM).
+            if (!projectPath || !path.isAbsolute(projectPath)) {
+                const selectedFolder = await this.browseFolder();
+                if (!selectedFolder) {
+                    // User dismissed the picker; return to the gallery silently.
+                    this.postMessageToWebview({ type: 'projectCreationFailed', error: '' });
+                    return;
+                }
+                projectPath = selectedFolder;
+                this.postMessageToWebview({ type: 'folderSelected', path: projectPath, source: 'template' });
+            }
+
+            await this.createProject(template, language, projectPath);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             this.postMessageToWebview({ type: 'projectCreationFailed', error: msg });

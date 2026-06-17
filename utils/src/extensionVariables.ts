@@ -49,14 +49,14 @@ export function registerUIExtensionVariables(extVars: types.UIExtensionVariables
     // eslint-disable-next-line @typescript-eslint/naming-convention
     ext = Object.assign(extVars, { _internalReporter: createTelemetryReporter(extVars.context) });
 
-    registerErrorHandler(handleEntryNotFound);
+    registerErrorHandler((context) => { void handleEntryNotFound(context); });
 }
 
 /**
  * Long-standing issue that is pretty common for all Azure calls, but can be fixed with a simple reload of VS Code
  * https://github.com/microsoft/vscode-azure-account/issues/53
  */
-async function handleEntryNotFound(context: types.IErrorHandlerContext): Promise<void> {
+function handleEntryNotFound(context: types.IErrorHandlerContext): Promise<void> {
     if (parseError(context.error).message === 'Entry not found in cache.') {
         context.error = new Error(l10n.t('Your VS Code window must be reloaded to perform this action.'));
         context.errorHandling.suppressReportIssue = true;
@@ -69,4 +69,6 @@ async function handleEntryNotFound(context: types.IErrorHandlerContext): Promise
             }
         ];
     }
+
+    return Promise.resolve();
 }

@@ -40,7 +40,7 @@ export class GenericParentTreeItem extends AzExtParentTreeItem implements types.
         this.label = options.label;
         this.suppressMaskLabel = options.suppressMaskLabel;
 
-        this.compareChildrenImpl = options.compareChildrenImpl ?? (() => 0);
+        this.compareChildrenImpl = options.compareChildrenImpl ? (ti1, ti2) => options.compareChildrenImpl?.(ti1, ti2) ?? 0 : (() => 0);
     }
 
     public loadMoreChildrenImpl(clearCache: boolean, context: types.IActionContext): Promise<AzExtTreeItem[]> {

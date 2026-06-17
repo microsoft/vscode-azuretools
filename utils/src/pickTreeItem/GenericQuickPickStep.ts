@@ -58,7 +58,7 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
     }
 
     protected async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
-        const lastPickedItem: unknown | undefined = getLastNode(wizardContext);
+        const lastPickedItem: unknown = getLastNode(wizardContext);
 
         // TODO: if `lastPickedItem` is an `AzExtParentTreeItem`, should we clear its cache?
         const childElements = (await this.treeDataProvider.getChildren(lastPickedItem)) ?? [];
@@ -87,11 +87,11 @@ export abstract class GenericQuickPickStep<TContext extends types.QuickPickWizar
         return picks;
     }
 
-    protected async getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
-        return {
+    protected getQuickPickItem(element: unknown, item: vscode.TreeItem): Promise<types.IAzureQuickPickItem<unknown>> {
+        return Promise.resolve({
             label: ((item.label as vscode.TreeItemLabel)?.label || item.label) as string,
             description: item.description as string,
             data: element,
-        };
+        });
     }
 }

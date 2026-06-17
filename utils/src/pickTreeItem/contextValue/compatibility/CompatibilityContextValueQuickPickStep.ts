@@ -49,11 +49,11 @@ export class CompatibilityContextValueQuickPickStep<TContext extends types.Quick
         const lastPickedItemUnwrapped = isWrapper(lastPickedItem) ? lastPickedItem.unwrap() : lastPickedItem;
         if (isAzExtParentTreeItem(lastPickedItemUnwrapped)) {
             const children = await this.treeDataProvider.getChildren(lastPickedItem);
-            if (children && children.length) {
+            if (children?.length) {
                 this.pickOptions.skipIfOne = lastPickedItemUnwrapped.autoSelectInTreeItemPicker;
                 const customChild = await this.getCustomChildren(wizardContext, lastPickedItemUnwrapped);
                 const customPick = children.find((child) => {
-                    const ti: AzExtTreeItem = isWrapper(child) ? child.unwrap() : child as unknown as AzExtTreeItem;
+                    const ti: AzExtTreeItem = isWrapper(child) ? child.unwrap() : child as AzExtTreeItem;
                     return ti.fullId === customChild?.fullId;
                 });
 

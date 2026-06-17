@@ -17,7 +17,7 @@ type ExtendedSkuDescription = SkuDescription & { label?: string; description?: s
 
 export class AppServicePlanSkuStep extends AzureWizardPromptStep<IAppServiceWizardContext> {
     public async prompt(context: IAppServiceWizardContext): Promise<void> {
-        let skus: ExtendedSkuDescription[] = [];
+        let skus: ExtendedSkuDescription[];
         if (await this.isPV4Region(context)) {
             skus = context.advancedCreation ? this.pv4RecommendedSkus().concat(this.getAdvancedSkus()) : this.pv4RecommendedSkus();
         } else {

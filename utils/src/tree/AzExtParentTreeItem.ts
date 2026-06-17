@@ -250,7 +250,7 @@ export abstract class AzExtParentTreeItem extends AzExtTreeItem implements types
                 // Just in case implementers of `loadMoreChildrenImpl` re-use the same child node, we want to clear those caches as well
                 for (const child of this._cachedChildren) {
                     if (isAzExtParentTreeItem(child)) {
-                        (<AzExtParentTreeItem>child).clearCache();
+                        child.clearCache();
                     }
                 }
                 this._cachedChildren = [];
@@ -372,7 +372,7 @@ export class InvalidTreeItem extends AzExtParentTreeItem implements types.Invali
         return new ThemeIcon('warning');
     }
 
-    public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
+    public loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
         throw this._error;
     }
 

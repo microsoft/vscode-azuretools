@@ -50,7 +50,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             label: lastPickedItemTi.createNewLabel ?? vscode.l10n.t('$(plus) Create new {0}...', lastPickedItemTi.childTypeLabel!)
         } : undefined;
 
-        const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
+        const picks = await this.getPicks(wizardContext);
 
         if (picks.length === 1 && this.pickOptions.skipIfOne && typeof picks[0].data !== 'function') {
             return picks[0].data;
@@ -78,7 +78,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
                     const createdTreeItem = await callback?.(wizardContext) as AzExtTreeItem;
 
                     // convert created AzExtTreeItem to a BranchDataItem so the wizard can get its children in the next step
-                    const picks = await this.getPicks(wizardContext) as types.IAzureQuickPickItem<unknown>[];
+                    const picks = await this.getPicks(wizardContext);
                     const createdPick = picks.find((pick) => {
                         return (pick.data as Wrapper).unwrap<AzExtTreeItem>().fullId === createdTreeItem.fullId;
                     });
@@ -124,6 +124,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
     }
 
     protected override async getPicks(wizardContext: TContext): Promise<types.IAzureQuickPickItem<unknown>[]> {
+        // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents -- create pick data is unioned with arbitrary tree item data
         const picks: types.IAzureQuickPickItem<unknown | CreateCallback>[] = [];
         try {
             picks.push(...await super.getPicks(wizardContext));
@@ -139,7 +140,7 @@ export class CompatibilityRecursiveQuickPickStep<TContext extends types.QuickPic
             picks.push(this.getCreatePick(this.pickOptions.create));
         }
 
-        return picks as types.IAzureQuickPickItem<unknown>[];
+        return picks;
     }
 
     private getCreatePick(options: CreateOptions): types.IAzureQuickPickItem<CreateCallback> {

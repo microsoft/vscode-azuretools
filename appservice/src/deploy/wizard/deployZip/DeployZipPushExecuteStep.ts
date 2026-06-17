@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RequestBodyType } from "@azure/core-rest-pipeline";
 import { AzExtPipelineResponse } from "@microsoft/vscode-azext-azureutils";
 import { publisherName } from "../../../constants";
 import { InnerDeployContext } from "../../IDeployContext";
@@ -14,7 +13,7 @@ export class DeployZipPushExecuteStep extends DeployZipBaseExecuteStep {
     public async deployZip(context: InnerDeployContext): Promise<AzExtPipelineResponse | void> {
         const kuduClient = await context.site.createClient(context);
         const callback = async (zipStream: NodeJS.ReadableStream) => {
-            return await kuduClient.zipPushDeploy(context, (() => zipStream) as RequestBodyType, {
+            return await kuduClient.zipPushDeploy(context, (() => zipStream), {
                 author: publisherName,
                 deployer: publisherName,
                 isAsync: true,
