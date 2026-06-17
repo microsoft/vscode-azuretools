@@ -3,42 +3,16 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { execFileSync } from "child_process";
 import type { CopilotClient, CopilotSession } from "@github/copilot-sdk";
 import type * as vscode from "vscode";
 import { InvalidCopilotResponseError } from "../errors";
-import { ensureCopilotCliInstalled } from "./installCopilotCli";
+import { ensureCopilotCliInstalled, getCopilotCliPath } from "./installCopilotCli";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
 
 async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
     return await import("@github/copilot-sdk");
-}
-
-/** @internal Exported for testing. */
-export function getCopilotCliPath(): string {
-    try {
-        return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
-    } catch {
-        // The platform-specific binary package is not present. Fall back to a globally
-        // installed `copilot` CLI on PATH.
-        // We must resolve the full path because CopilotClient uses existsSync()
-        // which does not search PATH for bare command names.
-        try {
-            const fullPath = execFileSync(
-                process.platform === 'win32' ? 'where' : 'which',
-                ['copilot'],
-                { encoding: 'utf-8' },
-            ).trim().split('\n')[0];
-            if (fullPath) {
-                return fullPath;
-            }
-        } catch {
-            // which/where failed, fall back to bare command name
-        }
-        return 'copilot';
-    }
 }
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {

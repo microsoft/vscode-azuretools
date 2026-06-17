@@ -3,7 +3,9 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { type CommandLineArgs, composeArgs, spawnStreamAsync, withArg } from "@microsoft/vscode-processutils";
+import { type CommandLineArgs, composeArgs, getSafeExecPath, spawnStreamAsync, withArg } from "@microsoft/vscode-processutils";
+import { existsSync } from "fs";
+import * as path from "path";
 import { Writable } from "stream";
 import * as vscode from "vscode";
 import { ext } from "../extensionVariables";
@@ -11,6 +13,61 @@ import { ext } from "../extensionVariables";
 interface InstallCommand {
     command: string;
     args: CommandLineArgs;
+}
+
+/**
+ * Resolves the full filesystem path to the platform-specific `@github/copilot` binary,
+ * falling back to a globally installed `copilot` CLI on PATH.
+ *
+ * We must resolve a real, absolute file path because `CopilotClient` validates `cliPath`
+ * with `existsSync()` and does not search PATH for bare command names.
+ *
+ * @internal Exported for testing.
+ */
+export function getCopilotCliPath(): string {
+    try {
+        return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
+    } catch {
+        // The platform-specific binary package is not present. Fall back to a globally installed `copilot` CLI on PATH.
+        return resolveCopilotCliFromPath() ?? 'copilot';
+    }
+}
+
+/**
+ * Searches PATH for the `copilot` executable and returns its absolute path, or `undefined`
+ * if it cannot be found. Uses {@link getSafeExecPath} to resolve against PATH and verifies the
+ * result with `existsSync()`, then falls back to a manual PATH scan (which also resolves a real
+ * file path on non-Windows platforms, where `getSafeExecPath` returns the bare command name).
+ */
+function resolveCopilotCliFromPath(): string | undefined {
+    try {
+        const execPath = getSafeExecPath('copilot');
+        if (path.isAbsolute(execPath) && existsSync(execPath)) {
+            return execPath;
+        }
+    } catch {
+        // `copilot` was not found on PATH; fall through to a manual scan.
+    }
+
+    return scanPathForCopilot();
+}
+
+function scanPathForCopilot(): string | undefined {
+    const pathDirs = (process.env.PATH || '').split(path.delimiter).filter(dir => dir.length > 0);
+    const exeNames = process.platform === 'win32'
+        ? (process.env.PATHEXT || '.EXE;.CMD;.BAT').split(';').map(pathExt => `copilot${pathExt.trim().toLowerCase()}`)
+        : ['copilot'];
+
+    for (const dir of pathDirs) {
+        for (const exeName of exeNames) {
+            const candidate = path.join(dir, exeName);
+            if (existsSync(candidate)) {
+                return candidate;
+            }
+        }
+    }
+
+    return undefined;
 }
 
 export async function isCopilotCliInstalled(): Promise<boolean> {
@@ -78,7 +135,7 @@ async function runInstallCommand(installCommand: InstallCommand): Promise<void> 
     ext.outputChannel.appendLog(vscode.l10n.t('Installing GitHub Copilot CLI via "{0}"...', installCommand.command));
 
     const outputStream = new Writable({
-        write(chunk, _encoding, callback) {
+        write(chunk: Buffer, _encoding, callback) {
             ext.outputChannel.appendLog(chunk.toString());
             callback();
         },
