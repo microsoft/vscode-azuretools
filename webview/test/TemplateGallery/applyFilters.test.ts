@@ -74,4 +74,10 @@ suite('(unit) applyFilters', () => {
         const noLangs = { ...template({ id: 'no-langs', displayName: 'Bare' }), languages: undefined } as unknown as IProjectTemplate;
         assert.doesNotThrow(() => apply([noLangs], emptyFilters({ search: '.net' })));
     });
+
+    test('language filter does not throw when a template has no languages', () => {
+        const noLangs = { ...template({ id: 'no-langs', displayName: 'Bare' }), languages: undefined } as unknown as IProjectTemplate;
+        assert.doesNotThrow(() => apply([noLangs], emptyFilters({ language: 'dotnet' })));
+        assert.deepStrictEqual(apply([noLangs], emptyFilters({ language: 'dotnet' })), []);
+    });
 });

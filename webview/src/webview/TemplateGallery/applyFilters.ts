@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import type { FilterState, IProjectTemplate } from './types';
@@ -22,7 +22,7 @@ export function createApplyFilters(
 
         if (filters.language !== 'all') {
             results = results.filter(t =>
-                t.languages.some(lang => languageFilterMap[lang] === filters.language)
+                (t.languages ?? []).some(lang => languageFilterMap[lang] === filters.language)
             );
         }
 
