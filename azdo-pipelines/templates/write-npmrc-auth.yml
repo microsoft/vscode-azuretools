@@ -37,6 +37,8 @@ steps:
         Write-Host "##vso[task.setvariable variable=npmrcFile]$npmrcPath"
       } else {
         Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
+        # Clear in case an earlier invocation in this job set it, so this run is self-contained
+        Write-Host "##vso[task.setvariable variable=npmrcFile]"
       }
     displayName: "👉 Configure npm/pnpm registry"
 
