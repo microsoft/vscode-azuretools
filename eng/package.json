@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.1.0-alpha.1",
+    "version": "1.1.0-alpha.2",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -38,24 +38,24 @@
     },
     "dependencies": {
         "@eslint/js": "^10.0.1",
-        "@tony.ganchev/eslint-plugin-header": "^3.4.3",
+        "@tony.ganchev/eslint-plugin-header": "^3.4.4",
         "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
         "@types/mocha": "^10.0.10",
         "chai": "^6.2.2",
         "chai-as-promised": "^8.0.2",
-        "eslint": "^10.2.1",
-        "mocha": "^11.7.5",
+        "eslint": "^10.5.0",
+        "mocha": "^11.7.6",
         "typescript": "~5.9",
-        "typescript-eslint": "^8.59.0"
+        "typescript-eslint": "^8.61.1"
     },
     "peerDependencies": {
         "@vscode/test-cli": "^0.0.12",
-        "@vscode/test-electron": "^2.5.2",
-        "@vscode/vsce": "^3.9.1",
-        "esbuild": "^0.28.0",
+        "@vscode/test-electron": "^3.0.0",
+        "@vscode/vsce": "^3.9.2",
+        "esbuild": "^0.28.1",
         "esbuild-plugin-copy": "^2.1.1",
-        "tsx": "^4.21.0"
+        "tsx": "^4.22.4"
     },
     "peerDependenciesMeta": {
         "@vscode/test-cli": {
