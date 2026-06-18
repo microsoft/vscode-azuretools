@@ -1,0 +1,49 @@
+parameters:
+  # Directory in which to write (or read) the .npmrc file.
+  - name: workingDirectory
+    type: string
+
+  # Base URL of an Azure Artifacts universal feed
+  # (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
+  # When set, the registry is written as "<feedBaseUrl>/npm/registry/".
+  - name: feedBaseUrl
+    type: string
+    default: ""
+
+steps:
+  # Respect a checked-in .npmrc if present (in the working directory, or falling back to
+  # the repo root); otherwise write one from feedBaseUrl. Sets npmrcFile to the resolved
+  # path, which gates and targets the authentication step below.
+  - pwsh: |
+      $workingNpmrc = Join-Path "${{ parameters.workingDirectory }}" ".npmrc"
+      $rootNpmrc = Join-Path "$(Build.SourcesDirectory)" ".npmrc"
+      $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
+
+      $npmrcPath = $null
+      if (Test-Path $workingNpmrc) {
+        Write-Host "Using checked-in .npmrc in working directory: $workingNpmrc"
+        $npmrcPath = $workingNpmrc
+      } elseif (Test-Path $rootNpmrc) {
+        Write-Host "Using checked-in .npmrc at repo root: $rootNpmrc"
+        $npmrcPath = $rootNpmrc
+      } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
+        $registry = "$feedBaseUrl/npm/registry/"
+        Set-Content -Path $workingNpmrc -Value "registry=$registry`nalways-auth=true`n"
+        Write-Host "Wrote .npmrc with registry $registry"
+        $npmrcPath = $workingNpmrc
+      }
+
+      if ($npmrcPath) {
+        Write-Host "##vso[task.setvariable variable=npmrcFile]$npmrcPath"
+      } else {
+        Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
+        # Clear in case an earlier invocation in this job set it, so this run is self-contained
+        Write-Host "##vso[task.setvariable variable=npmrcFile]"
+      }
+    displayName: "👉 Configure npm/pnpm registry"
+
+  - task: npmAuthenticate@0
+    displayName: "👉 Authenticate NPM"
+    condition: and(succeeded(), ne(variables['npmrcFile'], ''))
+    inputs:
+      workingFile: $(npmrcFile)

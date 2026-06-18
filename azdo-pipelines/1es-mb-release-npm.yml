@@ -27,6 +27,14 @@ parameters:
   - name: approverAliases
     type: string
 
+  # Base URL of an Azure Artifacts universal feed for an internal NPM mirror
+  # (e.g. https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode).
+  # When set, the package is also published to this feed after the ESRP publish to npmjs.org succeeds.
+  # Same-org feeds authenticate with the build identity, so no service connection is needed.
+  - name: feedBaseUrl
+    type: string
+    default: ""
+
   # The pool to use for releases
   - name: releasePool
     type: object
@@ -111,6 +119,25 @@ extends:
                   - pwsh: Write-Host "Skipping NPM publish"
                     displayName: "👉 Publish NPM package (skipped - dry run)"
                     condition: false
+
+              # (Optional) Publish the same tarball to an internal Azure Artifacts feed,
+              # but only after the ESRP publish above has completed successfully.
+              # NOTE: Template references / the npmAuthenticate task don't combine cleanly with
+              # `condition:` for dryRun, so dryRun and feedBaseUrl remain compile-time checks here.
+              - ${{ if and(ne(parameters.feedBaseUrl, ''), eq(parameters.dryRun, false)) }}:
+                  - template: azdo-pipelines/templates/write-npmrc-auth.yml@azExtTemplates
+                    parameters:
+                      workingDirectory: $(tgzFolderName)
+                      feedBaseUrl: ${{ parameters.feedBaseUrl }}
+
+                  - task: Npm@1
+                    displayName: "👉 Publish NPM package to internal feed"
+                    inputs:
+                      command: custom
+                      workingDir: "$(tgzFolderName)"
+                      # Publish the exact pre-built tarball, skipping lifecycle scripts; auth comes
+                      # from the .npmrc written/authenticated by write-npmrc-auth.yml above.
+                      customCommand: publish "$(tgzFileName)" --ignore-scripts
 
               # (Optional) Create a draft release on GitHub containing the package
               - ${{ if ne(parameters.gitHubServiceConnection, '') }}:

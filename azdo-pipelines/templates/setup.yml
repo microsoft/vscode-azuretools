@@ -38,28 +38,10 @@ steps:
 
   # Private-feed auth: use a checked-in .npmrc, or write one from feedBaseUrl;
   # authenticate when present, skip otherwise.
-  - pwsh: |
-      $npmrcPath = "$(working_directory)/.npmrc"
-      $feedBaseUrl = "${{ parameters.feedBaseUrl }}".TrimEnd("/")
-      if (Test-Path $npmrcPath) {
-        Write-Host "Using checked-in .npmrc"
-        Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
-      } elseif (-not [string]::IsNullOrWhiteSpace($feedBaseUrl)) {
-        $registry = "$feedBaseUrl/npm/registry/"
-        Set-Content -Path $npmrcPath -Value "registry=$registry`nalways-auth=true`n"
-        Write-Host "Wrote .npmrc with registry $registry"
-        Write-Host "##vso[task.setvariable variable=needsNpmAuth]true"
-      } else {
-        Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
-        Write-Host "##vso[task.setvariable variable=needsNpmAuth]false"
-      }
-    displayName: "👉 Configure npm/pnpm registry"
-
-  - task: npmAuthenticate@0
-    displayName: "👉 Authenticate NPM"
-    condition: and(succeeded(), eq(variables['needsNpmAuth'], 'true'))
-    inputs:
-      workingFile: $(working_directory)/.npmrc
+  - template: write-npmrc-auth.yml
+    parameters:
+      workingDirectory: $(working_directory)
+      feedBaseUrl: ${{ parameters.feedBaseUrl }}
 
   - pwsh: $(packageManager) ci
     displayName: "👉 Install Dependencies"
