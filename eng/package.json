@@ -78,7 +78,7 @@
         }
     },
     "devDependencies": {
-        "@types/node": "25.x",
+        "@types/node": "22.x",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",
         "esbuild": "*",
