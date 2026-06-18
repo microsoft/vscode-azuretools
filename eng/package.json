@@ -46,7 +46,7 @@
         "chai-as-promised": "^8.0.2",
         "eslint": "^10.5.0",
         "mocha": "^11.7.6",
-        "typescript": "~6.0",
+        "typescript": "~5.9",
         "typescript-eslint": "^8.61.1"
     },
     "peerDependencies": {
