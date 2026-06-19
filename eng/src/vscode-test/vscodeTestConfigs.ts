@@ -4,6 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defineConfig, type TestConfiguration as VscodeTestConfig } from '@vscode/test-cli';
+import { createHash } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /**
  * Base config - shared between different test configs
@@ -20,6 +23,21 @@ export const baseConfig: Partial<VscodeTestConfig> = {
         DEBUGTELEMETRY: '1',
     },
 };
+
+if (process.platform !== 'win32') {
+    // @vscode/test-cli creates an AF_UNIX IPC socket under the user-data dir on macOS/Linux. Deep
+    // checkouts and git worktrees can push the default socket path past sockaddr_un.sun_path's
+    // 104-character limit, so use a short temp path instead. Windows uses named pipes, so leave it
+    // unchanged. Hash process.cwd() so each consuming checkout gets its own stable user-data dir
+    // instead of colliding on the shared eng package path, and reuse that deterministic path
+    // instead of creating a fresh mkdtemp-style temp directory on every run.
+    const checkoutHash = createHash('sha1').update(process.cwd()).digest('hex').slice(0, 8);
+    baseConfig.launchArgs = [
+        ...(baseConfig.launchArgs ?? []),
+        '--user-data-dir',
+        join(tmpdir(), `vscode-azure-test-${checkoutHash}`),
+    ];
+}
 
 /**
  * Test configuration for extensions with tests in `./src/test/` directory.
