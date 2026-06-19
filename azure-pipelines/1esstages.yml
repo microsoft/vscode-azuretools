@@ -51,6 +51,9 @@ stages:
                   targetPath: $(build.artifactstagingdirectory)/build/$(artifact_name)
                   artifactName: Build $(artifact_name)
             steps:
+              - pwsh: |
+                  Write-Host "##vso[task.logissue type=warning]The 'azure-pipelines' templates in microsoft/vscode-azuretools are deprecated and will be removed in a future release. Please migrate to the new 'azdo-pipelines' templates. See https://github.com/microsoft/vscode-azuretools/blob/main/azdo-pipelines/MIGRATION.md for migration instructions."
+                displayName: "\U000026A0 Deprecation Warning"
               - template: ./templates/setup.yml
                 parameters:
                   additionalSetupSteps: ${{ parameters.additionalSetupSteps }}
