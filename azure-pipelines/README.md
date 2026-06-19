@@ -1,5 +1,8 @@
 ## Usage
 
+> [!WARNING]
+> The templates in this `azure-pipelines` folder are **deprecated** and will be removed in a future release. Please migrate to the new templates in the [`azdo-pipelines`](../azdo-pipelines) folder. See the [migration guide](../azdo-pipelines/MIGRATION.md) for instructions.
+
 ### 1ES pipelines
 To use these base pipeline templates:
 1. Your project must have an `.nvmrc` file with the appropriate Node.js version at the root of the repository
