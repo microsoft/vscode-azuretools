@@ -32,22 +32,6 @@ extends:
   template: azdo-pipelines/1es-mb-main.yml@azExtTemplates
   parameters:
     signType: none
+    packageManager: pnpm
     feedBaseUrl: ${{ variables.feedBaseUrl }}
     testARMServiceConnection: ${{ variables.testARMServiceConnection }}
-    jobs:
-      - name: microsoft_vscode_azext_azureappservice
-        working_directory: appservice
-      - name: microsoft_vscode_azext_azureappsettings
-        working_directory: appsettings
-      - name: microsoft_vscode_azext_azureauth
-        working_directory: auth
-      - name: microsoft_vscode_azext_azureutils
-        working_directory: azure
-      - name: microsoft_vscode_azext_eng
-        working_directory: eng
-      - name: microsoft_vscode_azext_github
-        working_directory: github
-      - name: microsoft_vscode_azext_utils
-        working_directory: utils
-      - name: microsoft_vscode_azext_webview
-        working_directory: webview

@@ -1,0 +1,49 @@
+packages:
+  - eng
+  - appservice
+  - appsettings
+  - auth
+  - azure
+  - github
+  - utils
+  - webview
+
+publicHoistPattern:
+  # Hoist some dev dependencies from the eng package
+  - "*eslint*"
+  - "typescript"
+  - "mocha"
+  - "@types/mocha"
+  - "chai"
+  - "@types/chai"
+
+overrides:
+  serialize-javascript: "^7.0.5" # Temporary override until Mocha 12 is available and used by @vscode/test-cli
+
+allowBuilds:
+  esbuild: true
+  "@parcel/watcher": true
+  "@vscode/vsce-sign": true
+  keytar: true
+
+catalog:
+  # Shared devDependencies
+  "@types/node": "22.x"
+  "@types/vscode": "1.105.0"
+  "@types/semver": "^7.7.1"
+  "@vscode/test-cli": "^0.0.12"
+  "@vscode/test-electron": "^3.0.0"
+  tsx: "^4.22.4"
+  esbuild: "^0.28.1"
+  esbuild-plugin-copy: "^2.1.1"
+  typescript: "~5.9"
+
+  # Shared dependencies
+  "@azure/core-rest-pipeline": "^1.23.0"
+  "@azure/core-client": "^1.10.1"
+  "@azure/core-auth": "^1.10.1"
+  "@azure/arm-resources-subscriptions": "^3.0.0-beta.1"
+  "@azure/ms-rest-azure-env": "^2.0.0"
+  "@microsoft/vscode-azureresources-api": "^3.1.1"
+  semver: "^7.7.4"
+  dayjs: "^1.11.19"

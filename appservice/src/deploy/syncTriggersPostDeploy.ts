@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext } from '@microsoft/vscode-azext-utils';
-import retry from 'p-retry';
+import pRetry from 'p-retry';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
@@ -20,8 +20,10 @@ export async function syncTriggersPostDeploy(context: IActionContext, site: Pars
     // Retry at most 5 times, with initial spacing of 5 seconds and total max time of about 3 minutes
     const retries: number = 5;
     const client = await site.createClient(context);
-    await retry(
-        async (currentAttempt: number) => {
+    let currentAttempt = 0;
+    await pRetry(
+        async () => {
+            currentAttempt++;
             const message: string = currentAttempt === 1 ?
                 vscode.l10n.t('Syncing triggers...') :
                 vscode.l10n.t('Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);

@@ -4,14 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
-import retry from 'p-retry';
+import pRetry from 'p-retry';
 
 /**
  * Kudu calls are not the most reliable - this will retry a few times with exponential backoff. Each "set" of retries will take a max of about 15 seconds
  */
 export async function retryKuduCall<T>(context: IActionContext, methodName: string, callback: () => Promise<T>): Promise<T> {
-    return await retry(
-        async (attempt: number) => {
+    let attempt = 0;
+    return await pRetry(
+        async () => {
+            attempt++;
             if (attempt > 1) { // only add telemetry if it needed a retry
                 const existingAttempt: number | undefined = context.telemetry.measurements.kuduMaxRetry;
                 if (existingAttempt === undefined || existingAttempt < attempt) {

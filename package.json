@@ -1,0 +1,21 @@
+{
+    "name": "@microsoft/vscode-azuretools",
+    "private": true,
+    "description": "Common packages for developing Azure extensions for VS Code",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azuretools"
+    },
+    "license": "MIT",
+    "packageManager": "pnpm@11.8.0",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "build": "pnpm -r --parallel run build",
+        "lint": "pnpm -r --parallel run lint",
+        "test": "pnpm -r --workspace-concurrency=1 run test",
+        "package": "pnpm -r --parallel run package",
+        "clean": "pnpm -r --parallel exec -- node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+    }
+}

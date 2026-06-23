@@ -32,7 +32,8 @@ type ThemeGenModule = typeof import('../../src/webview/theme/themeGenerator.js')
 let themeGen: ThemeGenModule;
 
 suite('(unit) themeGenerator', () => {
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        this.timeout(10000); // dynamic import of @fluentui/react-components is slow on CI
         themeGen = await import('../../src/webview/theme/themeGenerator.js');
     });
 

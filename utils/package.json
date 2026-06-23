@@ -55,28 +55,28 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/utils/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "pnpm run build:esm && pnpm run build:cjs",
         "build:esm": "tsc -p ./",
-        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false --skipLibCheck",
         "lint": "eslint --max-warnings 0",
         "test": "vscode-test",
-        "package": "npm pack",
-        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+        "package": "pnpm pack",
+        "l10n": "pnpx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@microsoft/vscode-azureresources-api": "^3.1.1",
+        "@microsoft/vscode-azureresources-api": "catalog:",
         "@microsoft/vscode-processutils": "^0.2.1",
         "@vscode/extension-telemetry": "^1.5.2",
-        "dayjs": "^1.11.19",
+        "dayjs": "catalog:",
         "html-to-text": "^9.0.5",
-        "semver": "^7.7.4",
+        "semver": "catalog:",
         "vscode-tas-client": "^0.1.84"
     },
     "peerDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0",
+        "@azure/ms-rest-azure-env": "catalog:",
         "@github/copilot-sdk": "0.1.32"
     },
     "peerDependenciesMeta": {
@@ -87,15 +87,13 @@
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/html-to-text": "^9.0.4",
-        "@types/node": "22.x",
-        "@types/semver": "^7.7.1",
-        "@types/vscode": "1.105.0",
-        "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*",
-        "@github/copilot-sdk": "*",
-        "tsx": "*"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "@types/node": "catalog:",
+        "@types/semver": "catalog:",
+        "@types/vscode": "catalog:",
+        "@vscode/test-cli": "catalog:",
+        "@vscode/test-electron": "catalog:",
+        "@github/copilot-sdk": "0.1.32",
+        "tsx": "catalog:",
+        "vscode-jsonrpc": "^8.2.1"
     }
 }
