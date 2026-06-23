@@ -29,12 +29,12 @@
         }
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "pnpm run build:esm && pnpm run build:cjs",
         "build:esm": "tsc",
         "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "test": "exit 0",
         "lint": "eslint --max-warnings 0",
-        "package": "npm pack"
+        "package": "pnpm pack"
     },
     "dependencies": {
         "@eslint/js": "^10.0.1",
@@ -46,7 +46,7 @@
         "chai-as-promised": "^8.0.2",
         "eslint": "^10.5.0",
         "mocha": "^11.7.6",
-        "typescript": "~5.9",
+        "typescript": "catalog:",
         "typescript-eslint": "^8.61.1"
     },
     "peerDependencies": {
@@ -78,16 +78,13 @@
         }
     },
     "devDependencies": {
-        "@types/node": "22.x",
-        "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*",
-        "esbuild": "*",
-        "esbuild-plugin-copy": "*"
+        "@types/node": "catalog:",
+        "@vscode/test-cli": "catalog:",
+        "@vscode/test-electron": "catalog:",
+        "esbuild": "catalog:",
+        "esbuild-plugin-copy": "catalog:"
     },
     "publishConfig": {
         "tag": "alpha"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
     }
 }

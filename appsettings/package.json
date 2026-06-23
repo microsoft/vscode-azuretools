@@ -24,13 +24,13 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/appsettings/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "pnpm run build:esm && pnpm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --max-warnings 0",
         "test": "exit 0",
-        "package": "npm pack",
-        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+        "package": "pnpm pack",
+        "l10n": "pnpx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
         "vscode": "^1.105.0"
@@ -41,10 +41,7 @@
     "devDependencies": {
         "@azure/arm-appservice": "^18.0.0",
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
-        "@types/node": "22.x",
-        "@types/vscode": "1.105.0"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "@types/node": "catalog:",
+        "@types/vscode": "catalog:"
     }
 }

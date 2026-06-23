@@ -24,13 +24,13 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/appservice/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "pnpm run build:esm && pnpm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --max-warnings 0",
         "test": "vscode-test",
-        "package": "npm pack",
-        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+        "package": "pnpm pack",
+        "l10n": "pnpx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
         "vscode": "^1.105.0"
@@ -40,38 +40,36 @@
         "@azure/arm-appinsights": "^5.0.0-beta.4",
         "@azure/arm-appservice": "^18.0.0",
         "@azure/arm-operationalinsights": "^8.0.1",
+        "@azure/arm-resources": "^6.0.0",
         "@azure/arm-resourcegraph": "^5.0.0-beta.3",
-        "@azure/core-rest-pipeline": "^1.10.3",
+        "@azure/core-auth": "catalog:",
+        "@azure/core-rest-pipeline": "catalog:",
         "@azure/storage-blob": "^12.3.0",
         "@microsoft/vscode-azext-azureutils": "^4.0.0",
         "@microsoft/vscode-azext-github": "^2.0.0",
         "@microsoft/vscode-azext-utils": "^4.1.1",
-        "dayjs": "^1.11.2",
+        "dayjs": "catalog:",
         "fs-extra": "^10.0.0",
-        "p-retry": "^3.0.1",
+        "p-retry": "^8.0.0",
         "pretty-bytes": "^5.3.0",
         "simple-git": "^3.5.0",
         "ws": "^8.5.0",
         "yazl": "^2.5.1"
     },
     "peerDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0",
+        "@azure/ms-rest-azure-env": "catalog:",
         "@microsoft/vscode-azext-azureappsettings": "^1.0.0"
     },
     "devDependencies": {
-        "@azure/core-client": "^1.7.2",
+        "@azure/core-client": "catalog:",
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/fs-extra": "^9.0.13",
-        "@types/node": "22.x",
-        "@types/p-retry": "^2.0.0",
-        "@types/vscode": "1.105.0",
+        "@types/node": "catalog:",
+        "@types/vscode": "catalog:",
         "@types/ws": "^8.5.3",
         "@types/yazl": "^2.4.2",
-        "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*",
-        "tsx": "*"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "@vscode/test-cli": "catalog:",
+        "@vscode/test-electron": "catalog:",
+        "tsx": "catalog:"
     }
 }

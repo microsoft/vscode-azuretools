@@ -39,15 +39,15 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/webview/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs && npm run build:assets && npm run build:webview",
+        "build": "pnpm run build:esm && pnpm run build:cjs && pnpm run build:assets && pnpm run build:webview",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "build:assets": "node copy-assets.mjs",
         "build:webview": "node esbuild.views.mjs",
         "lint": "eslint --max-warnings 0",
-        "package": "npm pack",
+        "package": "pnpm pack",
         "test": "mocha",
-        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+        "l10n": "pnpx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "mocha": {
         "ui": "tdd",
@@ -63,12 +63,14 @@
     },
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
-        "@types/node": "22.x",
+        "@types/node": "catalog:",
         "@types/vscode": "^1.104.0",
         "@types/vscode-webview": "^1.57.5",
-        "esbuild": "*",
-        "esbuild-plugin-copy": "*",
-        "tsx": "*"
+        "@types/react": "^18.3.1",
+        "@types/react-dom": "^18.3.1",
+        "esbuild": "catalog:",
+        "esbuild-plugin-copy": "catalog:",
+        "tsx": "catalog:"
     },
     "dependencies": {
         "@fluentui/react-components": "^9.56.2",
@@ -83,8 +85,5 @@
         "sass": "~1.79.6",
         "sass-loader": "^16.0.2",
         "uuid": "^14.0.0"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
     }
 }

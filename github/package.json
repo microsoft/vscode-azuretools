@@ -24,28 +24,26 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/github/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "pnpm run build:esm && pnpm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --max-warnings 0",
-        "package": "npm pack",
+        "package": "pnpm pack",
         "test": "exit 0",
-        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+        "l10n": "pnpx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
         "vscode": "^1.105.0"
     },
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
-        "@microsoft/vscode-azureresources-api": "^3.1.0",
-        "@types/node": "22.x",
-        "@types/vscode": "1.105.0"
+        "@microsoft/vscode-azureresources-api": "catalog:",
+        "@types/node": "catalog:",
+        "@types/vscode": "catalog:"
     },
     "dependencies": {
         "@microsoft/vscode-azext-utils": "^4.1.0",
-        "@octokit/rest": "^22.0.1"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "@octokit/rest": "^22.0.1",
+        "dayjs": "catalog:"
     }
 }

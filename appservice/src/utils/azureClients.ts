@@ -13,23 +13,27 @@ import { AzExtClientContext, AzExtClientType, createAzureClient, createAzureSubs
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
 
+// Typecasts below are needed because several @azure SDK beta packages no longer extend the
+// legacy ServiceClient base that AzExtClientType<T> constrains against.
+
 export async function createWebSiteClient(context: AzExtClientContext): Promise<WebSiteManagementClient> {
-    // Typecast done for CJS compilation due to TypeScript not recognizing "WebSiteManagementClient" extends the required "ServiceClient" although both type definitions appear to be the same
     return createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient as unknown as AzExtClientType<WebSiteManagementClient>);
 }
 
 export async function createAppInsightsClient(context: AzExtClientContext): Promise<ApplicationInsightsManagementClient> {
-    return createAzureClient(context, (await import('@azure/arm-appinsights')).ApplicationInsightsManagementClient);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+    return createAzureClient(context, (await import('@azure/arm-appinsights')).ApplicationInsightsManagementClient as any) as unknown as ApplicationInsightsManagementClient;
 }
 
 export async function createResourceClient(context: AzExtClientContext): Promise<ResourceManagementClient> {
-    return createAzureClient(context, (await import('@azure/arm-resources')).ResourceManagementClient);
+    return createAzureClient(context, (await import('@azure/arm-resources')).ResourceManagementClient as unknown as AzExtClientType<ResourceManagementClient>);
 }
 
 export async function createResourceGraphClient(context: AzExtClientContext): Promise<ResourceGraphClient> {
-    return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+    return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient as any);
 }
 
 export async function createOperationalInsightsManagementClient(context: AzExtClientContext): Promise<OperationalInsightsManagementClient> {
-    return createAzureClient(context, (await import('@azure/arm-operationalinsights')).OperationalInsightsManagementClient);
+    return createAzureClient(context, (await import('@azure/arm-operationalinsights')).OperationalInsightsManagementClient as unknown as AzExtClientType<OperationalInsightsManagementClient>);
 }

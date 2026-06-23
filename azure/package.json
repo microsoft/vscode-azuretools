@@ -24,13 +24,13 @@
     },
     "homepage": "https://github.com/Microsoft/vscode-azuretools/blob/main/azure/README.md",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "pnpm run build:esm && pnpm run build:cjs",
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --max-warnings 0",
         "test": "vscode-test",
-        "package": "npm pack",
-        "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
+        "package": "pnpm pack",
+        "l10n": "pnpx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
     "engines": {
         "vscode": "^1.105.0"
@@ -41,32 +41,29 @@
         "@azure/arm-msi": "^2.2.0",
         "@azure/arm-resources": "^5.0.0",
         "@azure/arm-resources-profile-2020-09-01-hybrid": "^2.1.0",
-        "@azure/arm-resources-subscriptions": "^3.0.0-beta.1",
+        "@azure/arm-resources-subscriptions": "catalog:",
         "@azure/arm-storage": "^18.6.0",
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.1.0",
-        "@azure/core-client": "^1.10.1",
-        "@azure/core-rest-pipeline": "^1.23.0",
+        "@azure/core-client": "catalog:",
+        "@azure/core-rest-pipeline": "catalog:",
         "@azure/logger": "^1.3.0",
         "@microsoft/vscode-azext-azureauth": "^6.1.0-alpha.2",
         "@microsoft/vscode-azext-utils": "^4.1.1",
-        "@microsoft/vscode-azureresources-api": "^3.1.0",
-        "semver": "^7.7.4"
+        "@microsoft/vscode-azureresources-api": "catalog:",
+        "semver": "catalog:"
     },
     "peerDependencies": {
-        "@azure/ms-rest-azure-env": "^2.0.0"
+        "@azure/ms-rest-azure-env": "catalog:"
     },
     "devDependencies": {
-        "@azure/core-auth": "^1.10.1",
+        "@azure/core-auth": "catalog:",
         "@azure/core-paging": "^1.6.2",
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
-        "@types/node": "22.x",
-        "@types/semver": "^7.7.1",
-        "@types/vscode": "1.105.0",
-        "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*",
-        "tsx": "*"
-    },
-    "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "@types/node": "catalog:",
+        "@types/semver": "catalog:",
+        "@types/vscode": "catalog:",
+        "@vscode/test-cli": "catalog:",
+        "@vscode/test-electron": "catalog:",
+        "tsx": "catalog:"
     }
 }
