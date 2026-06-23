@@ -13,8 +13,11 @@ import { AzExtClientContext, AzExtClientType, createAzureClient, createAzureSubs
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
 
-// Typecasts below are needed because several @azure SDK beta packages no longer extend the
-// legacy ServiceClient base that AzExtClientType<T> constrains against.
+// Typecasts below are needed because pnpm's isolated node_modules creates duplicate copies of
+// @azure/core-client, making the ServiceClient type identity different between this package and
+// the SDK packages. For most clients `as unknown as AzExtClientType<T>` suffices, but for
+// AppInsights and ResourceGraph the generic constraint on AzExtClientType/AzExtSubscriptionClientType
+// itself rejects the type, requiring `as any`.
 
 export async function createWebSiteClient(context: AzExtClientContext): Promise<WebSiteManagementClient> {
     return createAzureClient(context, (await import('@azure/arm-appservice')).WebSiteManagementClient as unknown as AzExtClientType<WebSiteManagementClient>);

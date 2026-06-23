@@ -9,6 +9,7 @@ packages:
   - webview
 
 publicHoistPattern:
+  # Hoist some dev dependencies from the eng package
   - "*eslint*"
   - "typescript"
   - "mocha"
@@ -17,7 +18,7 @@ publicHoistPattern:
   - "@types/chai"
 
 overrides:
-  serialize-javascript: "^7.0.5"
+  serialize-javascript: "^7.0.5" # Temporary override until Mocha 12 is available and used by @vscode/test-cli
 
 allowBuilds:
   esbuild: true
