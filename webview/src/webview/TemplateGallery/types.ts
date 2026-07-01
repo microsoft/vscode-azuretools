@@ -82,11 +82,15 @@ export interface BrowseFolderMessage {
     source: 'template' | 'ai';
 }
 
+/** Where in the gallery UI the user initiated project creation. */
+export type ProjectCreationEntryPoint = 'card' | 'details';
+
 export interface CreateProjectMessage {
     type: 'createProject';
     template: IProjectTemplate;
     language: string;
     location: string;
+    entryPoint?: ProjectCreationEntryPoint;
 }
 
 export interface ContinueInChatMessage {
