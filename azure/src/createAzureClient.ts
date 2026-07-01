@@ -12,6 +12,7 @@ import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { FeedMirrorPolicy } from './utils/FeedMirrorPolicy';
+import { ProxyAgentPolicy } from './utils/ProxyAgentPolicy';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
@@ -174,6 +175,16 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     }
 
     pipeline.addPolicy(new AllowInsecureConnectionPolicy());
+
+    // Apply VS Code's `http.proxy` / `http.proxyStrictSSL` / `http.noProxy` settings to requests.
+    // Runs before the SDK's built-in proxy policy (which only reads proxy env vars). When
+    // `http.proxySupport` is `off`, this policy no-ops; env-var proxies still flow through the
+    // built-in policy, matching VS Code's default extension-host behavior (`off` opts out of VS
+    // Code's setting-based proxy handling, not of the standard proxy environment variables).
+    // Known limitation: `http.noProxy` only bypasses proxies this policy applies. When a proxy comes
+    // solely from an env var (e.g. `HTTPS_PROXY`) and `http.proxy` is unset, the built-in policy still
+    // proxies it because it consults only `NO_PROXY`, not VS Code's `http.noProxy` list.
+    ProxyAgentPolicy.addIfNeeded(pipeline);
 
     if (bearerChallengePolicy) {
         pipeline.addPolicy(bearerChallengePolicy, { phase: 'Sign' });
