@@ -12,6 +12,8 @@ import { parseError } from './parseError';
 import { cacheIssueForCommand } from './registerReportIssueCommand';
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { AzExtUserInput } from './userInput/AzExtUserInput';
+import { certificateTroubleshootingLink, isCertificateTrustError } from './utils/certificateTrustError';
+import { openUrl } from './utils/openUrl';
 import { limitLines } from './utils/textStrings';
 
 const maxStackLines: number = 3;
@@ -169,8 +171,15 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         }
 
         if (!context.errorHandling.suppressDisplay) {
+            const isCertError: boolean = isCertificateTrustError(unMaskedErrorData);
+            const certHint: string = l10n.t('This can happen behind a corporate proxy or SSL-inspection appliance whose certificate authority is not trusted by VS Code. See the troubleshooting steps for how to trust it.');
+
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
             ext.outputChannel.appendLog(l10n.t('Error: {0}', unMaskedErrorData.message));
+            if (isCertError) {
+                ext.outputChannel.appendLog(certHint);
+                ext.outputChannel.appendLog(l10n.t('Troubleshooting: {0}', certificateTroubleshootingLink));
+            }
 
             let notificationMessage: string;
             if (unMaskedErrorData.message.includes('\n')) {
@@ -180,7 +189,20 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
                 notificationMessage = unMaskedErrorData.message;
             }
 
+            if (isCertError && !notificationMessage.includes(certHint)) {
+                notificationMessage = `${notificationMessage} ${certHint}`;
+            }
+
             const items: MessageItem[] = [];
+            if (isCertError) {
+                const learnMore: types.AzExtErrorButton = {
+                    title: l10n.t('Learn more'),
+                    callback: async (): Promise<void> => {
+                        await openUrl(certificateTroubleshootingLink);
+                    }
+                };
+                items.push(learnMore);
+            }
             if (!context.errorHandling.suppressReportIssue) {
                 items.push(DialogResponses.reportAnIssue);
             }
