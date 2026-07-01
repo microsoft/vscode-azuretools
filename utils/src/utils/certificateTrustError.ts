@@ -18,6 +18,7 @@ export const certificateTroubleshootingLink: string = 'https://github.com/micros
  */
 const certificateErrorCodes: readonly string[] = [
     'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+    'UNABLE_TO_GET_ISSUER_CERT',
     'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
     'SELF_SIGNED_CERT_IN_CHAIN',
     'DEPTH_ZERO_SELF_SIGNED_CERT',
@@ -32,6 +33,7 @@ const certificateErrorCodes: readonly string[] = [
  */
 const certificateErrorMessages: readonly string[] = [
     'unable to get local issuer certificate',
+    'unable to get issuer certificate',
     'unable to verify the first certificate',
     'self signed certificate',
     'self-signed certificate',
