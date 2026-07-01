@@ -35,7 +35,6 @@ const certificateErrorMessages: readonly string[] = [
     'unable to verify the first certificate',
     'self signed certificate',
     'self-signed certificate',
-    'certificate has expired',
 ];
 
 /**

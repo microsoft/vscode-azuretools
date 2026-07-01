@@ -172,7 +172,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
 
         if (!context.errorHandling.suppressDisplay) {
             const isCertError: boolean = isCertificateTrustError(unMaskedErrorData);
-            const certHint: string = l10n.t('This can happen behind a corporate proxy or SSL-inspection appliance whose certificate authority is not trusted by VS Code. See the troubleshooting steps for how to trust it.');
+            const certHint: string = l10n.t('This can happen behind a corporate proxy or SSL-inspection appliance whose certificate authority is not trusted by the Node.js extension host. See the troubleshooting steps for how to trust it (for example, by setting NODE_EXTRA_CA_CERTS).');
 
             // Always append the error to the output channel, but only 'show' the output channel for multiline errors
             ext.outputChannel.appendLog(l10n.t('Error: {0}', unMaskedErrorData.message));
