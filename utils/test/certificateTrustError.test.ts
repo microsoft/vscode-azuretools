@@ -9,13 +9,13 @@ import { parseError } from '../src/parseError';
 import { isCertificateTrustError } from '../src/utils/certificateTrustError';
 
 function parsed(partial: Partial<IParsedError>): IParsedError {
-    return {
+    const base: IParsedError = {
         errorType: '',
         message: '',
         isUserCancelledError: false,
         name: 'Error',
-        ...partial,
-    } as IParsedError;
+    };
+    return { ...base, ...partial };
 }
 
 suite('isCertificateTrustError', () => {
