@@ -6,10 +6,10 @@
 import type { IParsedError } from '../../index';
 
 /**
- * Default troubleshooting documentation for certificate trust failures. All Azure extensions
- * link their README troubleshooting sections to this canonical location.
+ * Default troubleshooting documentation for certificate trust failures. This is a stable aka.ms
+ * redirect that points at the canonical Azure extensions troubleshooting guidance.
  */
-export const certificateTroubleshootingLink: string = 'https://github.com/microsoft/vscode-azureresourcegroups/blob/main/README.md#troubleshooting';
+export const certificateTroubleshootingLink: string = 'https://aka.ms/AA11ri61';
 
 /**
  * Node.js/OpenSSL TLS error codes that indicate the runtime could not build a trusted
