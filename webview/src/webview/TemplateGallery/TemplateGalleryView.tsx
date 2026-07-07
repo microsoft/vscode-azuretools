@@ -327,7 +327,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     </Tab>
                     {config.supportsAiGeneration && (
                         <Tab value="ai" icon={<span className="codicon codicon-sparkle"></span>}>
-                            Build with Copilot Chat
+                            {config.aiGeneration.tabLabel}
                         </Tab>
                     )}
                 </TabList>
@@ -422,6 +422,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
             {state.mode === 'ai' && config.supportsAiGeneration && (
                 <AiGenerateView
                     ai={state.ai}
+                    projectLocation={state.projectLocation}
                     postMessage={postMessage}
                     dispatch={dispatch}
                 />

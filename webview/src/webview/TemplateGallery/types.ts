@@ -32,6 +32,59 @@ export interface IProjectTemplate {
 
 // ── Configuration (passed as initial data to the webview) ──
 
+export interface AiExamplePrompt {
+    label: string;
+    prompt: string;
+}
+
+export interface AiGenerationConfig {
+    /** Label for the AI generation tab. */
+    tabLabel?: string;
+    /** Introductory copy above the prompt text area. */
+    introDescription?: string;
+    /** Placeholder shown in the prompt text area. */
+    promptPlaceholder?: string;
+    /** Accessible label for the prompt text area. */
+    promptAriaLabel?: string;
+    /** Label before example prompt chips. */
+    examplesLabel?: string;
+    /** Example prompt chips shown under the prompt text area. */
+    examplePrompts?: AiExamplePrompt[];
+    /** Label for the language picker. */
+    languageLabel?: string;
+    /** Primary button text for opening chat. */
+    openChatButtonLabel?: string;
+    /** Confirmation heading shown after chat is requested. */
+    chatConfirmationTitle?: string;
+    /** Confirmation copy shown after chat is requested. */
+    chatConfirmationDescription?: string;
+    /** Back button text in the confirmation view. */
+    chatConfirmationBackLabel?: string;
+    /** Heading for the capabilities panel. */
+    capabilitiesTitle?: string;
+    /** Accessible label for the capabilities list. */
+    capabilitiesAriaLabel?: string;
+    /** Capability bullets shown in the AI tab. */
+    capabilities?: string[];
+}
+
+export interface ResolvedAiGenerationConfig {
+    tabLabel: string;
+    introDescription: string;
+    promptPlaceholder: string;
+    promptAriaLabel: string;
+    examplesLabel: string;
+    examplePrompts: AiExamplePrompt[];
+    languageLabel: string;
+    openChatButtonLabel: string;
+    chatConfirmationTitle: string;
+    chatConfirmationDescription: string;
+    chatConfirmationBackLabel: string;
+    capabilitiesTitle: string;
+    capabilitiesAriaLabel: string;
+    capabilities: string[];
+}
+
 export interface TemplateGalleryConfig {
     /** Service name displayed in UI, e.g. "Azure Functions" */
     serviceName: string;
@@ -41,6 +94,8 @@ export interface TemplateGalleryConfig {
     headerSubtitle: string;
     /** Whether to show the AI generation tab */
     supportsAiGeneration: boolean;
+    /** AI generation tab display configuration. */
+    aiGeneration?: AiGenerationConfig;
     /** Map of language keys to display names. Falls back to built-in defaults. */
     languageDisplayNames?: Record<string, string>;
     /** Map of category keys to display names */
@@ -93,6 +148,7 @@ export interface ContinueInChatMessage {
     type: 'continueInChat';
     prompt: string;
     language: string;
+    location: string;
 }
 
 export interface ShowErrorMessage {
@@ -295,3 +351,42 @@ export const defaultLanguageDisplayNames: Record<string, string> = {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export const defaultLanguageOrder = ['python', 'dotnet', 'typescript', 'javascript', 'java', 'go', 'powershell'];
+
+export const defaultAiGenerationConfig: ResolvedAiGenerationConfig = {
+    tabLabel: 'Build with Copilot Chat',
+    introDescription: 'Describe the Azure Functions app you want to build. Copilot Chat will help you design, scaffold, and refine it — with full visibility into every change before it is applied to your workspace.',
+    promptPlaceholder: 'e.g., I need an HTTP API that receives sensor readings, validates the data, and stores it in Azure Cosmos DB. It should also send alerts to a Service Bus queue when values exceed a threshold.',
+    promptAriaLabel: 'Describe your function app',
+    examplesLabel: 'Try an example:',
+    examplePrompts: [
+        {
+            label: 'HTTP API + Cosmos DB',
+            prompt: 'I need an HTTP API that receives JSON payloads, validates them, and stores the records in Azure Cosmos DB. Include input validation and clear error responses.',
+        },
+        {
+            label: 'Service Bus consumer',
+            prompt: 'A Service Bus queue trigger that processes order messages, calls a downstream HTTP API to enrich each order, and writes the result to Blob Storage.',
+        },
+        {
+            label: 'Timer-driven cleanup',
+            prompt: 'A timer-triggered job that runs every night, scans a Cosmos DB container for documents older than 90 days, and archives them to Blob Storage before deleting.',
+        },
+        {
+            label: 'Event Grid webhook',
+            prompt: 'An Event Grid-triggered function that handles BlobCreated events, generates a thumbnail for each uploaded image, and writes it back to a different container.',
+        },
+    ],
+    languageLabel: 'Language',
+    openChatButtonLabel: 'Open in Copilot Chat',
+    chatConfirmationTitle: 'Copilot Chat is opening...',
+    chatConfirmationDescription: 'Your prompt has been pre-filled with Azure Functions best-practice guidance. Continue the conversation in the chat panel to design and generate your app — you will review every change before it is applied to your workspace.',
+    chatConfirmationBackLabel: 'Back to prompt',
+    capabilitiesTitle: 'What Copilot Chat will do',
+    capabilitiesAriaLabel: 'Copilot Chat capabilities',
+    capabilities: [
+        'Multi-turn design conversation — you stay in control',
+        'Reads your workspace for context-aware suggestions',
+        'Writes files directly with your review at each step',
+        'Can run terminal commands and iterate on errors',
+    ],
+};
