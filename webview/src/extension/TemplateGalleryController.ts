@@ -97,7 +97,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
      * The webview hands the user off to chat for multi-turn design and
      * file generation — there is no separate "generate then write" pipeline.
      */
-    protected async continueInChat(_prompt: string, _language: string): Promise<void> {
+    protected async continueInChat(_prompt: string, _language: string, _location: string): Promise<void> {
         // No-op by default.
     }
 
@@ -168,7 +168,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 break;
 
             case 'continueInChat':
-                await this.continueInChat(message.prompt, message.language);
+                await this.continueInChat(message.prompt, message.language, message.location);
                 break;
 
             case 'showError':

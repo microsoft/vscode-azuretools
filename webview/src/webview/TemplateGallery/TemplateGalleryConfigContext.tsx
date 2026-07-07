@@ -8,11 +8,13 @@ import { createContext, useContext, useMemo } from 'react';
 import {
     defaultCategoryDisplayNames,
     defaultCategoryOrder,
+    defaultAiGenerationConfig,
     defaultLanguageDisplayNames,
     defaultLanguageFilterMap,
     defaultLanguageOrder,
     defaultResourceDisplayNames,
     defaultResourceOrder,
+    type ResolvedAiGenerationConfig,
     type TemplateGalleryConfig,
 } from './types';
 
@@ -21,6 +23,7 @@ export interface TemplateGalleryConfigContextValue {
     headerTitle: string;
     headerSubtitle: string;
     supportsAiGeneration: boolean;
+    aiGeneration: ResolvedAiGenerationConfig;
     languageDisplayNames: Record<string, string>;
     categoryDisplayNames: Record<string, string>;
     resourceDisplayNames: Record<string, string>;
@@ -35,6 +38,7 @@ const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextV
     headerTitle: '',
     headerSubtitle: '',
     supportsAiGeneration: false,
+    aiGeneration: defaultAiGenerationConfig,
     languageDisplayNames: defaultLanguageDisplayNames,
     categoryDisplayNames: defaultCategoryDisplayNames,
     resourceDisplayNames: defaultResourceDisplayNames,
@@ -59,6 +63,12 @@ export const TemplateGalleryConfigProvider = ({
         headerTitle: config.headerTitle,
         headerSubtitle: config.headerSubtitle,
         supportsAiGeneration: config.supportsAiGeneration,
+        aiGeneration: {
+            ...defaultAiGenerationConfig,
+            ...config.aiGeneration,
+            examplePrompts: config.aiGeneration?.examplePrompts ?? defaultAiGenerationConfig.examplePrompts,
+            capabilities: config.aiGeneration?.capabilities ?? defaultAiGenerationConfig.capabilities,
+        },
         languageDisplayNames: { ...defaultLanguageDisplayNames, ...config.languageDisplayNames },
         categoryDisplayNames: { ...defaultCategoryDisplayNames, ...config.categoryDisplayNames },
         resourceDisplayNames: { ...defaultResourceDisplayNames, ...config.resourceDisplayNames },
