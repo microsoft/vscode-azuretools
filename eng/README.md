@@ -10,7 +10,6 @@ In addition, universal and recommended configurations are provided. They can be 
 - [ESLint Config](./src/eslint/README.md)
 - [VS Code Test Config](./src/vscode-test/README.md)
 - [Internal Feed Auth Scripts](#internal-feed-auth-scripts)
-- [Configure pnpm Registry Scripts](#configure-pnpm-registry-scripts)
 
 # Internal Feed Auth Scripts
 
@@ -47,30 +46,6 @@ Use this script on Linux, macOS, or any POSIX-compatible shell environment.
 
 # Force re-authentication
 ./node_modules/@microsoft/vscode-azext-eng/scripts/internalFeedAuth.sh --force
-```
-
-# Configure pnpm Registry Scripts
-
-Two scripts are provided to configure pnpm's default registry to the corporate npm proxy feed (`packagefeedproxy.microsoft.io`).
-
-**Why these scripts are needed:** MSIT configures dev machines to use `packagefeedproxy.microsoft.io` via npm's global config, but pnpm ignores npm's global config. These scripts write the registry setting into pnpm's own global config file instead.
-
-**Why not `~/.npmrc`:** The Azure Artifacts credential provider reads `~/.npmrc` and attempts to authenticate every registry listed there. Since the proxy feed is anonymous, that authentication will fail and break the `azcode` auth flow set up by the [Internal Feed Auth Scripts](#internal-feed-auth-scripts).
-
-## `scripts/configurePnpmRegistry.ps1` (PowerShell Core)
-
-**Example usage:**
-
-```powershell
-pwsh -File ./node_modules/@microsoft/vscode-azext-eng/scripts/configurePnpmRegistry.ps1
-```
-
-## `scripts/configurePnpmRegistry.sh` (POSIX shell)
-
-**Example usage:**
-
-```sh
-./node_modules/@microsoft/vscode-azext-eng/scripts/configurePnpmRegistry.sh
 ```
 
 # TODO: Future Ideas
