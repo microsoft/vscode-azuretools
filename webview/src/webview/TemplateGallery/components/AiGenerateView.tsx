@@ -7,7 +7,8 @@ import { Button, Dropdown, Field, Option, Textarea } from '@fluentui/react-compo
 import { ArrowLeftRegular } from '@fluentui/react-icons';
 import { useCallback, useState, type Dispatch, type JSX } from 'react';
 import { useTemplateGalleryConfig } from '../TemplateGalleryConfigContext';
-import type { AiState, TemplateGalleryAction, WebviewToExtensionMessage } from '../types';
+import type { AiState, TemplateGalleryAction, TemplateGalleryWorkspaceOptionValues, WebviewToExtensionMessage } from '../types';
+import { WorkspaceOptions } from './WorkspaceOptions';
 
 // Narrow the parent's action union to just the actions this component dispatches.
 type ParentAction = Extract<
@@ -18,21 +19,23 @@ type ParentAction = Extract<
 interface AiGenerateViewProps {
     ai: AiState;
     projectLocation: string;
+    workspaceOptions: TemplateGalleryWorkspaceOptionValues;
     postMessage: (msg: WebviewToExtensionMessage) => void;
     dispatch: Dispatch<ParentAction>;
+    onWorkspaceOptionChange: (id: string, checked: boolean) => void;
 }
 
 type AiViewState = 'prompt' | 'chatConfirmation';
 
-export const AiGenerateView = ({ ai, projectLocation, postMessage, dispatch }: AiGenerateViewProps): JSX.Element => {
+export const AiGenerateView = ({ ai, projectLocation, workspaceOptions, postMessage, dispatch, onWorkspaceOptionChange }: AiGenerateViewProps): JSX.Element => {
     const [viewState, setViewState] = useState<AiViewState>('prompt');
-    const { aiGeneration } = useTemplateGalleryConfig();
+    const { aiGeneration, workspaceOptions: workspaceOptionConfig } = useTemplateGalleryConfig();
 
     const handleOpenInChat = useCallback(() => {
         if (!ai.prompt.trim()) { return; }
-        postMessage({ type: 'continueInChat', prompt: ai.prompt, language: ai.language, location: projectLocation });
+        postMessage({ type: 'continueInChat', prompt: ai.prompt, language: ai.language, location: projectLocation, options: workspaceOptions });
         setViewState('chatConfirmation');
-    }, [ai.prompt, ai.language, projectLocation, postMessage]);
+    }, [ai.prompt, ai.language, projectLocation, workspaceOptions, postMessage]);
 
     const handleExampleClick = useCallback((prompt: string) => {
         dispatch({ type: 'SET_AI_PROMPT', prompt });
@@ -98,6 +101,12 @@ export const AiGenerateView = ({ ai, projectLocation, postMessage, dispatch }: A
                         </div>
                     </div>
                 )}
+
+                <WorkspaceOptions
+                    options={workspaceOptionConfig}
+                    values={workspaceOptions}
+                    onChange={onWorkspaceOptionChange}
+                />
 
                 <div className="ai-controls">
                     <Field label={aiGeneration.languageLabel} className="ai-language-group">

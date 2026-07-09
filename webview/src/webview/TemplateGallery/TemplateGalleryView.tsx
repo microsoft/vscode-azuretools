@@ -15,6 +15,7 @@ import { CreatingView } from './components/CreatingView';
 import { FilterBar } from './components/FilterBar';
 import { TemplateCard } from './components/TemplateCard';
 import { TemplateConfigView } from './components/TemplateConfigView';
+import { WorkspaceOptions } from './components/WorkspaceOptions';
 import type {
     TemplateGalleryAction as Action,
     ActiveView,
@@ -23,6 +24,8 @@ import type {
     FilterState,
     IProjectTemplate,
     TemplateGalleryConfig,
+    TemplateGalleryWorkspaceOption,
+    TemplateGalleryWorkspaceOptionValues,
     ViewMode,
     WebviewToExtensionMessage,
 } from './types';
@@ -184,6 +187,10 @@ function createReducer(languageFilterMap: Record<string, string>) {
     };
 }
 
+function defaultWorkspaceOptionValues(options: readonly TemplateGalleryWorkspaceOption[]): TemplateGalleryWorkspaceOptionValues {
+    return Object.fromEntries(options.map(option => [option.id, option.defaultValue]));
+}
+
 // ── Inner component that uses config context ──
 
 const TemplateGalleryViewInner = (): JSX.Element => {
@@ -192,6 +199,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
 
     const reducer = React.useMemo(() => createReducer(config.languageFilterMap), [config.languageFilterMap]);
     const [state, dispatch] = useReducer(reducer, initialState);
+    const [workspaceOptions, setWorkspaceOptions] = React.useState<TemplateGalleryWorkspaceOptionValues>(() => defaultWorkspaceOptionValues(config.workspaceOptions));
 
     const postMessage = useCallback((msg: WebviewToExtensionMessage) => {
         vscodeApi.postMessage(msg);
@@ -243,6 +251,10 @@ const TemplateGalleryViewInner = (): JSX.Element => {
         postMessage({ type: 'getTemplates' });
     }, [postMessage]);
 
+    useEffect(() => {
+        setWorkspaceOptions(defaultWorkspaceOptionValues(config.workspaceOptions));
+    }, [config.workspaceOptions]);
+
     // ── Handlers ──
 
     const handleSelectTemplate = useCallback((template: IProjectTemplate) => {
@@ -258,17 +270,21 @@ const TemplateGalleryViewInner = (): JSX.Element => {
         postMessage({ type: 'browseFolder', source });
     }, [postMessage]);
 
-    const handleCreateProject = useCallback((template: IProjectTemplate, language: string, location: string) => {
+    const handleCreateProject = useCallback((template: IProjectTemplate, language: string, location: string, options: TemplateGalleryWorkspaceOptionValues) => {
         dispatch({ type: 'SET_VIEW', view: 'creating' });
-        postMessage({ type: 'createProject', template, language, location });
+        postMessage({ type: 'createProject', template, language, location, options });
     }, [postMessage]);
+
+    const handleWorkspaceOptionChange = useCallback((id: string, checked: boolean) => {
+        setWorkspaceOptions(current => ({ ...current, [id]: checked }));
+    }, []);
 
     // "Use Template" button on the card → create immediately using the default
     // project location and the template's first language. Skips the details screen.
     const handleUseTemplateDirect = useCallback((template: IProjectTemplate) => {
         const language = template.languages[0] || '';
-        handleCreateProject(template, language, state.projectLocation);
-    }, [handleCreateProject, state.projectLocation]);
+        handleCreateProject(template, language, state.projectLocation, workspaceOptions);
+    }, [handleCreateProject, state.projectLocation, workspaceOptions]);
 
     const handleRefresh = useCallback(() => {
         dispatch({ type: 'SET_LOADING' });
@@ -295,6 +311,8 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                 onBack={handleBackToGallery}
                 onBrowse={() => handleBrowseFolder('template')}
                 onCreateProject={handleCreateProject}
+                workspaceOptions={workspaceOptions}
+                onWorkspaceOptionChange={handleWorkspaceOptionChange}
             />
         );
     }
@@ -341,6 +359,12 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                         filters={state.filters}
                         onFilterChange={(key, value) => dispatch({ type: 'SET_FILTER', key, value })}
                         onClearFilters={() => dispatch({ type: 'CLEAR_FILTERS' })}
+                    />
+
+                    <WorkspaceOptions
+                        options={config.workspaceOptions}
+                        values={workspaceOptions}
+                        onChange={handleWorkspaceOptionChange}
                     />
 
                     <div className="results-bar">
@@ -423,8 +447,10 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                 <AiGenerateView
                     ai={state.ai}
                     projectLocation={state.projectLocation}
+                    workspaceOptions={workspaceOptions}
                     postMessage={postMessage}
                     dispatch={dispatch}
+                    onWorkspaceOptionChange={handleWorkspaceOptionChange}
                 />
             )}
         </div>
