@@ -9,6 +9,44 @@ In addition, universal and recommended configurations are provided. They can be 
 - [ESBuild Config](./src/esbuild/README.md)
 - [ESLint Config](./src/eslint/README.md)
 - [VS Code Test Config](./src/vscode-test/README.md)
+- [Internal Feed Auth Scripts](#internal-feed-auth-scripts)
+
+# Internal Feed Auth Scripts
+
+Two scripts are provided to authenticate the internal `@microsoft`-scoped Azure Artifacts feed (`azcode`) using `@microsoft/artifacts-npm-credprovider` with self-describing (Entra) tokens.
+
+Both scripts:
+1. Install `@microsoft/artifacts-npm-credprovider` globally (unconditionally, to always pick up the latest version).
+2. Point the `@microsoft` npm scope at the internal `azcode` feed.
+3. Run the credential provider, forwarding any extra arguments.
+
+## `scripts/internalFeedAuth.ps1` (PowerShell Core)
+
+Use this script on Windows or wherever PowerShell Core (`pwsh`) is available.
+
+**Example usage:**
+
+```powershell
+# Validate credentials only
+pwsh -File ./node_modules/@microsoft/vscode-azext-eng/scripts/internalFeedAuth.ps1 --validate-only
+
+# Force re-authentication
+pwsh -File ./node_modules/@microsoft/vscode-azext-eng/scripts/internalFeedAuth.ps1 --force
+```
+
+## `scripts/internalFeedAuth.sh` (POSIX shell)
+
+Use this script on Linux, macOS, or any POSIX-compatible shell environment.
+
+**Example usage:**
+
+```sh
+# Validate credentials only
+./node_modules/@microsoft/vscode-azext-eng/scripts/internalFeedAuth.sh --validate-only
+
+# Force re-authentication
+./node_modules/@microsoft/vscode-azext-eng/scripts/internalFeedAuth.sh --force
+```
 
 # TODO: Future Ideas
 
