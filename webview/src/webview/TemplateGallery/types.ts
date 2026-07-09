@@ -85,6 +85,15 @@ export interface ResolvedAiGenerationConfig {
     capabilities: string[];
 }
 
+export interface TemplateGalleryWorkspaceOption {
+    id: string;
+    label: string;
+    description?: string;
+    defaultValue: boolean;
+}
+
+export type TemplateGalleryWorkspaceOptionValues = Record<string, boolean>;
+
 export interface TemplateGalleryConfig {
     /** Service name displayed in UI, e.g. "Azure Functions" */
     serviceName: string;
@@ -96,6 +105,8 @@ export interface TemplateGalleryConfig {
     supportsAiGeneration: boolean;
     /** AI generation tab display configuration. */
     aiGeneration?: AiGenerationConfig;
+    /** Workspace options sent back with template creation and chat handoff requests. */
+    workspaceOptions?: TemplateGalleryWorkspaceOption[];
     /** Map of language keys to display names. Falls back to built-in defaults. */
     languageDisplayNames?: Record<string, string>;
     /** Map of category keys to display names */
@@ -146,6 +157,7 @@ export interface CreateProjectMessage {
     language: string;
     location: string;
     entryPoint?: ProjectCreationEntryPoint;
+    options: TemplateGalleryWorkspaceOptionValues;
 }
 
 export interface ContinueInChatMessage {
@@ -153,6 +165,7 @@ export interface ContinueInChatMessage {
     prompt: string;
     language: string;
     location: string;
+    options: TemplateGalleryWorkspaceOptionValues;
 }
 
 export interface ShowErrorMessage {

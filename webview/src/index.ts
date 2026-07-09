@@ -14,6 +14,6 @@ export { WebviewController } from './extension/WebviewController';
 export type { WebviewBundleLocation } from './extension/WebviewController';
 export type {
     ActiveView, AiState, ExtensionToWebviewMessage, FilterState, IProjectTemplate,
-    ProjectCreationEntryPoint, TemplateGalleryConfig, ViewMode, WebviewToExtensionMessage
+    ProjectCreationEntryPoint, TemplateGalleryConfig, TemplateGalleryWorkspaceOption,
+    TemplateGalleryWorkspaceOptionValues, ViewMode, WebviewToExtensionMessage
 } from './webview/TemplateGallery/types';
-

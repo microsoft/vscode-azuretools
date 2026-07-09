@@ -16,6 +16,7 @@ import {
     defaultResourceOrder,
     type ResolvedAiGenerationConfig,
     type TemplateGalleryConfig,
+    type TemplateGalleryWorkspaceOption,
 } from './types';
 
 export interface TemplateGalleryConfigContextValue {
@@ -24,6 +25,7 @@ export interface TemplateGalleryConfigContextValue {
     headerSubtitle: string;
     supportsAiGeneration: boolean;
     aiGeneration: ResolvedAiGenerationConfig;
+    workspaceOptions: TemplateGalleryWorkspaceOption[];
     languageDisplayNames: Record<string, string>;
     categoryDisplayNames: Record<string, string>;
     resourceDisplayNames: Record<string, string>;
@@ -39,6 +41,7 @@ const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextV
     headerSubtitle: '',
     supportsAiGeneration: false,
     aiGeneration: defaultAiGenerationConfig,
+    workspaceOptions: [],
     languageDisplayNames: defaultLanguageDisplayNames,
     categoryDisplayNames: defaultCategoryDisplayNames,
     resourceDisplayNames: defaultResourceDisplayNames,
@@ -69,6 +72,7 @@ export const TemplateGalleryConfigProvider = ({
             examplePrompts: config.aiGeneration?.examplePrompts ?? defaultAiGenerationConfig.examplePrompts,
             capabilities: config.aiGeneration?.capabilities ?? defaultAiGenerationConfig.capabilities,
         },
+        workspaceOptions: config.workspaceOptions ?? [],
         languageDisplayNames: { ...defaultLanguageDisplayNames, ...config.languageDisplayNames },
         categoryDisplayNames: { ...defaultCategoryDisplayNames, ...config.categoryDisplayNames },
         resourceDisplayNames: { ...defaultResourceDisplayNames, ...config.resourceDisplayNames },
