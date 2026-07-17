@@ -25,7 +25,7 @@ Your project must meet the following requirements to use these templates:
    - `test` - Runs tests. Runs after `build` and `package`.
 4. After the `package` script has run, the output must match the required build artifacts (see corresponding release pipeline)
 5. (For compliance) A `tsaoptions.json` file in `.config` (see [Compliance Configuration](#compliance-configuration))
-6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`) so Corepack activates the pinned pnpm version. The build installs with `pnpm ci`, which requires pnpm 11+. See [Using pnpm](#using-pnpm).
+6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`) so the build installs the pinned pnpm version. The build installs with `pnpm ci`, which requires pnpm 11+. See [Using pnpm](#using-pnpm).
 
 ## Build Pipeline (`1es-mb-main.yml`)
 
@@ -93,12 +93,14 @@ extends:
 
 ### Using pnpm
 
-By default the build uses **npm** (`npm ci`, then `npm run <script>`). Set `packageManager: pnpm` to use pnpm instead. The install step is uniform across both — it runs `<packageManager> ci` (note: `pnpm ci` requires pnpm 11+). The same `lint`/`build`/`package`/`test` scripts run either way; only the package manager and pnpm's Corepack activation differ.
+By default the build uses **npm** (`npm ci`, then `npm run <script>`). Set `packageManager: pnpm` to use pnpm instead. The install step is uniform across both — it runs `<packageManager> ci` (note: `pnpm ci` requires pnpm 11+). The same `lint`/`build`/`package`/`test` scripts run either way; only the package manager and pnpm's activation differ.
 
 When `packageManager: pnpm`:
 
 - Commit a `pnpm-lock.yaml` (the build runs `pnpm ci`, which requires pnpm 11+).
-- Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`). The build runs `corepack enable`, and Corepack activates exactly that pnpm version. `pnpm ci` requires pnpm 11+.
+- Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`). The build reads that version and installs exactly it. `pnpm ci` requires pnpm 11+.
+
+The pinned pnpm is bootstrapped with `npm install -g pnpm@<version>` from an anonymous proxy feed (`https://packagefeedproxy.microsoft.io/npm`), which the build agents can reach. This avoids Corepack's downloader, which fetches the pnpm binary from `registry.npmjs.org` *before* any feed auth or `.npmrc` is applied and so fails on agents that can't reach `registry.npmjs.org`. Consumers keep a plain `"packageManager": "pnpm@<version>"` — no URLs or extra configuration. The proxy feed is hardcoded in the template today; it can be parametrized later if a consumer needs a different one.
 
 ### Private feed (npm and pnpm)
 
