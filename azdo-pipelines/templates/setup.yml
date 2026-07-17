@@ -26,13 +26,28 @@ steps:
     inputs:
       version: $(nodeVersion)
 
-  # pnpm is activated through Corepack using the version pinned by the consumer's
-  # package.json "packageManager" field (e.g. "pnpm@11.3.0"; pnpm ci needs 11+).
+  # Activate the pnpm version pinned by the consumer's package.json "packageManager"
+  # field (e.g. "pnpm@11.3.0"; pnpm ci needs 11+). pnpm is bootstrapped with
+  # `npm install -g` from an anonymous proxy feed (npm fetches only the packument +
+  # tarball) instead of Corepack, whose downloader hits registry.npmjs.org before
+  # any feed auth is applied and fails on network-restricted agents. The proxy feed
+  # is hardcoded for now; parametrize it if a consumer ever needs a different one.
   - pwsh: |
-      corepack enable
+      $pnpmRegistry = "https://packagefeedproxy.microsoft.io/npm"
+      $pm = (Get-Content "package.json" -Raw | ConvertFrom-Json).packageManager
+      if (-not $pm -or -not $pm.StartsWith("pnpm@")) {
+        Write-Output "##vso[task.logissue type=error]package.json 'packageManager' must be 'pnpm@<version>' when packageManager is pnpm."
+        exit 1
+      }
+      # Strip the "pnpm@" prefix and any "+<hash>" integrity suffix -> bare version.
+      $pnpmVersion = ($pm -replace '^pnpm@', '') -replace '\+.*$', ''
+      # Drop any Corepack pnpm shim first so the globally installed pnpm wins on PATH.
+      corepack disable pnpm 2>$null
+      npm install -g "pnpm@$pnpmVersion" --registry="$pnpmRegistry"
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       node --version
       pnpm --version
-    displayName: "👉 Activate pnpm (Corepack)"
+    displayName: "👉 Activate pnpm"
     workingDirectory: $(working_directory)
     condition: and(succeeded(), eq(variables['packageManager'], 'pnpm'))
 
