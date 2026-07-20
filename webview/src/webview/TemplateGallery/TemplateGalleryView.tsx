@@ -10,6 +10,7 @@ import { WebviewContext } from '../WebviewContext';
 import '../styles/templateGalleryView.scss';
 import { useConfiguration } from '../useConfiguration';
 import { TemplateGalleryConfigProvider, useTemplateGalleryConfig } from './TemplateGalleryConfigContext';
+import { createApplyFilters } from './applyFilters';
 import { AiGenerateView } from './components/AiGenerateView';
 import { CreatingView } from './components/CreatingView';
 import { FilterBar } from './components/FilterBar';
@@ -65,51 +66,8 @@ const initialState: GalleryState = {
     creatingDetail: '',
 };
 
-function createApplyFilters(languageFilterMap: Record<string, string>) {
-    return function applyFilters(templates: IProjectTemplate[], filters: FilterState): IProjectTemplate[] {
-        let results = [...templates];
-
-        if (filters.language !== 'all') {
-            results = results.filter(t =>
-                t.languages.some(lang => languageFilterMap[lang] === filters.language)
-            );
-        }
-
-        if (filters.useCase !== 'all') {
-            results = results.filter(t => {
-                const cats = t.categories || (t.category ? [t.category] : []);
-                return cats.includes(filters.useCase);
-            });
-        }
-
-        if (filters.resource !== 'all') {
-            results = results.filter(t => t.resource === filters.resource);
-        }
-
-        if (filters.search.trim()) {
-            const query = filters.search.toLowerCase();
-            results = results.filter(t =>
-                t.displayName.toLowerCase().includes(query) ||
-                t.shortDescription.toLowerCase().includes(query) ||
-                (t.tags && t.tags.some(tag => tag.toLowerCase().includes(query)))
-            );
-        }
-
-        results.sort((a, b) => {
-            if (a.isHighlighted && !b.isHighlighted) { return -1; }
-            if (!a.isHighlighted && b.isHighlighted) { return 1; }
-            const aPrio = a.priority ?? 999;
-            const bPrio = b.priority ?? 999;
-            if (aPrio !== bPrio) { return aPrio - bPrio; }
-            return a.displayName.localeCompare(b.displayName);
-        });
-
-        return results;
-    };
-}
-
-function createReducer(languageFilterMap: Record<string, string>) {
-    const applyFilters = createApplyFilters(languageFilterMap);
+function createReducer(languageFilterMap: Record<string, string>, languageDisplayNames: Record<string, string>) {
+    const applyFilters = createApplyFilters(languageFilterMap, languageDisplayNames);
 
     return function reducer(state: GalleryState, action: Action): GalleryState {
         switch (action.type) {
@@ -190,7 +148,10 @@ const TemplateGalleryViewInner = (): JSX.Element => {
     const { vscodeApi } = useContext(WebviewContext);
     const config = useTemplateGalleryConfig();
 
-    const reducer = React.useMemo(() => createReducer(config.languageFilterMap), [config.languageFilterMap]);
+    const reducer = React.useMemo(
+        () => createReducer(config.languageFilterMap, config.languageDisplayNames),
+        [config.languageFilterMap, config.languageDisplayNames],
+    );
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const postMessage = useCallback((msg: WebviewToExtensionMessage) => {
