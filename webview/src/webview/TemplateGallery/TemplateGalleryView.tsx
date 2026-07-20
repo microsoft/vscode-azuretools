@@ -22,6 +22,7 @@ import type {
     ExtensionToWebviewMessage,
     FilterState,
     IProjectTemplate,
+    ProjectCreationEntryPoint,
     TemplateGalleryConfig,
     ViewMode,
     WebviewToExtensionMessage,
@@ -258,16 +259,16 @@ const TemplateGalleryViewInner = (): JSX.Element => {
         postMessage({ type: 'browseFolder', source });
     }, [postMessage]);
 
-    const handleCreateProject = useCallback((template: IProjectTemplate, language: string, location: string) => {
+    const handleCreateProject = useCallback((template: IProjectTemplate, language: string, location: string, entryPoint: ProjectCreationEntryPoint) => {
         dispatch({ type: 'SET_VIEW', view: 'creating' });
-        postMessage({ type: 'createProject', template, language, location });
+        postMessage({ type: 'createProject', template, language, location, entryPoint });
     }, [postMessage]);
 
     // "Use Template" button on the card → create immediately using the default
     // project location and the template's first language. Skips the details screen.
     const handleUseTemplateDirect = useCallback((template: IProjectTemplate) => {
         const language = template.languages[0] || '';
-        handleCreateProject(template, language, state.projectLocation);
+        handleCreateProject(template, language, state.projectLocation, 'card');
     }, [handleCreateProject, state.projectLocation]);
 
     const handleRefresh = useCallback(() => {
@@ -294,7 +295,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                 readmeLoading={state.readmeLoading}
                 onBack={handleBackToGallery}
                 onBrowse={() => handleBrowseFolder('template')}
-                onCreateProject={handleCreateProject}
+                onCreateProject={(template, language, location) => handleCreateProject(template, language, location, 'details')}
             />
         );
     }
