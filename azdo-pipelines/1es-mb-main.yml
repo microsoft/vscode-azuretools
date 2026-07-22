@@ -92,7 +92,7 @@ extends:
       componentgovernance:
         directoryExclusionPatterns: "**/.vscode-test"
       codeql:
-        excludePathPatterns: "**/.vscode-test, **/dist"
+        excludePathPatterns: "**/.vscode-test, **/dist, **/testProjects, **/testFolder"
 
     pool: ${{ parameters.sdlPool }}
 
