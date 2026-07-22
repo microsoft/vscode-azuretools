@@ -666,6 +666,28 @@
     flex: 1;
 }
 
+.workspace-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.workspace-option {
+    padding: 10px 12px;
+    border: 1px solid var(--vscode-widget-border);
+    border-radius: 6px;
+    background-color: var(--vscode-editor-background);
+}
+
+.workspace-option-description {
+    margin-left: 26px;
+    margin-top: 4px;
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
 .whats-included {
     background-color: var(--vscode-textBlockQuote-background);
     border-radius: 8px;

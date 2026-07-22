@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ext } from './extensionVariables';
 import { WebviewBaseController } from './WebviewBaseController';
-import type { IProjectTemplate, TemplateGalleryConfig, WebviewToExtensionMessage, ExtensionToWebviewMessage } from '../webview/TemplateGallery/types';
+import type { IProjectTemplate, TemplateGalleryConfig, TemplateGalleryWorkspaceOptionValues, WebviewToExtensionMessage, ExtensionToWebviewMessage } from '../webview/TemplateGallery/types';
 
 /**
  * Abstract controller for the Template Gallery webview panel.
@@ -83,7 +83,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
     protected abstract fetchTemplates(): Promise<{ templates: IProjectTemplate[]; defaultLocation: string }>;
 
     /** Create a project from the selected template. */
-    protected abstract createProject(template: IProjectTemplate, language: string, location: string): Promise<void>;
+    protected abstract createProject(template: IProjectTemplate, language: string, location: string, options: TemplateGalleryWorkspaceOptionValues): Promise<void>;
 
     /** Fetch the README markdown for a selected template. */
     protected abstract getReadme(template: IProjectTemplate): Promise<string>;
@@ -97,7 +97,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
      * The webview hands the user off to chat for multi-turn design and
      * file generation — there is no separate "generate then write" pipeline.
      */
-    protected async continueInChat(_prompt: string, _language: string): Promise<void> {
+    protected async continueInChat(_prompt: string, _language: string, _location: string, _options: TemplateGalleryWorkspaceOptionValues): Promise<void> {
         // No-op by default.
     }
 
@@ -160,7 +160,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 break;
 
             case 'createProject':
-                await this._handleCreateProject(message.template, message.language, message.location);
+                await this._handleCreateProject(message.template, message.language, message.location, message.options);
                 break;
 
             case 'browseFolder':
@@ -168,7 +168,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 break;
 
             case 'continueInChat':
-                await this.continueInChat(message.prompt, message.language);
+                await this.continueInChat(message.prompt, message.language, message.location, message.options);
                 break;
 
             case 'showError':
@@ -219,7 +219,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
         }
     }
 
-    private async _handleCreateProject(template: IProjectTemplate, language: string, location: string): Promise<void> {
+    private async _handleCreateProject(template: IProjectTemplate, language: string, location: string, options: TemplateGalleryWorkspaceOptionValues): Promise<void> {
         try {
             let projectPath = location?.trim() ?? '';
 
@@ -245,7 +245,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 this.postMessageToWebview({ type: 'folderSelected', path: projectPath, source: 'template' });
             }
 
-            await this.createProject(template, language, projectPath);
+            await this.createProject(template, language, projectPath, options);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             this.postMessageToWebview({ type: 'projectCreationFailed', error: msg });
