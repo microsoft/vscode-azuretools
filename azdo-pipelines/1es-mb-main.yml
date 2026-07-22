@@ -93,6 +93,7 @@ extends:
         directoryExclusionPatterns: "**/.vscode-test"
       codeql:
         excludePathPatterns: "**/.vscode-test, **/dist, **/testProjects, **/testFolder"
+        cadence: 0 # TODO: temporary to force it to run
 
     pool: ${{ parameters.sdlPool }}
 
