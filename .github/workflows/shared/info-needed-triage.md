@@ -9,6 +9,12 @@ safe-outputs:
     max: 1
   add-comment:
     max: 1
+  noop:
+    report-as-issue: false
+  missing-tool:
+    create-issue: false
+  report-incomplete:
+    create-issue: false
 ---
 
 # Info Needed Triage Agent
@@ -28,11 +34,11 @@ labels, author). Read it with the GitHub issues tools if you need more detail.
 These repositories have **no** GitHub issue form. The de-facto bug template is the
 body produced by the extension's built-in **`Azure: Report an Issue`** command,
 which pre-fills a structured body. A well-formed bug report contains most of these
-markers (values filled in, not left as `<!-- TODO -->` placeholders or blank):
+markers (values filled in, not left as the template's placeholder comments — HTML comments that begin with `<!--` and contain `TODO` — or blank):
 
 - `Does this occur consistently?` — answered Yes/No
 - `Repro steps:` followed by real numbered steps (the template seeds `1.` `2.`);
-  empty or `<!-- TODO -->` steps do **not** count
+  empty steps, or steps that still contain a `TODO` placeholder comment, do **not** count
 - Expected vs. actual behavior (often written into the repro steps)
 - `Version:` — the extension version
 - `OS:` / `OS Arch:` / `OS Release:` — the operating system
