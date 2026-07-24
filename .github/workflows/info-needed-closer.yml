@@ -55,6 +55,17 @@ jobs:
               }
             }
 
+            // gh-aw stamps every posted comment with a hidden workflow-id marker. Treat the
+            // info-needed triage bot's request the same as a maintainer asking for info.
+            function isAgentTriageComment(comment) {
+              const login = comment.user?.login ?? '';
+              const isBot = comment.user?.type === 'Bot' || login.endsWith('[bot]');
+              // Require a complete, well-formed gh-aw marker (including the closing "-->"), not just the
+              // prefix, so a human quoting or truncating it on a bot-relayed comment can't trigger a close.
+              const hasMarker = typeof comment.body === 'string' && /<!--\s*gh-aw-workflow-id:\s*\S[^>]*-->/.test(comment.body);
+              return isBot && hasMarker;
+            }
+
             // Fetch all open issues with the 'info-needed' label
             const issues = await github.paginate(github.rest.issues.listForRepo, {
               owner: context.repo.owner,
@@ -109,13 +120,16 @@ jobs:
               }
 
               // Only close if the last comment was made by someone with write access
+              // or by the gh-aw info-needed triage bot.
               const commenter = lastComment.user?.login;
-              if (!commenter || !(await hasWriteAccess(commenter))) {
-                core.info(`Issue #${issue.number}: last comment by ${commenter} does not have write access, skipping`);
+              const agentTriaged = isAgentTriageComment(lastComment);
+              if (!agentTriaged && (!commenter || !(await hasWriteAccess(commenter)))) {
+                core.info(`Issue #${issue.number}: last comment by ${commenter} is neither write-access nor agent triage, skipping`);
                 continue;
               }
 
-              core.info(`Closing issue #${issue.number}: last write-access comment by ${commenter} on ${lastComment.created_at}`);
+              const closeReason = agentTriaged ? 'agent triage comment' : `write-access comment by ${commenter}`;
+              core.info(`Closing issue #${issue.number}: last ${closeReason} on ${lastComment.created_at}`);
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
