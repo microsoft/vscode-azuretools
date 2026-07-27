@@ -51,7 +51,7 @@
     },
     "peerDependencies": {
         "@vscode/test-cli": "^0.0.15",
-        "@vscode/test-electron": "^3.0.0",
+        "@vscode/test-electron": "^3.1.0",
         "@vscode/vsce": "^3.9.2",
         "esbuild": "^0.28.1",
         "esbuild-plugin-copy": "^2.1.1",
@@ -88,6 +88,6 @@
         "tag": "alpha"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "serialize-javascript": "^7.0.7"
     }
 }
