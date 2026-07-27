@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.1.0-alpha.3",
+    "version": "1.1.0-alpha.4",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -36,6 +36,9 @@
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
+    "engines": {
+        "node": ">=22"
+    },
     "dependencies": {
         "@eslint/js": "^10.0.1",
         "@tony.ganchev/eslint-plugin-header": "^3.4.4",
@@ -44,18 +47,18 @@
         "@types/mocha": "^10.0.10",
         "chai": "^6.2.2",
         "chai-as-promised": "^8.0.2",
-        "eslint": "^10.5.0",
+        "eslint": "^10.8.0",
         "mocha": "^11.7.6",
         "typescript": "~5.9",
-        "typescript-eslint": "^8.61.1"
+        "typescript-eslint": "^8.65.0"
     },
     "peerDependencies": {
-        "@vscode/test-cli": "^0.0.12",
-        "@vscode/test-electron": "^3.0.0",
+        "@vscode/test-cli": "^0.0.15",
+        "@vscode/test-electron": "^3.1.0",
         "@vscode/vsce": "^3.9.2",
         "esbuild": "^0.28.1",
         "esbuild-plugin-copy": "^2.1.1",
-        "tsx": "^4.22.4"
+        "tsx": "^4.23.1"
     },
     "peerDependenciesMeta": {
         "@vscode/test-cli": {
@@ -88,6 +91,6 @@
         "tag": "alpha"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "serialize-javascript": "^7.0.7"
     }
 }
