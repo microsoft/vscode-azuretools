@@ -47,10 +47,10 @@
         "@types/mocha": "^10.0.10",
         "chai": "^6.2.2",
         "chai-as-promised": "^8.0.2",
-        "eslint": "^10.8.0",
+        "eslint": "^10.7.0",
         "mocha": "^11.7.6",
         "typescript": "~5.9",
-        "typescript-eslint": "^8.65.0"
+        "typescript-eslint": "^8.64.0"
     },
     "peerDependencies": {
         "@vscode/test-cli": "^0.0.15",
@@ -91,6 +91,6 @@
         "tag": "alpha"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.7"
+        "serialize-javascript": "^7.0.5"
     }
 }
