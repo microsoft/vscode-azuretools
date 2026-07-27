@@ -50,7 +50,7 @@
         "eslint": "^10.8.0",
         "mocha": "^11.7.6",
         "typescript": "~5.9",
-        "typescript-eslint": "^8.65.0"
+        "typescript-eslint": "^8.64.0"
     },
     "peerDependencies": {
         "@vscode/test-cli": "^0.0.15",
