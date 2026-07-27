@@ -36,6 +36,9 @@
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
+    "engines": {
+        "node": ">=22"
+    },
     "dependencies": {
         "@eslint/js": "^10.0.1",
         "@tony.ganchev/eslint-plugin-header": "^3.4.4",
