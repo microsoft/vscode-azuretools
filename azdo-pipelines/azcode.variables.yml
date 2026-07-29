@@ -17,7 +17,7 @@ variables:
   - name: npmReleaseApprovalEnvironment
     value: AzCodeDeploy
   - name: npmReleaseOwnerAliases
-    value: jinglou
+    value: preetik
   - name: npmReleaseApproverAliases
     value: bwater
 
