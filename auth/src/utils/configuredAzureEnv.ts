@@ -27,6 +27,17 @@ export class ExtendedEnvironment extends azureEnv.Environment {
 }
 
 /**
+ * Shape of the `microsoft-sovereign-cloud.customEnvironment` setting: the Azure SDK
+ * environment parameters plus an optional `isAzureStack` flag. A custom cloud is
+ * assumed to be Azure Stack Hub (which exposes only a limited, hybrid SDK profile)
+ * unless it sets `isAzureStack: false` - which a custom environment that supports the
+ * full API surface uses to opt into the full SDK clients.
+ */
+export interface CustomCloudEnvironmentParameters extends azureEnv.EnvironmentParameters {
+    readonly isAzureStack?: boolean;
+}
+
+/**
  * Gets the configured Azure environment.
  *
  * @returns The configured Azure environment from the settings in the built-in authentication provider extension
@@ -40,10 +51,15 @@ export function getConfiguredAzureEnv(): ExtendedEnvironment {
     } else if (environmentSettingValue === CloudEnvironmentSettingValue.USGovernment) {
         return new ExtendedEnvironment(azureEnv.Environment.USGovernment, false);
     } else if (environmentSettingValue === CloudEnvironmentSettingValue.Custom) {
-        const customCloud = authProviderConfig.get<azureEnv.EnvironmentParameters | undefined>(CustomEnvironmentSettingName);
+        const customCloud = authProviderConfig.get<CustomCloudEnvironmentParameters | undefined>(CustomEnvironmentSettingName);
 
         if (customCloud) {
-            return new ExtendedEnvironment(customCloud, true);
+            // `isCustomCloud` drives the hybrid-vs-full SDK client selection across the
+            // Azure extensions. It conflates two concepts - "custom endpoints" and "Azure
+            // Stack Hub limited profile" - so a custom cloud that is NOT Stack Hub opts out
+            // with `isAzureStack: false` to receive the full modern SDK clients.
+            const isCustomCloud = customCloud.isAzureStack !== false;
+            return new ExtendedEnvironment(customCloud, isCustomCloud);
         }
 
         throw new Error(vscode.l10n.t('The custom cloud choice is not configured. Please configure the setting `{0}.{1}`.', CustomCloudConfigurationSection, CustomEnvironmentSettingName));
