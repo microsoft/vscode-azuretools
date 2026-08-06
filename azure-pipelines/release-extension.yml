@@ -151,7 +151,7 @@ extends:
                       displayName: "\U0001F449 Install vsce"
                       inputs:
                         command: custom
-                        customCommand: i -g @vscode/vsce@latest
+                        customCommand: i -g @vscode/vsce
                         ${{ if ne(parameters.npmFeed, '') }}:
                           customRegistry: useFeed
                           customFeed: ${{ parameters.npmFeed }}
