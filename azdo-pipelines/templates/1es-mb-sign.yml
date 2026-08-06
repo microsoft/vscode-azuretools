@@ -16,7 +16,7 @@ steps:
   - template: ./find-vsixs.yml
 
   # Global installs ignore project .npmrc files, so use the authenticated file as user config.
-  - pwsh: npm install --global @vscode/vsce@latest
+  - pwsh: npm install --global --omit=optional @vscode/vsce@latest
     displayName: "👉 Install vsce"
     env:
       NPM_CONFIG_USERCONFIG: $(npmrcFile)
