@@ -51,7 +51,7 @@ steps:
     condition: and(succeeded(), eq(variables['signprojExists'], True))
     inputs:
       command: custom
-      customCommand: i -g @vscode/vsce
+      customCommand: i -g @vscode/vsce@latest
       ${{ if ne(parameters.npmFeed, '') }}:
         customRegistry: useFeed
         customFeed: ${{ parameters.npmFeed }}
