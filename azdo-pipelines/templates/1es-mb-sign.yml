@@ -15,22 +15,12 @@ steps:
 
   - template: ./find-vsixs.yml
 
-  - pwsh: |
-      $npmArgs = @("install", "--global")
-      if (-not [string]::IsNullOrWhiteSpace($env:NPMRC_FILE)) {
-          # Global installs ignore project .npmrc files, so pass the authenticated file as user config.
-          $npmArgs += @("--userconfig", $env:NPMRC_FILE)
-      }
-      $npmArgs += "@vscode/vsce@latest"
-
-      & npm @npmArgs
-      if ($LASTEXITCODE -ne 0) {
-          exit $LASTEXITCODE
-      }
+  # Global installs ignore project .npmrc files, so use the authenticated file as user config.
+  - pwsh: npm install --global @vscode/vsce@latest
     displayName: "👉 Install vsce"
     workingDirectory: $(working_directory)
     env:
-      NPMRC_FILE: $(npmrcFile)
+      NPM_CONFIG_USERCONFIG: $(npmrcFile)
 
   - pwsh: |
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
