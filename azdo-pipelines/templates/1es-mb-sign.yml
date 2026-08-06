@@ -15,6 +15,12 @@ steps:
 
   - template: ./find-vsixs.yml
 
+  # Global installs ignore project .npmrc files, so use the authenticated file as user config.
+  - pwsh: npm install --global --omit=optional @vscode/vsce@latest
+    displayName: "👉 Install vsce"
+    env:
+      NPM_CONFIG_USERCONFIG: $(npmrcFile)
+
   - pwsh: |
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
       $fileListObject = @{
@@ -25,18 +31,6 @@ steps:
               }
           )
       }
-
-      # Resolve the full path to the .bin directory before changing directories, and prepend it to PATH.
-      # This ensures vsce is found regardless of OS-specific shim names (vsce, vsce.cmd, vsce.ps1).
-      $binDir = Join-Path $(working_directory) 'node_modules/.bin'
-      if (-not (Test-Path $binDir)) {
-          $binDir = Join-Path $(Build.SourcesDirectory) 'node_modules/.bin'
-          if (-not (Test-Path $binDir)) {
-              Write-Error "Cannot find node_modules/.bin. Ensure @vscode/vsce is installed."
-              exit 1
-          }
-      }
-      $env:PATH = "$(( Resolve-Path -LiteralPath $binDir ).Path)$([System.IO.Path]::PathSeparator)$env:PATH"
 
       foreach ($vsix in $vsixList) {
           Set-Location $vsix.directory
