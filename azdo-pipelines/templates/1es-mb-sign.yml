@@ -18,7 +18,6 @@ steps:
   # Global installs ignore project .npmrc files, so use the authenticated file as user config.
   - pwsh: npm install --global @vscode/vsce@latest
     displayName: "👉 Install vsce"
-    workingDirectory: $(working_directory)
     env:
       NPM_CONFIG_USERCONFIG: $(npmrcFile)
 
