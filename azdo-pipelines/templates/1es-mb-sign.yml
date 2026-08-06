@@ -15,11 +15,21 @@ steps:
 
   - template: ./find-vsixs.yml
 
-  - task: Npm@1
+  - pwsh: |
+      $npmArgs = @("install", "--global")
+      if (-not [string]::IsNullOrWhiteSpace($env:NPMRC_FILE)) {
+          $npmArgs += @("--userconfig", $env:NPMRC_FILE)
+      }
+      $npmArgs += "@vscode/vsce@latest"
+
+      & npm @npmArgs
+      if ($LASTEXITCODE -ne 0) {
+          exit $LASTEXITCODE
+      }
     displayName: "👉 Install vsce"
-    inputs:
-      command: custom
-      customCommand: i -g @vscode/vsce@latest
+    workingDirectory: $(working_directory)
+    env:
+      NPMRC_FILE: $(npmrcFile)
 
   - pwsh: |
       $vsixList = '$(vsixListJson)' | ConvertFrom-Json
