@@ -18,6 +18,7 @@ steps:
   - pwsh: |
       $npmArgs = @("install", "--global")
       if (-not [string]::IsNullOrWhiteSpace($env:NPMRC_FILE)) {
+          # Global installs ignore project .npmrc files, so pass the authenticated file as user config.
           $npmArgs += @("--userconfig", $env:NPMRC_FILE)
       }
       $npmArgs += "@vscode/vsce@latest"
