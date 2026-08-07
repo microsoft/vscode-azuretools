@@ -1,3 +1,10 @@
+parameters:
+  - name: signType
+    type: string
+    values:
+      - test
+      - real
+
 steps:
   # Eww, but DDSignFiles.dll requires .NET Core 3.1
   - task: UseDotNet@2
@@ -59,7 +66,7 @@ steps:
     displayName: "👉 Prepare VSIXs for signing"
 
   - pwsh: |
-      & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll -- /filelist:$(Build.SourcesDirectory)/filesToSign.json
+      & dotnet $env:MBSIGN_APPFOLDER/DDSignFiles.dll ${{ iif(eq(parameters.signType, 'test'), '/test', '') }} -- /filelist:$(Build.SourcesDirectory)/filesToSign.json
     displayName: "👉 Sign VSIX signature files"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
