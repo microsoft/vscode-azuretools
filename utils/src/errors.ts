@@ -25,7 +25,7 @@ export function isUserCancelledError(error: unknown): error is UserCancelledErro
 
 export class InvalidCopilotResponseError extends Error {
     constructor() {
-        super(vscode.l10n.t('Invalid input.'));
+        super(vscode.l10n.t('Unable to get a valid response from the GitHub Copilot CLI.'));
     }
 }
 
