@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ServiceClient } from '@azure/core-client';
-import { createHttpHeaders, createPipelineRequest, Pipeline, PipelinePolicy, PipelineRequest, PipelineResponse, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
+import { createHttpHeaders, createPipelineRequest, Pipeline, PipelinePolicy, PipelineRequest, PipelineResponse, proxyPolicyName, RestError, RetryPolicyOptions, SendRequest, userAgentPolicy } from '@azure/core-rest-pipeline';
 import { BearerChallengePolicy } from '@microsoft/vscode-azext-azureauth';
 import { appendExtensionUserAgent, AzExtServiceClientCredentialsT2, AzExtTreeItem, IActionContext, ISubscriptionActionContext, ISubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { randomUUID } from 'crypto';
@@ -12,6 +12,7 @@ import { Agent as HttpsAgent } from 'https';
 import * as vscode from "vscode";
 import * as types from '../index';
 import { FeedMirrorPolicy } from './utils/FeedMirrorPolicy';
+import { ProxyAgentPolicy } from './utils/ProxyAgentPolicy';
 import { parseJson, removeBom } from './utils/parseJson';
 
 export type InternalAzExtClientContext = ISubscriptionActionContext | [IActionContext, ISubscriptionContext | AzExtTreeItem];
@@ -174,6 +175,13 @@ function addAzExtPipeline(context: IActionContext, pipeline: Pipeline, endpoint?
     }
 
     pipeline.addPolicy(new AllowInsecureConnectionPolicy());
+
+    // Honor VS Code's `http.proxy` / `http.proxyStrictSSL` / `http.noProxy` settings, running before
+    // the SDK's built-in proxy policy (which only reads env vars). With `http.proxySupport: off` this
+    // no-ops and env-var proxies still flow through the built-in policy (matching VS Code's default).
+    // Note: `http.noProxy` only bypasses proxies this policy applies, not env-var-only proxies (the
+    // built-in policy consults only `NO_PROXY`).
+    pipeline.addPolicy(new ProxyAgentPolicy(), { beforePolicies: [proxyPolicyName] });
 
     if (bearerChallengePolicy) {
         pipeline.addPolicy(bearerChallengePolicy, { phase: 'Sign' });
