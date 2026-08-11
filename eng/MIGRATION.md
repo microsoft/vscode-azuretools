@@ -83,6 +83,15 @@ Extensions must be bundled to improve loading performance and VSIX size. We use 
 # Tests
 Depending on how your tests run, you will do one of the below.
 
+Both approaches register the [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin for you, so
+assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. To get the corresponding types, add
+`chai-as-promised` to the `types` array in your tsconfig.json:
+```jsonc
+    "types": [
+        "chai-as-promised"
+    ]
+```
+
 ## Mocha Tests
 Your tests run directly in Mocha, because **you do not have VS Code dependencies**.
 

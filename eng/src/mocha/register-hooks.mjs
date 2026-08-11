@@ -5,6 +5,9 @@
 
 import { register } from 'node:module';
 
+// Registers the chai-as-promised plugin
+import './chai-setup.mjs';
+
 // Registers a lightweight resolve hook so that extensionless relative imports
 // (e.g. './foo') resolve to '.ts' files when running under Node's built-in
 // type-stripping mode instead of tsx.
