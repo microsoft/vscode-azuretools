@@ -44,6 +44,12 @@ Contains default VS Code test configuration for Azure extensions.
     },
     ```
 
+# Chai Assertions
+
+The [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered automatically, so
+assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. To get the corresponding types, add
+`chai-as-promised` to the `types` array in your tsconfig.json.
+
 ---
 
 [Back to Root](../../README.md)
