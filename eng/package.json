@@ -25,7 +25,7 @@
             "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./mocha": {
-            "import": "./src/mocha/register-hooks.mjs"
+            "import": "./src/mocha/index.mjs"
         },
         "./mocha/chai-setup": {
             "import": "./src/mocha/chai-setup.mjs"
