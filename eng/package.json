@@ -28,7 +28,8 @@
             "import": "./src/mocha/index.mjs"
         },
         "./mocha/chai-setup": {
-            "import": "./src/mocha/chai-setup.mjs"
+            "import": "./src/mocha/chai-setup.mjs",
+            "default": "./src/mocha/chai-setup.mjs"
         }
     },
     "scripts": {
