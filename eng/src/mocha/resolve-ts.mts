@@ -3,12 +3,16 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResolveHook } from 'node:module';
+import type { ResolveFnOutput, ResolveHook, ResolveHookContext } from 'node:module';
 
 /**
  * Resolve hook: tries appending '.ts' / '.js' to relative specifiers that lack an extension.
  */
-export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
+export async function resolve(
+    specifier: string,
+    context: ResolveHookContext,
+    nextResolve: Parameters<ResolveHook>[2],
+): Promise<ResolveFnOutput> {
     // Only handle relative imports without a file extension
     if (specifier.startsWith('.') && !/\.\w+$/.test(specifier)) {
         for (const ext of ['.ts', '.js']) {
@@ -23,4 +27,4 @@ export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
     }
 
     return nextResolve(specifier, context);
-};
+}
