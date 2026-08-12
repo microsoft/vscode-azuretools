@@ -28,10 +28,10 @@
             "import": "./dist/esm/mocha/index.mjs",
             "types": "./dist/esm/mocha/index.d.mts"
         },
-        "./mocha/chai-setup": {
-            "import": "./dist/esm/mocha/chai-setup.mjs",
-            "types": "./dist/esm/mocha/chai-setup.d.mts",
-            "default": "./dist/esm/mocha/chai-setup.mjs"
+        "./mocha/test-globals": {
+            "import": "./dist/esm/mocha/test-globals.mjs",
+            "types": "./dist/esm/mocha/test-globals.d.mts",
+            "default": "./dist/esm/mocha/test-globals.mjs"
         }
     },
     "scripts": {

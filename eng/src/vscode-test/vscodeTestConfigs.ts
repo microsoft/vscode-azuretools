@@ -14,8 +14,8 @@ import { join } from 'node:path';
  */
 export const baseConfig: Partial<VscodeTestConfig> = {
     mocha: {
-        // 'chai-setup' registers the global `expect` and the chai-as-promised plugin, since this test runner does not load the mocha hooks
-        require: ['tsx', '@microsoft/vscode-azext-eng/mocha/chai-setup'],
+        // 'test-globals' declares mocha's globals and registers the global `expect` and the chai-as-promised plugin, since this test runner does not load the mocha hooks
+        require: ['tsx', '@microsoft/vscode-azext-eng/mocha/test-globals'],
         timeout: 10000,
     },
     env: {

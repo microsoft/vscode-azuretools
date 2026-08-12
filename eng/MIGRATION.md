@@ -93,7 +93,7 @@ To get the types for all of it, add a single entry to the `types` array in your 
 ```jsonc
     "types": [
         "node",
-        "@microsoft/vscode-azext-eng/mocha/chai-setup"
+        "@microsoft/vscode-azext-eng/mocha/test-globals"
     ]
 ```
 > You do not need `mocha` or `chai-as-promised` entries, you do not need `@types/mocha` as a dependency, and you do not

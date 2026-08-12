@@ -9,4 +9,4 @@
 // requires. The resolve hook that makes extensionless imports work for consumers' tests cannot help
 // here, because this graph is what registers it, and static imports resolve before any of it runs.
 import './register-hooks.mjs';
-import './chai-setup.mjs';
+import './test-globals.mjs';

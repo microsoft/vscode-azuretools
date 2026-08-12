@@ -24,7 +24,7 @@ import 'chai/register-expect.js';
 
 declare global {
     /**
-     * Chai's `expect`, registered as a global by the shared mocha setup.
+     * Chai's `expect`, registered as a global by the shared test globals setup.
      */
     const expect: typeof chaiExpect;
 }
