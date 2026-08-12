@@ -83,14 +83,31 @@ Extensions must be bundled to improve loading performance and VSIX size. We use 
 # Tests
 Depending on how your tests run, you will do one of the below.
 
-Both approaches register the [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin for you, so
-assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. To get the corresponding types, add
-`chai-as-promised` to the `types` array in your tsconfig.json:
+Both approaches set up your test globals for you:
+- Mocha's globals (`describe`, `it`, `suite`, `test`, ...) are declared for you.
+- Chai's `expect` is registered as a global, so your tests can use `expect(...)` without importing it.
+- The [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered, so assertions like
+  `await expect(thing()).to.be.rejectedWith(/.../)` are available.
+
+To get the types for all of it, add a single entry to the `types` array in your tsconfig.json:
 ```jsonc
     "types": [
-        "chai-as-promised"
+        "node",
+        "@microsoft/vscode-azext-eng/mocha/test-globals"
     ]
 ```
+> You do not need `mocha` or `chai-as-promised` entries, you do not need `@types/mocha` as a dependency, and you do not
+> need to add `chai` to your dependencies. Importing `expect` from `chai` explicitly still works if you prefer that
+> style.
+>
+> **Using pnpm?** Because `chai` and `chai-as-promised` come in transitively through this package, pnpm's default
+> isolated `node_modules` layout may not make them resolvable from your extension. If you hit resolution errors, hoist
+> them via `pnpm-workspace.yaml`:
+> ```yaml
+> publicHoistPattern:
+>   - chai
+>   - chai-as-promised
+> ```
 
 ## Mocha Tests
 Your tests run directly in Mocha, because **you do not have VS Code dependencies**.

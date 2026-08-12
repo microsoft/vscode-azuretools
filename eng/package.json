@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.1.0-alpha.5",
+    "version": "1.1.0-alpha.6",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -25,11 +25,13 @@
             "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./mocha": {
-            "import": "./src/mocha/index.mjs"
+            "import": "./dist/esm/mocha/index.mjs",
+            "types": "./dist/esm/mocha/index.d.mts"
         },
-        "./mocha/chai-setup": {
-            "import": "./src/mocha/chai-setup.mjs",
-            "default": "./src/mocha/chai-setup.mjs"
+        "./mocha/test-globals": {
+            "import": "./dist/esm/mocha/test-globals.mjs",
+            "types": "./dist/esm/mocha/test-globals.d.mts",
+            "default": "./dist/esm/mocha/test-globals.mjs"
         }
     },
     "scripts": {

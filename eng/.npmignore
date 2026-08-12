@@ -2,8 +2,12 @@ node_modules/
 .vscode/
 src/
 !src/**/*.md
-!src/mocha/**/*.mjs
 src/**/*.ts
+src/**/*.mts
+# Everything under src/mocha is ESM-only and authored as '.mts', so the CommonJS build pass emits
+# unreferenced '.mjs' duplicates of the ESM output. Nothing resolves them, so leave them out.
+dist/cjs/**/*.mjs
+dist/cjs/**/*.mjs.map
 tsconfig.json
 *.tgz
 .vscode-test/
