@@ -4,6 +4,7 @@ src/
 !src/**/*.md
 !src/mocha/**/*.mjs
 src/**/*.ts
+!src/mocha/**/*.d.ts
 tsconfig.json
 *.tgz
 .vscode-test/

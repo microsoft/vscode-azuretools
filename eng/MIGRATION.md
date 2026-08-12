@@ -84,11 +84,13 @@ Extensions must be bundled to improve loading performance and VSIX size. We use 
 Depending on how your tests run, you will do one of the below.
 
 Both approaches register the [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin for you, so
-assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. To get the corresponding types, add
-`chai-as-promised` to the `types` array in your tsconfig.json:
+assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. Chai's `expect` is also registered as
+a global, so you do not need to import it. To get the corresponding types, add `chai-as-promised` and
+`@microsoft/vscode-azext-eng/mocha/chai-setup` to the `types` array in your tsconfig.json:
 ```jsonc
     "types": [
-        "chai-as-promised"
+        "chai-as-promised",
+        "@microsoft/vscode-azext-eng/mocha/chai-setup"
     ]
 ```
 
