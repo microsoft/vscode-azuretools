@@ -99,10 +99,11 @@ To get the types for both, add a single entry to the `types` array in your tscon
 >
 > **Using pnpm?** Because `chai` and `chai-as-promised` come in transitively through this package, pnpm's default
 > isolated `node_modules` layout may not make them resolvable from your extension. If you hit resolution errors, hoist
-> them via `.npmrc`:
-> ```ini
-> public-hoist-pattern[]=chai
-> public-hoist-pattern[]=chai-as-promised
+> them via `pnpm-workspace.yaml`:
+> ```yaml
+> publicHoistPattern:
+>   - chai
+>   - chai-as-promised
 > ```
 
 ## Mocha Tests
