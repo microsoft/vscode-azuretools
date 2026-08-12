@@ -35,10 +35,9 @@
         }
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs && npm run build:dist-type",
+        "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc",
         "build:cjs": "tsc -p ./tsconfig.cjs.json --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "build:dist-type": "node ./scripts/write-dist-package-type.mjs",
         "test": "exit 0",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
