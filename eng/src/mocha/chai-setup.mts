@@ -3,19 +3,20 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// These modules contribute global declarations rather than exports: '@types/mocha' declares
+// `describe`, `it`, `suite`, `test`, etc., and 'chai-as-promised' augments the global `Chai`
+// namespace with assertions like `.rejectedWith()` and `.eventually`. Referencing them here means
+// a single entry in a consumer's tsconfig `types` array covers all of it, and they do not need
+// '@types/mocha' of their own. 'preserve="true"' (TypeScript 5.5+) is required: a plain reference
+// directive is treated as unused and silently dropped from the declaration emit.
+/// <reference types="mocha" preserve="true" />
+/// <reference types="chai-as-promised" preserve="true" />
+
 import { use, type expect as chaiExpect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-// Re-exported purely so that the generated declaration keeps a reference to 'chai-as-promised'.
-// That module augments the global `Chai` namespace, so pulling it into the declaration is what
-// makes assertions like `.rejectedWith()` visible to consumers off the back of a single entry in
-// their tsconfig `types` array. A plain import would be elided from the declaration emit.
-export type ChaiAsPromised = typeof chaiAsPromised;
-
 // Registers the chai-as-promised plugin, making assertions like
-// `await expect(promise).to.be.rejectedWith(/foo/)` available to consumers. The
-// triple-slash reference above is emitted into the generated declaration, so the
-// matching type augmentation comes along with it.
+// `await expect(promise).to.be.rejectedWith(/foo/)` available to consumers.
 use(chaiAsPromised);
 
 // Registers chai's `expect` as a global, so tests can use it without importing chai.

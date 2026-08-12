@@ -44,20 +44,23 @@ Contains default VS Code test configuration for Azure extensions.
     },
     ```
 
-# Chai Assertions
+# Test Globals
 
-The [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered automatically, so
-assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. Chai's `expect` is also registered as
-a global, so you do not need to import it.
+Mocha's globals (`describe`, `it`, `suite`, `test`, ...) are declared for you. The
+[chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered automatically, so assertions
+like `await expect(thing()).to.be.rejectedWith(/.../)` are available. Chai's `expect` is also registered as a global,
+so you do not need to import it.
 
-To get the types for both, add a single entry to the `types` array in your tsconfig.json:
+To get the types for all of it, add a single entry to the `types` array in your tsconfig.json:
 ```jsonc
     "types": [
+        "node",
         "@microsoft/vscode-azext-eng/mocha/chai-setup"
     ]
 ```
-> You do not need to list `chai-as-promised` separately, and you do not need to add `chai` to your dependencies.
-> Importing `expect` from `chai` explicitly still works if you prefer that style.
+> You do not need `mocha` or `chai-as-promised` entries, you do not need `@types/mocha` as a dependency, and you do not
+> need to add `chai` to your dependencies. Importing `expect` from `chai` explicitly still works if you prefer that
+> style.
 >
 > **Using pnpm?** Because `chai` and `chai-as-promised` come in transitively through this package, pnpm's default
 > isolated `node_modules` layout may not make them resolvable from your extension. If you hit resolution errors, hoist
