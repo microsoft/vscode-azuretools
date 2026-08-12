@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.json",
+    "exclude": [
+        "**/node_modules",
+        "**/lib",
+        "**/dist",
+        // The mocha hooks are ESM-only (they use `import.meta`), and are only ever loaded by Node
+        // directly via the `./mocha` exports, so they are not part of the CommonJS build.
+        "src/mocha",
+    ],
+}

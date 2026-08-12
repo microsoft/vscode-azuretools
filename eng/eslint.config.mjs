@@ -8,5 +8,6 @@ import { azExtEslintStrictTypeChecked } from './src/eslint/eslintConfigs.ts';
 
 export default [
     ...azExtEslintStrictTypeChecked,
-    globalIgnores(['src/mocha/**']),
+    // Build scripts are plain Node scripts, outside of the TypeScript project
+    globalIgnores(['scripts/**']),
 ];

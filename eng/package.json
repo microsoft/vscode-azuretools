@@ -25,19 +25,20 @@
             "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./mocha": {
-            "types": "./src/mocha/index.d.ts",
-            "import": "./src/mocha/index.mjs"
+            "import": "./dist/esm/mocha/index.js",
+            "types": "./dist/esm/mocha/index.d.ts"
         },
         "./mocha/chai-setup": {
-            "types": "./src/mocha/chai-setup.d.ts",
-            "import": "./src/mocha/chai-setup.mjs",
-            "default": "./src/mocha/chai-setup.mjs"
+            "import": "./dist/esm/mocha/chai-setup.js",
+            "types": "./dist/esm/mocha/chai-setup.d.ts",
+            "default": "./dist/esm/mocha/chai-setup.js"
         }
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "npm run build:esm && npm run build:cjs && npm run build:dist-type",
         "build:esm": "tsc",
-        "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:cjs": "tsc -p ./tsconfig.cjs.json --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:dist-type": "node ./scripts/write-dist-package-type.mjs",
         "test": "exit 0",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"

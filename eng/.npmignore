@@ -1,11 +1,11 @@
 node_modules/
 .vscode/
+scripts/
 src/
 !src/**/*.md
-!src/mocha/**/*.mjs
 src/**/*.ts
-!src/mocha/**/*.d.ts
 tsconfig.json
+tsconfig.cjs.json
 *.tgz
 .vscode-test/
 eslint.config.mjs
