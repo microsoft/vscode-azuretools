@@ -25,19 +25,19 @@
             "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./mocha": {
-            "import": "./dist/esm/mocha/index.js",
-            "types": "./dist/esm/mocha/index.d.ts"
+            "import": "./dist/esm/mocha/index.mjs",
+            "types": "./dist/esm/mocha/index.d.mts"
         },
         "./mocha/chai-setup": {
-            "import": "./dist/esm/mocha/chai-setup.js",
-            "types": "./dist/esm/mocha/chai-setup.d.ts",
-            "default": "./dist/esm/mocha/chai-setup.js"
+            "import": "./dist/esm/mocha/chai-setup.mjs",
+            "types": "./dist/esm/mocha/chai-setup.d.mts",
+            "default": "./dist/esm/mocha/chai-setup.mjs"
         }
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "tsc",
-        "build:cjs": "tsc -p ./tsconfig.cjs.json --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "test": "exit 0",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"

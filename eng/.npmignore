@@ -3,8 +3,11 @@ node_modules/
 src/
 !src/**/*.md
 src/**/*.ts
+src/**/*.mts
+# The mocha hooks are ESM-only, so the CommonJS build pass emits them as unreferenced '.mjs'
+# duplicates of the ESM output. Nothing resolves them, so leave them out of the package.
+dist/cjs/mocha/
 tsconfig.json
-tsconfig.cjs.json
 *.tgz
 .vscode-test/
 eslint.config.mjs
