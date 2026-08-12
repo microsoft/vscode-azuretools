@@ -96,6 +96,14 @@ To get the types for both, add a single entry to the `types` array in your tscon
 ```
 > You do not need to list `chai-as-promised` separately, and you do not need to add `chai` to your dependencies.
 > Importing `expect` from `chai` explicitly still works if you prefer that style.
+>
+> **Using pnpm?** Because `chai` and `chai-as-promised` come in transitively through this package, pnpm's default
+> isolated `node_modules` layout may not make them resolvable from your extension. If you hit resolution errors, hoist
+> them via `.npmrc`:
+> ```ini
+> public-hoist-pattern[]=chai
+> public-hoist-pattern[]=chai-as-promised
+> ```
 
 ## Mocha Tests
 Your tests run directly in Mocha, because **you do not have VS Code dependencies**.
