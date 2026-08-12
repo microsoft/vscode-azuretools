@@ -83,16 +83,19 @@ Extensions must be bundled to improve loading performance and VSIX size. We use 
 # Tests
 Depending on how your tests run, you will do one of the below.
 
-Both approaches register the [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin for you, so
-assertions like `await expect(thing()).to.be.rejectedWith(/.../)` are available. Chai's `expect` is also registered as
-a global, so you do not need to import it. To get the corresponding types, add `chai-as-promised` and
-`@microsoft/vscode-azext-eng/mocha/chai-setup` to the `types` array in your tsconfig.json:
+Both approaches set up chai for you:
+- Chai's `expect` is registered as a global, so your tests can use `expect(...)` without importing it.
+- The [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered, so assertions like
+  `await expect(thing()).to.be.rejectedWith(/.../)` are available.
+
+To get the types for both, add a single entry to the `types` array in your tsconfig.json:
 ```jsonc
     "types": [
-        "chai-as-promised",
         "@microsoft/vscode-azext-eng/mocha/chai-setup"
     ]
 ```
+> You do not need to list `chai-as-promised` separately, and you do not need to add `chai` to your dependencies.
+> Importing `expect` from `chai` explicitly still works if you prefer that style.
 
 ## Mocha Tests
 Your tests run directly in Mocha, because **you do not have VS Code dependencies**.
