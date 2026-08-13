@@ -101,7 +101,7 @@ If the issue is about a sign-in or authentication problem, you may also ask for:
 
 #### Microsoft Authentication extension logs
 
-Below is a snippet of the instructions you can include in your comment to help the reporter gather logs from the Microsoft Authentication extension. You can copy and paste this into your comment, adjusting as needed for the specific issue. You can remind the user that these logs may include sensitive information, so they should review them before sharing.
+Below is a snippet of the instructions you can include in your comment to help the reporter gather logs from the Microsoft Authentication extension. You can copy and paste this into your comment, adjusting as needed for the specific issue. Remind the user that these logs may include sensitive information, so they should review them before sharing.
 
 Set the log level to "Trace" or "Debug" with the "Developer: Set Log Level..." command.
 <img width="614" alt="image" src="https://github.com/user-attachments/assets/b0a1aef5-544b-48e0-bcdb-3f2847a78750">
