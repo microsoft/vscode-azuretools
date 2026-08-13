@@ -60,9 +60,9 @@ An issue filed directly on github.com typically has **none** of this structure.
      steps, expected vs. actual behavior, and any relevant error/console output.
    - The issue **already has the `info-needed` label**, or a maintainer or bot has
      already asked for more information.
-   In every one of these cases, take no labeling/commenting action; just call the
-   `noop` safe output with a one-line reason (e.g. "Issue #N is a feature request —
-   no info-needed triage").
+     In every one of these cases, take no labeling/commenting action; just call the
+     `noop` safe output with a one-line reason (e.g. "Issue #N is a feature request —
+     no info-needed triage").
 
 2. **Otherwise the issue is an incomplete bug report.** Do BOTH of the following:
    - Call `add_labels` once with `["info-needed"]` (omit `item_number` — it
@@ -76,7 +76,7 @@ workflow — not you.
 ## Writing the comment
 
 Write like a friendly, appreciative maintainer — **not** a canned bot. The
-comment must be specific to *this* issue: name only the details that are actually
+comment must be specific to _this_ issue: name only the details that are actually
 missing, and briefly say how to get each one. Do not dump a generic checklist of
 everything.
 
@@ -88,15 +88,28 @@ Include, as relevant to what's missing:
   and any error text.
 - **How to gather it quickly:** the easiest path is to run
   **`Azure: Report an Issue`** from the VS Code Command Palette
-  (`Cmd/Ctrl+Shift+P`) — it auto-fills the extension version, VS Code version, and
-  OS. If there's an error or unexpected failure, ask them to capture it via
-  **Help > Toggle Developer Tools > Console** and paste any red error text.
-- A link to the reporting guidelines: https://aka.ms/azcodeissuereporting
+  (`Cmd/Ctrl+Shift+P`) — it auto-fills the extension version, VS Code version, and OS.
 - A warm closing note (e.g. that this info will help the team reproduce and fix it
   faster).
 
 Keep it concise (a short paragraph plus a tight bulleted list of what's missing).
 Address the reporter by their handle when natural.
+
+### Authentication or sign-in issues
+
+If the issue is about a sign-in or authentication problem, you may also ask for:
+
+#### Microsoft Authentication extension logs
+
+Below is a snippet of the instructions you can include in your comment to help the reporter gather logs from the Microsoft Authentication extension. You can copy and paste this into your comment, adjusting as needed for the specific issue. Remind the user that these logs may include sensitive information, so they should review them before sharing.
+
+Set the log level to "Trace" or "Debug" with the "Developer: Set Log Level..." command.
+<img width="614" alt="image" src="https://github.com/user-attachments/assets/b0a1aef5-544b-48e0-bcdb-3f2847a78750">
+<img width="616" alt="image" src="https://github.com/user-attachments/assets/c732c571-2bb9-4c72-8ab1-a632dc4a1034">
+
+Then view the logs using the "Developer: Show Logs..." command and selecting "Microsoft Authentication".
+<img width="615" alt="image" src="https://github.com/user-attachments/assets/bce9e3be-8826-46a1-8ff9-6c31c8af4ea7">
+<img width="666" alt="image" src="https://github.com/user-attachments/assets/5239ff40-48a1-4213-b016-0ec42d1611ae">
 
 ## Mandatory completion rule
 
