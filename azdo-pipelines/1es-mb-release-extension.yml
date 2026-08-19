@@ -89,8 +89,6 @@ extends:
                 inputs:
                   version: 22.x
 
-              # Runs unconditionally so npmBeforeDate is always set; otherwise the
-              # literal string "$(npmBeforeDate)" would be passed to npm below.
               - template: azdo-pipelines/templates/set-npm-before-date.yml@azExtTemplates
 
               - task: Npm@1
