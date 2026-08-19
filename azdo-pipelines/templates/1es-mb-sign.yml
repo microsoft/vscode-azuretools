@@ -22,8 +22,10 @@ steps:
 
   - template: ./find-vsixs.yml
 
+  - template: ./set-npm-before-date.yml
+
   # Global installs ignore project .npmrc files, so use the authenticated file as user config.
-  - pwsh: npm install --global --omit=optional @vscode/vsce@latest
+  - pwsh: npm install --global --omit=optional --before $(npmBeforeDate) @vscode/vsce@latest
     displayName: "👉 Install vsce"
     env:
       NPM_CONFIG_USERCONFIG: $(npmrcFile)

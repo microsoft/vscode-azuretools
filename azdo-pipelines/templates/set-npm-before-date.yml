@@ -1,0 +1,14 @@
+parameters:
+  # Size of the cooldown window, in days.
+  - name: days
+    type: number
+    default: 7
+
+steps:
+  # Use `--before` rather than `--min-release-age`, which requires npm 11.7+ and is
+  # silently ignored by the npm 10.x that ships with Node 22.
+  - pwsh: |
+      $npmBeforeDate = [DateTime]::UtcNow.AddDays(-${{ parameters.days }}).ToString("yyyy-MM-ddTHH:mm:ssZ")
+      Write-Host "Ignoring package versions published after $npmBeforeDate (${{ parameters.days }} day cooldown)"
+      Write-Host "##vso[task.setvariable variable=npmBeforeDate]$npmBeforeDate"
+    displayName: "👉 Compute npm cooldown date"
