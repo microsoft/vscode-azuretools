@@ -94,7 +94,7 @@ extends:
                 condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
                 inputs:
                   command: custom
-                  customCommand: i -g --omit=optional @vscode/vsce@latest
+                  customCommand: i -g --omit=optional --min-release-age 7 @vscode/vsce@latest
                   ${{ if ne(parameters.npmFeed, '') }}:
                     customRegistry: useFeed
                     customFeed: ${{ parameters.npmFeed }}
