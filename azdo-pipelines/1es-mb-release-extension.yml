@@ -89,12 +89,16 @@ extends:
                 inputs:
                   version: 22.x
 
+              # Runs unconditionally so npmBeforeDate is always set; otherwise the
+              # literal string "$(npmBeforeDate)" would be passed to npm below.
+              - template: azdo-pipelines/templates/set-npm-before-date.yml@azExtTemplates
+
               - task: Npm@1
                 displayName: "👉 Install vsce"
                 condition: and(succeeded(), eq(${{ parameters.dryRun }}, false))
                 inputs:
                   command: custom
-                  customCommand: i -g --omit=optional --min-release-age 7 @vscode/vsce@latest
+                  customCommand: i -g --omit=optional --before $(npmBeforeDate) @vscode/vsce@latest
                   ${{ if ne(parameters.npmFeed, '') }}:
                     customRegistry: useFeed
                     customFeed: ${{ parameters.npmFeed }}

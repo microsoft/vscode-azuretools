@@ -1,0 +1,19 @@
+parameters:
+  # Size of the cooldown window, in days. Package versions published more
+  # recently than this are not installed.
+  - name: days
+    type: number
+    default: 7
+
+steps:
+  # npm's `--min-release-age` takes a relative number of days, but it requires npm 11.7+
+  # and is silently ignored by the npm 10.x that ships with Node 22. `--before` has been
+  # supported since npm 6.9 and applies the same filter (npm internally flattens
+  # `--min-release-age` to `--before`), so compute the absolute cutoff here instead.
+  # It must be recomputed each run; a hardcoded date would freeze installs at an
+  # ever-older point in time.
+  - pwsh: |
+      $npmBeforeDate = [DateTime]::UtcNow.AddDays(-${{ parameters.days }}).ToString("yyyy-MM-ddTHH:mm:ssZ")
+      Write-Host "Ignoring package versions published after $npmBeforeDate (${{ parameters.days }} day cooldown)"
+      Write-Host "##vso[task.setvariable variable=npmBeforeDate]$npmBeforeDate"
+    displayName: "👉 Compute npm cooldown date"
