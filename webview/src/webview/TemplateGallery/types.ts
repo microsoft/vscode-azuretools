@@ -86,9 +86,13 @@ export interface ResolvedAiGenerationConfig {
 }
 
 export interface TemplateGalleryWorkspaceOption {
+    /** Stable key included in the values passed to the consuming extension. */
     id: string;
+    /** Label displayed next to the option checkbox. */
     label: string;
+    /** Supporting text displayed below the checkbox. */
     description?: string;
+    /** Initial value used when the Template Gallery opens. */
     defaultValue: boolean;
 }
 

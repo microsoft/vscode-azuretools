@@ -83,7 +83,13 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
     protected abstract fetchTemplates(): Promise<{ templates: IProjectTemplate[]; defaultLocation: string }>;
 
     /** Create a project from the selected template. */
-    protected abstract createProject(template: IProjectTemplate, language: string, location: string, options: TemplateGalleryWorkspaceOptionValues, entryPoint?: ProjectCreationEntryPoint): Promise<void>;
+    protected abstract createProject(
+        template: IProjectTemplate,
+        language: string,
+        location: string,
+        entryPoint?: ProjectCreationEntryPoint,
+        options?: TemplateGalleryWorkspaceOptionValues,
+    ): Promise<void>;
 
     /** Fetch the README markdown for a selected template. */
     protected abstract getReadme(template: IProjectTemplate): Promise<string>;
@@ -160,7 +166,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 break;
 
             case 'createProject':
-                await this._handleCreateProject(message.template, message.language, message.location, message.options, message.entryPoint);
+                await this._handleCreateProject(message.template, message.language, message.location, message.entryPoint, message.options);
                 break;
 
             case 'browseFolder':
@@ -219,7 +225,13 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
         }
     }
 
-    private async _handleCreateProject(template: IProjectTemplate, language: string, location: string, options: TemplateGalleryWorkspaceOptionValues, entryPoint?: ProjectCreationEntryPoint): Promise<void> {
+    private async _handleCreateProject(
+        template: IProjectTemplate,
+        language: string,
+        location: string,
+        entryPoint?: ProjectCreationEntryPoint,
+        options?: TemplateGalleryWorkspaceOptionValues,
+    ): Promise<void> {
         try {
             let projectPath = location?.trim() ?? '';
 
@@ -245,7 +257,7 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
                 this.postMessageToWebview({ type: 'folderSelected', path: projectPath, source: 'template' });
             }
 
-            await this.createProject(template, language, projectPath, options, entryPoint);
+            await this.createProject(template, language, projectPath, entryPoint, options);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             this.postMessageToWebview({ type: 'projectCreationFailed', error: msg });
