@@ -13,7 +13,8 @@ export { WebviewBaseController } from './extension/WebviewBaseController';
 export { WebviewController } from './extension/WebviewController';
 export type { WebviewBundleLocation } from './extension/WebviewController';
 export type {
-    ActiveView, AiState, ExtensionToWebviewMessage, FilterState, IProjectTemplate,
-    ProjectCreationEntryPoint, TemplateGalleryConfig, ViewMode, WebviewToExtensionMessage
+    ActiveView, AiExamplePrompt, AiGenerationConfig, AiState, ExtensionToWebviewMessage,
+    FilterState, IProjectTemplate, ProjectCreationEntryPoint, TemplateGalleryConfig,
+    TemplateGalleryWorkspaceOption, TemplateGalleryWorkspaceOptionValues, ViewMode,
+    WebviewToExtensionMessage
 } from './webview/TemplateGallery/types';
-

@@ -7,8 +7,9 @@ import { Badge, Button, Dropdown, Input, Label, Option } from '@fluentui/react-c
 import { ArrowLeftRegular } from '@fluentui/react-icons';
 import { useState, useMemo, useCallback, useId, type JSX } from 'react';
 import { useTemplateGalleryConfig } from '../TemplateGalleryConfigContext';
-import type { IProjectTemplate } from '../types';
+import type { IProjectTemplate, TemplateGalleryWorkspaceOptionValues } from '../types';
 import { renderMarkdown } from '../utils/renderMarkdown';
+import { WorkspaceOptions } from './WorkspaceOptions';
 
 interface TemplateConfigViewProps {
     template: IProjectTemplate;
@@ -17,7 +18,9 @@ interface TemplateConfigViewProps {
     readmeLoading: boolean;
     onBack: () => void;
     onBrowse: () => void;
-    onCreateProject: (template: IProjectTemplate, language: string, location: string) => void;
+    onCreateProject: (template: IProjectTemplate, language: string, location: string, options: TemplateGalleryWorkspaceOptionValues) => void;
+    workspaceOptions: TemplateGalleryWorkspaceOptionValues;
+    onWorkspaceOptionChange: (id: string, checked: boolean) => void;
 }
 
 export const TemplateConfigView = ({
@@ -28,8 +31,10 @@ export const TemplateConfigView = ({
     onBack,
     onBrowse,
     onCreateProject,
+    workspaceOptions,
+    onWorkspaceOptionChange,
 }: TemplateConfigViewProps): JSX.Element => {
-    const { languageDisplayNames, languageFilterMap } = useTemplateGalleryConfig();
+    const { languageDisplayNames, languageFilterMap, workspaceOptions: workspaceOptionConfig } = useTemplateGalleryConfig();
 
     const languageInputId = useId();
     const locationInputId = useId();
@@ -40,9 +45,9 @@ export const TemplateConfigView = ({
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (selectedLanguage && projectLocation) {
-            onCreateProject(template, selectedLanguage, projectLocation);
+            onCreateProject(template, selectedLanguage, projectLocation, workspaceOptions);
         }
-    }, [template, selectedLanguage, projectLocation, onCreateProject]);
+    }, [template, selectedLanguage, projectLocation, workspaceOptions, onCreateProject]);
 
     const languageBadges = useMemo(() => {
         const seen = new Set<string>();
@@ -131,6 +136,12 @@ export const TemplateConfigView = ({
                                 </Button>
                             </div>
                         </div>
+
+                        <WorkspaceOptions
+                            options={workspaceOptionConfig}
+                            values={workspaceOptions}
+                            onChange={onWorkspaceOptionChange}
+                        />
 
                         <div className="whats-included">
                             <h3>What&apos;s included:</h3>
