@@ -613,6 +613,9 @@ background-color:#555555;}
 401 - Unauthorized: Access is denied due to invalid credentials.
 You do not have permission to view this directory or page using the credentials that you supplied.`);
         assert.strictEqual(pe2.isUserCancelledError, false);
+
+        const pe3: IParsedError = parseError('<html><body><p>Failure&nbsp;&amp; retry &#x2014; see <a href="https://example.com?a=1&amp;b=2">details</a>.</p><script>ignored()</script></body></html>');
+        assert.strictEqual(pe3.message, 'Failure & retry \u2014 see details [https://example.com?a=1&b=2].');
     });
 
     test('Docker Request Error', () => {

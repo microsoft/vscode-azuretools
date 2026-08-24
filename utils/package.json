@@ -71,7 +71,6 @@
         "@microsoft/vscode-processutils": "^0.2.1",
         "@vscode/extension-telemetry": "^1.5.2",
         "dayjs": "^1.11.19",
-        "html-to-text": "^9.0.5",
         "semver": "^7.7.4",
         "vscode-tas-client": "^0.1.84"
     },
@@ -86,7 +85,6 @@
     },
     "devDependencies": {
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
-        "@types/html-to-text": "^9.0.4",
         "@types/node": "22.x",
         "@types/semver": "^7.7.1",
         "@types/vscode": "1.105.0",

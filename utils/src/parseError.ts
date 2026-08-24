@@ -5,7 +5,6 @@
 
 /* eslint-disable */
 
-import * as htmlToText from 'html-to-text';
 import * as vscode from 'vscode';
 import { IParsedError } from '../index';
 import { isUserCancelledError } from './errors';
@@ -120,31 +119,55 @@ function parseIfJson(o: any): any {
 }
 
 function parseIfHtml(message: string): string {
-    if (/<html/i.test(message)) {
-        try {
-            var headerOptions = { leadingLineBreaks: 1, trailingLineBreaks: 1, uppercase: false };
-
-            return htmlToText.convert(
-                message,
-                {
-                    selectors: [
-                        { selector: 'h1', options: headerOptions },
-                        { selector: 'h2', options: headerOptions },
-                        { selector: 'h3', options: headerOptions },
-                        { selector: 'h4', options: headerOptions },
-                        { selector: 'h5', options: headerOptions },
-                        { selector: 'h6', options: headerOptions },
-                        { selector: 'img', format: 'skip' },
-                        { selector: 'table', options: { uppercaseHeaderCells: false } }
-                    ],
-                    wordwrap: false
-                });
-        } catch (err) {
-            // ignore
-        }
+    if (!/<html/i.test(message)) {
+        return message;
     }
 
-    return message;
+    const paragraphBreak = '\u0000';
+    const listItem = '\u0001';
+    let text = message
+        .replace(/<(head|script|style|template|svg)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/<a\b[^>]*\bhref\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a\s*>/gi, '$3 [$2]')
+        .replace(/<br\b[^>]*\/?>/gi, '\n')
+        .replace(/<\/?h[1-6]\b[^>]*>/gi, '\n')
+        .replace(/<\/?p\b[^>]*>/gi, paragraphBreak)
+        .replace(/<li\b[^>]*>/gi, `\n${listItem}`)
+        .replace(/<\/li\s*>/gi, '\n')
+        .replace(/<\/?(tr|caption)\b[^>]*>/gi, '\n')
+        .replace(/<\/?(td|th)\b[^>]*>/gi, ' ')
+        .replace(/<[^>]+>/g, '')
+        .replace(/[ \t]*\n[ \t]*/g, '\n')
+        .replace(/\n+/g, '\n')
+        .replace(new RegExp(`${paragraphBreak}+`, 'g'), '\n\n')
+        .replace(new RegExp(listItem, 'g'), ' * ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    text = decodeHtmlEntities(text);
+    return text;
+}
+
+function decodeHtmlEntities(text: string): string {
+    const namedEntities: Record<string, string> = {
+        amp: '&',
+        apos: '\'',
+        gt: '>',
+        lt: '<',
+        nbsp: ' ',
+        quot: '"'
+    };
+
+    return text.replace(/&(#(?:x[\da-f]+|\d+)|[a-z]+);/gi, (entity: string, name: string): string => {
+        if (name[0] !== '#') {
+            return namedEntities[name.toLowerCase()] ?? entity;
+        }
+
+        const isHex: boolean = name[1].toLowerCase() === 'x';
+        const codePoint: number = parseInt(name.slice(isHex ? 2 : 1), isHex ? 16 : 10);
+        return codePoint <= 0x10FFFF ? String.fromCodePoint(codePoint) : entity;
+    });
 }
 
 function parseIfXml(message: string): string {
