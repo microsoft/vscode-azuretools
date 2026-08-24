@@ -616,6 +616,12 @@ You do not have permission to view this directory or page using the credentials 
 
         const pe3: IParsedError = parseError('<html><body><p>Failure&nbsp;&amp; retry &#x2014; see <a href="https://example.com?a=1&amp;b=2">details</a>.</p><script>ignored()</script></body></html>');
         assert.strictEqual(pe3.message, 'Failure & retry \u2014 see details [https://example.com?a=1&b=2].');
+
+        assert.strictEqual(parseError('<html><body><a data-href="wrong" href=https://example.com>details</a></body></html>').message, 'details [https://example.com]');
+        assert.strictEqual(parseError('<html><body>&copy; Contoso &mdash; unavailable&hellip;</body></html>').message, '\u00A9 Contoso \u2014 unavailable\u2026');
+        assert.strictEqual(parseError('<html><body><table><tr><th>Name</th><th>Status</th></tr><tr><td>API</td><td>Unavailable</td></tr></table></body></html>').message, 'Name Status\nAPI Unavailable');
+        assert.strictEqual(parseError('<html><body>Visible<script>ignored()').message, 'Visible');
+        assert.strictEqual(parseError('<html><body>Visible<style>.hidden { display: none; }').message, 'Visible');
     });
 
     test('Docker Request Error', () => {

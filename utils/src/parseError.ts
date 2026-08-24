@@ -125,23 +125,31 @@ function parseIfHtml(message: string): string {
 
     const paragraphBreak = '\u0000';
     const listItem = '\u0001';
+    const tableCellBreak = '\u0002';
     let text = message
-        .replace(/<(head|script|style|template|svg)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+        .replace(/<(head|script|style|template|svg)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, '')
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/\s+/g, ' ')
-        .replace(/<a\b[^>]*\bhref\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a\s*>/gi, '$3 [$2]')
+        .replace(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi, (_anchor: string, attributes: string, content: string): string => {
+            const hrefMatch: RegExpMatchArray | null = attributes.match(/(?:^|\s)href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
+            const href: string | undefined = hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3];
+            return href === undefined ? content : `${content} [${href}]`;
+        })
         .replace(/<br\b[^>]*\/?>/gi, '\n')
         .replace(/<\/?h[1-6]\b[^>]*>/gi, '\n')
         .replace(/<\/?p\b[^>]*>/gi, paragraphBreak)
         .replace(/<li\b[^>]*>/gi, `\n${listItem}`)
         .replace(/<\/li\s*>/gi, '\n')
         .replace(/<\/?(tr|caption)\b[^>]*>/gi, '\n')
-        .replace(/<\/?(td|th)\b[^>]*>/gi, ' ')
+        .replace(/<(td|th)\b[^>]*>/gi, '')
+        .replace(/<\/(td|th)\s*>/gi, tableCellBreak)
         .replace(/<[^>]+>/g, '')
         .replace(/[ \t]*\n[ \t]*/g, '\n')
         .replace(/\n+/g, '\n')
         .replace(new RegExp(`${paragraphBreak}+`, 'g'), '\n\n')
         .replace(new RegExp(listItem, 'g'), ' * ')
+        .replace(new RegExp(`${tableCellBreak}(?=\\n|$)`, 'g'), '')
+        .replace(new RegExp(tableCellBreak, 'g'), ' ')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
@@ -153,10 +161,31 @@ function decodeHtmlEntities(text: string): string {
     const namedEntities: Record<string, string> = {
         amp: '&',
         apos: '\'',
+        bull: '\u2022',
+        cent: '\u00A2',
+        copy: '\u00A9',
+        deg: '\u00B0',
+        divide: '\u00F7',
+        euro: '\u20AC',
         gt: '>',
+        hellip: '\u2026',
+        laquo: '\u00AB',
+        ldquo: '\u201C',
+        lsquo: '\u2018',
         lt: '<',
+        mdash: '\u2014',
+        middot: '\u00B7',
         nbsp: ' ',
-        quot: '"'
+        ndash: '\u2013',
+        pound: '\u00A3',
+        quot: '"',
+        raquo: '\u00BB',
+        rdquo: '\u201D',
+        reg: '\u00AE',
+        rsquo: '\u2019',
+        times: '\u00D7',
+        trade: '\u2122',
+        yen: '\u00A5'
     };
 
     return text.replace(/&(#(?:x[\da-f]+|\d+)|[a-z]+);/gi, (entity: string, name: string): string => {
