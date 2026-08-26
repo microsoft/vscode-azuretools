@@ -20,7 +20,7 @@ jobs:
 
     steps:
       # Setup
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # GitHub (unlike AzDO) can't enforce an enum on a workflow_call input, so
       # fail the build when package_manager isn't one we support. The step is
       # skipped entirely when the value is valid.
@@ -39,11 +39,14 @@ jobs:
         if: ${{ inputs.package_manager == 'pnpm' }}
         run: corepack enable && corepack prepare --activate
       - name: Using Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: ${{ inputs.package_manager == 'pnpm' && 'pnpm' || '' }}
-          cache-dependency-path: ${{ inputs.package_manager == 'pnpm' && format('{0}/pnpm-lock.yaml', inputs.working_directory) || '' }}
+          # Action steps always run from the workspace root, regardless of
+          # defaults.run.working-directory, so the lockfile path has to be
+          # qualified with working_directory for the cache to resolve.
+          cache: ${{ inputs.package_manager }}
+          cache-dependency-path: ${{ format('{0}/{1}', inputs.working_directory, inputs.package_manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json') }}
 
       # Install
       - run: ${{ inputs.package_manager }} ci
@@ -57,13 +60,16 @@ jobs:
       # Package
       - run: ${{ inputs.package_manager }} run package
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "Artifacts-${{ inputs.working_directory }}"
           path: |
             **/*.vsix
             **/*.tgz
             !**/node_modules
+          # Fail loudly if `package` produced nothing, rather than publishing an
+          # empty artifact and letting the build go green.
+          if-no-files-found: error
 
       # Test
       - run: xvfb-run -a ${{ inputs.package_manager }} test

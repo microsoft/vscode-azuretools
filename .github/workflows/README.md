@@ -2,6 +2,7 @@
 
 To use these base workflow templates:
 1. Your project must have an `.nvmrc` file with the appropriate Node.js version at the root of the repository
+1. Your project must have a lockfile committed at the root of your `working_directory` (`package-lock.json` for NPM, `pnpm-lock.yaml` for PNPM). This is required by `npm ci`/`pnpm ci` and is also used as the dependency cache key.
 1. Your `package.json` file must contain the following NPM scripts:
     1. `lint`: This should perform linting and fail if the allowable linter errors/warnings is exceeded
     1. `build`: this should get the code built sufficiently that it is testable. Note, for a VSCode extension, this should include bundling (webpack, esbuild).
@@ -44,6 +45,14 @@ The reusable workflow accepts the following inputs:
 | --- | --- | --- | --- | --- |
 | `working_directory` | string | no | `"."` | Directory to run the build/test commands in. |
 | `package_manager` | string | no | `"npm"` | Package manager to use. Supported values: `npm` and `pnpm`. Any other value fails the build at a validation step. |
+
+### Caching
+
+Dependency caching is enabled via `actions/setup-node` for both package managers, keyed off the lockfile in `working_directory`.
+
+### Build artifacts
+
+Any `.vsix`/`.tgz` files produced by your `package` script are uploaded as build artifacts. The upload uses `if-no-files-found: error`, so the build fails if `package` produces no package files.
 
 ### Using PNPM
 

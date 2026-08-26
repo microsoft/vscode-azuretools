@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Lock Inactive Closed Issues
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           DAYS: ${{ inputs.days || '28' }}
         with:
