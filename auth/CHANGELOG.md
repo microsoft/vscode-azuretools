@@ -1,5 +1,9 @@
 # Change Log
 
+## 6.1.0-alpha.3 - 2026-08-31
+
+* Custom environments can now opt-out of using the Azure SDK Profiles. Previously any custom cloud configured via `microsoft-sovereign-cloud.customEnvironment` was treated as Azure Stack Hub and given the limited hybrid SDK profile. A custom environment that supports the full API surface can now set `isAzureStack: false` in that setting to receive the full modern SDK Clients.
+
 ## 6.1.0-alpha.2 - 2026-06-02
 
 * Add an optional `options` parameter to `getSessionWithScopes`. Passing `{ createIfNone: true }` allows an interactive consent prompt when a session for the requested scopes has not yet been granted, instead of failing silently. This enables callers to eagerly obtain consent for a non-management audience (e.g. the App Service audience used for Kudu/SCM deployments) before it is first needed. See [microsoft/vscode-azurefunctions#5073](https://github.com/microsoft/vscode-azurefunctions/issues/5073)
