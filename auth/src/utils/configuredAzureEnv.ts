@@ -72,11 +72,12 @@ export function getConfiguredAzureEnv(): ExtendedEnvironment {
  * Sets the configured Azure cloud.
  *
  * @param cloud Use `'AzureCloud'` or `undefined` for public Azure cloud, `'ChinaCloud'` for Azure China, or `'USGovernment'` for Azure US Government.
- * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use an instance of the `@azure/ms-rest-azure-env` {@link azureEnv.EnvironmentParameters}.
+ * These are the same values as the cloud names in `@azure/ms-rest-azure-env`. For a custom cloud, use a {@link CustomCloudEnvironmentParameters}, which is the
+ * `@azure/ms-rest-azure-env` {@link azureEnv.EnvironmentParameters} plus an optional `isAzureStack` flag; set `isAzureStack: false` to opt a non-Stack-Hub custom cloud into the full SDK clients.
  *
  * @param target (Optional) The configuration target to use, by default {@link vscode.ConfigurationTarget.Global}.
  */
-export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | null | azureEnv.EnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
+export async function setConfiguredAzureEnv(cloud: 'AzureCloud' | 'ChinaCloud' | 'USGovernment' | undefined | null | CustomCloudEnvironmentParameters, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
     const authProviderConfig = vscode.workspace.getConfiguration(CustomCloudConfigurationSection);
 
     if (typeof cloud === 'undefined' || !cloud) {
