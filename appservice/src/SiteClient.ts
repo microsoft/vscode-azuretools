@@ -7,8 +7,8 @@ import type { AppServicePlan, FunctionEnvelope, FunctionSecrets, HostKeys, HostN
 import type { ServiceClient } from '@azure/core-client';
 import { RequestBodyType, bearerTokenAuthenticationPolicy, createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import type { AppSettingsClientProvider, IAppSettingsClient } from '@microsoft/vscode-azext-azureappsettings';
-import { AzExtPipelineResponse, createGenericClient, uiUtils } from '@microsoft/vscode-azext-azureutils';
-import { IActionContext, ISubscriptionContext, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtPipelineResponse, createGenericClient, parseAzureResourceId, uiUtils } from '@microsoft/vscode-azext-azureutils';
+import { IActionContext, ISubscriptionContext, nonNullProp, parseError } from '@microsoft/vscode-azext-utils';
 import { URLSearchParams } from 'url';
 import type * as KuduModels from './KuduModels';
 import { AppKind } from './createAppService/AppKind';
@@ -58,9 +58,12 @@ export class ParsedSite implements AppSettingsClientProvider {
     constructor(site: Site, subscription: ISubscriptionContext) {
         this.rawSite = site;
 
-        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-        let matches: RegExpMatchArray | null = nonNullProp(site, 'serverFarmId').match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft.Web\/serverfarms\/(.*)/);
-        matches = nonNullValue(matches, 'Invalid serverFarmId.');
+        // Azure resource ids are case-insensitive, so parse the server farm id case-insensitively
+        // (via the shared helper) rather than matching a hardcoded 'Microsoft.Web/serverfarms' segment.
+        const parsedServerFarmId = parseAzureResourceId(nonNullProp(site, 'serverFarmId'));
+        if (parsedServerFarmId.provider.toLowerCase() !== 'microsoft.web/serverfarms') {
+            throw new Error('Invalid serverFarmId.');
+        }
 
         this.id = nonNullProp(site, 'id');
         [this.siteName, this.slotName] = nonNullProp(site, 'name').split('/');
@@ -80,10 +83,8 @@ export class ParsedSite implements AppSettingsClientProvider {
         this.isLinux = kind.includes('linux');
         this.identity = site.identity;
 
-        /* eslint-disable @typescript-eslint/no-non-null-assertion */
-        this.planResourceGroup = matches![2];
-        this.planName = matches![3];
-        /* eslint-enable @typescript-eslint/no-non-null-assertion */
+        this.planResourceGroup = parsedServerFarmId.resourceGroup;
+        this.planName = parsedServerFarmId.resourceName;
 
         this.defaultHostName = nonNullProp(site, 'defaultHostName');
         this.defaultHostUrl = `https://${this.defaultHostName}`;
