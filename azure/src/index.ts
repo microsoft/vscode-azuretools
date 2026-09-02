@@ -13,6 +13,8 @@ export * from './tree/RoleDefinitionsItem';
 export * from './tree/SubscriptionTreeItemBase';
 export * from './utils/createPortalUri';
 export * from './utils/parseAzureResourceId';
+export { getProxyAgent, getProxySettings } from './utils/ProxyAgentPolicy';
+export type { ProxySettings } from '@azure/core-rest-pipeline';
 export * from './utils/setupAzureLogger';
 export * from './utils/uiUtils';
 export { LocationCache } from './wizard/LocationCache';
