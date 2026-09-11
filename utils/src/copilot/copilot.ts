@@ -6,16 +6,13 @@
 import type { CopilotClient, CopilotSession } from "@github/copilot-sdk";
 import type * as vscode from "vscode";
 import { InvalidCopilotResponseError } from "../errors";
+import { ensureCopilotCliInstalled, getCopilotCliPath } from "./installCopilotCli";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
 
 async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
     return await import("@github/copilot-sdk");
-}
-
-function getCopilotCliPath(): string {
-    return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
 }
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
@@ -81,6 +78,11 @@ export async function doGithubCopilotInteraction(primaryPrompt: string, relevant
 export async function getCopilotSession(relevantContext?: string): Promise<CopilotSession> {
     if (session) {
         return session;
+    }
+
+    const installed = await ensureCopilotCliInstalled();
+    if (!installed) {
+        throw new InvalidCopilotResponseError();
     }
 
     const { CopilotClient } = await loadCopilotSdk();
