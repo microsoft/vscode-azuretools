@@ -9,9 +9,10 @@ import { InvalidCopilotResponseError } from "../errors";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
+let copilotSdkPromise: Promise<typeof import("@github/copilot-sdk")> | undefined;
 
-async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
-    return await import("@github/copilot-sdk");
+function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
+    return copilotSdkPromise ??= import("@github/copilot-sdk");
 }
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
