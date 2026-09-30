@@ -76,8 +76,8 @@
     },
     "peerDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0",
-        "@github/copilot": "1.0.88",
-        "@github/copilot-sdk": "1.0.14"
+        "@github/copilot": "^1.0.88",
+        "@github/copilot-sdk": "^1.0.14"
     },
     "peerDependenciesMeta": {
         "@github/copilot": {
@@ -88,8 +88,8 @@
         }
     },
     "devDependencies": {
-        "@github/copilot": "1.0.88",
-        "@github/copilot-sdk": "1.0.14",
+        "@github/copilot": "^1.0.88",
+        "@github/copilot-sdk": "^1.0.14",
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/node": "22.x",
         "@types/semver": "^7.7.1",
