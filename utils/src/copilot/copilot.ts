@@ -14,10 +14,6 @@ async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
     return await import("@github/copilot-sdk");
 }
 
-function getCopilotCliPath(): string {
-    return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
-}
-
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
     return `
         Task: choose one pick.
@@ -83,8 +79,8 @@ export async function getCopilotSession(relevantContext?: string): Promise<Copil
         return session;
     }
 
-    const { CopilotClient, RuntimeConnection } = await loadCopilotSdk();
-    client = new CopilotClient({ connection: RuntimeConnection.forStdio({ path: getCopilotCliPath() }) });
+    const { CopilotClient } = await loadCopilotSdk();
+    client = new CopilotClient();
     session = await client.createSession({
         onPermissionRequest: () => ({ kind: "approved" })
     });
