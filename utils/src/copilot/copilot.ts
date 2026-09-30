@@ -83,8 +83,8 @@ export async function getCopilotSession(relevantContext?: string): Promise<Copil
         return session;
     }
 
-    const { CopilotClient } = await loadCopilotSdk();
-    client = new CopilotClient({ cliPath: getCopilotCliPath() });
+    const { CopilotClient, RuntimeConnection } = await loadCopilotSdk();
+    client = new CopilotClient({ connection: RuntimeConnection.forStdio({ path: getCopilotCliPath() }) });
     session = await client.createSession({
         onPermissionRequest: () => ({ kind: "approved" })
     });
