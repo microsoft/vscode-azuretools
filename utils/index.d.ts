@@ -11,7 +11,6 @@ import type * as duration from 'dayjs/plugin/duration';
 import type * as vscode from 'vscode';
 import type * as vscodeTypes from 'vscode';
 import { AuthenticationSession, AuthenticationWwwAuthenticateRequest, CancellationToken, CancellationTokenSource, Command, Disposable, Event, ExtensionContext, FileChangeEvent, FileChangeType, FileStat, FileSystemProvider, FileType, InputBoxOptions, LanguageModelToolInvocationOptions, LanguageModelToolInvocationPrepareOptions, LanguageModelToolResult, LogLevel, LogOutputChannel, MarkdownString, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, PreparedToolInvocation, Progress, ProviderResult, QuickPickItem, TelemetryTrustedValue, TextDocumentShowOptions, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, Uri, QuickPickOptions as VSCodeQuickPickOptions, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
-import { TargetPopulation } from 'vscode-tas-client';
 import type { Activity, ActivityTreeItemOptions, AppResource, OnErrorActivityData, OnProgressActivityData, OnStartActivityData, OnSuccessActivityData } from './hostapi'; // This must remain `import type` or else a circular reference will result
 
 export declare interface RunWithTemporaryDescriptionOptions {
@@ -1704,18 +1703,6 @@ export declare namespace DialogResponses {
 export declare function registerUIExtensionVariables(extVars: UIExtensionVariables): void;
 
 /**
- * Call this to create the experimentation service adapter
- * @param ctx The extension context
- * @param targetPopulation Can be Team, Internal, Insiders, or Public. The definitions are somewhat subjective but generally:
- * Team is the devs and test team.
- * Internal is Microsoft
- * Insiders is anyone installing alpha builds
- * Public is everyone
- * NOTE: if unspecified, this will be "Team" if the extension is running in the Development Host, "Insiders" if the extension version contains "alpha", otherwise "Public"
- */
-export declare function createExperimentationService(ctx: ExtensionContext, targetPopulation?: TargetPopulation): Promise<IExperimentationServiceAdapter>;
-
-/**
  * Interface for common extension variables used throughout the UI package.
  */
 export interface UIExtensionVariables {
@@ -1726,35 +1713,6 @@ export interface UIExtensionVariables {
      * Set to true if not running under a webpacked 'dist' folder
      */
     ignoreBundle?: boolean;
-}
-
-/**
- * Interface for experimentation service adapter
- */
-export interface IExperimentationServiceAdapter {
-    /**
-     * Gets whether or not the flight is enabled from the cache (which will be ~1 session delayed)
-     * @param flight The flight variable name
-     */
-    isCachedFlightEnabled(flight: string): Promise<boolean>;
-
-    /**
-     * Gets whether or not the flight is enabled directly from the web. This is slower than cache and can result in behavior changing mid-session.
-     * @param flight The flight variable name
-     */
-    isLiveFlightEnabled(flight: string): Promise<boolean>;
-
-    /**
-     * Gets a treatment variable from the cache (which will be ~1 session delayed)
-     * @param name The variable name
-     */
-    getCachedTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
-
-    /**
-     * Gets a treatment variable directly from the web. This is slower than cache and can result in behavior changing mid-session.
-     * @param name The variable name
-     */
-    getLiveTreatmentVariable<T extends string | number | boolean>(name: string): Promise<T | undefined>;
 }
 
 export interface IAddUserAgent {

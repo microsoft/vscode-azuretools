@@ -8,6 +8,10 @@ This package provides common Azure UI elements for VS Code extensions:
 
 > NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use `registerCommand`, you must handle this exception in your extension.
 
+## Migrating to version 5
+
+Version 5 removes `createExperimentationService`, `IExperimentationServiceAdapter`, and the `vscode-tas-client` dependency. Remove calls to the adapter before upgrading. For features controlled by VS Code experiments, declare an experiment-backed setting in your extension and read it with `vscode.workspace.getConfiguration()`; the same setting can be used in a `when` clause with `config.<settingId>`. Extensions that still need their own TAS assignments must depend on a TAS client directly.
+
 ## Telemetry and Error Handling
 
 Use `registerCommand`, `registerEvent`, or `callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The first parameter of the function passed in will always be an `IActionContext`, which allows you to specify custom telemetry and describes the behavior of this command. The simplest example is to register a command (in this case, refreshing a node):
