@@ -11,7 +11,6 @@ export * from './callWithTelemetryAndErrorHandling';
 export { activityErrorContext, activityFailContext, activityFailIcon, activityInfoContext, activityInfoIcon, activityProgressContext, activityProgressIcon, activitySuccessContext, activitySuccessIcon } from './constants';
 export * from './copilot/installCopilotCli';
 export * from './createApiProvider';
-export { createExperimentationService } from './createExperimentationService';
 export * from './dev/TestActionContext';
 export * from './dev/testGlobalSetup';
 export * from './dev/TestOutputChannel';
