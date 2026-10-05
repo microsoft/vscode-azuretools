@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappsettings",
     "author": "Microsoft Corporation",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Common features and tools surrounding App Settings for the Azure VS Code extensions",
     "tags": [
         "azure",
@@ -36,7 +36,7 @@
         "vscode": "^1.105.0"
     },
     "dependencies": {
-        "@microsoft/vscode-azext-utils": "^4.1.0"
+        "@microsoft/vscode-azext-utils": "^5.0.0"
     },
     "devDependencies": {
         "@azure/arm-appservice": "^18.0.0",
