@@ -9,13 +9,10 @@ import { InvalidCopilotResponseError } from "../errors";
 
 let client: CopilotClient | undefined;
 let session: CopilotSession | undefined;
+let copilotSdkPromise: Promise<typeof import("@github/copilot-sdk")> | undefined;
 
-async function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
-    return await import("@github/copilot-sdk");
-}
-
-function getCopilotCliPath(): string {
-    return require.resolve(`@github/copilot-${process.platform}-${process.arch}`);
+function loadCopilotSdk(): Promise<typeof import("@github/copilot-sdk")> {
+    return copilotSdkPromise ??= import("@github/copilot-sdk");
 }
 
 export function createPrimaryPromptToGetSingleQuickPickInput(picks: string[], placeholder?: string): string {
@@ -84,7 +81,7 @@ export async function getCopilotSession(relevantContext?: string): Promise<Copil
     }
 
     const { CopilotClient } = await loadCopilotSdk();
-    client = new CopilotClient({ cliPath: getCopilotCliPath() });
+    client = new CopilotClient();
     session = await client.createSession({
         onPermissionRequest: () => ({ kind: "approved" })
     });
