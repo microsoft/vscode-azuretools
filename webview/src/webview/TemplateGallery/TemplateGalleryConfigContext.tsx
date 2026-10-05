@@ -13,6 +13,7 @@ import {
     defaultLanguageOrder,
     defaultResourceDisplayNames,
     defaultResourceOrder,
+    type InitialTemplateFilters,
     type TemplateGalleryConfig,
 } from './types';
 
@@ -28,6 +29,7 @@ export interface TemplateGalleryConfigContextValue {
     languageOrder: string[];
     categoryOrder: string[];
     resourceOrder: string[];
+    initialFilters: InitialTemplateFilters;
 }
 
 const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextValue>({
@@ -42,6 +44,7 @@ const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextV
     languageOrder: defaultLanguageOrder,
     categoryOrder: defaultCategoryOrder,
     resourceOrder: defaultResourceOrder,
+    initialFilters: {},
 });
 
 /**
@@ -66,6 +69,7 @@ export const TemplateGalleryConfigProvider = ({
         languageOrder: config.languageOrder ?? defaultLanguageOrder,
         categoryOrder: config.categoryOrder ?? defaultCategoryOrder,
         resourceOrder: config.resourceOrder ?? defaultResourceOrder,
+        initialFilters: config.initialFilters ?? {},
     }), [config]);
 
     return (
