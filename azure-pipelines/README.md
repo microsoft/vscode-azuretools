@@ -1,7 +1,7 @@
 ## Usage
 
 > [!WARNING]
-> The templates in this `azure-pipelines` folder are **deprecated** and will be removed in a future release. Please migrate to the new templates in the [`azdo-pipelines`](../azdo-pipelines) folder. See the [migration guide](../azdo-pipelines/MIGRATION.md) for instructions.
+> The templates in this `azure-pipelines` folder are **deprecated** and will be removed in a future release. Pipelines using these templates now log an Azure DevOps error and partially succeed, while subsequent build or release steps continue to run. Please migrate to the new templates in the [`azdo-pipelines`](../azdo-pipelines) folder. See the [migration guide](../azdo-pipelines/MIGRATION.md) for instructions.
 
 ### 1ES pipelines
 To use these base pipeline templates:
