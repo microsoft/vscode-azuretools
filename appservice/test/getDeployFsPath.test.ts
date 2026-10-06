@@ -45,7 +45,11 @@ suite("getDeployFsPath", () => {
 
     test(`outside of workspace`, async () => {
         const context = await createTestActionContext();
-        await assertThrowsAsync(async () => await getDeployFsPath(context, testWorkspaceRoot), /cancelled/i);
-        await assertThrowsAsync(async () => await getDeployFsPath(context, Uri.file(testWorkspaceRoot)), /cancelled/i);
+        await context.ui.runWithInputs(['Skip for now'], async () => {
+            await assertThrowsAsync(async () => await getDeployFsPath(context, testWorkspaceRoot), /cancelled/i);
+        });
+        await context.ui.runWithInputs(['Skip for now'], async () => {
+            await assertThrowsAsync(async () => await getDeployFsPath(context, Uri.file(testWorkspaceRoot)), /cancelled/i);
+        });
     });
 });

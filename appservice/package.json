@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-azureappservice",
     "author": "Microsoft Corporation",
-    "version": "5.0.3",
+    "version": "6.0.0",
     "description": "Common tools for developing Azure App Service extensions for VS Code",
     "tags": [
         "azure",
@@ -43,9 +43,9 @@
         "@azure/arm-resourcegraph": "^5.0.0-beta.3",
         "@azure/core-rest-pipeline": "^1.10.3",
         "@azure/storage-blob": "^12.3.0",
-        "@microsoft/vscode-azext-azureutils": "^4.0.0",
-        "@microsoft/vscode-azext-github": "^2.0.0",
-        "@microsoft/vscode-azext-utils": "^4.1.1",
+        "@microsoft/vscode-azext-azureutils": "^5.0.0",
+        "@microsoft/vscode-azext-github": "^3.0.0",
+        "@microsoft/vscode-azext-utils": "^5.0.0",
         "dayjs": "^1.11.2",
         "fs-extra": "^10.0.0",
         "p-retry": "^3.0.1",
@@ -56,7 +56,7 @@
     },
     "peerDependencies": {
         "@azure/ms-rest-azure-env": "^2.0.0",
-        "@microsoft/vscode-azext-azureappsettings": "^1.0.0"
+        "@microsoft/vscode-azext-azureappsettings": "^2.0.0"
     },
     "devDependencies": {
         "@azure/core-client": "^1.7.2",
