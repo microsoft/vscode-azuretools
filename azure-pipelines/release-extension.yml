@@ -78,8 +78,10 @@ extends:
                     - checkout: none
 
                     - pwsh: |
-                        Write-Host "##vso[task.logissue type=warning]The 'azure-pipelines' templates in microsoft/vscode-azuretools are deprecated and will be removed in a future release. Please migrate to the new 'azdo-pipelines' templates. See https://github.com/microsoft/vscode-azuretools/blob/main/azdo-pipelines/MIGRATION.md for migration instructions."
-                      displayName: "\U000026A0 Deprecation Warning"
+                        Write-Host "##vso[task.logissue type=error]The 'azure-pipelines' templates in microsoft/vscode-azuretools are deprecated and will be removed in a future release. Please migrate to the new 'azdo-pipelines' templates. See https://github.com/microsoft/vscode-azuretools/blob/main/azdo-pipelines/MIGRATION.md for migration instructions."
+                        exit 1
+                      displayName: "Deprecation Error"
+                      continueOnError: true
                     # Modify the build number to include repo name, extension version, and if dry run is true
                     - powershell: |
                         # Get the version from package.json
