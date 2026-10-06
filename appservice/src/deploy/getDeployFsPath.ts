@@ -152,7 +152,7 @@ function promptToOpenWorkspace(context: IActionContext, originalDeployFsPath: st
     const message: string = vscode.l10n.t('Failed to deploy because "{0}" is not part of an open workspace.', path.basename(originalDeployFsPath));
 
     // don't wait
-    void context.ui.showWarningMessage(message, openInNewWindow, DialogResponses.skipForNow).then(async result => {
+    void context.ui.showWarningMessage(message, openInNewWindow).then(async result => {
         await callWithTelemetryAndErrorHandling('deployWarning.openInNewWindow', async (postDeployContext: IActionContext) => {
             postDeployContext.telemetry.properties.dialogResult = result?.title;
             if (result === openInNewWindow) {

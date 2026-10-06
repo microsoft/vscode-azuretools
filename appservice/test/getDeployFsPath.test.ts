@@ -45,11 +45,12 @@ suite("getDeployFsPath", () => {
 
     test(`outside of workspace`, async () => {
         const context = await createTestActionContext();
-        await context.ui.runWithInputs(['Skip for now'], async () => {
-            await assertThrowsAsync(async () => await getDeployFsPath(context, testWorkspaceRoot), /cancelled/i);
-        });
-        await context.ui.runWithInputs(['Skip for now'], async () => {
-            await assertThrowsAsync(async () => await getDeployFsPath(context, Uri.file(testWorkspaceRoot)), /cancelled/i);
-        });
+        // Leave the warning unanswered so the test does not open another VS Code window.
+        context.ui.showWarningMessage = async (message: string): Promise<never> => {
+            assert.match(message, /not part of an open workspace/i);
+            return new Promise<never>(() => undefined);
+        };
+        await assertThrowsAsync(async () => await getDeployFsPath(context, testWorkspaceRoot), /cancelled/i);
+        await assertThrowsAsync(async () => await getDeployFsPath(context, Uri.file(testWorkspaceRoot)), /cancelled/i);
     });
 });
