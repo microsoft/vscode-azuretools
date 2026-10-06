@@ -155,3 +155,4 @@ extends:
                   isDraft: true
                   isPreRelease: true
                   addChangeLog: false
+
