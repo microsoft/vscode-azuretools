@@ -30,6 +30,37 @@ export interface IProjectTemplate {
     runtimeVersions?: string[];
 }
 
+/**
+ * Filters applied when the gallery first opens.
+ *
+ * Filter values correspond to keys in the gallery's template metadata:
+ *
+ * - `language`: A language-group value from {@link TemplateGalleryConfig.languageFilterMap},
+ *   such as `"dotnet"`, `"python"`, or `"go"`.
+ * - `useCase`: A category key from {@link IProjectTemplate.categories},
+ *   such as `"web-apis"`.
+ * - `resource`: A resource key from {@link IProjectTemplate.resource},
+ *   such as `"http"`.
+ * - `search`: Free-form text applied to the normal gallery search.
+ *
+ * Unknown metadata values may produce an empty result set. Users can change or
+ * clear these filters after the gallery opens.
+ *
+ * @example
+ * ```ts
+ * initialFilters: {
+ *     language: 'dotnet',
+ *     resource: 'http',
+ * }
+ * ```
+ */
+export interface InitialTemplateFilters {
+    language?: string;
+    useCase?: string;
+    resource?: string;
+    search?: string;
+}
+
 // ── Configuration (passed as initial data to the webview) ──
 
 export interface TemplateGalleryConfig {
@@ -55,6 +86,8 @@ export interface TemplateGalleryConfig {
     categoryOrder?: string[];
     /** Ordered list of resource keys for display order. Unlisted resources appear alphabetically at the end. */
     resourceOrder?: string[];
+    /** Filters applied when the gallery first opens. Omitted filters use the gallery defaults. */
+    initialFilters?: InitialTemplateFilters;
 }
 
 // ── Messages: Webview → Extension ──

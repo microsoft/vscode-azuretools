@@ -16,12 +16,14 @@ import { CreatingView } from './components/CreatingView';
 import { FilterBar } from './components/FilterBar';
 import { TemplateCard } from './components/TemplateCard';
 import { TemplateConfigView } from './components/TemplateConfigView';
+import { createInitialFilters } from './initialFilters';
 import type {
     TemplateGalleryAction as Action,
     ActiveView,
     AiState,
     ExtensionToWebviewMessage,
     FilterState,
+    InitialTemplateFilters,
     IProjectTemplate,
     ProjectCreationEntryPoint,
     TemplateGalleryConfig,
@@ -48,24 +50,26 @@ interface GalleryState {
     creatingDetail: string;
 }
 
-const initialState: GalleryState = {
-    templates: [],
-    filteredTemplates: [],
-    selectedTemplate: null,
-    filters: { language: 'all', useCase: 'all', resource: 'all', search: '' },
-    projectLocation: '',
-    isLoading: true,
-    error: null,
-    mode: 'browse',
-    activeView: 'gallery',
-    ai: {
-        prompt: '',
-        language: 'TypeScript',
-    },
-    readmeMarkdown: '',
-    readmeLoading: false,
-    creatingDetail: '',
-};
+function createInitialState(initialFilters?: InitialTemplateFilters): GalleryState {
+    return {
+        templates: [],
+        filteredTemplates: [],
+        selectedTemplate: null,
+        filters: createInitialFilters(initialFilters),
+        projectLocation: '',
+        isLoading: true,
+        error: null,
+        mode: 'browse',
+        activeView: 'gallery',
+        ai: {
+            prompt: '',
+            language: 'TypeScript',
+        },
+        readmeMarkdown: '',
+        readmeLoading: false,
+        creatingDetail: '',
+    };
+}
 
 function createReducer(languageFilterMap: Record<string, string>, languageDisplayNames: Record<string, string>) {
     const applyFilters = createApplyFilters(languageFilterMap, languageDisplayNames);
@@ -153,7 +157,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
         () => createReducer(config.languageFilterMap, config.languageDisplayNames),
         [config.languageFilterMap, config.languageDisplayNames],
     );
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const [state, dispatch] = useReducer(reducer, config.initialFilters, createInitialState);
 
     const postMessage = useCallback((msg: WebviewToExtensionMessage) => {
         vscodeApi.postMessage(msg);
