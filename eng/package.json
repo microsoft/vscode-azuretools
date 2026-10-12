@@ -36,14 +36,14 @@
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
-        "build:esm": "tsc",
-        "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
+        "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "test": "exit 0",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
     "engines": {
-        "node": ">=22"
+        "node": ">=22.17.0"
     },
     "dependencies": {
         "@eslint/js": "^10.0.1",
@@ -51,20 +51,20 @@
         "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
         "@types/mocha": "^10.0.10",
-        "chai": "^6.2.2",
+        "chai": "^6.3.0",
         "chai-as-promised": "^8.0.2",
-        "eslint": "^10.7.0",
-        "mocha": "^11.7.6",
-        "typescript": "~5.9",
-        "typescript-eslint": "^8.64.0"
+        "eslint": "^10.12.0",
+        "mocha": "^11.8.0",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.71.0"
     },
     "peerDependencies": {
         "@vscode/test-cli": "^0.0.15",
         "@vscode/test-electron": "^3.1.0",
-        "@vscode/vsce": "^3.9.2",
-        "esbuild": "^0.28.1",
+        "@vscode/vsce": "^4.0.0",
+        "esbuild": "^0.28.2",
         "esbuild-plugin-copy": "^2.1.1",
-        "tsx": "^4.23.1"
+        "tsx": "^4.23.15"
     },
     "peerDependenciesMeta": {
         "@vscode/test-cli": {
@@ -88,6 +88,7 @@
     },
     "devDependencies": {
         "@types/node": "22.x",
+        "@typescript/native": "npm:typescript@7.0.2",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",
         "esbuild": "*",
@@ -97,6 +98,6 @@
         "tag": "alpha"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "serialize-javascript": "^7.1.2"
     }
 }
