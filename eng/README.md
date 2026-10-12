@@ -20,10 +20,12 @@ Consumers can opt into the same arrangement; see [migration guidance](./MIGRATIO
 
 # Tests
 
-Requires Node.js 24 or later. From `eng`, run `npm run build` before `npm test` to
+Requires Node.js 22.17.0 or later. From `eng`, run `npm run build` before `npm test` to
 execute the ESM TypeScript test sources directly with Mocha, Node's built-in type
 stripping, Chai `should`, and chai-as-promised. Mocha options are configured in
-`package.json`. No tsx or compiled test runner is used.
+`package.json`: `experimental-strip-types` enables source execution on Node 22,
+and `disable-warning=ExperimentalWarning` suppresses experimental warnings without
+suppressing other warning categories. No tsx or compiled test runner is used.
 CI builds first; local runs also need distributable ESM/CJS outputs for package-entry-point
 and declaration integration checks. Source imports use TypeScript extensions, with
 `rewriteRelativeImportExtensions` preserving JavaScript paths in emitted builds.

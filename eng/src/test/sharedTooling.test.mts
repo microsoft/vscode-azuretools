@@ -153,11 +153,11 @@ it('cache CLI honors the environment and reports refusal with a failure exit', a
     const env = { ...process.env };
     env.VSCODE_TEST_CACHE_DIR = 'cache';
     const options = { cwd: root, env };
-    const result = await exec(process.execPath, [cli, '--extension-dir', 'extension'], options);
+    const result = await exec(process.execPath, [...process.execArgv, cli, '--extension-dir', 'extension'], options);
     result.stdout.should.match(/Test cache created/);
     (await fs.realpath(path.join(root, 'extension/.vscode-test'))).should.equal(await fs.realpath(path.join(root, 'cache')));
     await write('other/.vscode-test/keep.txt', 'keep');
-    await exec(process.execPath, [cli, '--extension-dir', 'other'], options).should.be.rejectedWith(/Refusing to replace/);
+    await exec(process.execPath, [...process.execArgv, cli, '--extension-dir', 'other'], options).should.be.rejectedWith(/Refusing to replace/);
 });
 
 it('VS Code factories merge nested defaults and isolate mutable configuration', () => {

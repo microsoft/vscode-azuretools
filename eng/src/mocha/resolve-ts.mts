@@ -14,7 +14,7 @@ export function resolve(
     nextResolve: Parameters<ResolveHookSync>[2],
 ): ResolveFnOutput {
     // Preserve normal CommonJS resolution; only adapt extensionless relative ESM imports.
-    // Node 24.0 supplies conditions as a Set rather than the array used in later releases.
+    // Early synchronous hooks supply conditions as a Set rather than an array.
     if (!Array.from(context.conditions).includes('require') && specifier.startsWith('.') && !/\.\w+$/.test(specifier)) {
         for (const ext of ['.ts', '.js']) {
             try {

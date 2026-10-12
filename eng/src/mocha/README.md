@@ -21,7 +21,7 @@ The factory defaults to BDD and `src/test/**/*.test.{ts,mts,cts}`. It uses Node'
 `experimental-transform-types` flag and the existing shared Mocha entry to register
 extensionless TypeScript resolution, global `expect`, and chai-as-promised. Resolution
 uses Node's synchronous module hooks for ESM imports and leaves CommonJS `require`
-resolution unchanged. The package's Node.js minimum (24) applies. Additional
+resolution unchanged. The package's Node.js minimum (22.17.0) applies. Additional
 `node-option` entries are appended; other overrides replace defaults. Each call clones configuration arrays
 and plain objects without cloning callbacks or reporter instances.
 
