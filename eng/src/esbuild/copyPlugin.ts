@@ -16,7 +16,7 @@ export interface CopyAsset {
     include?: string | string[];
     /**
      * POSIX destination permissions: an exact mode or a callback transforming the current permission bits.
-     * Ignored on Windows without logging; callbacks are not invoked.
+     * Ignored on Windows.
      */
     mode?: number | ((currentMode: number) => number);
 }
