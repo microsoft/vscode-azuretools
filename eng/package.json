@@ -14,6 +14,11 @@
             "require": "./dist/cjs/esbuild/esbuildConfigs.js",
             "types": "./dist/esm/esbuild/esbuildConfigs.d.ts"
         },
+        "./esbuild/sass": {
+            "import": "./dist/esm/esbuild/sassPlugin.js",
+            "require": "./dist/cjs/esbuild/sassPlugin.js",
+            "types": "./dist/esm/esbuild/sassPlugin.d.ts"
+        },
         "./eslint": {
             "import": "./dist/esm/eslint/eslintConfigs.js",
             "require": "./dist/cjs/eslint/eslintConfigs.js",
@@ -38,7 +43,7 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
         "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "test": "exit 0",
+        "test": "npm run build && node --test dist/esm/test/*.test.mjs",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
@@ -63,7 +68,7 @@
         "@vscode/test-electron": "^3.1.0",
         "@vscode/vsce": "^4.0.0",
         "esbuild": "^0.28.2",
-        "esbuild-plugin-copy": "^2.1.1",
+        "sass": "^1.105.1",
         "tsx": "^4.23.15"
     },
     "peerDependenciesMeta": {
@@ -79,7 +84,7 @@
         "esbuild": {
             "optional": true
         },
-        "esbuild-plugin-copy": {
+        "sass": {
             "optional": true
         },
         "tsx": {
@@ -92,7 +97,7 @@
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",
         "esbuild": "*",
-        "esbuild-plugin-copy": "*"
+        "sass": "*"
     },
     "publishConfig": {
         "tag": "alpha"

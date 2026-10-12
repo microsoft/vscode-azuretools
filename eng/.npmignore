@@ -12,4 +12,6 @@ tsconfig.json
 *.tgz
 .vscode-test/
 eslint.config.mjs
+dist/esm/test/
+dist/cjs/test/
 *.tsbuildinfo

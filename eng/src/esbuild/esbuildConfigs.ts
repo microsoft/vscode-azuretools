@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type BuildOptions as EsbuildConfig, build, context } from 'esbuild';
-import { copy } from 'esbuild-plugin-copy';
+import { type BuildOptions as EsbuildConfig, type Plugin, build, context } from 'esbuild';
 import * as fs from 'fs/promises';
+import { copyPlugin } from './copyPlugin.js';
 import { getAutoBuildSettings } from './getAutoBuildSettings.js';
+
+export { copyPlugin, type CopyAsset, type CopyPluginOptions } from './copyPlugin.js';
 
 export const {
     /**
@@ -62,44 +64,85 @@ export const extensionEsbuildConfig: EsbuildConfig = {
         out: 'extension.bundle',
     }],
     plugins: [
-        copy({
+        copyPlugin({
             assets: [
                 {
-                    from: './node_modules/@microsoft/vscode-azext-azureutils/resources/*.svg',
+                    from: './node_modules/@microsoft/vscode-azext-azureutils/resources',
                     to: './node_modules/@microsoft/vscode-azext-azureutils/resources',
+                    include: ['*.svg', 'azureIcons/*.svg'],
                 },
             ],
         }),
-        {
-            name: 'start-stop-log',
-            setup(build) {
-                let start: bigint;
-                build.onStart(() => {
-                    if (isAutoWatch) {
-                        // This format is important for the problem matcher to work
-                        console.log('[watch] build started');
-                    } else {
-                        console.log('esbuild started');
-                    }
-                    start = process.hrtime.bigint();
-                });
-
-                build.onEnd(() => {
-                    const elapsed = (process.hrtime.bigint() - start) / 1000000n;
-                    if (isAutoWatch) {
-                        // This format is important for the problem matcher to work
-                        console.log(`[watch] build finished in ${elapsed} milliseconds`);
-                    } else {
-                        console.log(`esbuild finished in ${elapsed} milliseconds`);
-                    }
-                });
-            },
-        },
+        buildLogPlugin(),
     ],
     alias: {
         '@vscode/extension-telemetry': './extension-telemetry.bundle.js',
     },
 };
+
+function buildLogPlugin(): Plugin {
+    return {
+        name: 'start-stop-log',
+        setup(build) {
+            let start: bigint;
+            build.onStart(() => {
+                // Watch messages must match the existing VS Code problem matcher.
+                console.log(isAutoWatch ? '[watch] build started' : 'esbuild started');
+                start = process.hrtime.bigint();
+            });
+            build.onEnd(() => {
+                const elapsed = (process.hrtime.bigint() - start) / 1000000n;
+                console.log(isAutoWatch
+                    ? `[watch] build finished in ${elapsed} milliseconds`
+                    : `esbuild finished in ${elapsed} milliseconds`);
+            });
+        },
+    };
+}
+
+export const baseWebviewEsbuildConfig: EsbuildConfig = {
+    bundle: true,
+    outdir: './dist',
+    platform: 'browser',
+    target: 'es2022',
+    format: 'esm',
+    splitting: false,
+    loader: {
+        '.css': 'css',
+        '.ttf': 'dataurl',
+        '.woff': 'dataurl',
+        '.woff2': 'dataurl',
+    },
+};
+
+export const azExtWebviewEsbuildConfigProd: EsbuildConfig = {
+    ...baseWebviewEsbuildConfig,
+    minify: true,
+    sourcemap: false,
+};
+
+export const azExtWebviewEsbuildConfigDev: EsbuildConfig = {
+    ...baseWebviewEsbuildConfig,
+    minify: false,
+    sourcemap: 'linked',
+};
+
+export const azExtWebviewEsbuildConfigDebug: EsbuildConfig = {
+    ...azExtWebviewEsbuildConfigProd,
+    metafile: true,
+};
+
+/** Selects browser settings from the usual debug/watch flags and appends caller-supplied plugins. */
+export function createWebviewEsbuildConfig(overrides: EsbuildConfig = {}): EsbuildConfig {
+    const config = isAutoDebug ? azExtWebviewEsbuildConfigDebug
+        : isAutoWatch ? azExtWebviewEsbuildConfigDev : azExtWebviewEsbuildConfigProd;
+    return {
+        ...config,
+        ...overrides,
+        loader: { ...config.loader, ...overrides.loader },
+        plugins: [buildLogPlugin(), ...(overrides.plugins ?? [])],
+    };
+}
 
 // #region CJS configs
 
