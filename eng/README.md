@@ -18,6 +18,14 @@ native TypeScript 7, installed separately as the `@typescript/native` alias. Bui
 scripts invoke that compiler explicitly because both packages provide a `tsc` binary.
 Consumers can opt into the same arrangement; see [migration guidance](./MIGRATION.md#typescript-compilers).
 
+# Tests
+
+Run `npm test` from `eng` to build both package formats and run the compiled ESM
+tests with Mocha, Chai `should`, and chai-as-promised. The test harness uses its own
+setup rather than the shared Mocha preset, which is exercised separately by an
+integration fixture. `should` registration is local to this harness; the shared test
+globals continue to provide `expect` without modifying `Object.prototype`.
+
 # TODO: Future Ideas
 
 - Common/base `.vscode/` items, e.g. `.vscode/extensions.json`, `.vscode/launch.json`, etc.
