@@ -65,7 +65,7 @@
         "node-option": [
             "experimental-strip-types",
             "disable-warning=ExperimentalWarning",
-            "import=./dist/esm/test/global.mjs"
+            "import=./test/global.mts"
         ]
     },
     "engines": {
