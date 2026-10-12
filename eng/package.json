@@ -10,53 +10,52 @@
     "license": "MIT",
     "exports": {
         "./esbuild": {
-            "import": "./dist/esm/esbuild/esbuildConfigs.js",
-            "require": "./dist/cjs/esbuild/esbuildConfigs.js",
-            "types": "./dist/esm/esbuild/esbuildConfigs.d.ts"
+            "import": "./dist/esm/src/esbuild/esbuildConfigs.js",
+            "require": "./dist/cjs/src/esbuild/esbuildConfigs.js",
+            "types": "./dist/esm/src/esbuild/esbuildConfigs.d.ts"
         },
         "./esbuild/sass": {
-            "import": "./dist/esm/esbuild/sassPlugin.js",
-            "require": "./dist/cjs/esbuild/sassPlugin.js",
-            "types": "./dist/esm/esbuild/sassPlugin.d.ts"
+            "import": "./dist/esm/src/esbuild/sassPlugin.js",
+            "require": "./dist/cjs/src/esbuild/sassPlugin.js",
+            "types": "./dist/esm/src/esbuild/sassPlugin.d.ts"
         },
         "./eslint": {
-            "import": "./dist/esm/eslint/eslintConfigs.js",
-            "require": "./dist/cjs/eslint/eslintConfigs.js",
-            "types": "./dist/esm/eslint/eslintConfigs.d.ts"
+            "import": "./dist/esm/src/eslint/eslintConfigs.js",
+            "require": "./dist/cjs/src/eslint/eslintConfigs.js",
+            "types": "./dist/esm/src/eslint/eslintConfigs.d.ts"
         },
         "./vscode-test": {
-            "import": "./dist/esm/vscode-test/vscodeTestConfigs.js",
-            "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js",
-            "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
+            "import": "./dist/esm/src/vscode-test/vscodeTestConfigs.js",
+            "require": "./dist/cjs/src/vscode-test/vscodeTestConfigs.js",
+            "types": "./dist/esm/src/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./mocha": {
-            "import": "./dist/esm/mocha/index.mjs",
-            "types": "./dist/esm/mocha/index.d.mts"
+            "import": "./dist/esm/src/mocha/index.mjs",
+            "types": "./dist/esm/src/mocha/index.d.mts"
         },
         "./mocha/test-globals": {
-            "import": "./dist/esm/mocha/test-globals.mjs",
-            "types": "./dist/esm/mocha/test-globals.d.mts",
-            "default": "./dist/esm/mocha/test-globals.mjs"
+            "import": "./dist/esm/src/mocha/test-globals.mjs",
+            "types": "./dist/esm/src/mocha/test-globals.d.mts",
+            "default": "./dist/esm/src/mocha/test-globals.mjs"
         },
         "./mocha/config": {
-            "import": "./dist/esm/mocha/config.js",
-            "require": "./dist/cjs/mocha/config.js",
-            "types": "./dist/esm/mocha/config.d.ts"
+            "import": "./dist/esm/src/mocha/config.js",
+            "require": "./dist/cjs/src/mocha/config.js",
+            "types": "./dist/esm/src/mocha/config.d.ts"
         },
         "./vscode-test/cache": {
-            "import": "./dist/esm/vscode-test/linkTestCache.js",
-            "require": "./dist/cjs/vscode-test/linkTestCache.js",
-            "types": "./dist/esm/vscode-test/linkTestCache.d.ts"
+            "import": "./dist/esm/src/vscode-test/linkTestCache.js",
+            "require": "./dist/cjs/src/vscode-test/linkTestCache.js",
+            "types": "./dist/esm/src/vscode-test/linkTestCache.d.ts"
         }
     },
     "bin": {
-        "azext-link-test-cache": "./dist/cjs/vscode-test/linkTestCacheCli.js"
+        "azext-link-test-cache": "./dist/cjs/src/vscode-test/linkTestCacheCli.js"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs && npm run build:check",
+        "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
         "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "build:check": "node ./node_modules/@typescript/native/bin/tsc -p ./test/tsconfig.json",
         "test": "mocha",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
@@ -66,7 +65,7 @@
         "node-option": [
             "experimental-strip-types",
             "disable-warning=ExperimentalWarning",
-            "import=./dist/esm/mocha/register-hooks.mjs"
+            "import=./dist/esm/test/global.mjs"
         ]
     },
     "engines": {

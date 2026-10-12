@@ -9,4 +9,4 @@ import chaiAsPromised from 'chai-as-promised';
 
 use(chaiAsPromised);
 
-export const should = registerShould();
+registerShould();

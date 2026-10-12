@@ -26,15 +26,13 @@ stripping, Chai `should`, and chai-as-promised. Mocha options are configured in
 `package.json`: `experimental-strip-types` enables source execution on Node 22,
 and `disable-warning=ExperimentalWarning` suppresses experimental warnings without
 suppressing other warning categories. No tsx or compiled test runner is used.
-Tests live in `test/`, next to `src/`, and are type-checked without emitting test
-JavaScript during `npm run build`. CI builds first; local runs also need distributable
-outputs for package-entry-point and declaration integration checks, and to preload
-the shared Mocha resolve hook. Imports retain JavaScript extensions; the hook resolves
-missing relative `.js`/`.mjs`/`.cjs` paths to TypeScript sources during native execution.
-The harness reuses that hook but keeps its own assertion setup; the shared Mocha preset
-is exercised separately by an integration fixture. `should` registration is local to
-this harness; the shared test globals continue to provide `expect` without modifying
-`Object.prototype`.
+Tests live in `test/`, next to `src/`, and share one TypeScript project. Builds check
+both directories and emit them under `dist/esm` and `dist/cjs`; emitted tests are
+excluded from the published package. Tests import the built package's public exports;
+the tsconfig source aliases let those imports type-check before build outputs exist.
+Mocha preloads the built local assertion setup, without a source-resolution hook.
+The shared Mocha preset is exercised separately by an integration fixture and continues
+to provide global `expect` without modifying `Object.prototype`.
 
 # TODO: Future Ideas
 

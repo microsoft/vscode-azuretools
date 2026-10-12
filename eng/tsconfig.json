@@ -2,8 +2,15 @@
     "extends": "../tsconfig.base.json",
     "compilerOptions": {
         "outDir": "dist/esm",
-        "rootDir": "src",
+        "rootDir": ".",
         "types": ["node"],
+        "paths": {
+            "@microsoft/vscode-azext-eng/esbuild": ["./src/esbuild/esbuildConfigs.ts"],
+            "@microsoft/vscode-azext-eng/esbuild/sass": ["./src/esbuild/sassPlugin.ts"],
+            "@microsoft/vscode-azext-eng/eslint": ["./src/eslint/eslintConfigs.ts"],
+            "@microsoft/vscode-azext-eng/vscode-test": ["./src/vscode-test/vscodeTestConfigs.ts"],
+            "@microsoft/vscode-azext-eng/vscode-test/cache": ["./src/vscode-test/linkTestCache.ts"],
+            "@microsoft/vscode-azext-eng/mocha/config": ["./src/mocha/config.ts"],
+        },
     },
-    "include": ["src"],
 }

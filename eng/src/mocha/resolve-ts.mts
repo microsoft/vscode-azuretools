@@ -6,7 +6,7 @@
 import type { ResolveFnOutput, ResolveHookContext, ResolveHookSync } from 'node:module';
 
 /**
- * Resolves extensionless relative ESM imports and missing JavaScript paths against TypeScript sources.
+ * Resolves extensionless relative ESM imports against TypeScript sources.
  */
 export function resolve(
     specifier: string,
@@ -15,25 +15,15 @@ export function resolve(
 ): ResolveFnOutput {
     // Preserve normal CommonJS resolution; only adapt relative ESM imports.
     // Early synchronous hooks supply conditions as a Set rather than an array.
-    if (!Array.from(context.conditions).includes('require') && specifier.startsWith('.')) {
-        const candidates = !/\.\w+$/.test(specifier)
-            ? [`${specifier}.ts`, `${specifier}.js`]
-            : /\.[cm]?js$/.test(specifier) ? [specifier, specifier.replace(/js$/, 'ts')] : [];
-        let originalError: Error | undefined;
-        for (const candidate of candidates) {
+    if (!Array.from(context.conditions).includes('require') && specifier.startsWith('.') && !/\.\w+$/.test(specifier)) {
+        for (const ext of ['.ts', '.js']) {
             try {
-                return nextResolve(candidate, context);
+                return nextResolve(specifier + ext, context);
             } catch (e) {
                 if (!(e instanceof Error) || !('code' in e) || e.code !== 'ERR_MODULE_NOT_FOUND') {
                     throw e;
                 }
-                if (candidate === specifier) {
-                    originalError = e;
-                }
             }
-        }
-        if (originalError !== undefined) {
-            throw originalError;
         }
     }
 
