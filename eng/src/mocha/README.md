@@ -6,18 +6,16 @@ Mocha configuration through `.mocharc.cjs`:
 ```js
 const { createNodeMochaConfig } = require('@microsoft/vscode-azext-eng/mocha/config');
 
-module.exports = createNodeMochaConfig({
-    // Optional: override the default src/test/ layout.
-    spec: ['test/**/*.test.{ts,mts,cts}'],
-    ui: 'tdd',
-});
+module.exports = createNodeMochaConfig();
 ```
 
 Run with `"test": "mocha"` in `package.json`. ESM consumers can import the same factory
 from a supported configuration-loading entry point or generate the CLI configuration
 programmatically.
 
-The factory defaults to BDD and `src/test/**/*.test.{ts,mts,cts}`. It uses Node's
+The factory defaults to BDD and discovers `**/*.test.{ts,mts,cts}` beneath the current
+working directory, excluding `node_modules`. Override `spec` to restrict discovery,
+or `ui` to select another test interface. It uses Node's
 `experimental-transform-types` flag and the existing shared Mocha entry to register
 extensionless TypeScript resolution, global `expect`, and chai-as-promised. Resolution
 uses the existing asynchronous module hook for ESM imports and leaves CommonJS `require`

@@ -8,6 +8,7 @@ import { cloneConfig } from '../cloneConfig.js';
 
 export interface NodeMochaConfig extends MochaOptions {
     spec?: string | string[];
+    ignore?: string | string[];
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'node-option'?: string[];
 }
@@ -19,7 +20,8 @@ export interface NodeMochaConfig extends MochaOptions {
 export function createNodeMochaConfig(overrides: NodeMochaConfig = {}): NodeMochaConfig {
     return cloneConfig({
         ui: 'bdd',
-        spec: ['src/test/**/*.test.{ts,mts,cts}'],
+        spec: ['**/*.test.{ts,mts,cts}'],
+        ignore: ['**/node_modules/**'],
         ...overrides,
         'node-option': [
             'experimental-transform-types',

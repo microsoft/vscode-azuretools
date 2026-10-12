@@ -222,7 +222,7 @@ describe('Test configuration', () => {
         azExtSrcTestConfig.should.have.property('workspaceFolder', 'src/test/test.code-workspace');
     });
 
-    it('Node Mocha factory runs ts/mts/cts with shared globals and preserves ESM/import and CJS/require resolution', async () => {
+    it('Node Mocha factory discovers ts/mts/cts across layouts, ignores dependencies, and preserves ESM/import and CJS/require resolution', async () => {
         const { root, write } = await fixture();
         await fs.mkdir(path.join(root, 'node_modules/@microsoft'), { recursive: true });
         await fs.symlink(packageDir, path.join(root, 'node_modules/@microsoft/vscode-azext-eng'), 'junction');
@@ -232,10 +232,16 @@ describe('Test configuration', () => {
         await write('src/test/example.test.ts', "import { value } from './helper'; enum Value { One = 1 } describe('ts', () => it('loads', () => expect(value).to.equal(Value.One)));");
         await write('src/test/example.test.mts', "import { value } from './helper.js'; describe('mts', () => it('loads', () => expect(value).to.equal(2)));");
         await write('src/test/example.test.cts', "const { value } = require('./helper'); describe('cts', () => it('loads', () => expect(value).to.equal(2)));");
+        await write('root.test.ts', "describe('root', () => it('loads', () => expect(true).to.equal(true)));");
+        await write('test/example.test.mts', "describe('test directory', () => it('loads', () => expect(true).to.equal(true)));");
+        await write('node_modules/dependency/unexpected.test.ts', "throw new Error('Dependency tests must not run');");
+        await write('packages/nested/node_modules/dependency/unexpected.test.cts', "throw new Error('Nested dependency tests must not run');");
+        await write('test/compiled.test.js', "throw new Error('Compiled JavaScript tests must not run');");
         const result = await exec(process.execPath, [require.resolve('mocha/bin/mocha.js')], { cwd: root });
-        result.stdout.should.match(/3 passing/);
+        result.stdout.should.match(/5 passing/);
         const options = { 'node-option': ['trace-warnings'], spec: ['test/**/*.ts'] };
         const config = createNodeMochaConfig(options);
+        config.should.have.property('spec').that.deep.equals(options.spec);
         config['node-option']?.push('mutation');
         options['node-option'].should.deep.equal(['trace-warnings']);
         createNodeMochaConfig().should.have.property('node-option').that.does.not.include('mutation');
