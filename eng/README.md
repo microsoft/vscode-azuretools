@@ -28,8 +28,7 @@ and `disable-warning=ExperimentalWarning` suppresses experimental warnings witho
 suppressing other warning categories. No tsx or compiled test runner is used.
 Tests live in `test/`, next to `src/`, and share one TypeScript project. Builds check
 both directories and emit them under `dist/esm` and `dist/cjs`; emitted tests are
-excluded from the published package. Tests import the built package's public exports;
-the tsconfig source aliases let those imports type-check before build outputs exist.
+excluded from the published package. Tests import the built package's public exports.
 Mocha preloads the built local assertion setup, without a source-resolution hook.
 The shared Mocha preset is exercised separately by an integration fixture and continues
 to provide global `expect` without modifying `Object.prototype`.
