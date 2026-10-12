@@ -227,7 +227,7 @@ describe('copyPlugin', () => {
         ((await fs.stat(path.join(root, 'assets/icon.svg'))).mode & 0o7777).should.equal(0o640);
     });
 
-    it('warns and skips permission overrides on Windows', async function () {
+    it('ignores permission overrides without warnings on Windows', async function () {
         if (process.platform !== 'win32') {
             this.skip();
         }
@@ -237,8 +237,7 @@ describe('copyPlugin', () => {
             { from: 'assets', to: 'exact', mode: 0o755 },
             { from: 'assets', to: 'callback', mode: () => { throw new Error('must not run on Windows'); } },
         ]));
-        result.warnings.should.have.lengthOf(1);
-        result.warnings[0].text.should.match(/permission overrides are ignored on Windows/);
+        result.warnings.should.have.lengthOf(0);
         (await fs.readFile(path.join(root, 'dist/exact/icon.svg'), 'utf8')).should.equal('icon');
         (await fs.readFile(path.join(root, 'dist/callback/icon.svg'), 'utf8')).should.equal('icon');
     });

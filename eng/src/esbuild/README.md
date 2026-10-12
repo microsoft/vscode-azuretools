@@ -93,7 +93,7 @@ Modes must be integers from `0` through `0o7777`; the callback receives only per
 bits, not file-type bits. Overrides run after copying each matched file on every build.
 Callback errors, invalid modes, and chmod failures fail the build. Source files are not
 chmodded; source/destination aliases are rejected when an override is requested.
-Windows ignores overrides, does not invoke callbacks, and emits an esbuild warning.
+Windows ignores overrides without logging and does not invoke callbacks.
 
 To copy a whole native package but add owner-execute only to its executable, use a
 filtered mapping after the package mapping:

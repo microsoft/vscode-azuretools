@@ -14,7 +14,10 @@ export interface CopyAsset {
     to: string;
     /** Globs relative to from. Defaults to all files recursively; matching files retain their relative paths. */
     include?: string | string[];
-    /** POSIX destination permissions: an exact mode or a callback transforming the current permission bits. Ignored on Windows with a warning. */
+    /**
+     * POSIX destination permissions: an exact mode or a callback transforming the current permission bits.
+     * Ignored on Windows without logging; callbacks are not invoked.
+     */
     mode?: number | ((currentMode: number) => number);
 }
 
@@ -62,9 +65,6 @@ export function copyPlugin(options: CopyPluginOptions): Plugin {
 
             build.onEnd(async () => {
                 const warnings: { text: string }[] = [];
-                if (process.platform === 'win32' && assets.some(asset => asset.mode !== undefined)) {
-                    warnings.push({ text: 'copyPlugin: POSIX permission overrides are ignored on Windows.' });
-                }
                 for (const asset of assets) {
                     const files: string[] = [];
                     for await (const file of fs.glob(asset.include, { cwd: asset.from })) {
