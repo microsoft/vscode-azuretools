@@ -12,7 +12,7 @@ import { afterEach, describe, it } from 'mocha';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { ESLint } from 'eslint';
-import { build, context, type Plugin } from 'esbuild';
+import { build, context, type BuildResult, type Plugin } from 'esbuild';
 import { should as registerShould } from 'chai';
 import { createNodeMochaConfig } from '@microsoft/vscode-azext-eng/mocha/config';
 import { azExtTestConfig, azExtSrcTestConfig, baseConfig, createVscodeTestConfig } from '@microsoft/vscode-azext-eng/vscode-test';
@@ -135,6 +135,36 @@ describe('VS Code test cache', () => {
         }).should.be.rejectedWith(/rename blocked/);
         (await fs.realpath(path.join(options.extensionDir, '.vscode-test'))).should.equal(await fs.realpath(options.cacheDir));
         (await fs.readdir(options.extensionDir)).should.deep.equal(['.vscode-test']);
+    `;
+        await exec(process.execPath, ['--input-type=module', '-e', script], { cwd: packageDir });
+    });
+
+    it('test-cache linker reports an unavailable filesystem root without retrying it', async () => {
+        const script = `
+        import { should, use } from 'chai';
+        import chaiAsPromised from 'chai-as-promised';
+        import fs from 'node:fs/promises';
+        import path from 'node:path';
+        import { syncBuiltinESMExports } from 'node:module';
+        import { linkVscodeTestCache } from '@microsoft/vscode-azext-eng/vscode-test/cache';
+        use(chaiAsPromised);
+        should();
+        const root = path.parse(process.cwd()).root;
+        const cacheDir = path.join(root, 'azext-unavailable-cache');
+        const realpath = fs.realpath;
+        const missing = Object.assign(new Error('unavailable root'), { code: 'ENOENT' });
+        let rootCalls = 0;
+        fs.realpath = async file => {
+            if (file === cacheDir || file === root) {
+                if (file === root && ++rootCalls > 1) throw new Error('root retried');
+                throw missing;
+            }
+            return realpath(file);
+        };
+        syncBuiltinESMExports();
+        await linkVscodeTestCache({ cacheDir }).should.be.rejectedWith('unavailable root')
+            .and.eventually.have.property('code', 'ENOENT');
+        rootCalls.should.equal(1);
     `;
         await exec(process.execPath, ['--input-type=module', '-e', script], { cwd: packageDir });
     });
@@ -356,6 +386,54 @@ describe('Webview builds', () => {
             plugins: [sassPlugin()],
             logLevel: 'silent',
         })).should.be.rejectedWith(/Undefined variable/);
+    });
+
+    it('Sass watch recovers from initial and subsequent imported-file errors', async () => {
+        const { root, write } = await fixture();
+        await write('styles/_variables.scss', '$width: ;');
+        await write('styles/_colors.scss', '$color: red;');
+        await write('styles/main.scss', '@use "variables"; @use "colors"; .root { width: variables.$width; color: colors.$color; }');
+        let finished: ((result: BuildResult) => void) | undefined;
+        let timeout: NodeJS.Timeout | undefined;
+        function nextBuild(): Promise<BuildResult> {
+            return new Promise((resolve, reject) => {
+                timeout = setTimeout(() => { reject(new Error('Sass error recovery timed out')); }, 1000);
+                finished = result => { clearTimeout(timeout); resolve(result); };
+            });
+        }
+        const ctx = await context(createWebviewEsbuildConfig({
+            absWorkingDir: root,
+            entryPoints: ['styles/main.scss'],
+            minify: false,
+            logLevel: 'silent',
+            plugins: [sassPlugin(), {
+                name: 'watch-errors-test',
+                setup(build) { build.onEnd(result => { finished?.(result); }); },
+            }],
+        }));
+        try {
+            const initial = nextBuild();
+            await ctx.watch();
+            (await initial).errors.should.have.lengthOf(1);
+            const recovered = nextBuild();
+            await write('styles/_variables.scss', '$width: 10px;');
+            (await recovered).errors.should.have.lengthOf(0);
+            const broken = nextBuild();
+            await write('styles/_variables.scss', '$width: ;');
+            (await broken).errors.should.have.lengthOf(1);
+            const otherDependency = nextBuild();
+            await write('styles/_colors.scss', '$color: blue;');
+            (await otherDependency).errors.should.have.lengthOf(1);
+            const fixed = nextBuild();
+            await write('styles/_variables.scss', '$width: 20px;');
+            (await fixed).errors.should.have.lengthOf(0);
+            const css = await fs.readFile(path.join(root, 'dist/main.css'), 'utf8');
+            css.should.match(/width: 20px/);
+            css.should.match(/color: blue/);
+        } finally {
+            clearTimeout(timeout);
+            await ctx.dispose();
+        }
     });
 });
 

@@ -33,7 +33,10 @@ async function realpathOrMissing(file: string): Promise<string> {
         return await fs.realpath(file);
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-            return path.join(await realpathOrMissing(path.dirname(file)), path.basename(file));
+            const parent = path.dirname(file);
+            if (parent !== file) {
+                return path.join(await realpathOrMissing(parent), path.basename(file));
+            }
         }
         throw error;
     }

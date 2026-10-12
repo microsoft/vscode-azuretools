@@ -111,6 +111,7 @@ are refused without deleting their contents. Repeating the command with the same
 target is safe and repairs a missing target directory. Changing an existing link's
 target requires `--replace`; the old cache's contents are never removed. Overlapping
 link and cache paths are rejected.
+Unavailable filesystem roots are reported as errors rather than retried.
 
 The function is also available without importing the test runner:
 

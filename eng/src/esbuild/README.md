@@ -171,6 +171,7 @@ using it. Its separate `esbuild/sass` entry point keeps optional Sass types out 
 ordinary esbuild consumers; importing it does not load the compiler until needed. The plugin accepts
 Sass asynchronous compiler options, reports imported files as watch dependencies,
 resolves relative CSS assets from the source stylesheet, and surfaces compiler errors.
+Imported files remain watched after compilation errors, so correcting them triggers a rebuild.
 
 The default extension config now copies both Azureutils' top-level resource SVGs
 and `resources/azureIcons/*.svg`. Consumers no longer need a separate copy mapping
