@@ -56,7 +56,7 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
         "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "test": "npm run build && mocha",
+        "test": "mocha",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
