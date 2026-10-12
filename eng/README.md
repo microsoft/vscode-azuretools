@@ -20,11 +20,16 @@ Consumers can opt into the same arrangement; see [migration guidance](./MIGRATIO
 
 # Tests
 
-Run `npm test` from `eng` to build both package formats and run the compiled ESM
-tests with Mocha, Chai `should`, and chai-as-promised. The test harness uses its own
-setup rather than the shared Mocha preset, which is exercised separately by an
-integration fixture. `should` registration is local to this harness; the shared test
-globals continue to provide `expect` without modifying `Object.prototype`.
+Requires Node.js 24 or later. Run `npm test` from `eng` to execute the ESM TypeScript
+test sources directly with Mocha, Node's built-in type stripping,
+Chai `should`, and chai-as-promised. No tsx or compiled test runner is used.
+Distributable ESM/CJS outputs are built first for package-entry-point and declaration
+integration checks. Source imports use TypeScript extensions, with
+`rewriteRelativeImportExtensions` preserving JavaScript paths in emitted builds.
+The test harness uses its own setup rather than the shared Mocha preset, which is
+exercised separately by an integration fixture. `should` registration is local to
+this harness; the shared test globals continue to provide `expect` without modifying
+`Object.prototype`.
 
 # TODO: Future Ideas
 

@@ -2,7 +2,7 @@
 
 Contains default esbuild configuration for Azure extensions.
 
-Requires Node.js 22.17.0 or later, where the native filesystem glob API is stable.
+Requires Node.js 24 or later. Asset copying uses the native filesystem glob API.
 
 # Minimal Usage
 

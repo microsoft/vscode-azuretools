@@ -56,12 +56,12 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
         "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "test": "npm run build && mocha --no-config --no-package --timeout 15000 \"dist/esm/test/*.test.mjs\"",
+        "test": "npm run build && mocha --no-config --no-package --timeout 15000 \"src/test/*.test.mts\"",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
     "engines": {
-        "node": ">=22.17.0"
+        "node": ">=24"
     },
     "dependencies": {
         "@eslint/js": "^10.0.1",
@@ -105,7 +105,7 @@
         }
     },
     "devDependencies": {
-        "@types/node": "22.x",
+        "@types/node": "24.x",
         "@typescript/native": "npm:typescript@7.0.2",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",

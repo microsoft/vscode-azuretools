@@ -8,8 +8,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, it } from 'mocha';
 import { build, context, type BuildOptions } from 'esbuild';
-import { copyPlugin, extensionEsbuildConfig, type CopyAsset } from '../esbuild/esbuildConfigs.js';
-import { should } from './global.test.mjs';
+import { copyPlugin, extensionEsbuildConfig, type CopyAsset } from '../esbuild/esbuildConfigs.ts';
+import { should } from './global.test.mts';
 
 const fixtures: string[] = [];
 

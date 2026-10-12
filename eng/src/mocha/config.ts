@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { type MochaOptions } from 'mocha';
-import { cloneConfig } from '../cloneConfig.js';
+import { cloneConfig } from '../cloneConfig.ts';
 
 export interface NodeMochaConfig extends MochaOptions {
     spec?: string | string[];

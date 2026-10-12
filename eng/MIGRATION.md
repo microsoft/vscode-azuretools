@@ -7,8 +7,9 @@
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
 1. No, seriously, `npm i` now before you install the eng pkg in the next step, so that things get updated.
 1. Run `npm i --save-dev @microsoft/vscode-azext-eng` to install the latest eng package. Bye bye small package-lock.json.
-1. Update your .nvmrc to Node 22.17.0+, and update `@types/node` accordingly. The minimum VS Code version for Node 22 is 1.101.0.
-   As appropriate, add a minimum VS Code engine version to your package.json as well.
+1. Update your .nvmrc to Node 24+, and use Node 24 typings for engineering and tests.
+   This is the engineering-tools Node requirement; select your extension's minimum
+   VS Code engine according to its runtime dependencies and API requirements.
 1. If needed, update `@microsoft/vscode-azext-utils` to 4.0.2 to get the replacements for TestUserInput, TestActionContext, etc.
 
 # Migrating an NPM package to use this
@@ -175,7 +176,8 @@ Your tests run directly in Mocha, because **you do not have VS Code dependencies
             ]
         }
     ```
-   > `experimental-transform-types` requires Node.js 22.6.0+.
+   > On Node.js 24+, `experimental-transform-types` supports enums and other syntax
+   > which requires transformation in addition to stripping types.
 1. Optionally, you can choose a grep to select specific tests. All mocha options are supported here.
 1. Add in your launch config. It will look something like this:
     ```json
