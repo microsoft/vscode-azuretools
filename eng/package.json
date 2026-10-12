@@ -53,18 +53,20 @@
         "azext-link-test-cache": "./dist/cjs/vscode-test/linkTestCacheCli.js"
     },
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "npm run build:esm && npm run build:cjs && npm run build:check",
         "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
         "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:check": "node ./node_modules/@typescript/native/bin/tsc -p ./test/tsconfig.json",
         "test": "mocha",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
     "mocha": {
-        "spec": "src/test/*.test.mts",
+        "spec": "test/*.test.mts",
         "node-option": [
             "experimental-strip-types",
-            "disable-warning=ExperimentalWarning"
+            "disable-warning=ExperimentalWarning",
+            "import=./dist/esm/mocha/register-hooks.mjs"
         ]
     },
     "engines": {

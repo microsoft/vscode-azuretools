@@ -6,24 +6,34 @@
 import type { ResolveFnOutput, ResolveHookContext, ResolveHookSync } from 'node:module';
 
 /**
- * Resolve hook: tries appending '.ts' / '.js' to relative specifiers that lack an extension.
+ * Resolves extensionless relative ESM imports and missing JavaScript paths against TypeScript sources.
  */
 export function resolve(
     specifier: string,
     context: ResolveHookContext,
     nextResolve: Parameters<ResolveHookSync>[2],
 ): ResolveFnOutput {
-    // Preserve normal CommonJS resolution; only adapt extensionless relative ESM imports.
+    // Preserve normal CommonJS resolution; only adapt relative ESM imports.
     // Early synchronous hooks supply conditions as a Set rather than an array.
-    if (!Array.from(context.conditions).includes('require') && specifier.startsWith('.') && !/\.\w+$/.test(specifier)) {
-        for (const ext of ['.ts', '.js']) {
+    if (!Array.from(context.conditions).includes('require') && specifier.startsWith('.')) {
+        const candidates = !/\.\w+$/.test(specifier)
+            ? [`${specifier}.ts`, `${specifier}.js`]
+            : /\.[cm]?js$/.test(specifier) ? [specifier, specifier.replace(/js$/, 'ts')] : [];
+        let originalError: Error | undefined;
+        for (const candidate of candidates) {
             try {
-                return nextResolve(specifier + ext, context);
+                return nextResolve(candidate, context);
             } catch (e) {
-                if ((e as NodeJS.ErrnoException | undefined)?.code !== 'ERR_MODULE_NOT_FOUND') {
+                if (!(e instanceof Error) || !('code' in e) || e.code !== 'ERR_MODULE_NOT_FOUND') {
                     throw e;
                 }
+                if (candidate === specifier) {
+                    originalError = e;
+                }
             }
+        }
+        if (originalError !== undefined) {
+            throw originalError;
         }
     }
 

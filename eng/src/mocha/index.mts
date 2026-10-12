@@ -8,5 +8,5 @@
 // package's "type", and relative imports must carry the extension that Node's ESM resolver
 // requires. The resolve hook that makes extensionless imports work for consumers' tests cannot help
 // here, because this graph is what registers it, and static imports resolve before any of it runs.
-import './register-hooks.mts';
-import './test-globals.mts';
+import './register-hooks.mjs';
+import './test-globals.mjs';

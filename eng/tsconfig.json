@@ -4,6 +4,6 @@
         "outDir": "dist/esm",
         "rootDir": "src",
         "types": ["node"],
-        "rewriteRelativeImportExtensions": true,
     },
+    "include": ["src"],
 }

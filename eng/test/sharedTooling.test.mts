@@ -13,19 +13,19 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { ESLint } from 'eslint';
 import { build, context, type Plugin } from 'esbuild';
-import { createNodeMochaConfig } from '../mocha/config.ts';
-import { azExtTestConfig, azExtSrcTestConfig, baseConfig, createVscodeTestConfig } from '../vscode-test/vscodeTestConfigs.ts';
-import { linkVscodeTestCache } from '../vscode-test/linkTestCache.ts';
+import { createNodeMochaConfig } from '../src/mocha/config.js';
+import { azExtTestConfig, azExtSrcTestConfig, baseConfig, createVscodeTestConfig } from '../src/vscode-test/vscodeTestConfigs.js';
+import { linkVscodeTestCache } from '../src/vscode-test/linkTestCache.js';
 import {
     azExtEslintRecommended, azExtEslintRecommendedTypeChecked, azExtEslintStrict, azExtEslintStrictTypeChecked,
     explicitTsProjectRuleConfig, importRestrictionsRuleConfig, lazyImportRuleConfig,
-} from '../eslint/eslintConfigs.ts';
-import { createWebviewEsbuildConfig } from '../esbuild/esbuildConfigs.ts';
-import { sassPlugin } from '../esbuild/sassPlugin.ts';
-import { should } from './global.test.mts';
+} from '../src/eslint/eslintConfigs.js';
+import { createWebviewEsbuildConfig } from '../src/esbuild/esbuildConfigs.js';
+import { sassPlugin } from '../src/esbuild/sassPlugin.js';
+import { should } from './global.test.mjs';
 
 const exec = promisify(execFile);
-const packageDir = fileURLToPath(new URL('../../', import.meta.url));
+const packageDir = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
 const fixtures: string[] = [];
 
@@ -149,15 +149,15 @@ it('test-cache linker resolves relative symlink targets against the link parent'
 it('cache CLI honors the environment and reports refusal with a failure exit', async () => {
     const { root, write } = await fixture();
     await fs.mkdir(path.join(root, 'extension'));
-    const cli = path.join(packageDir, 'src/vscode-test/linkTestCacheCli.ts');
+    const cli = path.join(packageDir, 'dist/esm/vscode-test/linkTestCacheCli.js');
     const env = { ...process.env };
     env.VSCODE_TEST_CACHE_DIR = 'cache';
     const options = { cwd: root, env };
-    const result = await exec(process.execPath, [...process.execArgv, cli, '--extension-dir', 'extension'], options);
+    const result = await exec(process.execPath, [cli, '--extension-dir', 'extension'], options);
     result.stdout.should.match(/Test cache created/);
     (await fs.realpath(path.join(root, 'extension/.vscode-test'))).should.equal(await fs.realpath(path.join(root, 'cache')));
     await write('other/.vscode-test/keep.txt', 'keep');
-    await exec(process.execPath, [...process.execArgv, cli, '--extension-dir', 'other'], options).should.be.rejectedWith(/Refusing to replace/);
+    await exec(process.execPath, [cli, '--extension-dir', 'other'], options).should.be.rejectedWith(/Refusing to replace/);
 });
 
 it('VS Code factories merge nested defaults and isolate mutable configuration', () => {
@@ -193,11 +193,23 @@ it('Node Mocha factory runs ts/mts/cts with shared globals and preserves ESM/imp
     await write('.mocharc.json', JSON.stringify(createNodeMochaConfig()));
     await write('src/test/helper.ts', 'export const value = 1;');
     await write('src/test/helper.js', 'module.exports.value = 2;');
+    await write('src/test/typescript.ts', 'export const value = 3;');
+    await write('src/test/module.mts', 'export const value = 4;');
+    await write('src/test/common.cts', 'module.exports.value = 5;');
     await write('src/test/example.test.ts', "import { value } from './helper'; enum Value { One = 1 } describe('ts', () => it('loads', () => expect(value).to.equal(Value.One)));");
-    await write('src/test/example.test.mts', "describe('mts', () => it('loads', () => expect(true).to.equal(true)));");
+    await write('src/test/example.test.mts', [
+        "import { value as js } from './helper.js';",
+        "import { value as ts } from './typescript.js';",
+        "import { value as mts } from './module.mjs';",
+        "import common from './common.cjs';",
+        "describe('mts', () => {",
+        "it('loads', () => { expect(js).to.equal(2); expect(ts).to.equal(3); expect(mts).to.equal(4); expect(common.value).to.equal(5); });",
+        "it('reports the original missing path', async () => { await expect(import('./missing.js')).to.be.rejectedWith(/missing\\.js/); });",
+        "});",
+    ].join('\n'));
     await write('src/test/example.test.cts', "const { value } = require('./helper'); describe('cts', () => it('loads', () => expect(value).to.equal(2)));");
     const result = await exec(process.execPath, [require.resolve('mocha/bin/mocha.js')], { cwd: root });
-    result.stdout.should.match(/3 passing/);
+    result.stdout.should.match(/4 passing/);
     const options = { 'node-option': ['trace-warnings'], spec: ['test/**/*.ts'] };
     const config = createNodeMochaConfig(options);
     config['node-option']?.push('mutation');

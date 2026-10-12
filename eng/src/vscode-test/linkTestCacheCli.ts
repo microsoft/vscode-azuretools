@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { parseArgs } from 'util';
-import { linkVscodeTestCache } from './linkTestCache.ts';
+import { linkVscodeTestCache } from './linkTestCache.js';
 
 async function main(): Promise<void> {
     const { values } = parseArgs({

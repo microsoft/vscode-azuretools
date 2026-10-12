@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { registerHooks } from 'node:module';
-import { resolve } from './resolve-ts.mts';
+import { resolve } from './resolve-ts.mjs';
 
 // Registers a lightweight resolve hook so that extensionless relative imports
 // (e.g. './foo') resolve to '.ts' files when running under Node's built-in

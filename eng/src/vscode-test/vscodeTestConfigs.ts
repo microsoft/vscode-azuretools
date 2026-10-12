@@ -7,7 +7,7 @@ import { type IDesktopTestConfiguration as VscodeTestConfig } from '@vscode/test
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { cloneConfig } from '../cloneConfig.ts';
+import { cloneConfig } from '../cloneConfig.js';
 
 /**
  * Base config - shared between different test configs

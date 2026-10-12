@@ -5,10 +5,10 @@
 
 import { type BuildOptions as EsbuildConfig, type Plugin, build, context } from 'esbuild';
 import * as fs from 'fs/promises';
-import { copyPlugin } from './copyPlugin.ts';
-import { getAutoBuildSettings } from './getAutoBuildSettings.ts';
+import { copyPlugin } from './copyPlugin.js';
+import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 
-export { copyPlugin, type CopyAsset, type CopyPluginOptions } from './copyPlugin.ts';
+export { copyPlugin, type CopyAsset, type CopyPluginOptions } from './copyPlugin.js';
 
 export const {
     /**
