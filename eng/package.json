@@ -61,8 +61,7 @@
         "package": "npm pack"
     },
     "mocha": {
-        "spec": "src/test/*.test.mts",
-        "timeout": 15000
+        "spec": "src/test/*.test.mts"
     },
     "engines": {
         "node": ">=24"
