@@ -78,6 +78,46 @@ filesystem failures fail the build. Patterns must not match files outside the so
 Copying runs after every build, including rebuilds, but does not independently watch assets
 or delete stale destination files.
 
+## Destination Permissions
+
+Source file permissions are preserved by default on POSIX. An asset's optional `mode`
+sets exact destination permissions when it is a number, or transforms the current
+permission bits when it is a synchronous callback:
+
+| `mode` | Behavior |
+| --- | --- |
+| `0o755` | Set exact permissions |
+| `current => current \| 0o100` | Add owner-execute, preserving other permissions |
+
+Modes must be integers from `0` through `0o7777`; the callback receives only permission
+bits, not file-type bits. Overrides run after copying each matched file on every build.
+Callback errors, invalid modes, and chmod failures fail the build. Source files are not
+chmodded; source/destination aliases are rejected when an override is requested.
+Windows ignores overrides, does not invoke callbacks, and emits an esbuild warning.
+
+To copy a whole native package but add owner-execute only to its executable, use a
+filtered mapping after the package mapping:
+
+```js
+copyPlugin({
+    assets: [
+        {
+            from: './node_modules/@azure-tools/azcopy-linux',
+            to: './node_modules/@azure-tools/azcopy-linux',
+        },
+        {
+            from: './node_modules/@azure-tools/azcopy-linux',
+            to: './node_modules/@azure-tools/azcopy-linux',
+            include: 'dist/bin/azcopy_linux_amd64',
+            mode: current => current | 0o100,
+        },
+    ],
+});
+```
+
+This replaces destination permission adjustments, not any separate changes to the
+original binaries in `node_modules`.
+
 ## Migrating from esbuild-plugin-copy
 
 Replace the import with `copyPlugin` from this package and remove `esbuild-plugin-copy`

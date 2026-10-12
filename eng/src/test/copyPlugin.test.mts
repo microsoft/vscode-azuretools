@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'node:fs/promises';
+import { unlinkSync } from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, it } from 'mocha';
@@ -135,6 +136,111 @@ describe('copyPlugin', () => {
         await build(config(root, [{ from: 'assets', to: path.join(root, 'assets/output') }]));
         (await fs.readFile(path.join(root, 'assets/output/icon.svg'), 'utf8')).should.equal('icon');
         await fs.stat(path.join(root, 'assets/output/output/icon.svg')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
+    });
+
+    it('rejects invalid exact permission modes', async () => {
+        const { root, write } = await fixture();
+        await write('assets/icon.svg', 'icon');
+        for (const mode of [-1, 1.5, NaN, Infinity, 0o10000]) {
+            await build(config(root, [{ from: 'assets', to: 'icons', mode }])).should.be.rejectedWith(/mode must be an integer between 0 and 0o7777/);
+        }
+    });
+
+    it('sets exact destination permissions, including zero, without changing sources on POSIX', async function () {
+        if (process.platform === 'win32') {
+            this.skip();
+        }
+        const { root, write } = await fixture();
+        await write('native/azcopy', 'executable');
+        await fs.chmod(path.join(root, 'native/azcopy'), 0o640);
+        await build(config(root, [
+            { from: 'native', to: 'exact', mode: 0o750 },
+            { from: 'native', to: 'none', mode: 0 },
+        ]));
+        ((await fs.stat(path.join(root, 'dist/exact/azcopy'))).mode & 0o7777).should.equal(0o750);
+        ((await fs.stat(path.join(root, 'dist/none/azcopy'))).mode & 0o7777).should.equal(0);
+        ((await fs.stat(path.join(root, 'native/azcopy'))).mode & 0o7777).should.equal(0o640);
+    });
+
+    it('transforms only matched destination permissions on every POSIX rebuild', async function () {
+        if (process.platform === 'win32') {
+            this.skip();
+        }
+        const { root, write } = await fixture();
+        await write('native/dist/bin/azcopy', 'first');
+        await write('native/package.json', '{}');
+        await fs.chmod(path.join(root, 'native/dist/bin/azcopy'), 0o640);
+        await fs.chmod(path.join(root, 'native/package.json'), 0o644);
+        const currentModes: number[] = [];
+        const ctx = await context(config(root, [
+            { from: 'native', to: 'node_modules/native' },
+            {
+                from: 'native', to: 'node_modules/native', include: 'dist/bin/azcopy',
+                mode: current => {
+                    currentModes.push(current);
+                    return current | 0o100;
+                },
+            },
+        ]));
+        try {
+            await ctx.rebuild();
+            ((await fs.stat(path.join(root, 'dist/node_modules/native/dist/bin/azcopy'))).mode & 0o7777).should.equal(0o740);
+            ((await fs.stat(path.join(root, 'native/dist/bin/azcopy'))).mode & 0o7777).should.equal(0o640);
+            await write('native/dist/bin/azcopy', 'updated');
+            await fs.chmod(path.join(root, 'native/dist/bin/azcopy'), 0o604);
+            await ctx.rebuild();
+            ((await fs.stat(path.join(root, 'dist/node_modules/native/dist/bin/azcopy'))).mode & 0o7777).should.equal(0o704);
+            ((await fs.stat(path.join(root, 'native/dist/bin/azcopy'))).mode & 0o7777).should.equal(0o604);
+            ((await fs.stat(path.join(root, 'dist/node_modules/native/package.json'))).mode & 0o7777).should.equal(0o644);
+            (await fs.readFile(path.join(root, 'dist/node_modules/native/dist/bin/azcopy'), 'utf8')).should.equal('updated');
+            currentModes.should.deep.equal([0o640, 0o604]);
+        } finally {
+            await ctx.dispose();
+        }
+    });
+
+    it('surfaces callback/chmod errors and refuses source aliases on POSIX', async function () {
+        if (process.platform === 'win32') {
+            this.skip();
+        }
+        const { root, write } = await fixture();
+        await write('assets/icon.svg', 'icon');
+        await fs.chmod(path.join(root, 'assets/icon.svg'), 0o640);
+        await build(config(root, [{ from: 'assets', to: 'icons', mode: () => NaN }])).should.be.rejectedWith(/mode must be an integer/);
+        await build(config(root, [{
+            from: 'assets', to: 'icons', mode: () => { throw new Error('permission callback failed'); },
+        }])).should.be.rejectedWith(/permission callback failed/);
+        await build(config(root, [{
+            from: 'assets', to: 'icons', mode: () => {
+                unlinkSync(path.join(root, 'dist/icons/icon.svg'));
+                return 0o755;
+            },
+        }])).should.be.rejectedWith(/ENOENT/);
+        await build(config(root, [{
+            from: 'assets', to: path.join(root, 'assets'), mode: 0o755,
+        }])).should.be.rejectedWith(/source and destination refer to the same file/);
+        await fs.mkdir(path.join(root, 'dist/linked'), { recursive: true });
+        await fs.link(path.join(root, 'assets/icon.svg'), path.join(root, 'dist/linked/icon.svg'));
+        await build(config(root, [{
+            from: 'assets', to: 'linked', mode: 0o755,
+        }])).should.be.rejectedWith(/source and destination refer to the same file/);
+        ((await fs.stat(path.join(root, 'assets/icon.svg'))).mode & 0o7777).should.equal(0o640);
+    });
+
+    it('warns and skips permission overrides on Windows', async function () {
+        if (process.platform !== 'win32') {
+            this.skip();
+        }
+        const { root, write } = await fixture();
+        await write('assets/icon.svg', 'icon');
+        const result = await build(config(root, [
+            { from: 'assets', to: 'exact', mode: 0o755 },
+            { from: 'assets', to: 'callback', mode: () => { throw new Error('must not run on Windows'); } },
+        ]));
+        result.warnings.should.have.lengthOf(1);
+        result.warnings[0].text.should.match(/permission overrides are ignored on Windows/);
+        (await fs.readFile(path.join(root, 'dist/exact/icon.svg'), 'utf8')).should.equal('icon');
+        (await fs.readFile(path.join(root, 'dist/callback/icon.svg'), 'utf8')).should.equal('icon');
     });
 });
 
