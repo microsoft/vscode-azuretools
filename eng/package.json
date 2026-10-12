@@ -37,7 +37,20 @@
             "import": "./dist/esm/mocha/test-globals.mjs",
             "types": "./dist/esm/mocha/test-globals.d.mts",
             "default": "./dist/esm/mocha/test-globals.mjs"
+        },
+        "./mocha/config": {
+            "import": "./dist/esm/mocha/config.js",
+            "require": "./dist/cjs/mocha/config.js",
+            "types": "./dist/esm/mocha/config.d.ts"
+        },
+        "./vscode-test/cache": {
+            "import": "./dist/esm/vscode-test/linkTestCache.js",
+            "require": "./dist/cjs/vscode-test/linkTestCache.js",
+            "types": "./dist/esm/vscode-test/linkTestCache.d.ts"
         }
+    },
+    "bin": {
+        "azext-link-test-cache": "./dist/cjs/vscode-test/linkTestCacheCli.js"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
