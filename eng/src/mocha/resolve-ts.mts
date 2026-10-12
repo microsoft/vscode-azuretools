@@ -3,24 +3,23 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ResolveFnOutput, ResolveHookContext, ResolveHookSync } from 'node:module';
+import type { ResolveFnOutput, ResolveHook, ResolveHookContext } from 'node:module';
 
 /**
- * Resolves extensionless relative ESM imports against TypeScript sources.
+ * Resolve hook: tries appending '.ts' / '.js' to relative specifiers that lack an extension.
  */
-export function resolve(
+export async function resolve(
     specifier: string,
     context: ResolveHookContext,
-    nextResolve: Parameters<ResolveHookSync>[2],
-): ResolveFnOutput {
-    // Preserve normal CommonJS resolution; only adapt relative ESM imports.
-    // Early synchronous hooks supply conditions as a Set rather than an array.
-    if (!Array.from(context.conditions).includes('require') && specifier.startsWith('.') && !/\.\w+$/.test(specifier)) {
+    nextResolve: Parameters<ResolveHook>[2],
+): Promise<ResolveFnOutput> {
+    // Only handle relative imports without a file extension
+    if (specifier.startsWith('.') && !/\.\w+$/.test(specifier)) {
         for (const ext of ['.ts', '.js']) {
             try {
-                return nextResolve(specifier + ext, context);
+                return await nextResolve(specifier + ext, context);
             } catch (e) {
-                if (!(e instanceof Error) || !('code' in e) || e.code !== 'ERR_MODULE_NOT_FOUND') {
+                if ((e as NodeJS.ErrnoException | undefined)?.code !== 'ERR_MODULE_NOT_FOUND') {
                     throw e;
                 }
             }
