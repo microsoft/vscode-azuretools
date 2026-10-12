@@ -61,11 +61,10 @@
         "package": "npm pack"
     },
     "mocha": {
-        "spec": "test/*.test.mts",
+        "spec": "test/*.test.{ts,mts}",
         "node-option": [
             "experimental-strip-types",
-            "disable-warning=ExperimentalWarning",
-            "import=./test/global.mts"
+            "disable-warning=ExperimentalWarning"
         ]
     },
     "engines": {
