@@ -22,7 +22,8 @@ Consumers can opt into the same arrangement; see [migration guidance](./MIGRATIO
 
 Requires Node.js 24 or later. Run `npm test` from `eng` to execute the ESM TypeScript
 test sources directly with Mocha, Node's built-in type stripping,
-Chai `should`, and chai-as-promised. No tsx or compiled test runner is used.
+Chai `should`, and chai-as-promised. Mocha options are configured in `package.json`.
+No tsx or compiled test runner is used.
 Distributable ESM/CJS outputs are built first for package-entry-point and declaration
 integration checks. Source imports use TypeScript extensions, with
 `rewriteRelativeImportExtensions` preserving JavaScript paths in emitted builds.

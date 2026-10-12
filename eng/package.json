@@ -56,9 +56,13 @@
         "build": "npm run build:esm && npm run build:cjs",
         "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
         "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "test": "npm run build && mocha --no-config --no-package --timeout 15000 \"src/test/*.test.mts\"",
+        "test": "npm run build && mocha",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
+    },
+    "mocha": {
+        "spec": "src/test/*.test.mts",
+        "timeout": 15000
     },
     "engines": {
         "node": ">=24"
