@@ -9,6 +9,14 @@ In addition, universal and recommended configurations are provided. They can be 
 - [ESBuild Config](./src/esbuild/README.md)
 - [ESLint Config](./src/eslint/README.md)
 - [VS Code Test Config](./src/vscode-test/README.md)
+- [Standalone Node/Mocha Config](./src/mocha/README.md)
+
+# TypeScript Compilers
+
+The ESLint configurations use TypeScript 6's compiler API. This package builds with
+native TypeScript 7, installed separately as the `@typescript/native` alias. Build
+scripts invoke that compiler explicitly because both packages provide a `tsc` binary.
+Consumers can opt into the same arrangement; see [migration guidance](./MIGRATION.md#typescript-compilers).
 
 # TODO: Future Ideas
 
@@ -17,7 +25,6 @@ In addition, universal and recommended configurations are provided. They can be 
 - Common/base `tsconfig.json` items
 - Common/base ignores, e.g. `.npmignore`, `.vscodeignore`
   - These could be just reference items that consumers can copy into their own projects, or if we want to get fancy, we could do it on install.
-- Use `tsgo` (TypeScript native) instead of `tsc`. Correspondingly, use native language server.
 
 # TODONT: Things Not to Do
 

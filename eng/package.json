@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.1.0-alpha.6",
+    "version": "1.2.0",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -111,9 +111,6 @@
         "@vscode/test-electron": "*",
         "esbuild": "*",
         "sass": "*"
-    },
-    "publishConfig": {
-        "tag": "alpha"
     },
     "overrides": {
         "serialize-javascript": "^7.1.2"

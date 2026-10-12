@@ -7,7 +7,7 @@
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
 1. No, seriously, `npm i` now before you install the eng pkg in the next step, so that things get updated.
 1. Run `npm i --save-dev @microsoft/vscode-azext-eng` to install the latest eng package. Bye bye small package-lock.json.
-1. Update your .nvmrc to Node 22+, and update `@types/node` accordingly. The minimum VS Code version for Node 22 is 1.101.0.
+1. Update your .nvmrc to Node 22.17.0+, and update `@types/node` accordingly. The minimum VS Code version for Node 22 is 1.101.0.
    As appropriate, add a minimum VS Code engine version to your package.json as well.
 1. If needed, update `@microsoft/vscode-azext-utils` to 4.0.2 to get the replacements for TestUserInput, TestActionContext, etc.
 
@@ -34,7 +34,6 @@ Hard mode engage!
         "@vscode/test-electron": "*",
         "@vscode/vsce": "*",
         "esbuild": "*",
-        "esbuild-plugin-copy": "*",
         "tsx": "*"
     }
     ```
@@ -58,6 +57,54 @@ Hard mode engage!
 1. Fix lint issues as needed. You can do `npm run lint -- --fix` and it will auto-fix everything it can. I suggest
    committing auto-fixed issues separately from manually-fixed, so it's easier to read the PRs.
 
+# TypeScript Compilers
+
+This package supplies TypeScript 6 for the compatible compiler API required by
+typescript-eslint. Do not replace or hoist native TypeScript 7 under the name
+`typescript` into ESLint's dependency graph.
+
+**TODO:** Revisit this split when TypeScript 7.1 and compatible typescript-eslint
+support are available. The TypeScript team
+[expects 7.1 to ship a new, different compiler API](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/).
+Once typescript-eslint supports that API and version, consolidate on the native
+`typescript` package and remove the separate TypeScript 6 dependency and native
+alias. Upgrading to 7.1 alone will not guarantee ESLint compatibility.
+
+To opt into native TypeScript 7 builds, install it separately:
+
+```json
+"devDependencies": {
+    "@typescript/native": "npm:typescript@7.0.2"
+}
+```
+
+Both the native alias and the API-bearing `typescript` package expose a `tsc`
+binary. When both are installed directly in the same npm package, as they are in
+eng, they compete for the same `.bin` entry. Invoke the alias explicitly rather
+than relying on which executable npm links:
+
+```json
+"scripts": {
+    "check": "node ./node_modules/@typescript/native/bin/tsc --noEmit"
+}
+```
+
+Use the same explicit compiler path for emitting builds and watch commands, keeping
+your existing arguments.
+
+With pnpm, a consuming repository can use bare `tsc` when only the native alias is
+installed directly at the workspace root and the API-bearing TypeScript remains
+private to eng's dependency graph. This is how
+[vscode-azure](https://github.com/microsoft/vscode-azure/blob/8993a3c153ece31f79c4d8dac7a982ee4654c802/pnpm-workspace.yaml#L23-L32)
+avoids the binary collision: it keeps `typescript` out of `publicHoistPattern`,
+allowing ESLint to resolve its compatible package-local compiler API while build
+scripts find the root's native `tsc`. The explicit path is needed to disambiguate
+competing binaries, not because TypeScript 7 inherently requires it.
+
+TypeScript 6 and 7 no longer automatically include installed ambient type packages.
+List required globals explicitly in `compilerOptions.types`, such as `["node"]`
+for Node builds and the test-globals entry documented below for Mocha tests.
+
 # Bundling
 Extensions must be bundled to improve loading performance and VSIX size. We use esbuild for bundling.
 
@@ -68,7 +115,8 @@ Extensions must be bundled to improve loading performance and VSIX size. We use 
     1. The first thing to do is entrypoints. These are a list of bundle files that get created. For example, in the
        Container Tools extension, there is an entrypoint for the extension itself plus one for each language server.
     1. The next thing to look at is any additional files that are being copied to the output. You will need to use
-       `esbuild-copy-plugin` to move those. See an example [here](./src/esbuild/esbuildConfigs.ts).
+       the native `copyPlugin` exported from `@microsoft/vscode-azext-eng/esbuild` to move those.
+       See usage and migration examples [here](./src/esbuild/README.md#copying-assets).
     1. The next thing is to look at the externals. These are things you are telling esbuild to *not* bundle. For example,
        the `vscode` module is provided by VS Code itself, and no attempt should be made to bundle it--so it is by default
        an external. **NOTE:** A lot of the time, the externals are no longer needed. Do your research on why it was
@@ -180,7 +228,7 @@ which can improve load times by deferring package loading until it is necessary.
 
 1. First do all of the above
 1. IMPORTANT! Ensure you are using `^4.0.4` of `@microsoft/vscode-azext-utils`!
-1. Update to at least `1.0.0-alpha.14` of this package (but prefer the latest alpha).
+1. Update to `1.2.0` or later of this package.
 1. Rename your `main.js` to `main.mjs`, and change it according to the above sample PR. It will primarily have just an
    `await import` of the bundle, an `activate()`, and a `deactivate()`.
 1. Add a `module` field to `package.json`, referencing your `main.mjs`, and update `main` as well to reference the same.
