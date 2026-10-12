@@ -20,19 +20,14 @@ Consumers can opt into the same arrangement; see [migration guidance](./MIGRATIO
 
 # Tests
 
-Requires Node.js 22.17.0 or later. From `eng`, run `npm run build` before `npm test` to
-execute the ESM TypeScript test sources directly with Mocha, Node's built-in type
-stripping, Chai `should`, and chai-as-promised. Mocha options are configured in
-`package.json`: `experimental-strip-types` enables source execution on Node 22,
-and `disable-warning=ExperimentalWarning` suppresses experimental warnings without
-suppressing other warning categories. No tsx or compiled test runner is used.
-Tests live in `test/`, next to `src/`, and share one TypeScript project. Builds check
-both directories and emit them under `dist/esm` and `dist/cjs`; emitted tests are
-excluded from the published package. Tests import the built package's public exports.
-Mocha discovers `test/global.test.ts` alongside the suites to register assertions,
-without a separate preload or source-resolution hook.
-The shared Mocha preset is exercised separately by an integration fixture and continues
-to provide global `expect` without modifying `Object.prototype`.
+Using Node.js 22.17.0 or later, run the following from `eng`:
+
+```sh
+npm run build
+npm test
+```
+
+Build first because the tests exercise the package's public exports.
 
 # TODO: Future Ideas
 
