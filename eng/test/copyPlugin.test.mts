@@ -242,37 +242,37 @@ describe('copyPlugin', () => {
         (await fs.readFile(path.join(root, 'dist/exact/icon.svg'), 'utf8')).should.equal('icon');
         (await fs.readFile(path.join(root, 'dist/callback/icon.svg'), 'utf8')).should.equal('icon');
     });
-});
 
-it('default extension config copies Azure utils root and azureIcons SVGs into the build output', async () => {
-    const { root, write } = await fixture();
-    const resources = 'node_modules/@microsoft/vscode-azext-azureutils/resources';
-    await write(`${resources}/root.svg`, 'root');
-    await write(`${resources}/azureIcons/nested.svg`, 'nested');
-    await write(`${resources}/ignored.txt`, 'ignored');
-    const copy = extensionEsbuildConfig.plugins?.[0];
-    should.exist(copy);
-    await build({
-        ...extensionEsbuildConfig,
-        absWorkingDir: root,
-        entryPoints: undefined,
-        stdin: { contents: 'module.exports = {};', loader: 'js' },
-        alias: undefined,
-        plugins: [copy!],
-        logLevel: 'silent',
+    it('default extension config copies Azure utils root and azureIcons SVGs into the build output', async () => {
+        const { root, write } = await fixture();
+        const resources = 'node_modules/@microsoft/vscode-azext-azureutils/resources';
+        await write(`${resources}/root.svg`, 'root');
+        await write(`${resources}/azureIcons/nested.svg`, 'nested');
+        await write(`${resources}/ignored.txt`, 'ignored');
+        const copy = extensionEsbuildConfig.plugins?.[0];
+        should.exist(copy);
+        await build({
+            ...extensionEsbuildConfig,
+            absWorkingDir: root,
+            entryPoints: undefined,
+            stdin: { contents: 'module.exports = {};', loader: 'js' },
+            alias: undefined,
+            plugins: [copy!],
+            logLevel: 'silent',
+        });
+        (await fs.readFile(path.join(root, 'dist', resources, 'root.svg'), 'utf8')).should.equal('root');
+        (await fs.readFile(path.join(root, 'dist', resources, 'azureIcons/nested.svg'), 'utf8')).should.equal('nested');
+        await fs.stat(path.join(root, 'dist', resources, 'ignored.txt')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
     });
-    (await fs.readFile(path.join(root, 'dist', resources, 'root.svg'), 'utf8')).should.equal('root');
-    (await fs.readFile(path.join(root, 'dist', resources, 'azureIcons/nested.svg'), 'utf8')).should.equal('nested');
-    await fs.stat(path.join(root, 'dist', resources, 'ignored.txt')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
-});
 
-it('copies executable permissions on POSIX', async function () {
-    if (process.platform === 'win32') {
-        this.skip();
-    }
-    const { root, write } = await fixture();
-    await write('native/azcopy', 'executable');
-    await fs.chmod(path.join(root, 'native/azcopy'), 0o755);
-    await build(config(root, [{ from: 'native', to: 'native' }]));
-    ((await fs.stat(path.join(root, 'dist/native/azcopy'))).mode & 0o777).should.equal(0o755);
+    it('copies executable permissions on POSIX', async function () {
+        if (process.platform === 'win32') {
+            this.skip();
+        }
+        const { root, write } = await fixture();
+        await write('native/azcopy', 'executable');
+        await fs.chmod(path.join(root, 'native/azcopy'), 0o755);
+        await build(config(root, [{ from: 'native', to: 'native' }]));
+        ((await fs.stat(path.join(root, 'dist/native/azcopy'))).mode & 0o777).should.equal(0o755);
+    });
 });
