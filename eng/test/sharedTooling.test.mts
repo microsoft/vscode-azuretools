@@ -235,7 +235,7 @@ describe('Test configuration', () => {
         await write('src/test/example.test.ts', "import { value } from './helper'; enum Value { One = 1 } describe('ts', () => it('loads', () => { expect(value).to.equal(Value.One); value.should.equal(Value.One); }));");
         await write('src/test/example.test.mts', "import { value } from './helper.js'; describe('mts', () => it('loads', async () => { expect(value).to.equal(2); await Promise.reject(new Error('expected')).should.be.rejectedWith('expected'); }));");
         await write('src/test/example.test.cts', "const { value } = require('./helper'); describe('cts', () => it('loads', () => expect(value).to.equal(2)));");
-        await write('root.test.ts', "describe('root', () => it('loads', () => expect(true).to.equal(true)));");
+        await write('root.test.ts', "describe('root', () => it('loads', () => { expect(true).to.equal(true); should.exist(true); should.not.exist(null); }));");
         await write('test/example.test.mts', "describe('test directory', () => it('loads', () => expect(true).to.equal(true)));");
         await write('node_modules/dependency/unexpected.test.ts', "throw new Error('Dependency tests must not run');");
         await write('packages/nested/node_modules/dependency/unexpected.test.cts', "throw new Error('Nested dependency tests must not run');");
