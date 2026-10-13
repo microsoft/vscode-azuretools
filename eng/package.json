@@ -24,24 +24,24 @@
             "require": "./dist/cjs/src/eslint/eslintConfigs.js",
             "types": "./dist/esm/src/eslint/eslintConfigs.d.ts"
         },
-        "./vscode-test": {
-            "import": "./dist/esm/src/vscode-test/vscodeTestConfigs.js",
-            "require": "./dist/cjs/src/vscode-test/vscodeTestConfigs.js",
-            "types": "./dist/esm/src/vscode-test/vscodeTestConfigs.d.ts"
-        },
         "./mocha": {
             "import": "./dist/esm/src/mocha/index.mjs",
             "types": "./dist/esm/src/mocha/index.d.mts"
+        },
+        "./mocha/config": {
+            "import": "./dist/esm/src/mocha/config.js",
+            "require": "./dist/cjs/src/mocha/config.js",
+            "types": "./dist/esm/src/mocha/config.d.ts"
         },
         "./mocha/test-globals": {
             "import": "./dist/esm/src/mocha/test-globals.mjs",
             "types": "./dist/esm/src/mocha/test-globals.d.mts",
             "default": "./dist/esm/src/mocha/test-globals.mjs"
         },
-        "./mocha/config": {
-            "import": "./dist/esm/src/mocha/config.js",
-            "require": "./dist/cjs/src/mocha/config.js",
-            "types": "./dist/esm/src/mocha/config.d.ts"
+        "./vscode-test": {
+            "import": "./dist/esm/src/vscode-test/vscodeTestConfigs.js",
+            "require": "./dist/cjs/src/vscode-test/vscodeTestConfigs.js",
+            "types": "./dist/esm/src/vscode-test/vscodeTestConfigs.d.ts"
         },
         "./vscode-test/cache": {
             "import": "./dist/esm/src/vscode-test/linkTestCache.js",
