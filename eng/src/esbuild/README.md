@@ -77,6 +77,8 @@ Existing files are overwritten. A mapping with no matching files produces an esb
 filesystem failures fail the build. Patterns must not match files outside the source directory.
 Copying runs after every build, including rebuilds, but does not independently watch assets
 or delete stale destination files.
+Destinations nested inside their source directory are excluded from source matches,
+preventing previous output from being copied again on rebuilds.
 
 ## Destination Permissions
 

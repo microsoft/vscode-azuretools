@@ -131,12 +131,22 @@ describe('copyPlugin', () => {
         (await fs.readFile(path.join(root, 'dist/icons/icon.svg'), 'utf8')).should.equal('linked');
     });
 
-    it('snapshots matches before copying into a source subdirectory', async () => {
+    it('excludes nested destinations from source matches across rebuilds', async () => {
         const { root, write } = await fixture();
         await write('assets/icon.svg', 'icon');
-        await build(config(root, [{ from: 'assets', to: path.join(root, 'assets/output') }]));
-        (await fs.readFile(path.join(root, 'assets/output/icon.svg'), 'utf8')).should.equal('icon');
-        await fs.stat(path.join(root, 'assets/output/output/icon.svg')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
+        await write('assets/output/preexisting.svg', 'previous output');
+        await write('assets/output-other/kept.svg', 'source');
+        const ctx = await context(config(root, [{ from: 'assets', to: path.join(root, 'assets/output') }]));
+        try {
+            (await ctx.rebuild()).warnings.should.have.lengthOf(0);
+            await write('assets/icon.svg', 'updated');
+            (await ctx.rebuild()).warnings.should.have.lengthOf(0);
+            (await fs.readFile(path.join(root, 'assets/output/icon.svg'), 'utf8')).should.equal('updated');
+            (await fs.readFile(path.join(root, 'assets/output/output-other/kept.svg'), 'utf8')).should.equal('source');
+            await fs.stat(path.join(root, 'assets/output/output')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
+        } finally {
+            await ctx.dispose();
+        }
     });
 
     it('rejects invalid exact permission modes', async () => {

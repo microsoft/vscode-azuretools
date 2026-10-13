@@ -31,6 +31,11 @@ function validateMode(mode: unknown): asserts mode is number {
     }
 }
 
+function isWithin(directory: string, file: string): boolean {
+    const relative = path.relative(directory, file);
+    return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
 /**
  * Copies assets after every build using Node.js glob and filesystem APIs.
  * Does not independently watch assets or remove previously copied files.
@@ -74,8 +79,11 @@ export function copyPlugin(options: CopyPluginOptions): Plugin {
                     for (const file of files) {
                         const source = path.resolve(asset.from, file);
                         const relative = path.relative(asset.from, source);
-                        if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+                        if (!isWithin(asset.from, source)) {
                             throw new Error(`copyPlugin pattern matched outside the source directory: ${source}`);
+                        }
+                        if (path.relative(asset.from, asset.to) !== '' && isWithin(asset.from, asset.to) && isWithin(asset.to, source)) {
+                            continue;
                         }
                         const sourceStats = await fs.stat(source);
                         if (!sourceStats.isFile()) {
