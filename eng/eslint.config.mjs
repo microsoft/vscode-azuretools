@@ -6,6 +6,5 @@
 import { azExtEslintStrictTypeChecked } from './src/eslint/eslintConfigs.ts';
 
 export default [
-    { ignores: ['.mocharc.cjs'] },
     ...azExtEslintStrictTypeChecked,
 ];
