@@ -49,7 +49,8 @@ Contains default VS Code test configuration for Azure extensions.
 Mocha's globals (`describe`, `it`, `suite`, `test`, ...) are declared for you. The
 [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered automatically, so assertions
 like `await expect(thing()).to.be.rejectedWith(/.../)` are available. Chai's `expect` is also registered as a global,
-so you do not need to import it.
+so you do not need to import it. The shared setup registers Chai's `should` getter on
+`Object.prototype` as well, enabling assertions such as `value.should.equal(expected)`.
 
 To get the types for all of it, add a single entry to the `types` array in your tsconfig.json:
 ```jsonc

@@ -21,6 +21,7 @@ use(chaiAsPromised);
 
 // Registers chai's `expect` as a global, so tests can use it without importing chai.
 import 'chai/register-expect.js';
+import 'chai/register-should.js';
 
 declare global {
     /**
