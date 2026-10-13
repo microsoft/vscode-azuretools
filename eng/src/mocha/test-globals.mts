@@ -24,9 +24,7 @@ import 'chai/register-expect.js';
 import 'chai/register-should.js';
 
 declare global {
-    /**
-     * Chai's `expect`, registered as a global by the shared test globals setup.
-     */
+    /** Chai's `expect`, registered as a global by the shared test globals setup. */
     const expect: typeof chaiExpect;
     /** Chai's global assertion helpers, registered alongside the Object.prototype.should getter. */
     const should: ReturnType<typeof chaiShould>;
