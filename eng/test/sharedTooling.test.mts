@@ -226,7 +226,10 @@ describe('Test configuration', () => {
         const { root, write } = await fixture();
         await fs.mkdir(path.join(root, 'node_modules/@microsoft'), { recursive: true });
         await fs.symlink(packageDir, path.join(root, 'node_modules/@microsoft/vscode-azext-eng'), 'junction');
-        await write('.mocharc.json', JSON.stringify(createNodeMochaConfig()));
+        await write('.mocharc.cjs', [
+            "const { createNodeMochaConfig } = require('@microsoft/vscode-azext-eng/mocha/config');",
+            'module.exports = createNodeMochaConfig();',
+        ].join('\n'));
         await write('src/test/helper.ts', 'export const value = 1;');
         await write('src/test/helper.js', 'module.exports.value = 2;');
         await write('src/test/example.test.ts', "import { value } from './helper'; enum Value { One = 1 } describe('ts', () => it('loads', () => expect(value).to.equal(Value.One)));");

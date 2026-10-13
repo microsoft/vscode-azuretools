@@ -9,9 +9,8 @@ const { createNodeMochaConfig } = require('@microsoft/vscode-azext-eng/mocha/con
 module.exports = createNodeMochaConfig();
 ```
 
-Run with `"test": "mocha"` in `package.json`. ESM consumers can import the same factory
-from a supported configuration-loading entry point or generate the CLI configuration
-programmatically.
+Run with `"test": "mocha"` in `package.json`. Use `.mocharc.cjs` even in ESM packages:
+Mocha does not discover or load `.mocharc.mjs` as JavaScript configuration.
 
 The factory defaults to BDD and discovers `**/*.test.{ts,mts,cts}` beneath the current
 working directory, excluding `node_modules`. Override `spec` to restrict discovery,

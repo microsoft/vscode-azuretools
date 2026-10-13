@@ -12,5 +12,6 @@ tsconfig.json
 *.tgz
 .vscode-test/
 eslint.config.mjs
+.mocharc.cjs
 test/
 *.tsbuildinfo
