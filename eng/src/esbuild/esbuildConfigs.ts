@@ -298,15 +298,15 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
     validateBundleNames(bundles);
 
     const contexts: BuildContext[] = [];
-    const shutdown = new AbortController();
-    const aborted = new Promise<void>(resolve => {
-        shutdown.signal.addEventListener('abort', () => {
-            resolve();
-        }, { once: true });
+    let stopped = false;
+    let stopInitial: (() => void) | undefined;
+    const shutdown = new Promise<void>(resolve => {
+        stopInitial = resolve;
     });
 
     async function dispose(): Promise<void> {
-        shutdown.abort();
+        stopped = true;
+        stopInitial?.();
         process.off('SIGINT', stop);
         process.off('SIGTERM', stop);
         await Promise.all(contexts.splice(0).map(ctx => ctx.dispose()));
@@ -322,7 +322,10 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
     try {
         for (const bundle of bundles) {
-            shutdown.signal.throwIfAborted();
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag between builds.
+            if (stopped) {
+                return;
+            }
 
             const config = bundle.config;
             const watching = isAutoWatch && bundle.watch !== false;
@@ -375,24 +378,24 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                     });
 
                     const ctx = await context(options);
-                    contexts.push(ctx);
-                    shutdown.signal.throwIfAborted();
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag during context creation.
+                    if (stopped) {
+                        await ctx.dispose();
+                        return;
+                    }
 
+                    contexts.push(ctx);
                     if (contexts.length === 1) {
                         process.on('SIGINT', stop);
                         process.on('SIGTERM', stop);
                     }
 
                     await ctx.watch();
-                    await Promise.race([initial, aborted]);
+                    await Promise.race([initial, shutdown]);
                 } else {
                     await build(options);
                 }
             } catch (error) {
-                if (error === shutdown.signal.reason) {
-                    throw error;
-                }
-
                 throw new Error(
                     `Failed to build bundle "${bundle.name}": ${error instanceof Error ? error.message : String(error)}`,
                     { cause: error },
@@ -401,10 +404,6 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
         }
     } catch (error) {
         await dispose();
-
-        if (error === shutdown.signal.reason) {
-            return;
-        }
 
         throw error;
     }
