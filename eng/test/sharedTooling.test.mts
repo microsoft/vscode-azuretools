@@ -38,11 +38,13 @@ afterEach(async () => {
 async function fixture() {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'azext-tooling-'));
     fixtures.push(root);
+
     async function write(relative: string, contents: string) {
         const file = path.join(root, relative);
         await fs.mkdir(path.dirname(file), { recursive: true });
         await fs.writeFile(file, contents);
     }
+
     return { root, write };
 }
 
@@ -168,10 +170,11 @@ describe('VS Code test cache', () => {
         await exec(process.execPath, ['--input-type=module', '-e', script], { cwd: packageDir });
     });
 
-    it('test-cache linker resolves relative symlink targets against the link parent', async function() {
+    it('test-cache linker resolves relative symlink targets against the link parent', async function () {
         if (process.platform === 'win32') {
             this.skip();
         }
+
         const { root } = await fixture();
         await fs.mkdir(path.join(root, 'extension'));
         await fs.mkdir(path.join(root, 'cache'));
@@ -331,7 +334,9 @@ describe('Ordered builds', () => {
             },
         }));
         const log = console.log;
-        console.log = (...args: unknown[]) => { messages.push(args.join(' ')); };
+        console.log = (...args: unknown[]) => {
+            messages.push(args.join(' '));
+        };
         try {
             await autoEsbuildOrWatch(bundles);
         } finally {
@@ -398,7 +403,9 @@ describe('Ordered builds', () => {
             log(...args);
             if (message.startsWith('[watch] build ')) {
                 messages.push(message);
-                if (message.startsWith('[watch] build finished')) finishedCycle?.();
+                if (message.startsWith('[watch] build finished')) {
+                    finishedCycle?.();
+                }
             }
         };
         const starts = [Promise.withResolvers(), Promise.withResolvers()];
@@ -432,7 +439,9 @@ describe('Ordered builds', () => {
                                 if (!initialized) {
                                     assert.equal(messages.filter(message => message.includes('finished')).length, 0);
                                 }
-                                if (overlapping) ends[index].resolve();
+                                if (overlapping) {
+                                    ends[index].resolve();
+                                }
                             });
                         }
                     }]
@@ -440,8 +449,11 @@ describe('Ordered builds', () => {
             });
         }
         function nextFinish() {
-            return new Promise(resolve => { finishedCycle = resolve; });
+            return new Promise(resolve => {
+                finishedCycle = resolve;
+            });
         }
+
         function assertOneCycle() {
             assert.equal(messages.length, 2);
             assert.equal(messages[0], '[watch] build started');
@@ -451,6 +463,7 @@ describe('Ordered builds', () => {
             await autoEsbuildOrWatch(bundles);
             initialized = true;
             assertOneCycle();
+
             messages.length = 0;
             overlapping = true;
             const overlapFinished = nextFinish();
@@ -470,6 +483,7 @@ describe('Ordered builds', () => {
                 assert.equal(metadata.outputs[output].bytes, content.length);
                 assert.match(content.toString(), /value = 2/);
             }
+
             overlapping = false;
             messages.length = 0;
             const failed = nextFinish();
@@ -477,6 +491,7 @@ describe('Ordered builds', () => {
             await failed;
             assertOneCycle();
             assert.equal(errors[0], 1);
+
             messages.length = 0;
             const recovered = nextFinish();
             await fs.writeFile(path.join(root, 'entry0.ts'), 'export const value = 3;');
@@ -517,48 +532,93 @@ describe('Ordered builds', () => {
                     name: 'watch-order',
                     setup(build) {
                         build.onStart(async () => {
-                            if (index) await fs.access(path.join(root, 'dist/bundle' + (index - 1) + '.js'));
+                            if (index) {
+                                await fs.access(path.join(root, 'dist/bundle' + (index - 1) + '.js'));
+                            }
                         });
-                        build.onEnd(() => { counts[index]++; if (index === 1) rebuilt?.(); });
+                        build.onEnd(() => {
+                            counts[index]++;
+                            if (index === 1) {
+                                rebuilt?.();
+                            }
+                        });
                     }
                 }]
             }
         }));
         try {
             await autoEsbuildOrWatch(bundles);
-            for (const index of [0, 1, 2]) await fs.access(path.join(root, 'esbuild.bundle' + index + '.meta.json'));
+            for (const index of [0, 1, 2]) {
+                await fs.access(path.join(root, 'esbuild.bundle' + index + '.meta.json'));
+            }
+
             assert.equal(process.listenerCount('SIGTERM'), before + 1);
-            const updated = new Promise(resolve => { rebuilt = resolve; });
+            const updated = new Promise(resolve => {
+                rebuilt = resolve;
+            });
             await fs.writeFile(path.join(root, 'watched.ts'), 'export const value = "updated";');
             await updated;
             assert.deepEqual(counts, [1, 2, 1]);
             rebuilt = undefined;
             process.emit('SIGTERM');
             assert.equal(process.listenerCount('SIGTERM'), before);
+
             await assert.rejects(autoEsbuildOrWatch([
                 bundles[1],
-                { name: 'syntax', config: { stdin: { contents: 'invalid syntax =', loader: 'js' }, write: false, logLevel: 'silent' } }
+                {
+                    name: 'syntax',
+                    config: {
+                        stdin: { contents: 'invalid syntax =', loader: 'js' },
+                        write: false,
+                        logLevel: 'silent'
+                    }
+                }
             ]), /Failed to build bundle "syntax":.*Expected/s);
             assert.equal(process.listenerCount('SIGTERM'), before);
+
             await assert.rejects(autoEsbuildOrWatch([
                 bundles[2],
-                { name: 'setup', config: { plugins: [{ name: 'broken-setup', setup() { throw new Error('setup failed'); } }], logLevel: 'silent' } }
+                {
+                    name: 'setup',
+                    config: {
+                        plugins: [{
+                            name: 'broken-setup',
+                            setup() { throw new Error('setup failed'); }
+                        }],
+                        logLevel: 'silent'
+                    }
+                }
             ]), /Failed to build bundle "setup":.*setup failed/s);
             assert.equal(process.listenerCount('SIGTERM'), before);
+
             await fs.mkdir(path.join(root, 'esbuild.blocked-metadata.meta.json'));
             await assert.rejects(autoEsbuildOrWatch([
                 { ...bundles[2], name: 'blocked-metadata' }
             ]), /Failed to build bundle "blocked-metadata":.*(EISDIR|EPERM)/s);
             assert.equal(process.listenerCount('SIGTERM'), before);
+
             await autoEsbuildOrWatch([
-                { name: 'stop', config: { ...bundles[0].config, plugins: [{
-                    name: 'stop-during-startup',
-                    setup(build) { build.onStart(() => { process.emit('SIGTERM'); }); }
-                }] } },
-                { name: 'must-not-start', config: { plugins: [{
+                {
+                    name: 'stop',
+                    config: {
+                        ...bundles[0].config,
+                        plugins: [{
+                            name: 'stop-during-startup',
+                            setup(build) {
+                                build.onStart(() => { process.emit('SIGTERM'); });
+                            }
+                        }]
+                    }
+                },
+                {
                     name: 'must-not-start',
-                    setup() { throw new Error('Started after shutdown'); }
-                }] } }
+                    config: {
+                        plugins: [{
+                            name: 'must-not-start',
+                            setup() { throw new Error('Started after shutdown'); }
+                        }]
+                    }
+                }
             ]);
             assert.equal(process.listenerCount('SIGTERM'), before);
             console.log('watch cleanup verified');

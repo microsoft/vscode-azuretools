@@ -23,37 +23,21 @@ export interface LinkTestCacheResult {
     action: 'created' | 'unchanged' | 'replaced';
 }
 
-function overlaps(first: string, second: string): boolean {
-    const relative = path.relative(first, second);
-    return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
-}
-
-async function realpathOrMissing(file: string): Promise<string> {
-    try {
-        return await fs.realpath(file);
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-            const parent = path.dirname(file);
-            if (parent !== file) {
-                return path.join(await realpathOrMissing(parent), path.basename(file));
-            }
-        }
-        throw error;
-    }
-}
-
 /** Explicitly shares the test download directory. Linked tests must not run concurrently. */
 export async function linkVscodeTestCache(options: LinkTestCacheOptions = {}): Promise<LinkTestCacheResult> {
     if (options.extensionDir?.trim() === '' || options.cacheDir?.trim() === '') {
         throw new Error('Test-cache directories must not be empty.');
     }
+
     const extensionDir = await fs.realpath(path.resolve(options.extensionDir ?? process.cwd()));
     if (!(await fs.stat(extensionDir)).isDirectory()) {
         throw new Error(`Extension directory is not a directory: ${extensionDir}`);
     }
+
     const linkPath = path.join(extensionDir, '.vscode-test');
-    const requestedCache = path.resolve(options.cacheDir ?? (process.env.VSCODE_TEST_CACHE_DIR?.trim() || path.join(homedir(), '.vscode-test-cache')));
-    const cacheDir = await realpathOrMissing(requestedCache);
+    const requestedCache = options.cacheDir
+        ?? (process.env.VSCODE_TEST_CACHE_DIR?.trim() || path.join(homedir(), '.vscode-test-cache'));
+    const cacheDir = await realpathOrMissing(path.resolve(requestedCache));
     if (overlaps(linkPath, cacheDir) || overlaps(cacheDir, linkPath)) {
         throw new Error('The test cache must not contain, equal, or be contained by the .vscode-test link.');
     }
@@ -76,18 +60,26 @@ export async function linkVscodeTestCache(options: LinkTestCacheOptions = {}): P
     if (previousTarget !== undefined && !sameTarget && !options.replaceExistingLink) {
         throw new Error(`The test-cache link points at ${previousTarget}; use replaceExistingLink or --replace to change it.`);
     }
+
     await fs.mkdir(cacheDir, { recursive: true });
     if (!(await fs.stat(cacheDir)).isDirectory()) {
         throw new Error(`Test cache is not a directory: ${cacheDir}`);
     }
+
     if (sameTarget) {
         return { linkPath, cacheDir, action: 'unchanged' };
     }
+
     if (previousTarget === undefined) {
         await fs.symlink(cacheDir, linkPath, 'junction');
         return { linkPath, cacheDir, action: 'created' };
     }
 
+    await replaceCacheLink(linkPath, cacheDir, previousTarget);
+    return { linkPath, cacheDir, action: 'replaced' };
+}
+
+async function replaceCacheLink(linkPath: string, cacheDir: string, previousTarget: string): Promise<void> {
     // Create the replacement before touching the old link; restore it if the final rename fails.
     const replacement = `${linkPath}-${randomUUID()}`;
     await fs.symlink(cacheDir, replacement, 'junction');
@@ -99,8 +91,13 @@ export async function linkVscodeTestCache(options: LinkTestCacheOptions = {}): P
             try {
                 await fs.symlink(previousTarget, linkPath, 'junction');
             } catch (restoreError) {
-                throw new AggregateError([error, restoreError], `Failed to replace and restore test-cache link: ${linkPath}`, { cause: restoreError });
+                throw new AggregateError(
+                    [error, restoreError],
+                    `Failed to replace and restore test-cache link: ${linkPath}`,
+                    { cause: restoreError },
+                );
             }
+
             throw error;
         }
     } catch (error) {
@@ -108,10 +105,40 @@ export async function linkVscodeTestCache(options: LinkTestCacheOptions = {}): P
             await fs.unlink(replacement);
         } catch (cleanupError) {
             if (!(cleanupError instanceof Error && 'code' in cleanupError && cleanupError.code === 'ENOENT')) {
-                throw new AggregateError([error, cleanupError], `Failed to clean up test-cache replacement: ${replacement}`, { cause: cleanupError });
+                throw new AggregateError(
+                    [error, cleanupError],
+                    `Failed to clean up test-cache replacement: ${replacement}`,
+                    { cause: cleanupError },
+                );
             }
         }
+
         throw error;
     }
-    return { linkPath, cacheDir, action: 'replaced' };
+}
+
+async function realpathOrMissing(file: string): Promise<string> {
+    try {
+        return await fs.realpath(file);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+            const parent = path.dirname(file);
+            if (parent !== file) {
+                return path.join(await realpathOrMissing(parent), path.basename(file));
+            }
+        }
+
+        throw error;
+    }
+}
+
+function overlaps(first: string, second: string): boolean {
+    const relative = path.relative(first, second);
+
+    return relative === ''
+        || (
+            relative !== '..'
+            && !relative.startsWith(`..${path.sep}`)
+            && !path.isAbsolute(relative)
+        );
 }

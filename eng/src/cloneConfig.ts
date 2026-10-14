@@ -8,9 +8,11 @@ export function cloneConfig<T>(value: T): T {
     if (Array.isArray(value)) {
         return (value as unknown[]).map(item => cloneConfig(item)) as T;
     }
+
     if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
         const entries: [string, unknown][] = Object.entries(value);
         return Object.fromEntries(entries.map(([key, item]) => [key, cloneConfig(item)])) as T;
     }
+
     return value;
 }

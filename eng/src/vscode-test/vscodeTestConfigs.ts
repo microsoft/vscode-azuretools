@@ -15,7 +15,7 @@ import { cloneConfig } from '../cloneConfig.js';
  */
 export const baseConfig: Partial<VscodeTestConfig> = {
     mocha: {
-        // 'test-globals' declares mocha's globals and registers the global `expect` and the chai-as-promised plugin, since this test runner does not load the mocha hooks
+        // Desktop tests bypass the Mocha hooks, so preload the shared declarations and Chai assertions.
         require: ['tsx', '@microsoft/vscode-azext-eng/mocha/test-globals'],
         timeout: 10000,
     },

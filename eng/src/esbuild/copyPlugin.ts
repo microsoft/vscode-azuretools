@@ -91,6 +91,7 @@ function resolveAsset(asset: CopyAsset, workingDir: string, outputDir: string | 
 }
 
 async function copyAsset(asset: ResolvedCopyAsset): Promise<boolean> {
+    // Finish globbing before writes so newly copied files cannot become source matches.
     const files: string[] = [];
     for await (const file of fs.glob(asset.include, { cwd: asset.from })) {
         files.push(file);

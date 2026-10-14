@@ -122,8 +122,14 @@ export interface WebviewEsbuildConfig extends EsbuildConfig {
 /** Selects browser settings from the usual debug/watch flags and appends caller-supplied plugins. */
 export function createWebviewEsbuildConfig(overrides: WebviewEsbuildConfig = {}): EsbuildConfig {
     const { sass = true, ...options } = overrides;
-    const config = isAutoWatch ? azExtWebviewEsbuildConfigDev
-        : isAutoDebug ? azExtWebviewEsbuildConfigDebug : azExtWebviewEsbuildConfigProd;
+    let config = azExtWebviewEsbuildConfigProd;
+
+    if (isAutoWatch) {
+        config = azExtWebviewEsbuildConfigDev;
+    } else if (isAutoDebug) {
+        config = azExtWebviewEsbuildConfigDebug;
+    }
+
     return {
         ...config,
         ...(isAutoDebug ? { metafile: true } : {}),
@@ -246,7 +252,7 @@ export interface EsbuildBundle {
  */
 export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): EsbuildBundle[] {
     let extensionConfig: EsbuildConfig;
-    let telemetryConfig: EsbuildConfig | undefined;
+
     if (isAutoWatch) {
         extensionConfig = {
             ...(esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev),
@@ -258,14 +264,18 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
         extensionConfig = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }
 
+    const bundles: EsbuildBundle[] = [];
+
     if (telemetry) {
-        telemetryConfig = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
+        bundles.push({
+            name: 'telemetry',
+            config: esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig,
+            watch: false,
+        });
     }
 
-    return [
-        ...(telemetryConfig ? [{ name: 'telemetry', config: telemetryConfig, watch: false }] : []),
-        { name: 'extension', config: extensionConfig },
-    ];
+    bundles.push({ name: 'extension', config: extensionConfig });
+    return bundles;
 }
 
 /**
@@ -282,15 +292,15 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
     const progress = createBuildProgress();
     const contexts: BuildContext[] = [];
     let stopped = false;
-    let stopInitial: (() => void) | undefined;
+    let releaseInitialBuildWait: (() => void) | undefined;
     const shutdown = new Promise<void>(resolve => {
-        stopInitial = resolve;
+        releaseInitialBuildWait = resolve;
     });
 
     async function dispose(): Promise<void> {
         stopped = true;
         progress.stop();
-        stopInitial?.();
+        releaseInitialBuildWait?.();
         process.off('SIGINT', stop);
         process.off('SIGTERM', stop);
         await Promise.all(contexts.splice(0).map(ctx => ctx.dispose()));

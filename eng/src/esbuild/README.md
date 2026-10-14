@@ -159,9 +159,12 @@ import {
 } from '@microsoft/vscode-azext-eng/esbuild';
 await autoEsbuildOrWatch([
     ...autoSelectEsbuildConfig(),
-    { name: 'webview', config: createWebviewEsbuildConfig({
-        entryPoints: { views: './src/webview/webviewEntry.tsx' },
-    }) },
+    {
+        name: 'webview',
+        config: createWebviewEsbuildConfig({
+            entryPoints: { views: './src/webview/webviewEntry.tsx' },
+        }),
+    },
 ]);
 ```
 

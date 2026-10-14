@@ -235,13 +235,13 @@ export function importRestrictionsRuleConfig(options: ImportRestrictionsOptions)
                         allowTypeImports: true,
                         message: 'Only type imports from this module are allowed.',
                     })),
-                    patterns: options.lazyPatterns?.length ? [
-                        {
+                    patterns: options.lazyPatterns?.length
+                        ? [{
                             group: options.lazyPatterns,
                             message: 'Please lazily import this package within the function that uses it to reduce extension activation time.',
                             allowTypeImports: true,
-                        },
-                    ] : [],
+                        }]
+                        : [],
                 },
             ],
         },

@@ -16,10 +16,12 @@ async function main(): Promise<void> {
             help: { type: 'boolean', default: false },
         },
     });
+
     if (values.help) {
         console.log('Usage: azext-link-test-cache [--extension-dir PATH] [--cache-dir PATH] [--replace]');
         return;
     }
+
     const result = await linkVscodeTestCache({
         extensionDir: values['extension-dir'],
         cacheDir: values['cache-dir'],

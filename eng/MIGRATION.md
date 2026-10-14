@@ -135,6 +135,8 @@ Depending on how your tests run, you will do one of the below.
 Both approaches set up your test globals for you:
 - Mocha's globals (`describe`, `it`, `suite`, `test`, ...) are declared for you.
 - Chai's `expect` is registered as a global, so your tests can use `expect(...)` without importing it.
+- Chai's `should` helpers and `Object.prototype.should` getter are registered, enabling
+  `should.exist(value)` and `value.should.equal(expected)` assertions.
 - The [chai-as-promised](https://www.chaijs.com/plugins/chai-as-promised/) plugin is registered, so assertions like
   `await expect(thing()).to.be.rejectedWith(/.../)` are available.
 
