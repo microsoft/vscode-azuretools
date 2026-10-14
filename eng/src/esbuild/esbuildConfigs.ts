@@ -264,17 +264,21 @@ export interface EsbuildBundle {
  * @param esm (Optional, default: false) True if the ESM configs should be returned
  * @param telemetry (Optional, default: true) True if the telemetry config should be included
  * @returns
- * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
- * - else if `--watch` is passed as an argument, returns the dev config + optional telemetry config
+ * - if `--watch` is passed as an argument, returns the dev config + optional telemetry config
+ * - else if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
  * - else, returns the prod config + optional telemetry config
+ * Debug independently enables extension metadata, including in watch mode.
  */
 export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): EsbuildBundle[] {
     let extensionConfig: EsbuildConfig;
     let telemetryConfig: EsbuildConfig | undefined;
-    if (isAutoDebug) {
+    if (isAutoWatch) {
+        extensionConfig = {
+            ...(esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev),
+            ...(isAutoDebug ? { metafile: true } : {}),
+        };
+    } else if (isAutoDebug) {
         extensionConfig = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
-    } else if (isAutoWatch) {
-        extensionConfig = esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
     } else {
         extensionConfig = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }

@@ -443,11 +443,21 @@ describe('Webview builds', () => {
         createWebviewEsbuildConfig({ sass: false }).should.have.property('plugins').with.lengthOf(1);
     });
 
-    it('browser factory selects production, watch, and debug settings from shared flags', async () => {
+    it('browser and extension factories select consistent production, watch, and debug settings', async () => {
         const script = `
-        import { createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
-        const config = createWebviewEsbuildConfig();
-        console.log(JSON.stringify({ minify: config.minify, sourcemap: config.sourcemap, metafile: config.metafile }));
+        import assert from 'node:assert/strict';
+        import { autoSelectEsbuildConfig, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
+        const configs = [createWebviewEsbuildConfig()];
+        for (const esm of [false, true]) {
+            const [telemetry, extension] = autoSelectEsbuildConfig(esm);
+            assert.equal(telemetry.watch, false);
+            assert.equal(telemetry.config.minify, true);
+            assert.equal(telemetry.config.sourcemap, false);
+            assert.equal(telemetry.config.metafile, undefined);
+            assert.equal(extension.config.format, esm ? 'esm' : 'cjs');
+            configs.push(extension.config);
+        }
+        console.log(JSON.stringify(configs.map(config => ({ minify: config.minify, sourcemap: config.sourcemap, metafile: config.metafile }))));
     `;
         for (const [args, debug, expected] of [
             [[], '0', { minify: true, sourcemap: false }],
@@ -458,7 +468,7 @@ describe('Webview builds', () => {
             const env = { ...process.env };
             env.DEBUG_ESBUILD = debug;
             const result = await exec(process.execPath, ['--input-type=module', '-e', script, '--', ...args], { cwd: packageDir, env });
-            result.stdout.trim().should.equal(JSON.stringify(expected));
+            result.stdout.trim().should.equal(JSON.stringify([expected, expected, expected]));
         }
     });
 

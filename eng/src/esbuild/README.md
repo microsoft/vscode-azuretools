@@ -189,6 +189,10 @@ awaits each initial build, including in watch mode; subsequent rebuilds are inde
 Telemetry still builds only once. SIGINT/SIGTERM and initialization failures dispose
 all watch contexts.
 
+Both extension and webview factories use unminified builds with linked source maps
+when `--watch` is set, even with `DEBUG_ESBUILD` enabled. Debug independently adds
+extension and webview metadata; telemetry keeps its production settings.
+
 Metafiles are written after builds and rebuilds to `esbuild.<bundle index>.meta.json`
 under `absWorkingDir` or cwd. Set a bundle's `metafilePath` for a custom destination.
 
