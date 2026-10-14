@@ -5,11 +5,11 @@
 
 import { type Plugin } from 'esbuild';
 import { dirname } from 'path';
-import { type Options } from 'sass';
+import { type Options as SassCompileOptions } from 'sass';
 import { fileURLToPath } from 'url';
 
 /** Compiles Sass on demand; consumers selecting this plugin must install the optional Sass peer. */
-export function sassPlugin(options: Options<'async'> = {}): Plugin {
+export function sassPlugin(options: SassCompileOptions<'async'> = {}): Plugin {
     return {
         name: 'sass',
         setup(build) {
