@@ -16,21 +16,7 @@ export function sassPlugin(options: Options<'async'> = {}): Plugin {
             const dependencies = new Map<string, string[]>();
 
             build.onLoad({ filter: /\.s[ac]ss$/ }, async args => {
-                const sass = await import('sass').catch((error: unknown) => {
-                    if (
-                        error instanceof Error
-                        && 'code' in error
-                        && error.code === 'ERR_MODULE_NOT_FOUND'
-                        && error.message.includes("Cannot find package 'sass'")
-                    ) {
-                        throw new Error(
-                            'Sass stylesheets require the optional "sass" peer dependency. Install it with npm install --save-dev sass.',
-                            { cause: error },
-                        );
-                    }
-
-                    throw error;
-                });
+                const sass = await loadSass();
 
                 try {
                     const result = await sass.compileAsync(args.path, options);
@@ -66,4 +52,22 @@ export function sassPlugin(options: Options<'async'> = {}): Plugin {
             });
         },
     };
+}
+
+function loadSass(): Promise<typeof import('sass')> {
+    return import('sass').catch((error: unknown) => {
+        if (
+            error instanceof Error
+            && 'code' in error
+            && error.code === 'ERR_MODULE_NOT_FOUND'
+            && error.message.includes("Cannot find package 'sass'")
+        ) {
+            throw new Error(
+                'Sass stylesheets require the optional "sass" peer dependency. Install it with npm install --save-dev sass.',
+                { cause: error },
+            );
+        }
+
+        throw error;
+    });
 }
