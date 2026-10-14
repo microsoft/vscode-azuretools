@@ -76,32 +76,11 @@ export const extensionEsbuildConfig: EsbuildConfig = {
                 },
             ],
         }),
-        buildLogPlugin(),
     ],
     alias: {
         '@vscode/extension-telemetry': './extension-telemetry.bundle.js',
     },
 };
-
-function buildLogPlugin(): Plugin {
-    return {
-        name: 'start-stop-log',
-        setup(build) {
-            let start: bigint;
-            build.onStart(() => {
-                // Watch messages must match the existing VS Code problem matcher.
-                console.log(isAutoWatch ? '[watch] build started' : 'esbuild started');
-                start = process.hrtime.bigint();
-            });
-            build.onEnd(() => {
-                const elapsed = (process.hrtime.bigint() - start) / 1000000n;
-                console.log(isAutoWatch
-                    ? `[watch] build finished in ${elapsed} milliseconds`
-                    : `esbuild finished in ${elapsed} milliseconds`);
-            });
-        },
-    };
-}
 
 export const baseWebviewEsbuildConfig: EsbuildConfig = {
     bundle: true,
@@ -151,7 +130,6 @@ export function createWebviewEsbuildConfig(overrides: WebviewEsbuildConfig = {})
         ...options,
         loader: { ...config.loader, ...options.loader },
         plugins: [
-            buildLogPlugin(),
             ...(sass ? [sassPlugin()] : []),
             ...(options.plugins ?? []),
         ],
@@ -297,6 +275,11 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
 export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Promise<void> {
     validateBundleNames(bundles);
 
+    if (bundles.length === 0) {
+        return;
+    }
+
+    const logger = createBuildLogger();
     const contexts: BuildContext[] = [];
     let stopped = false;
     let stopInitial: (() => void) | undefined;
@@ -306,6 +289,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
     async function dispose(): Promise<void> {
         stopped = true;
+        logger.stop();
         stopInitial?.();
         process.off('SIGINT', stop);
         process.off('SIGTERM', stop);
@@ -334,7 +318,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
             const options = {
                 ...config,
-                plugins: [...(config.plugins ?? []), metafilePlugin(bundle)],
+                plugins: [...(config.plugins ?? []), metafilePlugin(bundle), logger.plugin],
             };
 
             try {
@@ -385,11 +369,76 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                 );
             }
         }
+
+        logger.finishInitialization();
     } catch (error) {
         await dispose();
 
         throw error;
     }
+}
+
+function createBuildLogger() {
+    let initializing = true;
+    let active = 0;
+    let stopped = false;
+    let start: bigint;
+
+    function logStart(): void {
+        // Watch messages must match the existing VS Code problem matcher.
+        console.log(isAutoWatch ? '[watch] build started' : 'esbuild started');
+        start = process.hrtime.bigint();
+    }
+
+    function logFinishIfIdle(): void {
+        if (initializing || active !== 0 || stopped) {
+            return;
+        }
+
+        const elapsed = (process.hrtime.bigint() - start) / 1000000n;
+        console.log(isAutoWatch
+            ? `[watch] build finished in ${elapsed} milliseconds`
+            : `esbuild finished in ${elapsed} milliseconds`);
+    }
+
+    const plugin: Plugin = {
+        name: 'start-stop-log',
+        setup(build) {
+            build.onStart(() => {
+                if (stopped) {
+                    return;
+                }
+
+                if (!initializing && active === 0) {
+                    logStart();
+                }
+
+                active++;
+            });
+
+            build.onEnd(() => {
+                if (stopped) {
+                    return;
+                }
+
+                active--;
+                logFinishIfIdle();
+            });
+        },
+    };
+
+    logStart();
+
+    return {
+        plugin,
+        finishInitialization(): void {
+            initializing = false;
+            logFinishIfIdle();
+        },
+        stop(): void {
+            stopped = true;
+        },
+    };
 }
 
 function metafilePlugin(bundle: EsbuildBundle): Plugin {

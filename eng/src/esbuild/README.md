@@ -146,7 +146,7 @@ alias, the require banner, or extension assets.
 
 `createWebviewEsbuildConfig` selects the appropriate preset using the same
 `DEBUG_ESBUILD` and `--watch` settings as extension builds. It merges loader overrides
-and appends supplied plugins to the shared build logger and default Sass plugin. Entry points, React/JSX
+and appends supplied plugins to the default Sass plugin. Entry points, React/JSX
 configuration, and output naming remain the consumer's responsibility.
 Watch mode is unminified with linked source maps, including when debug is enabled;
 debug adds metadata independently.
@@ -188,6 +188,11 @@ Append any additional bundles in the order they must initially build. The runner
 awaits each initial build, including in watch mode; subsequent rebuilds are independent.
 Telemetry still builds only once. SIGINT/SIGTERM and initialization failures dispose
 all watch contexts.
+
+The runner owns the VS Code problem-matcher start/finish messages. One pair covers
+the complete initial sequence; watch rebuilds emit a finish only when all active
+bundles and their post-build plugins have completed. Standalone configs do not emit
+these task-readiness markers.
 
 Both extension and webview factories use unminified builds with linked source maps
 when `--watch` is set, even with `DEBUG_ESBUILD` enabled. Debug independently adds

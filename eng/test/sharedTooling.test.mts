@@ -306,6 +306,7 @@ describe('Ordered builds', () => {
         defaults[0].should.have.property('watch', false);
         defaults[0].config.should.have.property('metafile', false);
         autoSelectEsbuildConfig(false, false).should.have.lengthOf(1);
+        const messages: string[] = [];
         const bundles = [0, 1, 2].map(index => ({
             name: `bundle${index}`,
             config: {
@@ -321,12 +322,25 @@ describe('Ordered builds', () => {
                                 (await fs.readFile(path.join(root, `finished${index - 1}`), 'utf8')).should.equal('done');
                             }
                         });
-                        build.onEnd(async () => { await write(`finished${index}`, 'done'); });
+                        build.onEnd(async () => {
+                            await write(`finished${index}`, 'done');
+                            messages.filter(message => message.startsWith('esbuild finished')).should.have.lengthOf(0);
+                        });
                     },
                 } satisfies Plugin],
             },
         }));
-        await autoEsbuildOrWatch(bundles);
+        const log = console.log;
+        console.log = (...args: unknown[]) => { messages.push(args.join(' ')); };
+        try {
+            await autoEsbuildOrWatch(bundles);
+        } finally {
+            console.log = log;
+        }
+
+        messages.should.have.lengthOf(2);
+        messages[0].should.equal('esbuild started');
+        messages[1].should.match(/^esbuild finished in \d+ milliseconds$/);
         await fs.stat(path.join(root, 'esbuild.bundle0.meta.json')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
         for (const index of [1, 2]) {
             const metadata = JSON.parse(await fs.readFile(path.join(root, `esbuild.bundle${index}.meta.json`), 'utf8')) as { outputs: Record<string, unknown> };
@@ -366,6 +380,116 @@ describe('Ordered builds', () => {
             error.message.should.match(/Failed to build bundle "broken-extension":.*Expected/s);
             error.should.have.property('cause').that.is.an.instanceOf(Error);
         }
+    });
+
+    it('coordinates readiness across initial builds, overlapping rebuilds, and error recovery', async () => {
+        const { root } = await fixture();
+        const script = `
+        import assert from 'node:assert/strict';
+        import fs from 'node:fs/promises';
+        import path from 'node:path';
+        import { autoEsbuildOrWatch, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
+        const root = ${JSON.stringify(root)};
+        const messages = [];
+        const log = console.log;
+        let finishedCycle;
+        console.log = (...args) => {
+            const message = args.join(' ');
+            log(...args);
+            if (message.startsWith('[watch] build ')) {
+                messages.push(message);
+                if (message.startsWith('[watch] build finished')) finishedCycle?.();
+            }
+        };
+        const starts = [Promise.withResolvers(), Promise.withResolvers()];
+        const holds = [Promise.withResolvers(), Promise.withResolvers()];
+        const ends = [Promise.withResolvers(), Promise.withResolvers()];
+        const errors = [0, 0];
+        let overlapping = false;
+        let initialized = false;
+        const bundles = [];
+        for (const index of [0, 1]) {
+            await fs.writeFile(path.join(root, 'entry' + index + '.ts'), 'export const value = 1;');
+            bundles.push({
+                name: 'view' + index,
+                config: createWebviewEsbuildConfig({
+                    absWorkingDir: root,
+                    entryPoints: ['entry' + index + '.ts'],
+                    outdir: 'dist/view' + index,
+                    metafile: true,
+                    logLevel: 'silent',
+                    plugins: [{
+                        name: 'readiness-test',
+                        setup(build) {
+                            build.onStart(async () => {
+                                if (overlapping) {
+                                    starts[index].resolve();
+                                    await holds[index].promise;
+                                }
+                            });
+                            build.onEnd(result => {
+                                errors[index] = result.errors.length;
+                                if (!initialized) {
+                                    assert.equal(messages.filter(message => message.includes('finished')).length, 0);
+                                }
+                                if (overlapping) ends[index].resolve();
+                            });
+                        }
+                    }]
+                })
+            });
+        }
+        function nextFinish() {
+            return new Promise(resolve => { finishedCycle = resolve; });
+        }
+        function assertOneCycle() {
+            assert.equal(messages.length, 2);
+            assert.equal(messages[0], '[watch] build started');
+            assert.match(messages[1], /^\\[watch\\] build finished in \\d+ milliseconds$/);
+        }
+        try {
+            await autoEsbuildOrWatch(bundles);
+            initialized = true;
+            assertOneCycle();
+            messages.length = 0;
+            overlapping = true;
+            const overlapFinished = nextFinish();
+            await Promise.all([0, 1].map(index => fs.writeFile(path.join(root, 'entry' + index + '.ts'), 'export const value = 2;')));
+            await Promise.all(starts.map(start => start.promise));
+            assert.deepEqual(messages, ['[watch] build started']);
+            holds[0].resolve();
+            await ends[0].promise;
+            assert.deepEqual(messages, ['[watch] build started']);
+            holds[1].resolve();
+            await overlapFinished;
+            assertOneCycle();
+            for (const index of [0, 1]) {
+                const metadata = JSON.parse(await fs.readFile(path.join(root, 'esbuild.view' + index + '.meta.json'), 'utf8'));
+                const output = 'dist/view' + index + '/entry' + index + '.js';
+                const content = await fs.readFile(path.join(root, output));
+                assert.equal(metadata.outputs[output].bytes, content.length);
+                assert.match(content.toString(), /value = 2/);
+            }
+            overlapping = false;
+            messages.length = 0;
+            const failed = nextFinish();
+            await fs.writeFile(path.join(root, 'entry0.ts'), 'invalid syntax =');
+            await failed;
+            assertOneCycle();
+            assert.equal(errors[0], 1);
+            messages.length = 0;
+            const recovered = nextFinish();
+            await fs.writeFile(path.join(root, 'entry0.ts'), 'export const value = 3;');
+            await recovered;
+            assertOneCycle();
+            assert.equal(errors[0], 0);
+            console.log('aggregate readiness verified');
+        } finally {
+            process.emit('SIGTERM');
+        }
+    `;
+        const result = await exec(process.execPath, ['--input-type=module', '-e', script, '--', '--watch'], { cwd: packageDir, timeout: 1800 });
+        result.stdout.should.include('aggregate readiness verified');
     });
 
     it('awaits initial watch builds and disposes every context on shutdown or a later failure', async () => {
@@ -473,13 +597,13 @@ describe('Webview builds', () => {
         should.exist(config.plugins);
         config.loader!.should.have.property('.css', 'css');
         config.loader!.should.have.property('.svg', 'file');
-        config.plugins![2].should.equal(plugin);
+        config.plugins![1].should.equal(plugin);
         await build(config);
         pluginRan.should.equal(true);
         (await fs.stat(path.join(root, 'dist/entry.js'))).isFile().should.equal(true);
         config.plugins!.push(plugin);
-        createWebviewEsbuildConfig().should.have.property('plugins').with.lengthOf(2);
-        createWebviewEsbuildConfig({ sass: false }).should.have.property('plugins').with.lengthOf(1);
+        createWebviewEsbuildConfig().should.have.property('plugins').with.lengthOf(1);
+        createWebviewEsbuildConfig({ sass: false }).should.have.property('plugins').with.lengthOf(0);
     });
 
     it('browser and extension factories select consistent production, watch, and debug settings', async () => {
