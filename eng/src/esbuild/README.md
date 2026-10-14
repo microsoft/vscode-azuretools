@@ -31,11 +31,11 @@ Requires Node.js 22.17.0 or later. Asset copying uses the native filesystem glob
    dependency for a separate type-checking script:
     ```diff
         "scripts": {
-    +        "check": "node ./node_modules/@typescript/native/bin/tsc --noEmit"
+    +        "check": "tsgo --noEmit"
         }
     ```
-   Invoke the alias explicitly to avoid selecting TypeScript 6's `tsc`. For pnpm
-   hoisting and watch commands, see [TypeScript compilers](../../MIGRATION.md#typescript-compilers).
+   `tsgo` selects the native compiler without competing for TypeScript 6's `tsc`
+   or requiring hoisting. See [TypeScript compilers](../../MIGRATION.md#typescript-compilers).
 
 # Normal Usage
 

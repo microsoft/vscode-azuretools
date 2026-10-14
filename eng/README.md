@@ -17,10 +17,9 @@ This package supplies native TypeScript 7 as the `@typescript/native` dependency
 for consumer builds and type checking. TypeScript 6 remains installed as
 `typescript` for the compiler API required by typescript-eslint.
 
-Update consumer scripts to invoke the native compiler explicitly rather than bare
-`tsc`, since both packages provide that binary. See the
-[build, watch, and typecheck examples](./MIGRATION.md#typescript-compilers), including
-the pnpm hoisting configuration.
+Use eng's `tsgo` command rather than bare `tsc`, since both compiler packages provide
+that binary. `tsgo` selects the native compiler without requiring consumer hoisting.
+See the [build, watch, and typecheck examples](./MIGRATION.md#typescript-compilers).
 
 # Tests
 

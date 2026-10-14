@@ -80,15 +80,15 @@ alias. Upgrading to 7.1 alone will not guarantee ESLint compatibility.
 
 Both the native alias and the API-bearing `typescript` package expose a `tsc`
 binary and can compete for the same `.bin` entry. Installing eng does not
-automatically switch existing scripts to TypeScript 7. Replace bare `tsc` (including
-`npx tsc` or `npm exec tsc`) with the explicit native compiler path, preserving
-your existing arguments:
+automatically switch existing scripts to TypeScript 7. Use eng's `tsgo` command,
+which resolves the native compiler relative to eng rather than the consumer.
+Replace bare `tsc` with `tsgo`, preserving your existing arguments:
 
 ```json
 "scripts": {
-    "build": "node ./node_modules/@typescript/native/bin/tsc",
-    "build:watch": "node ./node_modules/@typescript/native/bin/tsc --watch",
-    "check": "node ./node_modules/@typescript/native/bin/tsc --noEmit"
+    "build": "tsgo",
+    "build:watch": "tsgo --watch",
+    "check": "tsgo --noEmit"
 }
 ```
 
@@ -97,20 +97,12 @@ for type checking; run both from your existing build script. Add `--watch` to th
 command for watch-mode type checking. Keep existing `--project`, `--build`, and
 other compiler flags where applicable.
 
-With pnpm's isolated layout, expose the transitive native alias by adding this entry
-to the existing `publicHoistPattern` in `pnpm-workspace.yaml`:
-
-```yaml
-publicHoistPattern:
-  - '@typescript/native'
-```
-
-Run `pnpm install` after updating that configuration. The root-level native compiler
-path above is then available; invoke it from the workspace root (or adjust the
-relative path for scripts in child workspaces). Keep native TypeScript under its
-alias, not under `typescript`, so ESLint still resolves TypeScript 6. If a workspace
-deliberately installs the alias directly, bare `tsc` can work when there is no binary
-collision, but the explicit path is recommended for consistent compiler selection.
+The command preserves the caller's working directory, compiler arguments, exit status,
+and watch behavior. npm and pnpm expose it when eng is a direct dependency of the
+workspace running the script; the transitive native alias does not need to be hoisted.
+Existing explicit native compiler paths still work where the alias is accessible.
+Keep native TypeScript under its alias, not under `typescript`, so ESLint retains
+the compatible compiler API.
 
 TypeScript 6 and 7 no longer automatically include installed ambient type packages.
 List required globals explicitly in `compilerOptions.types`, such as `["node"]`

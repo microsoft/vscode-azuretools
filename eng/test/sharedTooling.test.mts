@@ -50,11 +50,40 @@ async function fixture() {
 }
 
 describe('TypeScript compilers', () => {
+    it('tsgo resolves a nested native compiler and preserves cwd, flags, and diagnostic exit status', async () => {
+        const { root, write } = await fixture();
+        const installed = path.join(root, 'node_modules/@microsoft/vscode-azext-eng');
+        const launcher = path.join(installed, 'dist/esm/src/typescript/tsgo.mjs');
+        await fs.mkdir(path.dirname(launcher), { recursive: true });
+        await fs.copyFile(path.join(packageDir, 'dist/esm/src/typescript/tsgo.mjs'), launcher);
+        const compiler = path.join(installed, 'node_modules/@typescript/native');
+        await fs.mkdir(path.dirname(compiler), { recursive: true });
+        await fs.symlink(path.join(packageDir, 'node_modules/@typescript/native'), compiler, 'junction');
+        const { stdout } = await exec(process.execPath, [launcher, '--version'], { cwd: root });
+        stdout.should.match(/Version 7\./);
+        await write('tsconfig.json', '{"compilerOptions":{"types":[],"strict":true},"include":["*.ts"]}');
+        await write('entry.ts', 'export const value: number = "invalid";');
+        try {
+            await exec(process.execPath, [launcher, '--noEmit', '--pretty', 'false'], { cwd: root });
+            should.fail('Expected a failing type check');
+        } catch (error) {
+            const failure = error as Error & { code: number; stdout: string };
+            failure.code.should.equal(1);
+            failure.stdout.should.match(/entry\.ts\(1,14\): error TS2322/);
+        }
+        await write('entry.ts', 'export const value: number = 1;');
+        await exec(process.execPath, [launcher, '--noEmit'], { cwd: root });
+        await fs.stat(path.join(root, 'entry.js')).should.be.rejectedWith(/ENOENT/);
+    });
+
     it('ships native TypeScript 7 for consumer builds while ESLint resolves the TypeScript 6 API', async () => {
         const manifest = JSON.parse(await fs.readFile(path.join(packageDir, 'package.json'), 'utf8')) as {
             dependencies: Record<string, string>;
             devDependencies: Record<string, string>;
+            bin: Record<string, string>;
         };
+        manifest.bin.tsgo.should.equal('./dist/esm/src/typescript/tsgo.mjs');
+        manifest.bin['azext-link-test-cache'].should.equal('./dist/cjs/src/vscode-test/linkTestCacheCli.js');
         manifest.dependencies['@typescript/native'].should.match(/^npm:typescript@7\./);
         manifest.dependencies.typescript.should.match(/^~6\./);
         manifest.devDependencies.should.not.have.property('@typescript/native');
