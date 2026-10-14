@@ -332,26 +332,9 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
             let completed: (() => void) | undefined;
             let failed: ((error: Error) => void) | undefined;
 
-            const metadata: Plugin = {
-                name: 'bundle-result',
-                setup(build) {
-                    build.onEnd(async result => {
-                        if (result.metafile) {
-                            const destination = path.resolve(
-                                config.absWorkingDir ?? process.cwd(),
-                                `esbuild.${bundle.name}.meta.json`,
-                            );
-
-                            await fs.mkdir(path.dirname(destination), { recursive: true });
-                            await fs.writeFile(destination, JSON.stringify(result.metafile));
-                        }
-                    });
-                },
-            };
-
             const options = {
                 ...config,
-                plugins: [...(config.plugins ?? []), metadata],
+                plugins: [...(config.plugins ?? []), metafilePlugin(bundle)],
             };
 
             try {
@@ -407,6 +390,27 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
         throw error;
     }
+}
+
+function metafilePlugin(bundle: EsbuildBundle): Plugin {
+    const config = bundle.config;
+
+    return {
+        name: 'bundle-result',
+        setup(build) {
+            build.onEnd(async result => {
+                if (result.metafile) {
+                    const destination = path.resolve(
+                        config.absWorkingDir ?? process.cwd(),
+                        `esbuild.${bundle.name}.meta.json`,
+                    );
+
+                    await fs.mkdir(path.dirname(destination), { recursive: true });
+                    await fs.writeFile(destination, JSON.stringify(result.metafile));
+                }
+            });
+        },
+    };
 }
 
 function validateBundleNames(bundles: readonly EsbuildBundle[]): void {
