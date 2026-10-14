@@ -49,7 +49,15 @@ async function fixture() {
 }
 
 describe('TypeScript compilers', () => {
-    it('builds use native TypeScript 7 while ESLint resolves the TypeScript 6 API', async () => {
+    it('ships native TypeScript 7 for consumer builds while ESLint resolves the TypeScript 6 API', async () => {
+        const manifest = JSON.parse(await fs.readFile(path.join(packageDir, 'package.json'), 'utf8')) as {
+            dependencies: Record<string, string>;
+            devDependencies: Record<string, string>;
+        };
+        manifest.dependencies['@typescript/native'].should.match(/^npm:typescript@7\./);
+        manifest.dependencies.typescript.should.match(/^~6\./);
+        manifest.devDependencies.should.not.have.property('@typescript/native');
+
         const parserRequire = createRequire(require.resolve('@typescript-eslint/parser'));
         const compiler: typeof import('typescript') = parserRequire('typescript');
         compiler.version.should.match(/^6\.0\./);

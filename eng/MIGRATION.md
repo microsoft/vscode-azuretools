@@ -7,6 +7,8 @@
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
 1. No, seriously, `npm i` now before you install the eng pkg in the next step, so that things get updated.
 1. Run `npm i --save-dev @microsoft/vscode-azext-eng` to install the latest eng package. Bye bye small package-lock.json.
+1. Update build, watch, and typecheck scripts to use the supplied native TypeScript 7
+   compiler. See [TypeScript compilers](#typescript-compilers).
 1. Update your .nvmrc to Node 22.17.0+, and use Node 22 typings for engineering and tests.
    This is the engineering-tools Node requirement; select your extension's minimum
    VS Code engine according to its runtime dependencies and API requirements.
@@ -60,9 +62,14 @@ Hard mode engage!
 
 # TypeScript Compilers
 
-This package supplies TypeScript 6 for the compatible compiler API required by
-typescript-eslint. Do not replace or hoist native TypeScript 7 under the name
-`typescript` into ESLint's dependency graph.
+Native TypeScript 7 is the default compiler for builds and type checking. This
+package supplies it as the regular dependency `@typescript/native`
+(`npm:typescript@7.0.2`), so consumers do not need to install a separate compiler.
+Remove redundant direct TypeScript dependencies and update scripts as shown below.
+
+This package also supplies TypeScript 6 as `typescript` for the compatible compiler
+API required by typescript-eslint. Do not replace or hoist native TypeScript 7
+under the name `typescript` into ESLint's dependency graph.
 
 **TODO:** Revisit this split when TypeScript 7.1 and compatible typescript-eslint
 support are available. The TypeScript team
@@ -71,36 +78,39 @@ Once typescript-eslint supports that API and version, consolidate on the native
 `typescript` package and remove the separate TypeScript 6 dependency and native
 alias. Upgrading to 7.1 alone will not guarantee ESLint compatibility.
 
-To opt into native TypeScript 7 builds, install it separately:
-
-```json
-"devDependencies": {
-    "@typescript/native": "npm:typescript@7.0.2"
-}
-```
-
 Both the native alias and the API-bearing `typescript` package expose a `tsc`
-binary. When both are installed directly in the same npm package, as they are in
-eng, they compete for the same `.bin` entry. Invoke the alias explicitly rather
-than relying on which executable npm links:
+binary and can compete for the same `.bin` entry. Installing eng does not
+automatically switch existing scripts to TypeScript 7. Replace bare `tsc` (including
+`npx tsc` or `npm exec tsc`) with the explicit native compiler path, preserving
+your existing arguments:
 
 ```json
 "scripts": {
+    "build": "node ./node_modules/@typescript/native/bin/tsc",
+    "build:watch": "node ./node_modules/@typescript/native/bin/tsc --watch",
     "check": "node ./node_modules/@typescript/native/bin/tsc --noEmit"
 }
 ```
 
-Use the same explicit compiler path for emitting builds and watch commands, keeping
-your existing arguments.
+For bundled extensions, keep esbuild as the emitter and use the `--noEmit` command
+for type checking; run both from your existing build script. Add `--watch` to that
+command for watch-mode type checking. Keep existing `--project`, `--build`, and
+other compiler flags where applicable.
 
-With pnpm, a consuming repository can use bare `tsc` when only the native alias is
-installed directly at the workspace root and the API-bearing TypeScript remains
-private to eng's dependency graph. This is how
-[vscode-azure](https://github.com/microsoft/vscode-azure/blob/8993a3c153ece31f79c4d8dac7a982ee4654c802/pnpm-workspace.yaml#L23-L32)
-avoids the binary collision: it keeps `typescript` out of `publicHoistPattern`,
-allowing ESLint to resolve its compatible package-local compiler API while build
-scripts find the root's native `tsc`. The explicit path is needed to disambiguate
-competing binaries, not because TypeScript 7 inherently requires it.
+With pnpm's isolated layout, expose the transitive native alias by adding this entry
+to the existing `publicHoistPattern` in `pnpm-workspace.yaml`:
+
+```yaml
+publicHoistPattern:
+  - '@typescript/native'
+```
+
+Run `pnpm install` after updating that configuration. The root-level native compiler
+path above is then available; invoke it from the workspace root (or adjust the
+relative path for scripts in child workspaces). Keep native TypeScript under its
+alias, not under `typescript`, so ESLint still resolves TypeScript 6. If a workspace
+deliberately installs the alias directly, bare `tsc` can work when there is no binary
+collision, but the explicit path is recommended for consistent compiler selection.
 
 TypeScript 6 and 7 no longer automatically include installed ambient type packages.
 List required globals explicitly in `compilerOptions.types`, such as `["node"]`

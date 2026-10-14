@@ -69,6 +69,7 @@
         "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
         "@types/mocha": "^10.0.10",
+        "@typescript/native": "npm:typescript@7.0.2",
         "chai": "^6.3.0",
         "chai-as-promised": "^8.0.2",
         "eslint": "^10.12.0",
@@ -106,7 +107,6 @@
     },
     "devDependencies": {
         "@types/node": "22.x",
-        "@typescript/native": "npm:typescript@7.0.2",
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",
         "esbuild": "*",

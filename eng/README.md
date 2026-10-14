@@ -13,10 +13,14 @@ In addition, universal and recommended configurations are provided. They can be 
 
 # TypeScript Compilers
 
-The ESLint configurations use TypeScript 6's compiler API. This package builds with
-native TypeScript 7, installed separately as the `@typescript/native` alias. Build
-scripts invoke that compiler explicitly because both packages provide a `tsc` binary.
-Consumers can opt into the same arrangement; see [migration guidance](./MIGRATION.md#typescript-compilers).
+This package supplies native TypeScript 7 as the `@typescript/native` dependency
+for consumer builds and type checking. TypeScript 6 remains installed as
+`typescript` for the compiler API required by typescript-eslint.
+
+Update consumer scripts to invoke the native compiler explicitly rather than bare
+`tsc`, since both packages provide that binary. See the
+[build, watch, and typecheck examples](./MIGRATION.md#typescript-compilers), including
+the pnpm hoisting configuration.
 
 # Tests
 

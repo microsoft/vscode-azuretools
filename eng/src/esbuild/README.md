@@ -22,17 +22,20 @@ Requires Node.js 22.17.0 or later. Asset copying uses the native filesystem glob
 
 1. Add the script to `package.json`:
     ```diff
-        "scripts": [
+        "scripts": {
     +        "build": "node esbuild.mjs"
-        ]
+        }
     ```
 
-1. (Recommended) esbuild does not do type-checking. Add a type-checking script to `package.json`:
+1. (Recommended) esbuild does not do type-checking. Use this package's native TypeScript 7
+   dependency for a separate type-checking script:
     ```diff
-        "scripts": [
-    +        "check": "tsc --noEmit"
-        ]
+        "scripts": {
+    +        "check": "node ./node_modules/@typescript/native/bin/tsc --noEmit"
+        }
     ```
+   Invoke the alias explicitly to avoid selecting TypeScript 6's `tsc`. For pnpm
+   hoisting and watch commands, see [TypeScript compilers](../../MIGRATION.md#typescript-compilers).
 
 # Normal Usage
 
