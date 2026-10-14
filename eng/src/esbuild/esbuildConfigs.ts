@@ -250,6 +250,7 @@ export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
 export interface EsbuildBundle {
     /** Unique bundle name used in errors and esbuild.<name>.meta.json. */
     name: string;
+    /** Esbuild configuration for building this bundle. */
     config: EsbuildConfig;
     /** Set false to build only once, even when --watch is passed. */
     watch?: boolean;
