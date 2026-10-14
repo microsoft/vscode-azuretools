@@ -3,61 +3,44 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type Plugin } from 'esbuild';
+import { type OnLoadResult, type Plugin } from 'esbuild';
 import { dirname, resolve, sep } from 'path';
-import { type Options as SassCompileOptions } from 'sass';
+import { type FileImporter, type Options as SassCompileOptions } from 'sass';
 import { fileURLToPath, pathToFileURL } from 'url';
+
+interface WatchDependencies {
+    watchFiles: string[];
+    watchDirs: string[];
+}
 
 /** Compiles Sass on demand; consumers selecting this plugin must install the optional Sass peer. */
 export function sassPlugin(options: SassCompileOptions<'async'> = {}): Plugin {
     return {
         name: 'sass',
         setup(build) {
-            const dependencies = new Map<string, { watchFiles: string[]; watchDirs: string[] }>();
+            const dependencies = new Map<string, WatchDependencies>();
 
             build.onLoad({ filter: /\.s[ac]ss$/ }, async args => {
                 const sass = await loadSass();
                 const watchDirs = new Set<string>();
+                let watchFiles: string[];
+                let output: OnLoadResult;
 
                 try {
                     const result = await sass.compileAsync(args.path, {
                         ...options,
-                        importers: [{
-                            // Observe unresolved filesystem candidates without changing Sass's resolution order.
-                            findFileUrl(url, { containingUrl }) {
-                                const bases = [
-                                    containingUrl ?? pathToFileURL(args.path),
-                                    ...(options.loadPaths ?? []).map(loadPath => pathToFileURL(resolve(loadPath) + sep)),
-                                ];
-                                for (const base of bases) {
-                                    if (base.protocol !== 'file:') {
-                                        continue;
-                                    }
-                                    const candidate = new URL(url, base);
-                                    if (candidate.protocol === 'file:') {
-                                        const file = fileURLToPath(candidate);
-                                        watchDirs.add(dirname(file));
-                                        watchDirs.add(file);
-                                    }
-                                }
-                                return null;
-                            },
-                        }, ...(options.importers ?? [])],
+                        importers: [
+                            createImportObserver(args.path, options.loadPaths ?? [], watchDirs),
+                            ...(options.importers ?? []),
+                        ],
                     });
-                    const watchFiles = result.loadedUrls
+                    watchFiles = result.loadedUrls
                         .filter(url => url.protocol === 'file:')
                         .map(url => fileURLToPath(url));
-                    for (const file of watchFiles) {
-                        watchDirs.add(dirname(file));
-                    }
-                    const watched = { watchFiles, watchDirs: [...watchDirs] };
-                    dependencies.set(args.path, watched);
-
-                    return {
+                    output = {
                         contents: result.css,
                         loader: 'css',
                         resolveDir: dirname(args.path),
-                        ...watched,
                     };
                 } catch (error) {
                     if (!(error instanceof sass.Exception)) {
@@ -65,26 +48,54 @@ export function sassPlugin(options: SassCompileOptions<'async'> = {}): Plugin {
                     }
 
                     const previous = dependencies.get(args.path);
-                    const watchFiles = new Set([args.path, ...(previous?.watchFiles ?? [])]);
+                    const files = new Set([args.path, ...(previous?.watchFiles ?? [])]);
                     if (error.span.url?.protocol === 'file:') {
-                        watchFiles.add(fileURLToPath(error.span.url));
+                        files.add(fileURLToPath(error.span.url));
                     }
-                    for (const file of watchFiles) {
-                        watchDirs.add(dirname(file));
-                    }
+                    watchFiles = [...files];
                     for (const dir of previous?.watchDirs ?? []) {
                         watchDirs.add(dir);
                     }
 
-                    const watched = { watchFiles: [...watchFiles], watchDirs: [...watchDirs] };
-                    dependencies.set(args.path, watched);
-
-                    return {
+                    output = {
                         errors: [{ text: error.message, detail: error }],
-                        ...watched,
                     };
                 }
+
+                for (const file of watchFiles) {
+                    watchDirs.add(dirname(file));
+                }
+                const watched = { watchFiles, watchDirs: [...watchDirs] };
+                dependencies.set(args.path, watched);
+                return { ...output, ...watched };
             });
+        },
+    };
+}
+
+function createImportObserver(entryPath: string, loadPaths: string[], watchDirs: Set<string>): FileImporter<'async'> {
+    return {
+        findFileUrl(url, { containingUrl }) {
+            const searchBases = [
+                containingUrl ?? pathToFileURL(entryPath),
+                ...loadPaths.map(loadPath => pathToFileURL(resolve(loadPath) + sep)),
+            ];
+            for (const base of searchBases) {
+                if (base.protocol !== 'file:') {
+                    continue;
+                }
+                const candidate = new URL(url, base);
+                if (candidate.protocol !== 'file:') {
+                    continue;
+                }
+
+                const file = fileURLToPath(candidate);
+                watchDirs.add(dirname(file));
+                watchDirs.add(file); // The import may resolve to an index file in this directory.
+            }
+
+            // Observe filesystem candidates without handling the import or changing resolution precedence.
+            return null;
         },
     };
 }
