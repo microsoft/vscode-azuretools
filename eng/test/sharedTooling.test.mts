@@ -21,8 +21,7 @@ import {
     azExtEslintRecommended, azExtEslintRecommendedTypeChecked, azExtEslintStrict, azExtEslintStrictTypeChecked,
     explicitTsProjectRuleConfig, importRestrictionsRuleConfig, lazyImportRuleConfig,
 } from '@microsoft/vscode-azext-eng/eslint';
-import { createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
-import { sassPlugin } from '@microsoft/vscode-azext-eng/esbuild/sass';
+import { autoEsbuildOrWatch, autoSelectEsbuildConfig, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
 
 const should = registerShould();
 const exec = promisify(execFile);
@@ -298,6 +297,119 @@ describe('ESLint helpers', () => {
     });
 });
 
+describe('Ordered builds', () => {
+    it('builds any number of bundles in order and writes separate metadata', async () => {
+        const { root, write } = await fixture();
+        const defaults = autoSelectEsbuildConfig();
+        defaults.should.have.lengthOf(2);
+        defaults[0].should.have.property('watch', false);
+        autoSelectEsbuildConfig(false, false).should.have.lengthOf(1);
+        const bundles = [0, 1, 2].map(index => ({
+            config: {
+                absWorkingDir: root,
+                stdin: { contents: `export const value = ${index};`, loader: 'js' as const },
+                outfile: `dist/bundle${index}.js`,
+                metafile: true,
+                plugins: [{
+                    name: 'ordered-test',
+                    setup(build) {
+                        build.onStart(async () => {
+                            if (index > 0) {
+                                (await fs.readFile(path.join(root, `finished${index - 1}`), 'utf8')).should.equal('done');
+                            }
+                        });
+                        build.onEnd(async () => { await write(`finished${index}`, 'done'); });
+                    },
+                } satisfies Plugin],
+            },
+        }));
+        await autoEsbuildOrWatch(bundles);
+        for (const index of [0, 1, 2]) {
+            const metadata = JSON.parse(await fs.readFile(path.join(root, `esbuild.${index}.meta.json`), 'utf8')) as { outputs: Record<string, unknown> };
+            Object.keys(metadata.outputs).should.deep.equal([`dist/bundle${index}.js`]);
+        }
+    });
+
+    it('awaits initial watch builds and disposes every context on shutdown or a later failure', async () => {
+        const { root } = await fixture();
+        const script = `
+        import assert from 'node:assert/strict';
+        import fs from 'node:fs/promises';
+        import path from 'node:path';
+        import { autoEsbuildOrWatch } from '@microsoft/vscode-azext-eng/esbuild';
+        const root = ${JSON.stringify(root)};
+        const before = process.listenerCount('SIGTERM');
+        const counts = [0, 0, 0];
+        let rebuilt;
+        await fs.writeFile(path.join(root, 'watched.ts'), 'export const value = 1;');
+        const bundles = [0, 1, 2].map(index => ({
+            watch: index === 0 ? false : undefined,
+            config: {
+                absWorkingDir: root,
+                stdin: { contents: 'export const value = 1;', loader: 'js' },
+                ...(index === 1 ? { stdin: undefined, entryPoints: ['watched.ts'] } : {}),
+                outfile: 'dist/bundle' + index + '.js',
+                metafile: true,
+                plugins: [{
+                    name: 'watch-order',
+                    setup(build) {
+                        build.onStart(async () => {
+                            if (index) await fs.access(path.join(root, 'dist/bundle' + (index - 1) + '.js'));
+                        });
+                        build.onEnd(() => { counts[index]++; if (index === 1) rebuilt?.(); });
+                    }
+                }]
+            }
+        }));
+        try {
+            await autoEsbuildOrWatch(bundles);
+            for (const index of [0, 1, 2]) await fs.access(path.join(root, 'esbuild.' + index + '.meta.json'));
+            assert.equal(process.listenerCount('SIGTERM'), before + 1);
+            const updated = new Promise(resolve => { rebuilt = resolve; });
+            await fs.writeFile(path.join(root, 'watched.ts'), 'export const value = "updated";');
+            await updated;
+            assert.deepEqual(counts, [1, 2, 1]);
+            rebuilt = undefined;
+            process.emit('SIGTERM');
+            assert.equal(process.listenerCount('SIGTERM'), before);
+            await assert.rejects(autoEsbuildOrWatch([
+                bundles[1],
+                { config: { stdin: { contents: 'invalid syntax =', loader: 'js' }, write: false, logLevel: 'silent' } }
+            ]), /Expected/);
+            assert.equal(process.listenerCount('SIGTERM'), before);
+            await assert.rejects(autoEsbuildOrWatch([
+                bundles[2],
+                { config: { plugins: [{ name: 'broken-setup', setup() { throw new Error('setup failed'); } }], logLevel: 'silent' } }
+            ]), /setup failed/);
+            assert.equal(process.listenerCount('SIGTERM'), before);
+            await fs.writeFile(path.join(root, 'blocked'), 'not a directory');
+            await assert.rejects(autoEsbuildOrWatch([
+                { ...bundles[2], metafilePath: 'blocked/meta.json' }
+            ]), /ENOTDIR|EEXIST/);
+            assert.equal(process.listenerCount('SIGTERM'), before);
+            await autoEsbuildOrWatch([
+                { config: { ...bundles[0].config, plugins: [{
+                    name: 'stop-during-startup',
+                    setup(build) { build.onStart(() => { process.emit('SIGTERM'); }); }
+                }] } },
+                { config: { plugins: [{
+                    name: 'must-not-start',
+                    setup() { throw new Error('Started after shutdown'); }
+                }] } }
+            ]);
+            assert.equal(process.listenerCount('SIGTERM'), before);
+            console.log('watch cleanup verified');
+        } finally {
+            process.emit('SIGTERM');
+        }
+    `;
+        const result = await exec(process.execPath, ['--input-type=module', '-e', script, '--', '--watch'], { cwd: packageDir, timeout: 1800 });
+        result.stdout.should.include('watch cleanup verified');
+        const metadata = JSON.parse(await fs.readFile(path.join(root, 'esbuild.1.meta.json'), 'utf8')) as { inputs: Record<string, { bytes: number }> };
+        metadata.inputs['watched.ts'].bytes.should.equal('export const value = "updated";'.length);
+    });
+});
+
 describe('Webview builds', () => {
     it('browser factory excludes host configuration and composes caller options', async () => {
         const { root, write } = await fixture();
@@ -322,12 +434,13 @@ describe('Webview builds', () => {
         should.exist(config.plugins);
         config.loader!.should.have.property('.css', 'css');
         config.loader!.should.have.property('.svg', 'file');
-        config.plugins![1].should.equal(plugin);
+        config.plugins![2].should.equal(plugin);
         await build(config);
         pluginRan.should.equal(true);
         (await fs.stat(path.join(root, 'dist/entry.js'))).isFile().should.equal(true);
         config.plugins!.push(plugin);
-        createWebviewEsbuildConfig().should.have.property('plugins').with.lengthOf(1);
+        createWebviewEsbuildConfig().should.have.property('plugins').with.lengthOf(2);
+        createWebviewEsbuildConfig({ sass: false }).should.have.property('plugins').with.lengthOf(1);
     });
 
     it('browser factory selects production, watch, and debug settings from shared flags', async () => {
@@ -338,8 +451,9 @@ describe('Webview builds', () => {
     `;
         for (const [args, debug, expected] of [
             [[], '0', { minify: true, sourcemap: false }],
+            [[], '1', { minify: true, sourcemap: false, metafile: true }],
             [['--watch'], '0', { minify: false, sourcemap: 'linked' }],
-            [['--watch'], '1', { minify: true, sourcemap: false, metafile: true }],
+            [['--watch'], '1', { minify: false, sourcemap: 'linked', metafile: true }],
         ] as const) {
             const env = { ...process.env };
             env.DEBUG_ESBUILD = debug;
@@ -365,7 +479,7 @@ describe('Webview builds', () => {
             entryPoints: ['styles/main.scss'],
             minify: false,
             loader: { '.svg': 'file' },
-            plugins: [sassPlugin(), {
+            plugins: [{
                 name: 'watch-test',
                 setup(build) { build.onEnd(() => { finished?.(); }); },
             }],
@@ -392,7 +506,6 @@ describe('Webview builds', () => {
         await build(createWebviewEsbuildConfig({
             absWorkingDir: root,
             entryPoints: ['broken.scss'],
-            plugins: [sassPlugin()],
             logLevel: 'silent',
         })).should.be.rejectedWith(/Undefined variable/);
     });
@@ -415,7 +528,7 @@ describe('Webview builds', () => {
             entryPoints: ['styles/main.scss'],
             minify: false,
             logLevel: 'silent',
-            plugins: [sassPlugin(), {
+            plugins: [{
                 name: 'watch-errors-test',
                 setup(build) { build.onEnd(result => { finished?.(result); }); },
             }],
@@ -469,12 +582,13 @@ describe('Package exports', () => {
         await exec(process.execPath, ['--input-type=module', '-e', script], { cwd: packageDir });
     });
 
-    it('ordinary esbuild ESM consumers type-check and load without the optional Sass peer', async () => {
+    it('ordinary esbuild consumers type-check and load without the optional Sass peer', async () => {
         const { root, write } = await fixture();
         const installed = path.join(root, 'node_modules/@microsoft/vscode-azext-eng');
         await fs.mkdir(installed, { recursive: true });
         await fs.copyFile(path.join(packageDir, 'package.json'), path.join(installed, 'package.json'));
         await fs.cp(path.join(packageDir, 'dist/esm'), path.join(installed, 'dist/esm'), { recursive: true });
+        await fs.cp(path.join(packageDir, 'dist/cjs'), path.join(installed, 'dist/cjs'), { recursive: true });
         await fs.symlink(path.join(packageDir, 'node_modules/esbuild'), path.join(root, 'node_modules/esbuild'), 'junction');
         const code = [
             "import { copyPlugin, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';",
@@ -487,10 +601,22 @@ describe('Package exports', () => {
         ], { cwd: root });
         const { stdout } = await exec(process.execPath, ['--input-type=module', '-e', `
         import { createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
-        import { sassPlugin } from '@microsoft/vscode-azext-eng/esbuild/sass';
-        createWebviewEsbuildConfig({ plugins: [sassPlugin()] });
-        console.log(typeof sassPlugin);
+        import { build } from 'esbuild';
+        import fs from 'node:fs/promises';
+        import { createRequire } from 'node:module';
+        const cjs = createRequire(import.meta.url)('@microsoft/vscode-azext-eng/esbuild');
+        await fs.writeFile('style.scss', '.root { color: red; }');
+        for (const factory of [createWebviewEsbuildConfig, cjs.createWebviewEsbuildConfig]) {
+            await build(factory({ stdin: { contents: 'export const value = 1;', loader: 'js' }, write: false, logLevel: 'silent' }));
+            try {
+                await build(factory({ entryPoints: ['style.scss'], write: false, logLevel: 'silent' }));
+                throw new Error('Unexpected Sass success');
+            } catch (error) {
+                if (!error.message.includes('Install it with npm install --save-dev sass')) throw error;
+            }
+        }
+        console.log('lazy Sass verified');
     `], { cwd: root });
-        stdout.trim().should.equal('function');
+        stdout.trim().should.match(/lazy Sass verified$/);
     });
 });

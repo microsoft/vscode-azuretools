@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type BuildOptions as EsbuildConfig, type Plugin, build, context } from 'esbuild';
+import { type BuildOptions as EsbuildConfig, type BuildContext, type Plugin, build, context } from 'esbuild';
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import { copyPlugin } from './copyPlugin.js';
 import { getAutoBuildSettings } from './getAutoBuildSettings.js';
 
@@ -132,15 +133,32 @@ export const azExtWebviewEsbuildConfigDebug: EsbuildConfig = {
     metafile: true,
 };
 
+export interface WebviewEsbuildConfig extends EsbuildConfig {
+    /** Set false to omit the default Sass plugin, for example when supplying a customized one. */
+    sass?: boolean;
+}
+
 /** Selects browser settings from the usual debug/watch flags and appends caller-supplied plugins. */
-export function createWebviewEsbuildConfig(overrides: EsbuildConfig = {}): EsbuildConfig {
-    const config = isAutoDebug ? azExtWebviewEsbuildConfigDebug
-        : isAutoWatch ? azExtWebviewEsbuildConfigDev : azExtWebviewEsbuildConfigProd;
+export function createWebviewEsbuildConfig(overrides: WebviewEsbuildConfig = {}): EsbuildConfig {
+    const { sass = true, ...options } = overrides;
+    const config = isAutoWatch ? azExtWebviewEsbuildConfigDev
+        : isAutoDebug ? azExtWebviewEsbuildConfigDebug : azExtWebviewEsbuildConfigProd;
     return {
         ...config,
-        ...overrides,
-        loader: { ...config.loader, ...overrides.loader },
-        plugins: [buildLogPlugin(), ...(overrides.plugins ?? [])],
+        ...(isAutoDebug ? { metafile: true } : {}),
+        ...options,
+        loader: { ...config.loader, ...options.loader },
+        plugins: [
+            buildLogPlugin(),
+            ...(sass ? [{
+                name: 'default-sass',
+                async setup(build) {
+                    const { sassPlugin } = await import('./sassPlugin.js');
+                    await sassPlugin().setup(build);
+                },
+            } satisfies Plugin] : []),
+            ...(options.plugins ?? []),
+        ],
     };
 }
 
@@ -231,18 +249,14 @@ export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
 // #endregion
 
 /**
- * A config for building two bundles--one for the extension, one for the telemetry reporter
+ * One bundle in an ordered build sequence.
  */
-export interface DualBundleConfig {
-    /**
-     * Config for building the extension bundle
-     */
-    extensionConfig: EsbuildConfig;
-
-    /**
-     * Config for building the telemetry bundle
-     */
-    telemetryConfig?: EsbuildConfig;
+export interface EsbuildBundle {
+    config: EsbuildConfig;
+    /** Set false to build only once, even when --watch is passed. */
+    watch?: boolean;
+    /** Relative to absWorkingDir or cwd. Defaults to esbuild.<bundle index>.meta.json. */
+    metafilePath?: string;
 }
 
 /**
@@ -254,7 +268,7 @@ export interface DualBundleConfig {
  * - else if `--watch` is passed as an argument, returns the dev config + optional telemetry config
  * - else, returns the prod config + optional telemetry config
  */
-export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): DualBundleConfig {
+export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): EsbuildBundle[] {
     let extensionConfig: EsbuildConfig;
     let telemetryConfig: EsbuildConfig | undefined;
     if (isAutoDebug) {
@@ -269,41 +283,97 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
         telemetryConfig = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
     }
 
-    return { extensionConfig, telemetryConfig, };
+    return [
+        ...(telemetryConfig ? [{ config: telemetryConfig, watch: false }] : []),
+        { config: extensionConfig },
+    ];
 }
 
 /**
- * Builds the telemetry bundle, and then either builds or watches the extension bundle based
- * on environment variables and command line args
- * - if `--watch` is passed, starts esbuild in watch mode
- * - else, builds once
- *
- * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
- *
- * @note Even in watch mode, the telemetry bundle is only built once at startup--the build must
- * be restarted if the telemetry dependencies change
- *
- * @param configs The configs to build or watch
+ * Builds bundles in supplied order, awaiting each initial build before starting the next.
+ * With --watch, watches bundles unless watch is false. Writes each generated metafile separately.
  */
-export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
-    // Build telemetry bundle first (needed because the extension bundle depends on it)
-    if (!!configs.telemetryConfig) {
-        await build(configs.telemetryConfig);
+export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Promise<void> {
+    const contexts: BuildContext[] = [];
+    let stopped = false;
+    function isStopped(): boolean {
+        return stopped;
     }
-
-    // Build (or watch) the extension bundle next
-    if (isAutoWatch) {
-        const ctx = await context(configs.extensionConfig);
-        process.on('SIGINT', () => {
-            console.log('Stopping esbuild watch');
-            void ctx.dispose();
+    let stopInitial: (() => void) | undefined;
+    const shutdown = new Promise<void>(resolve => { stopInitial = resolve; });
+    async function dispose(): Promise<void> {
+        stopped = true;
+        stopInitial?.();
+        process.off('SIGINT', stop);
+        process.off('SIGTERM', stop);
+        await Promise.all(contexts.splice(0).map(ctx => ctx.dispose()));
+    }
+    function stop(): void {
+        console.log('Stopping esbuild watch');
+        void dispose().catch((error: unknown) => {
+            console.error(error);
+            process.exitCode = 1;
         });
-        await ctx.watch();
-    } else {
-        const result = await build(configs.extensionConfig);
-
-        if (!!configs.extensionConfig.metafile && !!result.metafile) {
-            await fs.writeFile('esbuild.meta.json', JSON.stringify(result.metafile));
+    }
+    try {
+        for (const [index, bundle] of bundles.entries()) {
+            if (isStopped()) {
+                return;
+            }
+            const config = bundle.config;
+            const watching = isAutoWatch && bundle.watch !== false;
+            let completed: (() => void) | undefined;
+            let failed: ((error: Error) => void) | undefined;
+            const metadata: Plugin = {
+                name: 'bundle-result',
+                setup(build) {
+                    build.onEnd(async result => {
+                        if (result.metafile) {
+                            const destination = path.resolve(config.absWorkingDir ?? process.cwd(), bundle.metafilePath ?? `esbuild.${index}.meta.json`);
+                            await fs.mkdir(path.dirname(destination), { recursive: true });
+                            await fs.writeFile(destination, JSON.stringify(result.metafile));
+                        }
+                    });
+                },
+            };
+            const options = { ...config, plugins: [...(config.plugins ?? []), metadata] };
+            if (watching) {
+                const initial = new Promise<void>((resolve, reject) => {
+                    completed = resolve;
+                    failed = reject;
+                });
+                options.plugins.push({
+                    name: 'initial-build',
+                    setup(build) {
+                        build.onEnd(result => {
+                            if (result.errors.length) {
+                                failed?.(new Error(result.errors.map(error => error.text).join('\n')));
+                            } else {
+                                completed?.();
+                            }
+                            completed = undefined;
+                            failed = undefined;
+                        });
+                    },
+                });
+                const ctx = await context(options);
+                if (isStopped()) {
+                    await ctx.dispose();
+                    return;
+                }
+                contexts.push(ctx);
+                if (contexts.length === 1) {
+                    process.on('SIGINT', stop);
+                    process.on('SIGTERM', stop);
+                }
+                await ctx.watch();
+                await Promise.race([initial, shutdown]);
+            } else {
+                await build(options);
+            }
         }
+    } catch (error) {
+        await dispose();
+        throw error;
     }
 }

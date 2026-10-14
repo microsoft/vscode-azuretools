@@ -49,9 +49,10 @@ Append it to the inherited plugins to copy additional assets:
 ```js
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig, copyPlugin } from '@microsoft/vscode-azext-eng/esbuild';
 
-const configs = autoSelectEsbuildConfig();
-configs.extensionConfig.plugins = [
-    ...(configs.extensionConfig.plugins ?? []),
+const bundles = autoSelectEsbuildConfig();
+const extensionConfig = bundles[1].config;
+extensionConfig.plugins = [
+    ...(extensionConfig.plugins ?? []),
     copyPlugin({
         assets: [
             {
@@ -62,7 +63,7 @@ configs.extensionConfig.plugins = [
         ],
     }),
 ];
-await autoEsbuildOrWatch(configs);
+await autoEsbuildOrWatch(bundles);
 ```
 
 Each asset has a source directory (`from`), a destination directory (`to`), and optional
@@ -145,35 +146,51 @@ alias, the require banner, or extension assets.
 
 `createWebviewEsbuildConfig` selects the appropriate preset using the same
 `DEBUG_ESBUILD` and `--watch` settings as extension builds. It merges loader overrides
-and appends supplied plugins to the shared build logger. Entry points, React/JSX
+and appends supplied plugins to the shared build logger and default Sass plugin. Entry points, React/JSX
 configuration, and output naming remain the consumer's responsibility.
+Watch mode is unminified with linked source maps, including when debug is enabled;
+debug adds metadata independently.
 
 ```js
 import {
     autoEsbuildOrWatch,
+    autoSelectEsbuildConfig,
     createWebviewEsbuildConfig,
 } from '@microsoft/vscode-azext-eng/esbuild';
-import { sassPlugin } from '@microsoft/vscode-azext-eng/esbuild/sass';
-
-await autoEsbuildOrWatch({
-    extensionConfig: createWebviewEsbuildConfig({
+await autoEsbuildOrWatch([
+    ...autoSelectEsbuildConfig(),
+    { config: createWebviewEsbuildConfig({
         entryPoints: { views: './src/webview/webviewEntry.tsx' },
-        outdir: './dist/webview',
-        plugins: [sassPlugin()],
-    }),
-});
+    }) },
+]);
 ```
 
 The presets use bundled browser ESM, ES2022, no splitting, CSS loading, and data-URL
-font loaders. Override these as needed. The existing runner handles one build or
-watch mode, including problem-matcher logging and debug metafile output.
+font loaders and `./dist` output. Override these as needed.
 
-`sassPlugin` is optional: install the `sass` peer dependency (`"sass": "*"`) only when
-using it. Its separate `esbuild/sass` entry point keeps optional Sass types out of
-ordinary esbuild consumers; importing it does not load the compiler until needed. The plugin accepts
+The default Sass plugin loads the compiler only when a `.scss` or `.sass` file is
+encountered. Install the optional `sass` peer dependency (`"sass": "*"`) when using
+those files; missing Sass produces an installation error. Builds without Sass files
+do not require the peer. To customize compiler options, set `sass: false` and append
+`sassPlugin(options)` from the separate `esbuild/sass` entry. Its separate entry keeps
+optional Sass types out of ordinary esbuild consumers. The plugin accepts
 Sass asynchronous compiler options, reports imported files as watch dependencies,
 resolves relative CSS assets from the source stylesheet, and surfaces compiler errors.
 Imported files remain watched after compilation errors, so correcting them triggers a rebuild.
+
+## Ordered Bundles
+
+`autoSelectEsbuildConfig()` returns an ordered array of `{ config, watch?, metafilePath? }`
+bundles: telemetry first (`watch: false`), then the extension. The standard
+`autoEsbuildOrWatch(autoSelectEsbuildConfig())` call is unchanged. Custom consumers
+must migrate from the old `extensionConfig`/`telemetryConfig` object to this array.
+Append any additional bundles in the order they must initially build. The runner
+awaits each initial build, including in watch mode; subsequent rebuilds are independent.
+Telemetry still builds only once. SIGINT/SIGTERM and initialization failures dispose
+all watch contexts.
+
+Metafiles are written after builds and rebuilds to `esbuild.<bundle index>.meta.json`
+under `absWorkingDir` or cwd. Set a bundle's `metafilePath` for a custom destination.
 
 The default extension config now copies both Azureutils' top-level resource SVGs
 and `resources/azureIcons/*.svg`. Consumers no longer need a separate copy mapping
