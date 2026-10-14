@@ -22,6 +22,7 @@ import {
     explicitTsProjectRuleConfig, importRestrictionsRuleConfig, lazyImportRuleConfig,
 } from '@microsoft/vscode-azext-eng/eslint';
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig, createWebviewEsbuildConfig, type EsbuildConfigs } from '@microsoft/vscode-azext-eng/esbuild';
+import { sassPlugin } from '@microsoft/vscode-azext-eng/esbuild/sass';
 
 const should = registerShould();
 const exec = promisify(execFile);
@@ -750,6 +751,79 @@ describe('Webview builds', () => {
         }
     });
 
+    for (const [name, url, partial, loadPath] of [
+        ['sibling partial', 'missing', 'styles/_missing.scss', undefined],
+        ['nested partial', 'nested/missing', 'styles/nested/_missing.scss', undefined],
+        ['new index directory', 'nested/missing', 'styles/nested/missing/_index.scss', undefined],
+        ['load-path partial', 'nested/missing', 'includes/nested/_missing.scss', 'includes'],
+    ] as const) {
+        it(`Sass watch recovers when a missing ${name} is created`, async () => {
+            const { root, write } = await fixture();
+            await write('styles/main.scss', `@use "${url}"; .root { color: missing.$color; }`);
+            await fs.mkdir(path.join(root, 'styles/nested'), { recursive: true });
+            await fs.mkdir(path.join(root, 'includes/nested'), { recursive: true });
+            let finished: ((result: BuildResult) => void) | undefined;
+            let timeout: NodeJS.Timeout | undefined;
+            function nextBuild(errorCount: number): Promise<BuildResult> {
+                return new Promise((resolve, reject) => {
+                    timeout = setTimeout(() => { reject(new Error('Missing Sass import recovery timed out')); }, 1000);
+                    finished = result => {
+                        if (result.errors.length === errorCount) {
+                            clearTimeout(timeout);
+                            resolve(result);
+                        }
+                    };
+                });
+            }
+            const ctx = await context(createWebviewEsbuildConfig({
+                absWorkingDir: root,
+                entryPoints: ['styles/main.scss'],
+                minify: false,
+                logLevel: 'silent',
+                sass: false,
+                plugins: [
+                    sassPlugin({ loadPaths: loadPath ? [path.join(root, loadPath)] : [] }),
+                    {
+                        name: 'watch-missing-import-test',
+                        setup(build) { build.onEnd(result => { finished?.(result); }); },
+                    },
+                ],
+            }));
+            try {
+                const initial = nextBuild(1);
+                await ctx.watch();
+                (await initial).errors[0].text.should.match(/Can't find stylesheet to import/);
+                const recovered = nextBuild(0);
+                await write(partial, '$color: red;');
+                await recovered;
+                (await fs.readFile(path.join(root, 'dist/main.css'), 'utf8')).should.match(/color: red/);
+            } finally {
+                clearTimeout(timeout);
+                await ctx.dispose();
+            }
+        });
+    }
+
+    it('Sass directory watching preserves custom importer precedence and options', async () => {
+        const { root, write } = await fixture();
+        await write('styles/main.scss', '@use "colors"; .root { color: colors.$color; }');
+        await write('includes/_colors.scss', '$color: blue;');
+        await write('includes/_palette.scss', '$color: red;');
+        const importers = [{
+            canonicalize(url: string) { return url === 'colors' ? new URL('test:colors') : null; },
+            load() { return { contents: '@use "palette"; $color: palette.$color;', syntax: 'scss' as const }; },
+        }];
+        await build(createWebviewEsbuildConfig({
+            absWorkingDir: root,
+            entryPoints: ['styles/main.scss'],
+            minify: false,
+            sass: false,
+            plugins: [sassPlugin({ importers, loadPaths: [path.join(root, 'includes')] })],
+        }));
+        (await fs.readFile(path.join(root, 'dist/main.css'), 'utf8')).should.match(/color: red/);
+        importers.should.have.lengthOf(1);
+    });
+
     it('Sass compilation errors fail the build', async () => {
         const { root, write } = await fixture();
         await write('broken.scss', '.root { color: $undefined; }');
@@ -802,6 +876,13 @@ describe('Webview builds', () => {
             const css = await fs.readFile(path.join(root, 'dist/main.css'), 'utf8');
             css.should.match(/width: 20px/);
             css.should.match(/color: blue/);
+            const missingImport = nextBuild();
+            await write('styles/_variables.scss', '@use "nested/width"; $width: width.$width;');
+            (await missingImport).errors.should.have.lengthOf(1);
+            const createdImport = nextBuild();
+            await write('styles/nested/_width.scss', '$width: 30px;');
+            (await createdImport).errors.should.have.lengthOf(0);
+            (await fs.readFile(path.join(root, 'dist/main.css'), 'utf8')).should.match(/width: 30px/);
         } finally {
             clearTimeout(timeout);
             await ctx.dispose();

@@ -179,6 +179,9 @@ optional Sass types out of ordinary esbuild consumers. The plugin accepts
 Sass asynchronous compiler options, reports imported files as watch dependencies,
 resolves relative CSS assets from the source stylesheet, and surfaces compiler errors.
 Imported files remain watched after compilation errors, so correcting them triggers a rebuild.
+Filesystem import search directories are also watched, including nested and index-file
+locations and configured `loadPaths`, so creating a missing stylesheet triggers recovery.
+Custom importer-specific resolution inputs are not automatically watched.
 
 ## Ordered Bundles
 
