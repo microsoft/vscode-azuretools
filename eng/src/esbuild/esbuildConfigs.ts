@@ -240,34 +240,33 @@ export interface ExtensionEsbuildConfigs extends EsbuildConfigs {
 /**
  * Auto-selects the appropriate esbuild config based on environment variables and command line args
  * @param esm (Optional, default: false) True if the ESM configs should be returned
- * @param includeTelemetry (Optional, default: true) True if the telemetry config should be included
+ * @param telemetry (Optional, default: true) True if the telemetry config should be included
  * @returns
  * - if `--watch` is passed as an argument, returns the dev config + optional telemetry config
  * - else if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
  * - else, returns the prod config + optional telemetry config
  * Debug independently enables extension metadata, including in watch mode.
  */
-export function autoSelectEsbuildConfig(esm: boolean = false, includeTelemetry: boolean = true): ExtensionEsbuildConfigs {
-    let extension: EsbuildConfig;
+export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): ExtensionEsbuildConfigs {
+    let extensionConfig: EsbuildConfig;
+    let telemetryConfig: EsbuildConfig | undefined;
 
-    if (isAutoWatch) {
-        extension = {
-            ...(esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev),
-            ...(isAutoDebug ? { metafile: true } : {}),
-        };
-    } else if (isAutoDebug) {
-        extension = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+    if (isAutoDebug && !isAutoWatch) {
+        extensionConfig = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+    } else if (isAutoWatch) {
+        extensionConfig = { ...(esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev) };
+        if (isAutoDebug) {
+            extensionConfig.metafile = true;
+        }
     } else {
-        extension = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
+        extensionConfig = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }
 
-    let telemetry: EsbuildConfig | undefined;
-
-    if (includeTelemetry) {
-        telemetry = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
+    if (telemetry) {
+        telemetryConfig = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
     }
 
-    return { extension, telemetry };
+    return { extension: extensionConfig, telemetry: telemetryConfig };
 }
 
 /**
