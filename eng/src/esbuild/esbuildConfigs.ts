@@ -8,6 +8,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { copyPlugin } from './copyPlugin.js';
 import { getAutoBuildSettings } from './getAutoBuildSettings.js';
+import { sassPlugin } from './sassPlugin.js';
 
 export { copyPlugin, type CopyAsset, type CopyPluginOptions } from './copyPlugin.js';
 
@@ -150,13 +151,7 @@ export function createWebviewEsbuildConfig(overrides: WebviewEsbuildConfig = {})
         loader: { ...config.loader, ...options.loader },
         plugins: [
             buildLogPlugin(),
-            ...(sass ? [{
-                name: 'default-sass',
-                async setup(build) {
-                    const { sassPlugin } = await import('./sassPlugin.js');
-                    await sassPlugin().setup(build);
-                },
-            } satisfies Plugin] : []),
+            ...(sass ? [sassPlugin()] : []),
             ...(options.plugins ?? []),
         ],
     };
