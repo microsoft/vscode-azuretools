@@ -21,7 +21,7 @@ import {
     azExtEslintRecommended, azExtEslintRecommendedTypeChecked, azExtEslintStrict, azExtEslintStrictTypeChecked,
     explicitTsProjectRuleConfig, importRestrictionsRuleConfig, lazyImportRuleConfig,
 } from '@microsoft/vscode-azext-eng/eslint';
-import { autoEsbuildOrWatch, autoSelectEsbuildConfig, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
+import { autoEsbuildOrWatch, autoSelectEsbuildConfig, createWebviewEsbuildConfig, type EsbuildConfigs } from '@microsoft/vscode-azext-eng/esbuild';
 
 const should = registerShould();
 const exec = promisify(execFile);
@@ -309,18 +309,36 @@ describe('ESLint helpers', () => {
 });
 
 describe('Ordered builds', () => {
+    it('does not start builds or announce readiness for empty or omitted configurations', async () => {
+        const messages: unknown[][] = [];
+        const log = console.log;
+        console.log = (...args: unknown[]) => {
+            messages.push(args);
+        };
+
+        try {
+            await autoEsbuildOrWatch({});
+            await autoEsbuildOrWatch({ telemetry: undefined, omitted: undefined });
+        } finally {
+            console.log = log;
+        }
+
+        messages.should.have.lengthOf(0);
+    });
+
     it('builds any number of bundles in order and writes separate metadata', async () => {
         const { root, write } = await fixture();
         const defaults = autoSelectEsbuildConfig();
-        defaults.should.have.lengthOf(2);
-        defaults.map(bundle => bundle.name).should.deep.equal(['telemetry', 'extension']);
-        defaults[0].should.have.property('watch', false);
-        defaults[0].config.should.have.property('metafile', false);
-        autoSelectEsbuildConfig(false, false).should.have.lengthOf(1);
+        Object.keys(defaults).should.deep.equal(['extension', 'telemetry']);
+        defaults.telemetry!.should.have.property('metafile', false);
+        defaults.extension = { ...defaults.extension };
+        defaults.extension.alias = { example: './example.ts' };
+        defaults.extension.alias.should.have.property('example', './example.ts');
+        should.equal(autoSelectEsbuildConfig(false, false).telemetry, undefined);
         const messages: string[] = [];
-        const bundles = [0, 1, 2].map(index => ({
-            name: `bundle${index}`,
-            config: {
+        const configs: EsbuildConfigs = Object.fromEntries([0, 1, 2].map(index => [
+            `bundle${index}`,
+            {
                 absWorkingDir: root,
                 stdin: { contents: `export const value = ${index};`, loader: 'js' as const },
                 outfile: `dist/bundle${index}.js`,
@@ -340,13 +358,13 @@ describe('Ordered builds', () => {
                     },
                 } satisfies Plugin],
             },
-        }));
+        ] as const));
         const log = console.log;
         console.log = (...args: unknown[]) => {
             messages.push(args.join(' '));
         };
         try {
-            await autoEsbuildOrWatch(bundles);
+            await autoEsbuildOrWatch(configs);
         } finally {
             console.log = log;
         }
@@ -371,19 +389,18 @@ describe('Ordered builds', () => {
         };
 
         for (const name of ['', '../outside', 'nested/name', 'nested\\name', 'bad:name']) {
-            await autoEsbuildOrWatch([{ name: 'valid', config }, { name, config }])
+            await autoEsbuildOrWatch({ valid: config, [name]: config })
                 .should.be.rejectedWith(/filename-safe/);
         }
 
-        await autoEsbuildOrWatch([{ name: 'duplicate', config }, { name: 'Duplicate', config }])
+        await autoEsbuildOrWatch({ duplicate: config, Duplicate: config })
             .should.be.rejectedWith(/Duplicate bundle name/);
         await fs.stat(path.join(root, 'dist')).should.be.rejected.and.eventually.have.property('code', 'ENOENT');
 
         try {
-            await autoEsbuildOrWatch([{
-                name: 'broken-extension',
-                config: { ...config, stdin: { contents: 'invalid syntax =', loader: 'js' } },
-            }]);
+            await autoEsbuildOrWatch({
+                'broken-extension': { ...config, stdin: { contents: 'invalid syntax =', loader: 'js' } },
+            });
             should.fail('Expected build failure');
         } catch (error) {
             if (!(error instanceof Error)) {
@@ -422,38 +439,35 @@ describe('Ordered builds', () => {
         const errors = [0, 0];
         let overlapping = false;
         let initialized = false;
-        const bundles = [];
+        const configs = {};
         for (const index of [0, 1]) {
             await fs.writeFile(path.join(root, 'entry' + index + '.ts'), 'export const value = 1;');
-            bundles.push({
-                name: 'view' + index,
-                config: createWebviewEsbuildConfig({
-                    absWorkingDir: root,
-                    entryPoints: ['entry' + index + '.ts'],
-                    outdir: 'dist/view' + index,
-                    metafile: true,
-                    logLevel: 'silent',
-                    plugins: [{
-                        name: 'readiness-test',
-                        setup(build) {
-                            build.onStart(async () => {
-                                if (overlapping) {
-                                    starts[index].resolve();
-                                    await holds[index].promise;
-                                }
-                            });
-                            build.onEnd(result => {
-                                errors[index] = result.errors.length;
-                                if (!initialized) {
-                                    assert.equal(messages.filter(message => message.includes('finished')).length, 0);
-                                }
-                                if (overlapping) {
-                                    ends[index].resolve();
-                                }
-                            });
-                        }
-                    }]
-                })
+            configs['view' + index] = createWebviewEsbuildConfig({
+                absWorkingDir: root,
+                entryPoints: ['entry' + index + '.ts'],
+                outdir: 'dist/view' + index,
+                metafile: true,
+                logLevel: 'silent',
+                plugins: [{
+                    name: 'readiness-test',
+                    setup(build) {
+                        build.onStart(async () => {
+                            if (overlapping) {
+                                starts[index].resolve();
+                                await holds[index].promise;
+                            }
+                        });
+                        build.onEnd(result => {
+                            errors[index] = result.errors.length;
+                            if (!initialized) {
+                                assert.equal(messages.filter(message => message.includes('finished')).length, 0);
+                            }
+                            if (overlapping) {
+                                ends[index].resolve();
+                            }
+                        });
+                    }
+                }]
             });
         }
         function nextFinish() {
@@ -468,7 +482,7 @@ describe('Ordered builds', () => {
             assert.match(messages[1], /^\\[watch\\] build finished in \\d+ milliseconds$/);
         }
         try {
-            await autoEsbuildOrWatch(bundles);
+            await autoEsbuildOrWatch(configs);
             initialized = true;
             assertOneCycle();
 
@@ -525,12 +539,12 @@ describe('Ordered builds', () => {
         const root = ${JSON.stringify(root)};
         const before = process.listenerCount('SIGTERM');
         const counts = [0, 0, 0];
+        const telemetryDisposed = Promise.withResolvers();
         let rebuilt;
         await fs.writeFile(path.join(root, 'watched.ts'), 'export const value = 1;');
-        const bundles = [0, 1, 2].map(index => ({
-            name: 'bundle' + index,
-            watch: index === 0 ? false : undefined,
-            config: {
+        const configs = Object.fromEntries([1, 2, 0].map(index => [
+            index === 0 ? 'telemetry' : 'bundle' + index,
+            {
                 absWorkingDir: root,
                 stdin: { contents: 'export const value = 1;', loader: 'js' },
                 ...(index === 1 ? { stdin: undefined, entryPoints: ['watched.ts'] } : {}),
@@ -550,13 +564,21 @@ describe('Ordered builds', () => {
                                 rebuilt?.();
                             }
                         });
+                        build.onDispose(() => {
+                            if (index === 0) {
+                                telemetryDisposed.resolve();
+                            }
+                        });
                     }
                 }]
             }
-        }));
+        ]));
         try {
-            await autoEsbuildOrWatch(bundles);
-            for (const index of [0, 1, 2]) {
+            await autoEsbuildOrWatch(configs);
+            await telemetryDisposed.promise;
+            await assert.rejects(fs.stat(path.join(root, 'esbuild.telemetry.meta.json')), { code: 'ENOENT' });
+            assert.equal(configs.telemetry.metafile, true);
+            for (const index of [1, 2]) {
                 await fs.access(path.join(root, 'esbuild.bundle' + index + '.meta.json'));
             }
 
@@ -571,63 +593,51 @@ describe('Ordered builds', () => {
             process.emit('SIGTERM');
             assert.equal(process.listenerCount('SIGTERM'), before);
 
-            await assert.rejects(autoEsbuildOrWatch([
-                bundles[1],
-                {
-                    name: 'syntax',
-                    config: {
-                        stdin: { contents: 'invalid syntax =', loader: 'js' },
-                        write: false,
-                        logLevel: 'silent'
-                    }
+            await assert.rejects(autoEsbuildOrWatch({
+                bundle1: configs.bundle1,
+                syntax: {
+                    stdin: { contents: 'invalid syntax =', loader: 'js' },
+                    write: false,
+                    logLevel: 'silent'
                 }
-            ]), /Failed to build bundle "syntax":.*Expected/s);
+            }), /Failed to build bundle "syntax":.*Expected/s);
             assert.equal(process.listenerCount('SIGTERM'), before);
 
-            await assert.rejects(autoEsbuildOrWatch([
-                bundles[2],
-                {
-                    name: 'setup',
-                    config: {
-                        plugins: [{
-                            name: 'broken-setup',
-                            setup() { throw new Error('setup failed'); }
-                        }],
-                        logLevel: 'silent'
-                    }
+            await assert.rejects(autoEsbuildOrWatch({
+                bundle2: configs.bundle2,
+                setup: {
+                    plugins: [{
+                        name: 'broken-setup',
+                        setup() { throw new Error('setup failed'); }
+                    }],
+                    logLevel: 'silent'
                 }
-            ]), /Failed to build bundle "setup":.*setup failed/s);
+            }), /Failed to build bundle "setup":.*setup failed/s);
             assert.equal(process.listenerCount('SIGTERM'), before);
 
             await fs.mkdir(path.join(root, 'esbuild.blocked-metadata.meta.json'));
-            await assert.rejects(autoEsbuildOrWatch([
-                { ...bundles[2], name: 'blocked-metadata' }
-            ]), /Failed to build bundle "blocked-metadata":.*(EISDIR|EPERM)/s);
+            await assert.rejects(autoEsbuildOrWatch({
+                'blocked-metadata': configs.bundle2
+            }), /Failed to build bundle "blocked-metadata":.*(EISDIR|EPERM)/s);
             assert.equal(process.listenerCount('SIGTERM'), before);
 
-            await autoEsbuildOrWatch([
-                {
-                    name: 'stop',
-                    config: {
-                        ...bundles[0].config,
-                        plugins: [{
-                            name: 'stop-during-startup',
-                            setup(build) {
-                                build.onStart(() => { process.emit('SIGTERM'); });
-                            }
-                        }]
-                    }
+            await autoEsbuildOrWatch({
+                stop: {
+                    ...configs.telemetry,
+                    plugins: [{
+                        name: 'stop-during-startup',
+                        setup(build) {
+                            build.onStart(() => { process.emit('SIGTERM'); });
+                        }
+                    }]
                 },
-                {
-                    name: 'must-not-start',
-                    config: {
-                        plugins: [{
-                            name: 'must-not-start',
-                            setup() { throw new Error('Started after shutdown'); }
-                        }]
-                    }
+                'must-not-start': {
+                    plugins: [{
+                        name: 'must-not-start',
+                        setup() { throw new Error('Started after shutdown'); }
+                    }]
                 }
-            ]);
+            });
             assert.equal(process.listenerCount('SIGTERM'), before);
             console.log('watch cleanup verified');
         } finally {
@@ -680,13 +690,12 @@ describe('Webview builds', () => {
         import { autoSelectEsbuildConfig, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
         const configs = [createWebviewEsbuildConfig()];
         for (const esm of [false, true]) {
-            const [telemetry, extension] = autoSelectEsbuildConfig(esm);
-            assert.equal(telemetry.watch, false);
-            assert.equal(telemetry.config.minify, true);
-            assert.equal(telemetry.config.sourcemap, false);
-            assert.equal(telemetry.config.metafile, false);
-            assert.equal(extension.config.format, esm ? 'esm' : 'cjs');
-            configs.push(extension.config);
+            const { telemetry, extension } = autoSelectEsbuildConfig(esm);
+            assert.equal(telemetry.minify, true);
+            assert.equal(telemetry.sourcemap, false);
+            assert.equal(telemetry.metafile, false);
+            assert.equal(extension.format, esm ? 'esm' : 'cjs');
+            configs.push(extension);
         }
         console.log(JSON.stringify(configs.map(config => ({ minify: config.minify, sourcemap: config.sourcemap, metafile: config.metafile }))));
     `;
@@ -832,8 +841,11 @@ describe('Package exports', () => {
         await fs.cp(path.join(packageDir, 'dist/cjs'), path.join(installed, 'dist/cjs'), { recursive: true });
         await fs.symlink(path.join(packageDir, 'node_modules/esbuild'), path.join(root, 'node_modules/esbuild'), 'junction');
         const code = [
-            "import { copyPlugin, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';",
-            "createWebviewEsbuildConfig({ plugins: [copyPlugin({ assets: [{ from: 'assets', to: 'assets' }] })] });",
+            "import { autoEsbuildOrWatch, autoSelectEsbuildConfig, copyPlugin, createWebviewEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';",
+            'const configs = autoSelectEsbuildConfig(false, false);',
+            "configs.extension.alias = { example: './example.ts' };",
+            "configs.webview = createWebviewEsbuildConfig({ plugins: [copyPlugin({ assets: [{ from: 'assets', to: 'assets' }] })] });",
+            'void autoEsbuildOrWatch(configs);',
         ].join('\n');
         await write('index.mts', code);
         await exec(process.execPath, [

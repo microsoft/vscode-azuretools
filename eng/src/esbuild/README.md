@@ -52,10 +52,9 @@ Append it to the inherited plugins to copy additional assets:
 ```js
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig, copyPlugin } from '@microsoft/vscode-azext-eng/esbuild';
 
-const bundles = autoSelectEsbuildConfig();
-const extensionConfig = bundles[1].config;
-extensionConfig.plugins = [
-    ...(extensionConfig.plugins ?? []),
+const configs = autoSelectEsbuildConfig();
+configs.extension.plugins = [
+    ...(configs.extension.plugins ?? []),
     copyPlugin({
         assets: [
             {
@@ -66,7 +65,7 @@ extensionConfig.plugins = [
         ],
     }),
 ];
-await autoEsbuildOrWatch(bundles);
+await autoEsbuildOrWatch(configs);
 ```
 
 Each asset has a source directory (`from`), a destination directory (`to`), and optional
@@ -160,15 +159,12 @@ import {
     autoSelectEsbuildConfig,
     createWebviewEsbuildConfig,
 } from '@microsoft/vscode-azext-eng/esbuild';
-await autoEsbuildOrWatch([
+await autoEsbuildOrWatch({
     ...autoSelectEsbuildConfig(),
-    {
-        name: 'webview',
-        config: createWebviewEsbuildConfig({
-            entryPoints: { views: './src/webview/webviewEntry.tsx' },
-        }),
-    },
-]);
+    webview: createWebviewEsbuildConfig({
+        entryPoints: { views: './src/webview/webviewEntry.tsx' },
+    }),
+});
 ```
 
 The presets use bundled browser ESM, ES2022, no splitting, CSS loading, and data-URL
@@ -186,14 +182,24 @@ Imported files remain watched after compilation errors, so correcting them trigg
 
 ## Ordered Bundles
 
-`autoSelectEsbuildConfig()` returns an ordered array of `{ name, config, watch? }`
-bundles: `telemetry` first (`watch: false`, `metafile: false`), then `extension`. The standard
-`autoEsbuildOrWatch(autoSelectEsbuildConfig())` call is unchanged. Custom consumers
-must migrate from the old `extensionConfig`/`telemetryConfig` object to this array.
-Append any additional bundles in the order they must initially build. The runner
-awaits each initial build, including in watch mode; subsequent rebuilds are independent.
-Telemetry still builds only once. SIGINT/SIGTERM and initialization failures dispose
-all watch contexts.
+`autoSelectEsbuildConfig()` returns `ExtensionEsbuildConfigs`: an object with a
+required `extension` config and an optional `telemetry` config. The standard
+`autoEsbuildOrWatch(autoSelectEsbuildConfig())` call is unchanged. Customize the
+extension directly, for example `configs.extension.alias = { ... }`, and add other
+configs by key, such as `configs.webview = createWebviewEsbuildConfig(...)`.
+
+The runner accepts `EsbuildConfigs`, a map of names to plain esbuild configs; an
+extension config is not required for custom sequences. Undefined entries are
+omitted. Migrate the old `extensionConfig`/`telemetryConfig` properties to
+`extension`/`telemetry`. There is no separate bundle descriptor or `watch` option.
+
+The reserved `telemetry` config always builds first, only once, with metadata
+disabled, even if inserted last or configured with `metafile: true`. All other
+configs follow JavaScript property enumeration order and are watched when
+`--watch` is set. Use descriptive keys rather than integer-like keys, which
+JavaScript enumerates numerically instead of in insertion order. The runner awaits
+each initial build, including in watch mode; subsequent rebuilds are independent.
+SIGINT/SIGTERM and initialization failures dispose all watch contexts.
 
 The runner owns the VS Code problem-matcher start/finish messages. One pair covers
 the complete initial sequence; watch rebuilds emit a finish only when all active
@@ -204,7 +210,7 @@ Both extension and webview factories use unminified builds with linked source ma
 when `--watch` is set, even with `DEBUG_ESBUILD` enabled. Debug independently adds
 extension and webview metadata; telemetry keeps its production settings.
 
-Each bundle requires a unique name, used in build-failure messages and metadata filenames.
+Each object's key names its bundle in build-failure messages and metadata filenames.
 Names use letters, numbers, underscores, hyphens, and dots, starting with a letter,
 number, underscore, or hyphen. Names must be unique ignoring case for portability.
 Metafiles are written after builds and rebuilds to `esbuild.<name>.meta.json`

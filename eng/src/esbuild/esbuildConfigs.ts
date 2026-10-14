@@ -228,64 +228,68 @@ export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
 
 // #endregion
 
-/**
- * One bundle in an ordered build sequence.
- */
-export interface EsbuildBundle {
-    /** Unique bundle name used in errors and esbuild.<name>.meta.json. */
-    name: string;
-    /** Esbuild configuration for building this bundle. */
-    config: EsbuildConfig;
-    /** Set false to build only once, even when --watch is passed. */
-    watch?: boolean;
+/** Named build configurations. Undefined entries are omitted from the build sequence. */
+export type EsbuildConfigs = Record<string, EsbuildConfig | undefined>;
+
+/** The selector always supplies an extension configuration and optionally telemetry. */
+export interface ExtensionEsbuildConfigs extends EsbuildConfigs {
+    extension: EsbuildConfig;
+    telemetry?: EsbuildConfig;
 }
 
 /**
  * Auto-selects the appropriate esbuild config based on environment variables and command line args
  * @param esm (Optional, default: false) True if the ESM configs should be returned
- * @param telemetry (Optional, default: true) True if the telemetry config should be included
+ * @param includeTelemetry (Optional, default: true) True if the telemetry config should be included
  * @returns
  * - if `--watch` is passed as an argument, returns the dev config + optional telemetry config
  * - else if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
  * - else, returns the prod config + optional telemetry config
  * Debug independently enables extension metadata, including in watch mode.
  */
-export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): EsbuildBundle[] {
-    let extensionConfig: EsbuildConfig;
+export function autoSelectEsbuildConfig(esm: boolean = false, includeTelemetry: boolean = true): ExtensionEsbuildConfigs {
+    let extension: EsbuildConfig;
 
     if (isAutoWatch) {
-        extensionConfig = {
+        extension = {
             ...(esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev),
             ...(isAutoDebug ? { metafile: true } : {}),
         };
     } else if (isAutoDebug) {
-        extensionConfig = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
+        extension = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
     } else {
-        extensionConfig = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
+        extension = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }
 
-    const bundles: EsbuildBundle[] = [];
+    let telemetry: EsbuildConfig | undefined;
 
-    if (telemetry) {
-        bundles.push({
-            name: 'telemetry',
-            config: esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig,
-            watch: false,
-        });
+    if (includeTelemetry) {
+        telemetry = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
     }
 
-    bundles.push({ name: 'extension', config: extensionConfig });
-    return bundles;
+    return { extension, telemetry };
 }
 
 /**
- * Builds bundles in supplied order, awaiting each initial build before starting the next.
- * With --watch, watches bundles unless watch is false. Writes each generated metafile separately.
+ * Builds telemetry once first, then other configs in property enumeration order.
+ * Awaits each initial build, including in watch mode. Keys name errors and metadata files.
  */
-export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Promise<void> {
-    validateBundleNames(bundles);
+export async function autoEsbuildOrWatch(configs: Readonly<EsbuildConfigs>): Promise<void> {
+    const entries: [string, EsbuildConfig][] = [];
 
-    if (bundles.length === 0) {
+    for (const [name, config] of Object.entries(configs)) {
+        if (config !== undefined) {
+            if (name === 'telemetry') {
+                entries.unshift([name, config]);
+            } else {
+                entries.push([name, config]);
+            }
+        }
+    }
+
+    validateBundleNames(entries.map(([name]) => name));
+
+    if (entries.length === 0) {
         return;
     }
 
@@ -317,18 +321,18 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
     try {
         progress.beginInitialization();
 
-        for (const bundle of bundles) {
+        for (const [name, config] of entries) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag between builds.
             if (stopped) {
                 return;
             }
 
-            const config = bundle.config;
-            const watching = isAutoWatch && bundle.watch !== false;
+            const watching = isAutoWatch && name !== 'telemetry';
 
             const options = {
                 ...config,
-                plugins: [...(config.plugins ?? []), metafilePlugin(bundle), buildProgressPlugin(progress)],
+                metafile: name === 'telemetry' ? false : config.metafile,
+                plugins: [...(config.plugins ?? []), metafilePlugin(name, config), buildProgressPlugin(progress)],
             };
 
             try {
@@ -356,7 +360,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                 }
             } catch (error) {
                 throw new Error(
-                    `Failed to build bundle "${bundle.name}": ${error instanceof Error ? error.message : String(error)}`,
+                    `Failed to build bundle "${name}": ${error instanceof Error ? error.message : String(error)}`,
                     { cause: error },
                 );
             }
@@ -481,9 +485,7 @@ function buildProgressPlugin(progress: BuildProgress): Plugin {
     };
 }
 
-function metafilePlugin(bundle: EsbuildBundle): Plugin {
-    const config = bundle.config;
-
+function metafilePlugin(name: string, config: EsbuildConfig): Plugin {
     return {
         name: 'bundle-result',
         setup(build) {
@@ -491,7 +493,7 @@ function metafilePlugin(bundle: EsbuildBundle): Plugin {
                 if (result.metafile) {
                     const destination = path.resolve(
                         config.absWorkingDir ?? process.cwd(),
-                        `esbuild.${bundle.name}.meta.json`,
+                        `esbuild.${name}.meta.json`,
                     );
 
                     await fs.mkdir(path.dirname(destination), { recursive: true });
@@ -502,11 +504,11 @@ function metafilePlugin(bundle: EsbuildBundle): Plugin {
     };
 }
 
-function validateBundleNames(bundles: readonly EsbuildBundle[]): void {
+function validateBundleNames(bundleNames: readonly string[]): void {
     const names = new Set<string>();
 
-    for (const { name } of bundles) {
-        if (typeof name !== 'string' || !/^[a-z0-9_-][a-z0-9_.-]*$/i.test(name)) {
+    for (const name of bundleNames) {
+        if (!/^[a-z0-9_-][a-z0-9_.-]*$/i.test(name)) {
             throw new Error('Bundle names must be non-empty filename-safe identifiers using letters, numbers, underscores, hyphens, or dots.');
         }
 
