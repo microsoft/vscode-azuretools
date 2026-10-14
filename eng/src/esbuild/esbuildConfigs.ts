@@ -389,7 +389,11 @@ function createInitialBuild(): { plugin: Plugin; promise: Promise<void> } {
     return { plugin, promise };
 }
 
-function createBuildLogger() {
+function createBuildLogger(): {
+    plugin: Plugin;
+    finishInitialization(): void;
+    stop(): void;
+} {
     let initializing = true;
     let active = 0;
     let stopped = false;
