@@ -159,7 +159,7 @@ import {
 } from '@microsoft/vscode-azext-eng/esbuild';
 await autoEsbuildOrWatch([
     ...autoSelectEsbuildConfig(),
-    { config: createWebviewEsbuildConfig({
+    { name: 'webview', config: createWebviewEsbuildConfig({
         entryPoints: { views: './src/webview/webviewEntry.tsx' },
     }) },
 ]);
@@ -180,8 +180,8 @@ Imported files remain watched after compilation errors, so correcting them trigg
 
 ## Ordered Bundles
 
-`autoSelectEsbuildConfig()` returns an ordered array of `{ config, watch?, metafilePath? }`
-bundles: telemetry first (`watch: false`), then the extension. The standard
+`autoSelectEsbuildConfig()` returns an ordered array of `{ name, config, watch? }`
+bundles: `telemetry` first (`watch: false`, `metafile: false`), then `extension`. The standard
 `autoEsbuildOrWatch(autoSelectEsbuildConfig())` call is unchanged. Custom consumers
 must migrate from the old `extensionConfig`/`telemetryConfig` object to this array.
 Append any additional bundles in the order they must initially build. The runner
@@ -193,8 +193,12 @@ Both extension and webview factories use unminified builds with linked source ma
 when `--watch` is set, even with `DEBUG_ESBUILD` enabled. Debug independently adds
 extension and webview metadata; telemetry keeps its production settings.
 
-Metafiles are written after builds and rebuilds to `esbuild.<bundle index>.meta.json`
-under `absWorkingDir` or cwd. Set a bundle's `metafilePath` for a custom destination.
+Each bundle requires a unique name, used in build-failure messages and metadata filenames.
+Names use letters, numbers, underscores, hyphens, and dots, starting with a letter,
+number, underscore, or hyphen. Names must be unique ignoring case for portability.
+Metafiles are written after builds and rebuilds to `esbuild.<name>.meta.json`
+under `absWorkingDir` or cwd, such as `esbuild.extension.meta.json` and
+`esbuild.webview.meta.json`. Telemetry metadata is disabled.
 
 The default extension config now copies both Azureutils' top-level resource SVGs
 and `resources/azureIcons/*.svg`. Consumers no longer need a separate copy mapping

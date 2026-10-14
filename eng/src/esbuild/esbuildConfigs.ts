@@ -50,6 +50,7 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
     }],
     minify: true,
     sourcemap: false,
+    metafile: false,
 };
 
 /**
@@ -247,11 +248,11 @@ export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
  * One bundle in an ordered build sequence.
  */
 export interface EsbuildBundle {
+    /** Unique bundle name used in errors and esbuild.<name>.meta.json. */
+    name: string;
     config: EsbuildConfig;
     /** Set false to build only once, even when --watch is passed. */
     watch?: boolean;
-    /** Relative to absWorkingDir or cwd. Defaults to esbuild.<bundle index>.meta.json. */
-    metafilePath?: string;
 }
 
 /**
@@ -283,8 +284,8 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
     }
 
     return [
-        ...(telemetryConfig ? [{ config: telemetryConfig, watch: false }] : []),
-        { config: extensionConfig },
+        ...(telemetryConfig ? [{ name: 'telemetry', config: telemetryConfig, watch: false }] : []),
+        { name: 'extension', config: extensionConfig },
     ];
 }
 
@@ -293,6 +294,8 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
  * With --watch, watches bundles unless watch is false. Writes each generated metafile separately.
  */
 export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Promise<void> {
+    validateBundleNames(bundles);
+
     const contexts: BuildContext[] = [];
     let stopped = false;
 
@@ -322,7 +325,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
     }
 
     try {
-        for (const [index, bundle] of bundles.entries()) {
+        for (const bundle of bundles) {
             if (isStopped()) {
                 return;
             }
@@ -339,7 +342,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                         if (result.metafile) {
                             const destination = path.resolve(
                                 config.absWorkingDir ?? process.cwd(),
-                                bundle.metafilePath ?? `esbuild.${index}.meta.json`,
+                                `esbuild.${bundle.name}.meta.json`,
                             );
 
                             await fs.mkdir(path.dirname(destination), { recursive: true });
@@ -354,48 +357,72 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                 plugins: [...(config.plugins ?? []), metadata],
             };
 
-            if (watching) {
-                const initial = new Promise<void>((resolve, reject) => {
-                    completed = resolve;
-                    failed = reject;
-                });
+            try {
+                if (watching) {
+                    const initial = new Promise<void>((resolve, reject) => {
+                        completed = resolve;
+                        failed = reject;
+                    });
 
-                options.plugins.push({
-                    name: 'initial-build',
-                    setup(build) {
-                        build.onEnd(result => {
-                            if (result.errors.length) {
-                                failed?.(new Error(result.errors.map(error => error.text).join('\n')));
-                            } else {
-                                completed?.();
-                            }
+                    options.plugins.push({
+                        name: 'initial-build',
+                        setup(build) {
+                            build.onEnd(result => {
+                                if (result.errors.length) {
+                                    failed?.(new Error(result.errors.map(error => error.text).join('\n')));
+                                } else {
+                                    completed?.();
+                                }
 
-                            completed = undefined;
-                            failed = undefined;
-                        });
-                    },
-                });
+                                completed = undefined;
+                                failed = undefined;
+                            });
+                        },
+                    });
 
-                const ctx = await context(options);
-                if (isStopped()) {
-                    await ctx.dispose();
-                    return;
+                    const ctx = await context(options);
+                    if (isStopped()) {
+                        await ctx.dispose();
+                        return;
+                    }
+
+                    contexts.push(ctx);
+                    if (contexts.length === 1) {
+                        process.on('SIGINT', stop);
+                        process.on('SIGTERM', stop);
+                    }
+
+                    await ctx.watch();
+                    await Promise.race([initial, shutdown]);
+                } else {
+                    await build(options);
                 }
-
-                contexts.push(ctx);
-                if (contexts.length === 1) {
-                    process.on('SIGINT', stop);
-                    process.on('SIGTERM', stop);
-                }
-
-                await ctx.watch();
-                await Promise.race([initial, shutdown]);
-            } else {
-                await build(options);
+            } catch (error) {
+                throw new Error(
+                    `Failed to build bundle "${bundle.name}": ${error instanceof Error ? error.message : String(error)}`,
+                    { cause: error },
+                );
             }
         }
     } catch (error) {
         await dispose();
         throw error;
+    }
+}
+
+function validateBundleNames(bundles: readonly EsbuildBundle[]): void {
+    const names = new Set<string>();
+
+    for (const { name } of bundles) {
+        if (typeof name !== 'string' || !/^[a-z0-9_-][a-z0-9_.-]*$/i.test(name)) {
+            throw new Error('Bundle names must be non-empty filename-safe identifiers using letters, numbers, underscores, hyphens, or dots.');
+        }
+
+        const key = name.toLowerCase();
+        if (names.has(key)) {
+            throw new Error(`Duplicate bundle name: "${name}".`);
+        }
+
+        names.add(key);
     }
 }
