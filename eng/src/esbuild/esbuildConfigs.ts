@@ -298,20 +298,15 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
     validateBundleNames(bundles);
 
     const contexts: BuildContext[] = [];
-    let stopped = false;
-
-    function isStopped(): boolean {
-        return stopped;
-    }
-
-    let stopInitial: (() => void) | undefined;
-    const shutdown = new Promise<void>(resolve => {
-        stopInitial = resolve;
+    const shutdown = new AbortController();
+    const aborted = new Promise<void>(resolve => {
+        shutdown.signal.addEventListener('abort', () => {
+            resolve();
+        }, { once: true });
     });
 
     async function dispose(): Promise<void> {
-        stopped = true;
-        stopInitial?.();
+        shutdown.abort();
         process.off('SIGINT', stop);
         process.off('SIGTERM', stop);
         await Promise.all(contexts.splice(0).map(ctx => ctx.dispose()));
@@ -327,9 +322,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
     try {
         for (const bundle of bundles) {
-            if (isStopped()) {
-                return;
-            }
+            shutdown.signal.throwIfAborted();
 
             const config = bundle.config;
             const watching = isAutoWatch && bundle.watch !== false;
@@ -382,23 +375,24 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                     });
 
                     const ctx = await context(options);
-                    if (isStopped()) {
-                        await ctx.dispose();
-                        return;
-                    }
-
                     contexts.push(ctx);
+                    shutdown.signal.throwIfAborted();
+
                     if (contexts.length === 1) {
                         process.on('SIGINT', stop);
                         process.on('SIGTERM', stop);
                     }
 
                     await ctx.watch();
-                    await Promise.race([initial, shutdown]);
+                    await Promise.race([initial, aborted]);
                 } else {
                     await build(options);
                 }
             } catch (error) {
+                if (error === shutdown.signal.reason) {
+                    throw error;
+                }
+
                 throw new Error(
                     `Failed to build bundle "${bundle.name}": ${error instanceof Error ? error.message : String(error)}`,
                     { cause: error },
@@ -407,6 +401,11 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
         }
     } catch (error) {
         await dispose();
+
+        if (error === shutdown.signal.reason) {
+            return;
+        }
+
         throw error;
     }
 }
