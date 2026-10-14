@@ -279,7 +279,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
         return;
     }
 
-    const logger = createBuildLogger();
+    const progress = createBuildProgress();
     const contexts: BuildContext[] = [];
     let stopped = false;
     let stopInitial: (() => void) | undefined;
@@ -289,7 +289,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
     async function dispose(): Promise<void> {
         stopped = true;
-        logger.stop();
+        progress.stop();
         stopInitial?.();
         process.off('SIGINT', stop);
         process.off('SIGTERM', stop);
@@ -305,6 +305,8 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
     }
 
     try {
+        progress.beginInitialization();
+
         for (const bundle of bundles) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag between builds.
             if (stopped) {
@@ -316,7 +318,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
             const options = {
                 ...config,
-                plugins: [...(config.plugins ?? []), metafilePlugin(bundle), logger.plugin],
+                plugins: [...(config.plugins ?? []), metafilePlugin(bundle), buildProgressPlugin(progress)],
             };
 
             try {
@@ -350,7 +352,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
             }
         }
 
-        logger.finishInitialization();
+        progress.completeInitialization();
     } catch (error) {
         await dispose();
 
@@ -389,24 +391,29 @@ function createInitialBuild(): { plugin: Plugin; promise: Promise<void> } {
     return { plugin, promise };
 }
 
-function createBuildLogger(): {
-    plugin: Plugin;
-    finishInitialization(): void;
+interface BuildProgress {
+    beginInitialization(): void;
+    completeInitialization(): void;
+    bundleStarted(): void;
+    bundleFinished(): void;
     stop(): void;
-} {
+}
+
+/** One coordinator per runner: startup is one cycle, then overlapping rebuilds share a cycle. */
+function createBuildProgress(): BuildProgress {
     let initializing = true;
-    let active = 0;
+    let activeBuilds = 0;
     let stopped = false;
     let start: bigint;
 
-    function logStart(): void {
+    function startCycle(): void {
         // Watch messages must match the existing VS Code problem matcher.
         console.log(isAutoWatch ? '[watch] build started' : 'esbuild started');
         start = process.hrtime.bigint();
     }
 
-    function logFinishIfIdle(): void {
-        if (initializing || active !== 0 || stopped) {
+    function finishCycleIfReady(): void {
+        if (initializing || activeBuilds !== 0 || stopped) {
             return;
         }
 
@@ -416,42 +423,50 @@ function createBuildLogger(): {
             : `esbuild finished in ${elapsed} milliseconds`);
     }
 
-    const plugin: Plugin = {
-        name: 'start-stop-log',
-        setup(build) {
-            build.onStart(() => {
-                if (stopped) {
-                    return;
-                }
-
-                if (!initializing && active === 0) {
-                    logStart();
-                }
-
-                active++;
-            });
-
-            build.onEnd(() => {
-                if (stopped) {
-                    return;
-                }
-
-                active--;
-                logFinishIfIdle();
-            });
-        },
-    };
-
-    logStart();
-
     return {
-        plugin,
-        finishInitialization(): void {
+        beginInitialization(): void {
+            startCycle();
+        },
+        completeInitialization(): void {
             initializing = false;
-            logFinishIfIdle();
+            finishCycleIfReady();
+        },
+        bundleStarted(): void {
+            if (stopped) {
+                return;
+            }
+
+            if (!initializing && activeBuilds === 0) {
+                startCycle();
+            }
+
+            activeBuilds++;
+        },
+        bundleFinished(): void {
+            if (stopped) {
+                return;
+            }
+
+            activeBuilds--;
+            finishCycleIfReady();
         },
         stop(): void {
             stopped = true;
+        },
+    };
+}
+
+/** Reports this bundle's activity to the shared coordinator, after earlier post-build hooks. */
+function buildProgressPlugin(progress: BuildProgress): Plugin {
+    return {
+        name: 'build-progress',
+        setup(build) {
+            build.onStart(() => {
+                progress.bundleStarted();
+            });
+            build.onEnd(() => {
+                progress.bundleFinished();
+            });
         },
     };
 }
