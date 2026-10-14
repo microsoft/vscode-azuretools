@@ -300,11 +300,16 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
 export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Promise<void> {
     const contexts: BuildContext[] = [];
     let stopped = false;
+
     function isStopped(): boolean {
         return stopped;
     }
+
     let stopInitial: (() => void) | undefined;
-    const shutdown = new Promise<void>(resolve => { stopInitial = resolve; });
+    const shutdown = new Promise<void>(resolve => {
+        stopInitial = resolve;
+    });
+
     async function dispose(): Promise<void> {
         stopped = true;
         stopInitial?.();
@@ -312,6 +317,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
         process.off('SIGTERM', stop);
         await Promise.all(contexts.splice(0).map(ctx => ctx.dispose()));
     }
+
     function stop(): void {
         console.log('Stopping esbuild watch');
         void dispose().catch((error: unknown) => {
@@ -319,33 +325,46 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
             process.exitCode = 1;
         });
     }
+
     try {
         for (const [index, bundle] of bundles.entries()) {
             if (isStopped()) {
                 return;
             }
+
             const config = bundle.config;
             const watching = isAutoWatch && bundle.watch !== false;
             let completed: (() => void) | undefined;
             let failed: ((error: Error) => void) | undefined;
+
             const metadata: Plugin = {
                 name: 'bundle-result',
                 setup(build) {
                     build.onEnd(async result => {
                         if (result.metafile) {
-                            const destination = path.resolve(config.absWorkingDir ?? process.cwd(), bundle.metafilePath ?? `esbuild.${index}.meta.json`);
+                            const destination = path.resolve(
+                                config.absWorkingDir ?? process.cwd(),
+                                bundle.metafilePath ?? `esbuild.${index}.meta.json`,
+                            );
+
                             await fs.mkdir(path.dirname(destination), { recursive: true });
                             await fs.writeFile(destination, JSON.stringify(result.metafile));
                         }
                     });
                 },
             };
-            const options = { ...config, plugins: [...(config.plugins ?? []), metadata] };
+
+            const options = {
+                ...config,
+                plugins: [...(config.plugins ?? []), metadata],
+            };
+
             if (watching) {
                 const initial = new Promise<void>((resolve, reject) => {
                     completed = resolve;
                     failed = reject;
                 });
+
                 options.plugins.push({
                     name: 'initial-build',
                     setup(build) {
@@ -355,21 +374,25 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                             } else {
                                 completed?.();
                             }
+
                             completed = undefined;
                             failed = undefined;
                         });
                     },
                 });
+
                 const ctx = await context(options);
                 if (isStopped()) {
                     await ctx.dispose();
                     return;
                 }
+
                 contexts.push(ctx);
                 if (contexts.length === 1) {
                     process.on('SIGINT', stop);
                     process.on('SIGTERM', stop);
                 }
+
                 await ctx.watch();
                 await Promise.race([initial, shutdown]);
             } else {
