@@ -313,8 +313,6 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
             const config = bundle.config;
             const watching = isAutoWatch && bundle.watch !== false;
-            let completed: (() => void) | undefined;
-            let failed: ((error: Error) => void) | undefined;
 
             const options = {
                 ...config,
@@ -323,26 +321,8 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
             try {
                 if (watching) {
-                    const initial = new Promise<void>((resolve, reject) => {
-                        completed = resolve;
-                        failed = reject;
-                    });
-
-                    options.plugins.push({
-                        name: 'initial-build',
-                        setup(build) {
-                            build.onEnd(result => {
-                                if (result.errors.length) {
-                                    failed?.(new Error(result.errors.map(error => error.text).join('\n')));
-                                } else {
-                                    completed?.();
-                                }
-
-                                completed = undefined;
-                                failed = undefined;
-                            });
-                        },
-                    });
+                    const initial = createInitialBuild();
+                    options.plugins.push(initial.plugin);
 
                     const ctx = await context(options);
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag during context creation.
@@ -358,7 +338,7 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
                     }
 
                     await ctx.watch();
-                    await Promise.race([initial, shutdown]);
+                    await Promise.race([initial.promise, shutdown]);
                 } else {
                     await build(options);
                 }
@@ -376,6 +356,37 @@ export async function autoEsbuildOrWatch(bundles: readonly EsbuildBundle[]): Pro
 
         throw error;
     }
+}
+
+/**
+ * watch() enables watching without awaiting its first build. Append this plugin last
+ * to await that result, including earlier post-build hooks, and propagate startup errors.
+ */
+function createInitialBuild(): { plugin: Plugin; promise: Promise<void> } {
+    let completed: (() => void) | undefined;
+    let failed: ((error: Error) => void) | undefined;
+    const promise = new Promise<void>((resolve, reject) => {
+        completed = resolve;
+        failed = reject;
+    });
+
+    const plugin: Plugin = {
+        name: 'initial-build',
+        setup(build) {
+            build.onEnd(result => {
+                if (result.errors.length) {
+                    failed?.(new Error(result.errors.map(error => error.text).join('\n')));
+                } else {
+                    completed?.();
+                }
+
+                completed = undefined;
+                failed = undefined;
+            });
+        },
+    };
+
+    return { plugin, promise };
 }
 
 function createBuildLogger() {
