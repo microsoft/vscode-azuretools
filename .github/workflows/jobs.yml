@@ -1,0 +1,75 @@
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: false
+        type: string
+        default: "."
+      package_manager:
+        required: false
+        type: string
+        default: "npm"
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+
+    steps:
+      # Setup
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # GitHub (unlike AzDO) can't enforce an enum on a workflow_call input, so
+      # fail the build when package_manager isn't one we support. The step is
+      # skipped entirely when the value is valid.
+      - name: Validate package_manager
+        if: ${{ inputs.package_manager != 'npm' && inputs.package_manager != 'pnpm' }}
+        run: |
+          echo "::error::Invalid package manager; expected 'npm' or 'pnpm'."
+          exit 1
+      # Activate pnpm via Corepack (a plain run step) instead of a Marketplace
+      # action so consumers don't need to allowlist a third-party action. This
+      # runs in working_directory, so `corepack prepare --activate` downloads and
+      # pins the pnpm version from that directory's package.json "packageManager"
+      # field before actions/setup-node runs its `cache: pnpm` step. Skipped
+      # entirely for npm consumers.
+      - name: Using PNPM
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        run: corepack enable && corepack prepare --activate
+      - name: Using Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          # Action steps always run from the workspace root, regardless of
+          # defaults.run.working-directory, so the lockfile path has to be
+          # qualified with working_directory for the cache to resolve.
+          cache: ${{ inputs.package_manager }}
+          cache-dependency-path: ${{ format('{0}/{1}', inputs.working_directory, inputs.package_manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json') }}
+
+      # Install
+      - run: ${{ inputs.package_manager }} ci
+
+      # Lint
+      - run: ${{ inputs.package_manager }} run lint
+
+      # Build
+      - run: ${{ inputs.package_manager }} run build
+
+      # Package
+      - run: ${{ inputs.package_manager }} run package
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: "Artifacts-${{ inputs.working_directory }}"
+          path: |
+            **/*.vsix
+            **/*.tgz
+            !**/node_modules
+          # Fail loudly if `package` produced nothing, rather than publishing an
+          # empty artifact and letting the build go green.
+          if-no-files-found: error
+
+      # Test
+      - run: xvfb-run -a ${{ inputs.package_manager }} test
