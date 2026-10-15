@@ -20,7 +20,7 @@ jobs:
 
     steps:
       # Setup
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # GitHub (unlike AzDO) can't enforce an enum on a workflow_call input, so
       # fail the build when package_manager isn't one we support. The step is
       # skipped entirely when the value is valid.
@@ -39,7 +39,7 @@ jobs:
         if: ${{ inputs.package_manager == 'pnpm' }}
         run: corepack enable && corepack prepare --activate
       - name: Using Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
           # Action steps always run from the workspace root, regardless of
@@ -60,7 +60,7 @@ jobs:
       # Package
       - run: ${{ inputs.package_manager }} run package
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: "Artifacts-${{ inputs.working_directory }}"
           path: |
