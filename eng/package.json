@@ -51,12 +51,12 @@
     },
     "bin": {
         "azext-link-test-cache": "./dist/cjs/src/vscode-test/linkTestCacheCli.js",
-        "tsgo": "./bin/tsgo.mjs"
+        "tsgo": "./dist/esm/src/typescript/tsgo.mjs"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
-        "build:esm": "node ./bin/tsgo.mjs",
-        "build:cjs": "node ./bin/tsgo.mjs --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
+        "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "test": "mocha",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"

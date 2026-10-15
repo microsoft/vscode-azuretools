@@ -4,12 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { azExtEslintStrictTypeChecked } from './src/eslint/eslintConfigs.ts';
-import tseslint from 'typescript-eslint';
 
 export default [
     ...azExtEslintStrictTypeChecked,
-    {
-        ...tseslint.configs.disableTypeChecked,
-        files: ['bin/*.mjs'],
-    },
 ];
