@@ -84,7 +84,7 @@ export const azExtCopyrightHeaderRule: EslintConfig = {
  * @note This is exported but not meant to be used in isolation, rather as a building block for other configs
  */
 export const azExtTestRules: EslintConfig = {
-    files: ['**/*.test.ts'],
+    files: ['**/*.test.{ts,mts,cts}'],
     rules: {
         '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' in test files
         '@typescript-eslint/no-non-null-assertion': 'off', // Allow non-null assertions in test files
@@ -101,6 +101,7 @@ export const azExtTestRules: EslintConfig = {
  */
 export const azExtStylisticRules: EslintConfig = {
     rules: {
+        'no-unused-vars': 'off',
         '@typescript-eslint/consistent-generic-constructors': 'warn', // Move from error to warn
         '@typescript-eslint/naming-convention': [
             // Naming convention is enforced, with some exceptions below
@@ -111,10 +112,16 @@ export const azExtStylisticRules: EslintConfig = {
                 format: ['camelCase', 'PascalCase'],
             },
             {
+                selector: 'variable',
+                format: ['camelCase', 'PascalCase'],
+                leadingUnderscore: 'allow',
+            },
+            {
                 // const variables can also have UPPER_CASE
                 selector: 'variable',
                 modifiers: ['const'],
                 format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+                leadingUnderscore: 'allow',
             },
             {
                 // Function parameters should be camelCase, but can have a leading underscore if unused
@@ -147,6 +154,9 @@ export const azExtStylisticRules: EslintConfig = {
             {
                 // As a function parameter, unused parameters are allowed
                 args: 'none',
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
             },
         ],
     },
@@ -202,20 +212,51 @@ export const lazyImportAzurePackages = lazyImportRuleConfig(['@azure/*', '!@azur
  * @returns The {@link EslintConfig}
  */
 export function lazyImportRuleConfig(patterns: string[]): EslintConfig {
+    return importRestrictionsRuleConfig({ lazyPatterns: patterns });
+}
+
+export interface ImportRestrictionsOptions {
+    /** Modules which may only be imported for their types. */
+    typeOnlyModules?: string[];
+    /** Module patterns whose runtime imports must be lazy. */
+    lazyPatterns?: string[];
+}
+
+/** Combines type-only boundaries and lazy imports in one rule, avoiding option replacement. */
+export function importRestrictionsRuleConfig(options: ImportRestrictionsOptions): EslintConfig {
     return {
         rules: {
+            'no-restricted-imports': 'off',
             '@typescript-eslint/no-restricted-imports': [
                 'error',
                 {
-                    patterns: [
-                        {
-                            group: patterns,
+                    paths: (options.typeOnlyModules ?? []).map(name => ({
+                        name,
+                        allowTypeImports: true,
+                        message: 'Only type imports from this module are allowed.',
+                    })),
+                    patterns: options.lazyPatterns?.length
+                        ? [{
+                            group: options.lazyPatterns,
                             message: 'Please lazily import this package within the function that uses it to reduce extension activation time.',
                             allowTypeImports: true,
-                        },
-                    ],
+                        }]
+                        : [],
                 },
             ],
+        },
+    };
+}
+
+/** Selects a dedicated lint tsconfig without changing any of the shared lint rules. */
+export function explicitTsProjectRuleConfig(project: string | string[], tsconfigRootDir?: string): EslintConfig {
+    return {
+        languageOptions: {
+            parserOptions: {
+                projectService: false,
+                project,
+                ...(tsconfigRootDir === undefined ? {} : { tsconfigRootDir }),
+            },
         },
     };
 }
@@ -234,6 +275,7 @@ export const ignoresConfig: EslintConfig = globalIgnores([
     '.vscode-test.mjs',
     'esbuild*.mjs',
     'eslint.config.mjs',
+    '.mocharc.cjs',
     'main.js',
     'main.mjs',
     '**/test/testProjects/**'

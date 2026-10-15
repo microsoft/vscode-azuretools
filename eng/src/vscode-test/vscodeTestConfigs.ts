@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { defineConfig, type TestConfiguration as VscodeTestConfig } from '@vscode/test-cli';
+import { type IDesktopTestConfiguration as VscodeTestConfig } from '@vscode/test-cli';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { cloneConfig } from '../cloneConfig.js';
 
 /**
  * Base config - shared between different test configs
@@ -14,7 +15,7 @@ import { join } from 'node:path';
  */
 export const baseConfig: Partial<VscodeTestConfig> = {
     mocha: {
-        // 'test-globals' declares mocha's globals and registers the global `expect` and the chai-as-promised plugin, since this test runner does not load the mocha hooks
+        // Desktop tests bypass the Mocha hooks, so preload the shared declarations and Chai assertions.
         require: ['tsx', '@microsoft/vscode-azext-eng/mocha/test-globals'],
         timeout: 10000,
     },
@@ -44,8 +45,7 @@ if (process.platform !== 'win32') {
  * Test configuration for extensions with tests in `./src/test/` directory.
  * @see https://github.com/microsoft/vscode-test-cli for more options
  */
-export const azExtSrcTestConfig = defineConfig({
-    ...baseConfig,
+export const azExtSrcTestConfig = createVscodeTestConfig({
     files: 'src/test/**/*.test.{ts,mts,cts}',
     workspaceFolder: 'src/test/test.code-workspace',
 });
@@ -54,8 +54,24 @@ export const azExtSrcTestConfig = defineConfig({
  * Test configuration for extensions with tests in `./test/` directory.
  * @see https://github.com/microsoft/vscode-test-cli for more options
  */
-export const azExtTestConfig = defineConfig({
-    ...baseConfig,
-    files: 'test/**/*.test.{ts,mts,cts}',
-    workspaceFolder: 'test/test.code-workspace',
-});
+export const azExtTestConfig = createVscodeTestConfig();
+
+/**
+ * Creates an independent desktop test config. Mocha options and environment are merged;
+ * require hooks and launch arguments are appended to the shared defaults.
+ */
+export function createVscodeTestConfig(overrides: Partial<VscodeTestConfig> = {}): VscodeTestConfig {
+    return cloneConfig({
+        ...baseConfig,
+        files: 'test/**/*.test.{ts,mts,cts}',
+        workspaceFolder: 'test/test.code-workspace',
+        ...overrides,
+        mocha: {
+            ...baseConfig.mocha,
+            ...overrides.mocha,
+            require: [...(baseConfig.mocha?.require ?? []), ...(overrides.mocha?.require ?? [])],
+        },
+        env: { ...baseConfig.env, ...overrides.env },
+        launchArgs: [...(baseConfig.launchArgs ?? []), ...(overrides.launchArgs ?? [])],
+    });
+}

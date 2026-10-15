@@ -12,7 +12,7 @@
 /// <reference types="mocha" preserve="true" />
 /// <reference types="chai-as-promised" preserve="true" />
 
-import { use, type expect as chaiExpect } from 'chai';
+import { use, type expect as chaiExpect, type should as chaiShould } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 // Registers the chai-as-promised plugin, making assertions like
@@ -21,10 +21,11 @@ use(chaiAsPromised);
 
 // Registers chai's `expect` as a global, so tests can use it without importing chai.
 import 'chai/register-expect.js';
+import 'chai/register-should.js';
 
 declare global {
-    /**
-     * Chai's `expect`, registered as a global by the shared test globals setup.
-     */
+    /** Chai's `expect`, registered as a global by the shared test globals setup. */
     const expect: typeof chaiExpect;
+    /** Chai's global assertion helpers, registered alongside the Object.prototype.should getter. */
+    const should: ReturnType<typeof chaiShould>;
 }

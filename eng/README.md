@@ -9,6 +9,28 @@ In addition, universal and recommended configurations are provided. They can be 
 - [ESBuild Config](./src/esbuild/README.md)
 - [ESLint Config](./src/eslint/README.md)
 - [VS Code Test Config](./src/vscode-test/README.md)
+- [Standalone Node/Mocha Config](./src/mocha/README.md)
+
+# TypeScript Compilers
+
+This package supplies native TypeScript 7 as the `@typescript/native` dependency
+for consumer builds and type checking. TypeScript 6 remains installed as
+`typescript` for the compiler API required by typescript-eslint.
+
+Use eng's `tsgo` command rather than bare `tsc`, since both compiler packages provide
+`tsc`. `tsgo` selects the native compiler without requiring consumer hoisting.
+See the [build, watch, and typecheck examples](./MIGRATION.md#typescript-compilers).
+
+# Tests
+
+Using Node.js 22.17.0 or later, run the following from `eng`:
+
+```sh
+npm run build
+npm test
+```
+
+Build first because the tests exercise the package's public exports.
 
 # TODO: Future Ideas
 
@@ -17,7 +39,6 @@ In addition, universal and recommended configurations are provided. They can be 
 - Common/base `tsconfig.json` items
 - Common/base ignores, e.g. `.npmignore`, `.vscodeignore`
   - These could be just reference items that consumers can copy into their own projects, or if we want to get fancy, we could do it on install.
-- Use `tsgo` (TypeScript native) instead of `tsc`. Correspondingly, use native language server.
 
 # TODONT: Things Not to Do
 

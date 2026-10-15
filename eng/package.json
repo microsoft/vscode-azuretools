@@ -1,7 +1,7 @@
 {
     "name": "@microsoft/vscode-azext-eng",
     "author": "Microsoft Corporation",
-    "version": "1.1.0-alpha.6",
+    "version": "1.2.0",
     "description": "Engineering package for Azure extensions for VS Code",
     "repository": {
         "type": "git",
@@ -10,40 +10,59 @@
     "license": "MIT",
     "exports": {
         "./esbuild": {
-            "import": "./dist/esm/esbuild/esbuildConfigs.js",
-            "require": "./dist/cjs/esbuild/esbuildConfigs.js",
-            "types": "./dist/esm/esbuild/esbuildConfigs.d.ts"
+            "import": "./dist/esm/src/esbuild/esbuildConfigs.js",
+            "require": "./dist/cjs/src/esbuild/esbuildConfigs.js",
+            "types": "./dist/esm/src/esbuild/esbuildConfigs.d.ts"
+        },
+        "./esbuild/sass": {
+            "import": "./dist/esm/src/esbuild/sassPlugin.js",
+            "require": "./dist/cjs/src/esbuild/sassPlugin.js",
+            "types": "./dist/esm/src/esbuild/sassPlugin.d.ts"
         },
         "./eslint": {
-            "import": "./dist/esm/eslint/eslintConfigs.js",
-            "require": "./dist/cjs/eslint/eslintConfigs.js",
-            "types": "./dist/esm/eslint/eslintConfigs.d.ts"
-        },
-        "./vscode-test": {
-            "import": "./dist/esm/vscode-test/vscodeTestConfigs.js",
-            "require": "./dist/cjs/vscode-test/vscodeTestConfigs.js",
-            "types": "./dist/esm/vscode-test/vscodeTestConfigs.d.ts"
+            "import": "./dist/esm/src/eslint/eslintConfigs.js",
+            "require": "./dist/cjs/src/eslint/eslintConfigs.js",
+            "types": "./dist/esm/src/eslint/eslintConfigs.d.ts"
         },
         "./mocha": {
-            "import": "./dist/esm/mocha/index.mjs",
-            "types": "./dist/esm/mocha/index.d.mts"
+            "import": "./dist/esm/src/mocha/index.mjs",
+            "types": "./dist/esm/src/mocha/index.d.mts"
+        },
+        "./mocha/config": {
+            "import": "./dist/esm/src/mocha/config.js",
+            "require": "./dist/cjs/src/mocha/config.js",
+            "types": "./dist/esm/src/mocha/config.d.ts"
         },
         "./mocha/test-globals": {
-            "import": "./dist/esm/mocha/test-globals.mjs",
-            "types": "./dist/esm/mocha/test-globals.d.mts",
-            "default": "./dist/esm/mocha/test-globals.mjs"
+            "import": "./dist/esm/src/mocha/test-globals.mjs",
+            "types": "./dist/esm/src/mocha/test-globals.d.mts",
+            "default": "./dist/esm/src/mocha/test-globals.mjs"
+        },
+        "./vscode-test": {
+            "import": "./dist/esm/src/vscode-test/vscodeTestConfigs.js",
+            "require": "./dist/cjs/src/vscode-test/vscodeTestConfigs.js",
+            "types": "./dist/esm/src/vscode-test/vscodeTestConfigs.d.ts"
+        },
+        "./vscode-test/cache": {
+            "import": "./dist/esm/src/vscode-test/linkTestCache.js",
+            "require": "./dist/cjs/src/vscode-test/linkTestCache.js",
+            "types": "./dist/esm/src/vscode-test/linkTestCache.d.ts"
         }
+    },
+    "bin": {
+        "azext-link-test-cache": "./dist/cjs/src/vscode-test/linkTestCacheCli.js",
+        "tsgo": "./dist/esm/src/typescript/tsgo.mjs"
     },
     "scripts": {
         "build": "npm run build:esm && npm run build:cjs",
-        "build:esm": "tsc",
-        "build:cjs": "tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
-        "test": "exit 0",
+        "build:esm": "node ./node_modules/@typescript/native/bin/tsc",
+        "build:cjs": "node ./node_modules/@typescript/native/bin/tsc --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
+        "test": "mocha",
         "lint": "eslint --max-warnings 0",
         "package": "npm pack"
     },
     "engines": {
-        "node": ">=22"
+        "node": ">=22.17.0"
     },
     "dependencies": {
         "@eslint/js": "^10.0.1",
@@ -51,20 +70,21 @@
         "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
         "@types/mocha": "^10.0.10",
-        "chai": "^6.2.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "chai": "^6.3.0",
         "chai-as-promised": "^8.0.2",
-        "eslint": "^10.7.0",
-        "mocha": "^11.7.6",
-        "typescript": "~5.9",
-        "typescript-eslint": "^8.64.0"
+        "eslint": "^10.12.0",
+        "mocha": "^11.8.0",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.71.0"
     },
     "peerDependencies": {
         "@vscode/test-cli": "^0.0.15",
         "@vscode/test-electron": "^3.1.0",
-        "@vscode/vsce": "^3.9.2",
-        "esbuild": "^0.28.1",
-        "esbuild-plugin-copy": "^2.1.1",
-        "tsx": "^4.23.1"
+        "@vscode/vsce": "^4.0.0",
+        "esbuild": "^0.28.2",
+        "sass": "^1.105.1",
+        "tsx": "^4.23.15"
     },
     "peerDependenciesMeta": {
         "@vscode/test-cli": {
@@ -79,7 +99,7 @@
         "esbuild": {
             "optional": true
         },
-        "esbuild-plugin-copy": {
+        "sass": {
             "optional": true
         },
         "tsx": {
@@ -91,12 +111,9 @@
         "@vscode/test-cli": "*",
         "@vscode/test-electron": "*",
         "esbuild": "*",
-        "esbuild-plugin-copy": "*"
-    },
-    "publishConfig": {
-        "tag": "alpha"
+        "sass": "*"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "serialize-javascript": "^7.1.2"
     }
 }

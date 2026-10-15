@@ -1,6 +1,6 @@
 node_modules/
 .vscode/
-src/
+/src/
 !src/**/*.md
 src/**/*.ts
 src/**/*.mts
@@ -12,4 +12,6 @@ tsconfig.json
 *.tgz
 .vscode-test/
 eslint.config.mjs
+.mocharc.cjs
+test/
 *.tsbuildinfo

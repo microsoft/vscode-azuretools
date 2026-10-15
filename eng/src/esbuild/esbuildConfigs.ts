@@ -3,10 +3,14 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type BuildOptions as EsbuildConfig, build, context } from 'esbuild';
-import { copy } from 'esbuild-plugin-copy';
+import { type BuildOptions as EsbuildConfig, type BuildContext, type Plugin, build, context } from 'esbuild';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import { copyPlugin } from './copyPlugin.js';
 import { getAutoBuildSettings } from './getAutoBuildSettings.js';
+import { sassPlugin } from './sassPlugin.js';
+
+export { copyPlugin, type CopyAsset, type CopyPluginOptions } from './copyPlugin.js';
 
 export const {
     /**
@@ -46,6 +50,7 @@ export const telemetryEsbuildConfig: EsbuildConfig = {
     }],
     minify: true,
     sourcemap: false,
+    metafile: false,
 };
 
 /**
@@ -62,44 +67,80 @@ export const extensionEsbuildConfig: EsbuildConfig = {
         out: 'extension.bundle',
     }],
     plugins: [
-        copy({
+        copyPlugin({
             assets: [
                 {
-                    from: './node_modules/@microsoft/vscode-azext-azureutils/resources/*.svg',
+                    from: './node_modules/@microsoft/vscode-azext-azureutils/resources',
                     to: './node_modules/@microsoft/vscode-azext-azureutils/resources',
+                    include: ['*.svg', 'azureIcons/*.svg'],
                 },
             ],
         }),
-        {
-            name: 'start-stop-log',
-            setup(build) {
-                let start: bigint;
-                build.onStart(() => {
-                    if (isAutoWatch) {
-                        // This format is important for the problem matcher to work
-                        console.log('[watch] build started');
-                    } else {
-                        console.log('esbuild started');
-                    }
-                    start = process.hrtime.bigint();
-                });
-
-                build.onEnd(() => {
-                    const elapsed = (process.hrtime.bigint() - start) / 1000000n;
-                    if (isAutoWatch) {
-                        // This format is important for the problem matcher to work
-                        console.log(`[watch] build finished in ${elapsed} milliseconds`);
-                    } else {
-                        console.log(`esbuild finished in ${elapsed} milliseconds`);
-                    }
-                });
-            },
-        },
     ],
     alias: {
         '@vscode/extension-telemetry': './extension-telemetry.bundle.js',
     },
 };
+
+export const baseWebviewEsbuildConfig: EsbuildConfig = {
+    bundle: true,
+    outdir: './dist',
+    platform: 'browser',
+    target: 'es2022',
+    format: 'esm',
+    splitting: false,
+    loader: {
+        '.css': 'css',
+        '.ttf': 'dataurl',
+        '.woff': 'dataurl',
+        '.woff2': 'dataurl',
+    },
+};
+
+export const azExtWebviewEsbuildConfigProd: EsbuildConfig = {
+    ...baseWebviewEsbuildConfig,
+    minify: true,
+    sourcemap: false,
+};
+
+export const azExtWebviewEsbuildConfigDev: EsbuildConfig = {
+    ...baseWebviewEsbuildConfig,
+    minify: false,
+    sourcemap: 'linked',
+};
+
+export const azExtWebviewEsbuildConfigDebug: EsbuildConfig = {
+    ...azExtWebviewEsbuildConfigProd,
+    metafile: true,
+};
+
+export interface WebviewEsbuildConfig extends EsbuildConfig {
+    /** Set false to omit the default Sass plugin, for example when supplying a customized one. */
+    sass?: boolean;
+}
+
+/** Selects browser settings from the usual debug/watch flags and appends caller-supplied plugins. */
+export function createWebviewEsbuildConfig(overrides: WebviewEsbuildConfig = {}): EsbuildConfig {
+    const { sass = true, ...options } = overrides;
+    let config = azExtWebviewEsbuildConfigProd;
+
+    if (isAutoWatch) {
+        config = azExtWebviewEsbuildConfigDev;
+    } else if (isAutoDebug) {
+        config = azExtWebviewEsbuildConfigDebug;
+    }
+
+    return {
+        ...config,
+        ...(isAutoDebug ? { metafile: true } : {}),
+        ...options,
+        loader: { ...config.loader, ...options.loader },
+        plugins: [
+            ...(sass ? [sassPlugin()] : []),
+            ...(options.plugins ?? []),
+        ],
+    };
+}
 
 // #region CJS configs
 
@@ -187,19 +228,13 @@ export const azExtEsbuildConfigDebugEsm: EsbuildConfig = {
 
 // #endregion
 
-/**
- * A config for building two bundles--one for the extension, one for the telemetry reporter
- */
-export interface DualBundleConfig {
-    /**
-     * Config for building the extension bundle
-     */
-    extensionConfig: EsbuildConfig;
+/** Named build configurations. Undefined entries are omitted from the build sequence. */
+export type EsbuildConfigs = Record<string, EsbuildConfig | undefined>;
 
-    /**
-     * Config for building the telemetry bundle
-     */
-    telemetryConfig?: EsbuildConfig;
+/** The selector always supplies an extension configuration and optionally telemetry. */
+export interface ExtensionEsbuildConfigs extends EsbuildConfigs {
+    extension: EsbuildConfig;
+    telemetry?: EsbuildConfig;
 }
 
 /**
@@ -207,17 +242,22 @@ export interface DualBundleConfig {
  * @param esm (Optional, default: false) True if the ESM configs should be returned
  * @param telemetry (Optional, default: true) True if the telemetry config should be included
  * @returns
- * - if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
- * - else if `--watch` is passed as an argument, returns the dev config + optional telemetry config
+ * - if `--watch` is passed as an argument, returns the dev config + optional telemetry config
+ * - else if `process.env.DEBUG_ESBUILD` is true or 1, returns the debug config + optional telemetry config
  * - else, returns the prod config + optional telemetry config
+ * Debug independently enables extension metadata, including in watch mode.
  */
-export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): DualBundleConfig {
+export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean = true): ExtensionEsbuildConfigs {
     let extensionConfig: EsbuildConfig;
     let telemetryConfig: EsbuildConfig | undefined;
-    if (isAutoDebug) {
+
+    if (isAutoDebug && !isAutoWatch) {
         extensionConfig = esm ? azExtEsbuildConfigDebugEsm : azExtEsbuildConfigDebug;
     } else if (isAutoWatch) {
-        extensionConfig = esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev;
+        extensionConfig = { ...(esm ? azExtEsbuildConfigDevEsm : azExtEsbuildConfigDev) };
+        if (isAutoDebug) {
+            extensionConfig.metafile = true;
+        }
     } else {
         extensionConfig = esm ? azExtEsbuildConfigProdEsm : azExtEsbuildConfigProd;
     }
@@ -226,41 +266,256 @@ export function autoSelectEsbuildConfig(esm: boolean = false, telemetry: boolean
         telemetryConfig = esm ? telemetryEsbuildConfigEsm : telemetryEsbuildConfig;
     }
 
-    return { extensionConfig, telemetryConfig, };
+    return { extension: extensionConfig, telemetry: telemetryConfig };
 }
 
 /**
- * Builds the telemetry bundle, and then either builds or watches the extension bundle based
- * on environment variables and command line args
- * - if `--watch` is passed, starts esbuild in watch mode
- * - else, builds once
- *
- * Additionally, if a metafile is generated, it is written to `esbuild.meta.json`
- *
- * @note Even in watch mode, the telemetry bundle is only built once at startup--the build must
- * be restarted if the telemetry dependencies change
- *
- * @param configs The configs to build or watch
+ * Builds telemetry once first, then other configs in property enumeration order.
+ * Awaits each initial build, including in watch mode. Keys name errors and metadata files.
  */
-export async function autoEsbuildOrWatch(configs: DualBundleConfig): Promise<void> {
-    // Build telemetry bundle first (needed because the extension bundle depends on it)
-    if (!!configs.telemetryConfig) {
-        await build(configs.telemetryConfig);
+export async function autoEsbuildOrWatch(configs: Readonly<EsbuildConfigs>): Promise<void> {
+    const entries: [string, EsbuildConfig][] = [];
+
+    for (const [name, config] of Object.entries(configs)) {
+        if (config !== undefined) {
+            if (name === 'telemetry') {
+                entries.unshift([name, config]);
+            } else {
+                entries.push([name, config]);
+            }
+        }
     }
 
-    // Build (or watch) the extension bundle next
-    if (isAutoWatch) {
-        const ctx = await context(configs.extensionConfig);
-        process.on('SIGINT', () => {
-            console.log('Stopping esbuild watch');
-            void ctx.dispose();
-        });
-        await ctx.watch();
-    } else {
-        const result = await build(configs.extensionConfig);
+    validateBundleNames(entries.map(([name]) => name));
 
-        if (!!configs.extensionConfig.metafile && !!result.metafile) {
-            await fs.writeFile('esbuild.meta.json', JSON.stringify(result.metafile));
+    if (entries.length === 0) {
+        return;
+    }
+
+    const progress = createBuildProgress();
+    const contexts: BuildContext[] = [];
+    let stopped = false;
+    let releaseInitialBuildWait: (() => void) | undefined;
+    const shutdown = new Promise<void>(resolve => {
+        releaseInitialBuildWait = resolve;
+    });
+
+    async function dispose(): Promise<void> {
+        stopped = true;
+        progress.stop();
+        releaseInitialBuildWait?.();
+        process.off('SIGINT', stop);
+        process.off('SIGTERM', stop);
+        await Promise.all(contexts.splice(0).map(ctx => ctx.dispose()));
+    }
+
+    function stop(): void {
+        console.log('Stopping esbuild watch');
+        void dispose().catch((error: unknown) => {
+            console.error(error);
+            process.exitCode = 1;
+        });
+    }
+
+    try {
+        progress.beginInitialization();
+
+        for (const [name, config] of entries) {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag between builds.
+            if (stopped) {
+                return;
+            }
+
+            const watching = isAutoWatch && name !== 'telemetry';
+
+            const options = {
+                ...config,
+                metafile: name === 'telemetry' ? false : config.metafile,
+                plugins: [...(config.plugins ?? []), metafilePlugin(name, config), buildProgressPlugin(progress)],
+            };
+
+            try {
+                if (watching) {
+                    const initial = createInitialBuild();
+                    options.plugins.push(initial.plugin);
+
+                    const ctx = await context(options);
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Signal callbacks can change this flag during context creation.
+                    if (stopped) {
+                        await ctx.dispose();
+                        return;
+                    }
+
+                    contexts.push(ctx);
+                    if (contexts.length === 1) {
+                        process.on('SIGINT', stop);
+                        process.on('SIGTERM', stop);
+                    }
+
+                    await ctx.watch();
+                    await Promise.race([initial.promise, shutdown]);
+                } else {
+                    await build(options);
+                }
+            } catch (error) {
+                throw new Error(
+                    `Failed to build bundle "${name}": ${error instanceof Error ? error.message : String(error)}`,
+                    { cause: error },
+                );
+            }
         }
+
+        progress.completeInitialization();
+    } catch (error) {
+        await dispose();
+
+        throw error;
+    }
+}
+
+/**
+ * watch() enables watching without awaiting its first build. Append this plugin last
+ * to await that result, including earlier post-build hooks, and propagate startup errors.
+ */
+function createInitialBuild(): { plugin: Plugin; promise: Promise<void> } {
+    let completed: (() => void) | undefined;
+    let failed: ((error: Error) => void) | undefined;
+    const promise = new Promise<void>((resolve, reject) => {
+        completed = resolve;
+        failed = reject;
+    });
+
+    const plugin: Plugin = {
+        name: 'initial-build',
+        setup(build) {
+            build.onEnd(result => {
+                if (result.errors.length) {
+                    failed?.(new Error(result.errors.map(error => error.text).join('\n')));
+                } else {
+                    completed?.();
+                }
+
+                completed = undefined;
+                failed = undefined;
+            });
+        },
+    };
+
+    return { plugin, promise };
+}
+
+interface BuildProgress {
+    beginInitialization(): void;
+    completeInitialization(): void;
+    bundleStarted(): void;
+    bundleFinished(): void;
+    stop(): void;
+}
+
+/** One coordinator per runner: startup is one cycle, then overlapping rebuilds share a cycle. */
+function createBuildProgress(): BuildProgress {
+    let initializing = true;
+    let activeBuilds = 0;
+    let stopped = false;
+    let start: bigint;
+
+    function startCycle(): void {
+        // Watch messages must match the existing VS Code problem matcher.
+        console.log(isAutoWatch ? '[watch] build started' : 'esbuild started');
+        start = process.hrtime.bigint();
+    }
+
+    function finishCycleIfReady(): void {
+        if (initializing || activeBuilds !== 0 || stopped) {
+            return;
+        }
+
+        const elapsed = (process.hrtime.bigint() - start) / 1000000n;
+        console.log(isAutoWatch
+            ? `[watch] build finished in ${elapsed} milliseconds`
+            : `esbuild finished in ${elapsed} milliseconds`);
+    }
+
+    return {
+        beginInitialization(): void {
+            startCycle();
+        },
+        completeInitialization(): void {
+            initializing = false;
+            finishCycleIfReady();
+        },
+        bundleStarted(): void {
+            if (stopped) {
+                return;
+            }
+
+            if (!initializing && activeBuilds === 0) {
+                startCycle();
+            }
+
+            activeBuilds++;
+        },
+        bundleFinished(): void {
+            if (stopped) {
+                return;
+            }
+
+            activeBuilds--;
+            finishCycleIfReady();
+        },
+        stop(): void {
+            stopped = true;
+        },
+    };
+}
+
+/** Reports this bundle's activity to the shared coordinator, after earlier post-build hooks. */
+function buildProgressPlugin(progress: BuildProgress): Plugin {
+    return {
+        name: 'build-progress',
+        setup(build) {
+            build.onStart(() => {
+                progress.bundleStarted();
+            });
+            build.onEnd(() => {
+                progress.bundleFinished();
+            });
+        },
+    };
+}
+
+function metafilePlugin(name: string, config: EsbuildConfig): Plugin {
+    return {
+        name: 'bundle-result',
+        setup(build) {
+            build.onEnd(async result => {
+                if (result.metafile) {
+                    const destination = path.resolve(
+                        config.absWorkingDir ?? process.cwd(),
+                        `esbuild.${name}.meta.json`,
+                    );
+
+                    await fs.mkdir(path.dirname(destination), { recursive: true });
+                    await fs.writeFile(destination, JSON.stringify(result.metafile));
+                }
+            });
+        },
+    };
+}
+
+function validateBundleNames(bundleNames: readonly string[]): void {
+    const names = new Set<string>();
+
+    for (const name of bundleNames) {
+        if (!/^[a-z0-9_-][a-z0-9_.-]*$/i.test(name)) {
+            throw new Error('Bundle names must be non-empty filename-safe identifiers using letters, numbers, underscores, hyphens, or dots.');
+        }
+
+        const key = name.toLowerCase();
+        if (names.has(key)) {
+            throw new Error(`Duplicate bundle name: "${name}".`);
+        }
+
+        names.add(key);
     }
 }
