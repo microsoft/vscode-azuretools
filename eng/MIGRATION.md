@@ -1,8 +1,9 @@
 # Universal steps
 > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1000/files)
-1. In package.json, remove dev dependencies that are covered by this package. This includes everything related to
-   linting (eslint), bundling (esbuild), testing (mocha, chai, VS Code testing), and publish (vsce). Remove
-   typescript as well.
+1. In package.json, remove redundant dev dependencies supplied directly by this package,
+   such as eslint, mocha, chai, and TypeScript used only for compilation. Retain dependencies
+   used by your own scripts or APIs. Bundling, desktop testing, Sass, and publishing tools
+   are optional peers and must be declared by consumers that use them; see below.
 1. Spend some time validating the remaining dependencies (dev and real), to see if they are actually in use.
 1. Run `npm i`. Briefly revel in your much-smaller package-lock.json.
 1. No, seriously, `npm i` now before you install the eng pkg in the next step, so that things get updated.
@@ -30,7 +31,9 @@ Hard mode engage!
 
 1. Follow the subsection above on [universal steps](#universal-steps).
 1. As needed, add the following as dev dependencies. Use `*` for the desired version--they are optional peer
-   dependencies in this package, and you don't need to control the version from the extension. Then do `npm i` again.
+   dependencies in this package, and `*` allows the package manager to select versions
+   satisfying eng's peer ranges. Keep any additional consumer compatibility constraints.
+   Then do `npm i` again.
     ```json
     "devDependencies": {
         "@vscode/test-cli": "*",
@@ -40,6 +43,7 @@ Hard mode engage!
         "tsx": "*"
     }
     ```
+   Add `"sass": "*"` as well if your webview build compiles `.scss` or `.sass` files.
 1. Update your tsconfig.json to use target=es2022, lib=es2022, module=nodenext, moduleResolution=nodenext.
    > [Sample PR](https://github.com/microsoft/vscode-azurestaticwebapps/pull/1001/files)
 1. Rewrite main.js at the root, it will look more like [this](https://github.com/microsoft/vscode-containers/blob/main/main.js).
@@ -65,7 +69,8 @@ Hard mode engage!
 Native TypeScript 7 is the default compiler for builds and type checking. This
 package supplies it as the regular dependency `@typescript/native`
 (`npm:typescript@7.0.2`), so consumers do not need to install a separate compiler.
-Remove redundant direct TypeScript dependencies and update scripts as shown below.
+Remove redundant direct compiler dependencies and update scripts as shown below.
+Keep a separate API-bearing TypeScript dependency if your own tooling requires it.
 
 This package also supplies TypeScript 6 as `typescript` for the compatible compiler
 API required by typescript-eslint. Do not replace or hoist native TypeScript 7
@@ -85,10 +90,12 @@ which resolves the native compiler relative to eng rather than the consumer.
 Replace bare `tsc` with `tsgo`, preserving your existing arguments:
 
 ```json
-"scripts": {
-    "build": "tsgo",
-    "build:watch": "tsgo --watch",
-    "check": "tsgo --noEmit"
+{
+    "scripts": {
+        "build": "tsgo",
+        "build:watch": "tsgo --watch",
+        "check": "tsgo --noEmit"
+    }
 }
 ```
 
@@ -166,25 +173,21 @@ To get the types for all of it, add a single entry to the `types` array in your 
 Your tests run directly in Mocha, because **you do not have VS Code dependencies**.
 
 1. Remove any scripts or tasks that are used to build the tests. Use just `"test": "mocha"` as your test script.
-1. Add the following to your package.json, at the root (sub in your actual test location):
-    ```jsonc
-        "mocha": {
-            "ui": "tdd", // Only if your tests use `suite()`, `test()`, etc.
-            "node-option": [
-                "experimental-transform-types",
-                "disable-warning=ExperimentalWarning",
-                "import=@microsoft/vscode-azext-eng/mocha"
-            ],
-            "spec": [
-                "src/test/**/*.test.ts"
-            ]
-        }
+1. Add `.mocharc.cjs` at the root (substitute your actual test location):
+    ```js
+    const { createNodeMochaConfig } = require('@microsoft/vscode-azext-eng/mocha/config');
+
+    module.exports = createNodeMochaConfig({
+        // Set ui: 'tdd' instead if your tests use suite(), test(), etc.
+        spec: ['src/test/**/*.test.{ts,mts,cts}'],
+    });
     ```
    > On Node.js 22.17.0+, `experimental-transform-types` supports enums and other syntax
-   > which requires transformation in addition to stripping types.
+   > which requires transformation in addition to stripping types. The factory adds this
+   > flag and the shared assertion/resolution setup. See the [Mocha configuration](./src/mocha/README.md).
 1. Optionally, you can choose a grep to select specific tests. All mocha options are supported here.
 1. Add in your launch config. It will look something like this:
-    ```json
+    ```jsonc
         {
             "name": "Launch tests",
             "request": "launch",
@@ -237,9 +240,11 @@ which can improve load times by deferring package loading until it is necessary.
 1. Update to `1.2.0` or later of this package.
 1. Rename your `main.js` to `main.mjs`, and change it according to the above sample PR. It will primarily have just an
    `await import` of the bundle, an `activate()`, and a `deactivate()`.
-1. Add a `module` field to `package.json`, referencing your `main.mjs`, and update `main` as well to reference the same.
-1. Add `"type": "module"` to your `package.json`. This is required for Node.js to treat `.mjs` files and dynamic
-   `import()` calls correctly in ESM extensions. **Without this, telemetry will not work!**
+1. Update `main` in `package.json` to reference `main.mjs`. If your package also has a
+   bundler-facing `module` field, update it to match.
+1. Add `"type": "module"` to your `package.json`. The extension presets emit `.mjs`,
+   but the ESM telemetry preset still emits `extension-telemetry.bundle.js`; that `.js`
+   file must be interpreted as ESM. `.mjs` itself does not require this setting.
 1. In `esbuild.mjs`, pass `true` to `autoSelectEsbuildConfig()`.
 1. There may be other things that need to change--for example, the Container Tools extension launches the language servers
    in a separate process. The file extension changed for those. This is visible in the sample above in the changes to `extension.ts`.

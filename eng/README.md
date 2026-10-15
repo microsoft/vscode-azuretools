@@ -18,7 +18,7 @@ for consumer builds and type checking. TypeScript 6 remains installed as
 `typescript` for the compiler API required by typescript-eslint.
 
 Use eng's `tsgo` command rather than bare `tsc`, since both compiler packages provide
-that binary. `tsgo` selects the native compiler without requiring consumer hoisting.
+`tsc`. `tsgo` selects the native compiler without requiring consumer hoisting.
 See the [build, watch, and typecheck examples](./MIGRATION.md#typescript-compilers).
 
 # Tests

@@ -7,7 +7,8 @@ Requires Node.js 22.17.0 or later. Asset copying uses the native filesystem glob
 # Minimal Usage
 
 1. Add the esbuild dev dependencies. They are optional peer dependencies of this package, which
-   will control the version. As such, use `*` as the desired version.
+   constrains the supported version through its peer range. Use `*` unless your
+   consumer needs additional compatibility constraints.
     ```diff
         "devDependencies": {
     +        "esbuild": "*"
@@ -126,7 +127,9 @@ original binaries in `node_modules`.
 ## Migrating from esbuild-plugin-copy
 
 Replace the import with `copyPlugin` from this package and remove `esbuild-plugin-copy`
-from your dependencies. Unlike the old plugin, `from` is a directory, not a glob:
+from your dependencies only after migrating every independent use. Replacing eng's
+inherited mapping does not replace a consumer's custom plugin calls.
+Unlike the old plugin, `from` is a directory, not a glob:
 
 | Previous `from` | New `from` | New `include` |
 | --- | --- | --- |
@@ -177,7 +180,8 @@ do not require the peer. To customize compiler options, set `sass: false` and ap
 `sassPlugin(options)` from the separate `esbuild/sass` entry. Its separate entry keeps
 optional Sass types out of ordinary esbuild consumers. The plugin accepts
 Sass asynchronous compiler options, reports imported files as watch dependencies,
-resolves relative CSS assets from the source stylesheet, and surfaces compiler errors.
+and surfaces compiler errors. Relative CSS asset URLs resolve from the entry
+stylesheet's directory, not from each imported partial's directory.
 Imported files remain watched after compilation errors, so correcting them triggers a rebuild.
 Filesystem import search directories are also watched, including nested and index-file
 locations and configured `loadPaths`, so creating a missing stylesheet triggers recovery.
@@ -202,7 +206,9 @@ configs follow JavaScript property enumeration order and are watched when
 `--watch` is set. Use descriptive keys rather than integer-like keys, which
 JavaScript enumerates numerically instead of in insertion order. The runner awaits
 each initial build, including in watch mode; subsequent rebuilds are independent.
-SIGINT/SIGTERM and initialization failures dispose all watch contexts.
+SIGINT/SIGTERM and initialization failures dispose all watch contexts. An initial
+compilation error rejects the runner and closes contexts; recovery watching applies
+to subsequent errors, or to a Sass plugin used in an independently managed context.
 
 The runner owns the VS Code problem-matcher start/finish messages. One pair covers
 the complete initial sequence; watch rebuilds emit a finish only when all active
@@ -219,10 +225,14 @@ number, underscore, or hyphen. Names must be unique ignoring case for portabilit
 Metafiles are written after builds and rebuilds to `esbuild.<name>.meta.json`
 under `absWorkingDir` or cwd, such as `esbuild.extension.meta.json` and
 `esbuild.webview.meta.json`. Telemetry metadata is disabled.
+Exclude `esbuild.*.meta.json` from source control and extension packaging when using
+debug builds; metadata is written outside `dist` by default.
 
 The default extension config now copies both Azureutils' top-level resource SVGs
 and `resources/azureIcons/*.svg`. Consumers no longer need a separate copy mapping
 for that nested directory.
+This default is not recursive below `azureIcons`; consumers with deeper icon trees
+still need a custom recursive mapping.
 
 ---
 

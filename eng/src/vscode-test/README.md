@@ -5,11 +5,14 @@ Contains default VS Code test configuration for Azure extensions.
 # Minimal Usage
 
 1. Add the vscode-test dev dependencies. They are optional peer dependencies of this package, which
-   will control the version. As such, use `*` as the desired version.
+   constrains their versions through its peer ranges. Use `*` unless your consumer
+   needs additional compatibility constraints. The shared desktop configuration
+   also requires the optional `tsx` peer:
     ```diff
         "devDependencies": {
     +        "@vscode/test-cli": "*",
-    +        "@vscode/test-electron": "*"
+    +        "@vscode/test-electron": "*",
+    +        "tsx": "*"
         }
     ```
 
@@ -21,15 +24,15 @@ Contains default VS Code test configuration for Azure extensions.
 
 1. Add the script to `package.json`:
     ```diff
-        "scripts": [
+        "scripts": {
     +        "test": "vscode-test"
-        ]
+        }
     ```
 
 1. (Recommended) Add a launch configuration to `.vscode/launch.json`:
-    ```json
+    ```jsonc
     {
-        "label": "Run Tests",
+        "name": "Run Tests",
         "type": "extensionHost",
         "request": "launch",
         "testConfiguration": "${workspaceFolder}/.vscode-test.mjs",

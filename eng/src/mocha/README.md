@@ -27,4 +27,9 @@ Test filtering, integration-test prerequisites, and test-specific timeouts remai
 under the consumer's control. Shared test globals register Chai's `should` getter on
 `Object.prototype`, so both `expect(value)` and `value.should` assertions are available.
 
+For compile-time Mocha and assertion globals, include
+`"@microsoft/vscode-azext-eng/mocha/test-globals"` in `compilerOptions.types`
+alongside any other required globals, such as `"node"`. This declarations entry
+does not replace the runtime setup provided by the factory.
+
 [Back to Root](../../README.md)

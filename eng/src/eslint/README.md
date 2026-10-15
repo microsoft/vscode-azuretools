@@ -12,9 +12,9 @@ Contains default eslint configuration for Azure extensions.
 
 1. Add the script to `package.json`:
     ```diff
-        "scripts": [
+        "scripts": {
     +        "lint": "eslint --max-warnings 0"
-        ]
+        }
     ```
 
 1. (Recommended) Include `dbaeumer.vscode-eslint` as an extension recommendation in `.vscode/extensions.json`:
@@ -36,6 +36,11 @@ and allow their names under the naming convention. Core `no-unused-vars` is disa
 in favor of the TypeScript rule. Existing argument policy is unchanged: unused
 function parameters remain allowed, with underscore-prefix options also configured
 for consumers that enable argument checking.
+
+Object-literal property names that require quotes, such as `'editor.fontSize'` or
+`'dist-tag'`, are exempt through the `requiresQuotes` modifier. Quoting an otherwise
+valid identifier does not exempt it. A consumer override of `naming-convention`
+replaces its options, so include this exception when defining a custom naming rule.
 
 # Composable Options
 
