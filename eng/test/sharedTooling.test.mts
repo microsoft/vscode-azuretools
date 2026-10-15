@@ -53,9 +53,9 @@ describe('TypeScript compilers', () => {
     it('tsgo resolves a nested native compiler and preserves cwd, flags, and diagnostic exit status', async () => {
         const { root, write } = await fixture();
         const installed = path.join(root, 'node_modules/@microsoft/vscode-azext-eng');
-        const launcher = path.join(installed, 'dist/esm/src/typescript/tsgo.mjs');
+        const launcher = path.join(installed, 'bin/tsgo.mjs');
         await fs.mkdir(path.dirname(launcher), { recursive: true });
-        await fs.copyFile(path.join(packageDir, 'dist/esm/src/typescript/tsgo.mjs'), launcher);
+        await fs.copyFile(path.join(packageDir, 'bin/tsgo.mjs'), launcher);
         const compiler = path.join(installed, 'node_modules/@typescript/native');
         await fs.mkdir(path.dirname(compiler), { recursive: true });
         await fs.symlink(path.join(packageDir, 'node_modules/@typescript/native'), compiler, 'junction');
@@ -82,7 +82,7 @@ describe('TypeScript compilers', () => {
             devDependencies: Record<string, string>;
             bin: Record<string, string>;
         };
-        manifest.bin.tsgo.should.equal('./dist/esm/src/typescript/tsgo.mjs');
+        manifest.bin.tsgo.should.equal('./bin/tsgo.mjs');
         manifest.bin['azext-link-test-cache'].should.equal('./dist/cjs/src/vscode-test/linkTestCacheCli.js');
         manifest.dependencies['@typescript/native'].should.match(/^npm:typescript@7\./);
         manifest.dependencies.typescript.should.match(/^~6\./);
