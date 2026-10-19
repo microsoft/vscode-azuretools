@@ -15,7 +15,7 @@ parameters:
   - name: sdlPool
     type: object
     default:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEng-MicroBuildVSStable
       image: server2022-microbuildVS2022-1es
       os: windows
 
