@@ -40,7 +40,7 @@ parameters:
     type: object
     default:
       name: VSEng-MicroBuildVSStable
-      image: server2022-microbuildVS2022-1es
+      image: server2025-microbuildVSStable
       os: windows
 
   # The GitHub service connection to use for creating the GitHub release (optional)

@@ -53,7 +53,7 @@ extends:
   parameters:
     pool:
       name: VSEng-MicroBuildVSStable # Name of your hosted pool
-      image: server2022-microbuildVS2022-1es # Name of the image in your pool. If not specified, first image of the pool is used
+      image: server2025-microbuildVSStable # Name of the image in your pool. If not specified, first image of the pool is used
       os: windows # OS of the image. Allowed values: windows, linux, macOS
 
     stages:
