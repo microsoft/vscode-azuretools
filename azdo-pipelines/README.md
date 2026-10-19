@@ -27,12 +27,6 @@ Your project must meet the following requirements to use these templates:
 5. (For compliance) A `tsaoptions.json` file in `.config` (see [Compliance Configuration](#compliance-configuration))
 6. (Only if using `packageManager: pnpm`) Commit a `pnpm-lock.yaml` and set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`) so the build installs the pinned pnpm version. The build installs with `pnpm ci`, which requires pnpm 11+. See [Using pnpm](#using-pnpm).
 
-## Agent Pools
-
-The default Windows pool for SDL/compliance (`sdlPool`) and releases (`releasePool`) is `VSEng-MicroBuildVSStable`, using image `server2022-microbuildVS2022-1es`. The Linux build pool remains `AzurePipelines-EO` with image `1ESPT-Ubuntu22.04`. Pool defaults are defined in the main and release templates, not in `azcode.variables.yml`; consumers can override them using the corresponding pool parameters.
-
-Consumers referencing `azext-pt/v1` pick up template changes only after that branch is updated. After merging a pool change to `main`, run the **Release Pipeline Templates** GitHub Actions workflow (`.github/workflows/release-pipeline-templates.yml`) for `azext-pt/v1` through its release environment approval process. Merging to `main` alone does not update those consumers. Before rollout, confirm the target pool provides the configured image and authorizes the consuming Azure DevOps pipelines.
-
 ## Build Pipeline (`1es-mb-main.yml`)
 
 This template handles building, linting, testing, packaging, and signing your code.
