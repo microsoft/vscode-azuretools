@@ -13,7 +13,7 @@ import type { StorageAccount } from '@azure/arm-storage';
 import { type StorageManagementClient } from '@azure/arm-storage';
 import type { CommonClientOptions, ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
-import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
+import type { Pipeline, PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
@@ -565,7 +565,7 @@ export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
  */
 export declare function sendRequestWithTimeout(context: IActionContext, options: AzExtRequestPrepareOptions, timeout: number, clientInfo: AzExtGenericClientInfo, genericClientOptions?: IGenericClientOptions): Promise<AzExtPipelineResponse>;
 
-export type AzExtClientType<T extends ServiceClient> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
+export type AzExtClientType<T extends { pipeline: Pipeline }> = new (credentials: AzExtServiceClientCredentials, subscriptionId: string, options?: ServiceClientOptions) => T;
 
 /**
  * Convenience type to give us multiple ways to specify subscription info and action context depending on the scenario
@@ -582,7 +582,7 @@ export declare function parseClientContext(clientContext: AzExtClientContext): I
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
-export declare function createAzureClient<T extends ServiceClient>(context: AzExtClientContext, clientType: AzExtClientType<T>): T;
+export declare function createAzureClient<T extends { pipeline: Pipeline }>(context: AzExtClientContext, clientType: AzExtClientType<T>): T;
 
 export type AzExtSubscriptionClientType<T> = new (credentials: AzExtServiceClientCredentials, options?: ServiceClientOptions) => T;
 
