@@ -578,8 +578,7 @@ export type AzExtClientContext = ISubscriptionActionContext | [IActionContext, I
 export declare function parseClientContext(clientContext: AzExtClientContext): ISubscriptionActionContext;
 
 /**
- * Creates an Azure client with a pipeline.
- * Ensures best practices are followed. For example:
+ * Creates an Azure client, ensuring best practices are followed. For example:
  * 1. Adds extension-specific user agent
  * 2. Uses resourceManagerEndpointUrl to support sovereigns
  */
