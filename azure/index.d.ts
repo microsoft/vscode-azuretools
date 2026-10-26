@@ -13,7 +13,7 @@ import type { StorageAccount } from '@azure/arm-storage';
 import { type StorageManagementClient } from '@azure/arm-storage';
 import type { CommonClientOptions, ServiceClient, ServiceClientOptions } from '@azure/core-client';
 import type { PagedAsyncIterableIterator } from '@azure/core-paging';
-import type { PipelineRequestOptions, PipelineResponse } from '@azure/core-rest-pipeline';
+import type { PipelineRequestOptions, PipelineResponse, ProxySettings as ProxySettingsBase } from '@azure/core-rest-pipeline';
 import type { Environment } from '@azure/ms-rest-azure-env';
 import type { AzExtParentTreeItem, AzExtServiceClientCredentials, AzExtServiceClientCredentialsT2, AzExtTreeItem, AzureNameStep, AzureWizardExecuteStep, AzureWizardExecuteStepWithActivityOutput, AzureWizardPromptStep, IActionContext, IAzureNamingRules, IAzureQuickPickItem, IAzureQuickPickOptions, IAzureUserInput, IRelatedNameWizardContext, ISubscriptionActionContext, ISubscriptionContext, IWizardOptions, TreeElementBase, UIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import type { AzureSubscription } from '@microsoft/vscode-azureresources-api';
@@ -555,6 +555,36 @@ export function createAuthorizationManagementClient(context: AzExtClientContext)
 
 export type AzExtRequestPrepareOptions = PipelineRequestOptions & { rejectUnauthorized?: boolean }
 export type AzExtPipelineResponse = PipelineResponse & { parsedBody?: any }
+
+/**
+ * Returns an `http`/`https` `Agent` configured from VS Code's `http.proxy` / `http.proxyStrictSSL`
+ * settings (falling back to the standard `HTTPS_PROXY`/`HTTP_PROXY`/`NO_PROXY` environment
+ * variables) for the given request URL, or `undefined` when no proxy or TLS override applies.
+ *
+ * Azure clients created via this package already apply this configuration automatically. This
+ * helper is exported so extensions can apply the same proxy behavior to their own HTTP clients
+ * that don't go through the Azure SDK pipeline.
+ */
+export declare function getProxyAgent(requestUrl: string): import('http').Agent | undefined;
+
+/**
+ * Proxy configuration (host/port/username/password) accepted by pipeline-based Azure SDK clients
+ * via their `proxyOptions`/`proxySettings` option. Re-exported from `@azure/core-rest-pipeline`.
+ */
+export type ProxySettings = ProxySettingsBase;
+
+/**
+ * Returns a `ProxySettings` object configured from VS Code's `http.proxy` setting (falling back to
+ * the standard `HTTPS_PROXY`/`HTTP_PROXY`/`NO_PROXY` environment variables) for the given request
+ * URL, or `undefined` when no proxy applies (unset, `http.noProxy` bypass, or
+ * `http.proxySupport: off`).
+ *
+ * Intended for pipeline-based Azure SDK data-plane clients that accept a `proxyOptions` option
+ * (e.g. Storage's `BlobServiceClient`/`ShareServiceClient`) rather than a raw `http.Agent`. Unlike
+ * {@link getProxyAgent}, it does not carry a TLS (`http.proxyStrictSSL: false`) override, since
+ * `proxyOptions` cannot express one.
+ */
+export declare function getProxySettings(requestUrl: string): ProxySettings | undefined;
 
 /**
  * Send request with a timeout specified. Retries are disabled (because retrying could take a lot longer)
