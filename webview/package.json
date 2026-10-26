@@ -75,7 +75,7 @@
         "@fluentui/react-icons": "^2.0.265",
         "@microsoft/vscode-azext-utils": "^5.0.0",
         "@vscode/codicons": "0.0.38",
-        "dompurify": "^3.4.3",
+        "dompurify": "^3.4.17",
         "marked": "^18.0.3",
         "monaco-editor": "~0.51.0",
         "react": "^18.3.1",
