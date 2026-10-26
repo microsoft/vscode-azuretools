@@ -68,7 +68,7 @@ function createBearerChallengePolicy(context: ISubscriptionActionContext): Beare
     );
 }
 
-export function createAzureClient<T extends ServiceClient>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
+export function createAzureClient<T extends { pipeline: Pipeline }>(clientContext: InternalAzExtClientContext, clientType: types.AzExtClientType<T>): T {
     const context = parseClientContext(clientContext);
     const client = new clientType(context.credentials, context.subscriptionId, {
         endpoint: context.environment.resourceManagerEndpointUrl,
