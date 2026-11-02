@@ -8,22 +8,6 @@ This package provides common Azure UI elements for VS Code extensions:
 
 > NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use `registerCommand`, you must handle this exception in your extension.
 
-## 5.1.0 release preparation
-
-This additive minor release combines the binary-file APIs from
-[#2419](https://github.com/microsoft/vscode-azuretools/pull/2419)
-(`AzExtTreeFileSystem.showFile` and `openReadOnlyFile`) with the workflow telemetry
-APIs documented below. Existing text-file APIs and legacy command results remain
-supported; dashboards using `lastStep` must account for the bounded identities.
-
-The version is prepared, not published. After the reviewed changes land, use the
-official build containing both API sets with the existing
-[npm release pipeline](../.config/release.yml), selecting
-`packageToPublish=microsoft-vscode-azext-utils` and `publishVersion=5.1.0`.
-Verify registry availability before updating appservice or extension dependencies.
-The deployment telemetry layer is preserved separately until it can require the
-actual published utils version; this utils-only delivery adds no CI workaround.
-
 ## Telemetry and Error Handling
 
 Use `registerCommand`, `registerEvent`, or `callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The first parameter of the function passed in will always be an `IActionContext`, which allows you to specify custom telemetry and describes the behavior of this command. The simplest example is to register a command (in this case, refreshing a node):
@@ -62,116 +46,9 @@ registerEvent(
 );
 ```
 
-### Workflow telemetry (unreleased)
-
-`initializeWorkflowTelemetry` opts an action into schema `workflowSchemaVersion=1`.
-It is additive: existing event names, `result` (`Succeeded`/`Failed`/`Canceled`), error
-handling and command return values are unchanged. Finalization occurs in
-`callWithTelemetryAndErrorHandling` (including registered commands/events), not on
-process exit. An abandoned process has no inferred terminal event.
-
-```typescript
-initializeWorkflowTelemetry(context, {
-    workflow: 'createProject',
-    command: 'createNewProject',
-    stepNames: ['selectRuntime']
-});
-await withTelemetryStage(context, { stage: 'projectCreation' }, async () => {
-    await createProject();
-});
-```
-
-The finite types and exact accepted labels are exported in `index.d.ts`:
-`WorkflowName`, `WorkflowCommand`, `WorkflowStage`, `WorkflowOutcome`,
-`WorkflowCancelReason`, `WorkflowFailureCategory`, `WorkflowFailureCode`,
-`WorkflowTelemetryOptions`, `WorkflowTelemetryDetails`, `WorkflowTelemetryStage`,
-`WorkflowUserWaitTimer`, `WorkflowNetworkCategory`, `DeploymentMechanism` and `DeploymentStatus`.
-
-| Payload | Meaning |
-| --- | --- |
-| `workflow`, `command` | Bounded **root** operation labels, not arbitrary VS Code command IDs. |
-| `workflowRunId` | Generated root correlation UUID. |
-| `attemptId`, `parentAttemptId`, `isWorkflowRoot` | Generated record identity, parent linkage and explicit root marker. Stages/nested actions are not additional user attempts. |
-| `stage`, `stepId` | Bounded scope and registered static step identity. Root/action scope is `workflow`. |
-| `outcome` | `succeeded`, `failed`, `canceled`, `handedOff`, `blocked` or `unknown`. A gallery handoff is not successful creation or dismissal. |
-| `cancelReason`, `failureCategory`, `failureCode` | Optional finite diagnostics. No messages, paths, prompts, resource identifiers, URLs or response bodies are copied into new fields. |
-| `retryable` | Optional explicitly known boolean, not inferred from arbitrary errors or a changed retry policy. |
-| `retryCount`, `recoveredAfterRetry` | Observed extension-owned retries and proven recovery, not SDK-internal retries or configured retry limits. |
-| `deploymentMechanism`, `deploymentStatus`, `httpStatus`, `networkCategory` | Optional bounded facts. HTTP is only `1xx` through `5xx`; network classification reads structured codes, never message text. |
-| `workflowDuration`, `activeDuration`, `userWaitDuration` | Seconds within the emitted record's observed scope. Stage events also use `duration`; command `duration` retains its existing full-action meaning. |
-| `timingScope`, `userWaitTiming` | `observed`; wait timing is `available` only when an interval was actually observed, otherwise `unavailable` and the wait measurement is omitted. |
-
-`activeDuration` is observed elapsed time excluding the union of explicitly measured
-user-wait intervals, **not CPU time**. It includes extension/network/polling delays and
-any uninstrumented waits. It is not a claim that all user think time is observable.
-Where wait intervals exist, active plus user-wait reconciles with `workflowDuration`.
-Nested/overlapping intervals are counted once. Timers are idempotent and open
-intervals are clipped at the observed scope end on failure/cancellation.
-
-Use `startWorkflowUserWait(context)` only around extension-owned visible interaction
-and dispose it in `finally`. Built-in user input records visible waits; quick-pick
-loading and validation after acceptance are not counted as waiting for the user.
-Notification responses that happen after command completion are not root wait time.
-
-For a nested action with a **new telemetry object**, use
-`initializeWorkflowTelemetry(child, options, parent)`. Do not alias parent telemetry
-objects or copy their root marker as authoritative. Initialization replaces inherited
-normalized snapshots with the child's generated identity and `isWorkflowRoot=false`.
-A later detached child retains correlation, but cannot rewrite the already finalized
-root's outcome, duration, retry summary or deployment facts. Its measurements are
-local; the earlier root snapshot does not claim to include later diagnostics.
-
-`setWorkflowOutcome` records an explicit terminal decision without changing legacy
-`result` or throwing. Preserve existing control flow: e.g. mark `handedOff` with
-`templateGallery`, then retain the existing `UserCancelledError` to stop classic
-execute steps. Explicit handoff, blocked-prerequisite and failed-task outcomes survive
-the legacy cancellation handler. A subsequent real error replaces provisional
-`unknown`/`succeeded`, not a known handoff/blocked decision.
-
-`withTelemetryStage` emits privacy-safe `workflowStage` child events and rethrows the
-original exception. Its stage handle's `setOutcome` affects **only that stage**:
-a failed predeploy task followed by Deploy Anyway need not fail the root.
-`setWorkflowTelemetryDetails` affects the current scope; observed deployment status
-and mechanism also reach the live root, without prematurely setting root success.
-Thus Azure deployment can be `succeeded` while a later command operation fails.
-Suppression flags still apply, and reporter failures set `workflowTelemetryFailed`.
-
-For existing retry loops, use exactly one pattern per actual retry invocation:
-
-- Wrap each invocation with `withTelemetryStage(context, { stage, attempt }, callback)`,
-  passing the loop's actual one-based attempt number. First invocation is not a retry.
-- Or call `recordWorkflowRetry(context)` at the actual invocation seam, before repeating
-  or within the previously failed stage. It records immediately, not a deferred intent.
-  The same stage must subsequently succeed to establish recovery. Helpers that first
-  look up work must record only after the actual work is found and invoked.
-
-Do not use both for the same invocation. Do not count polling iterations as retries,
-add a retry policy, or infer recovery from a nonzero counter. Missing observations
-remain omitted, not a successful/zero-valued substitute.
-
-#### Stable wizard step identity
-
-Set `telemetryId` on prompt/execute steps to an extension-authored constant and
-register it in `stepNames` (at most 128 names of at most 64 ASCII identifier characters).
-Never build this registry from runtime/user/resource/error data. Explicit existing
-`stepName` properties are an allowlisted compatibility source after `telemetryId`.
-Constructor names are not telemetry identity because bundling can rename them.
-UUIDs, paths, URLs and unregistered names fall back to `unknown` or a finite UI kind.
-
-Runtime `id` remains unchanged: UUID allocation, Back navigation, cached inputs,
-duplicate filtering and activity identity do not use `telemetryId`. User-input
-`stepName` and parsed-error `stepName` can select only registered telemetry names;
-descriptions, prompts and runtime UUIDs are never fallback telemetry names.
-Even clients without workflow opt-in get bounded wizard/UI `lastStep` fallbacks.
-Legacy `result` is unchanged; dashboards relying on old high-cardinality `lastStep`
-values must migrate deliberately.
-
-**Release boundary:** this source API is not present in the existing published
-`5.0.0` package. The prepared `5.1.0` manifest and local tarballs are not proof of
-registry availability. Publish the new utils API through the existing release
-pipeline and update consumers' minimum dependency to its actual released version
-before publishing dependent packages. No package publication is performed by these
-source changes.
+### Workflow telemetry
+Opt in with `initializeWorkflowTelemetry` for stable steps, correlated stages/outcomes, observed retries and active/user-wait timing; independent of Copilot on Rails.
+Unreleased utils 5.1.0; see the [public API types](index.d.ts). Publish utils before updating dependent packages to require it.
 
 ## Pick tree items (Azure Resources API V2)
 
