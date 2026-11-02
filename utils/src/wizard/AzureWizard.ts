@@ -21,6 +21,7 @@ import { AzureWizardExecuteStep } from './AzureWizardExecuteStep';
 import { AzureWizardPromptStep } from './AzureWizardPromptStep';
 import { NoExecuteStep } from './NoExecuteStep';
 import { getSilentExecuteActivityContext } from './SilentExecuteActivityContext';
+import { recordWorkflowUserDismissal, setTelemetryStep, withTelemetryStage } from '../workflowTelemetry';
 
 export enum ActivityOutputType {
     Item = 'item',
@@ -42,6 +43,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
     private _cachedInputBoxValues: { [step: string]: string | undefined } = {};
     public currentStepId: string | undefined;
+    public currentTelemetryStepId: string | undefined;
 
     public constructor(context: T, options: types.IWizardOptions<T>) {
         // reverse steps to make it easier to use push/pop
@@ -89,6 +91,10 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
     }
 
     public async prompt(): Promise<void> {
+        await withTelemetryStage(this._context, { stage: 'prompt' }, () => this.promptCore());
+    }
+
+    private async promptCore(): Promise<void> {
         this._context.ui.wizard = this;
 
         try {
@@ -100,7 +106,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                 step.reset();
 
-                this._context.telemetry.properties.lastStep = `prompt-${getEffectiveStepId(step)}`;
+                this.currentTelemetryStepId = setTelemetryStep(this._context, getDeclaredTelemetryId(step), 'unknown', 'prompt-');
                 this.title = step.effectiveTitle;
                 this._stepHideStepCount = step.hideStepCount;
 
@@ -121,6 +127,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                         disposables.push(loadingQuickPick?.onDidHide(() => {
                             // Avoid issuing cancels during tests - see: https://github.com/microsoft/vscode-azuretools/pull/1807
                             if (!this._context.ui.isPrompting && !this._context.ui.isTesting && !this._context.suppressLoadingPrompt) {
+                                recordWorkflowUserDismissal(this._context);
                                 this._cancellationTokenSource.cancel();
                             }
                         }));
@@ -183,6 +190,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                         }
                     } finally {
                         this.currentStepId = undefined;
+                        this.currentTelemetryStepId = undefined;
                         vscode.Disposable.from(...disposables).dispose();
                         loadingQuickPick?.hide();
                     }
@@ -202,12 +210,17 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
                 step = this._promptSteps.pop();
             }
         } finally {
+            this.currentTelemetryStepId = undefined;
             this._context.ui.wizard = undefined;
             this._cancellationTokenSource.dispose();
         }
     }
 
     public async execute(): Promise<void> {
+        await withTelemetryStage(this._context, { stage: 'execute' }, () => this.executeCore());
+    }
+
+    private async executeCore(): Promise<void> {
         await this.withProgress({ location: ProgressLocation.Notification }, async progress => {
             let currentStep: number = 1;
 
@@ -245,7 +258,7 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
                 let output: types.ExecuteActivityOutput | undefined;
                 try {
-                    this._context.telemetry.properties.lastStep = `execute-${getEffectiveStepId(step)}`;
+                    setTelemetryStep(this._context, getDeclaredTelemetryId(step), 'unknown', 'execute-');
                     await step.execute(this._context, internalProgress);
                     output = step.createSuccessOutput?.(this._context);
                 } catch (e) {
@@ -393,6 +406,10 @@ export class AzureWizard<T extends (IInternalActionContext & Partial<types.Execu
 
 function getEffectiveStepId<T extends IInternalActionContext>(step: types.AzureWizardPromptStep<T> | types.AzureWizardExecuteStep<T>): string {
     return step.id || step.constructor.name;
+}
+
+function getDeclaredTelemetryId<T extends IInternalActionContext>(step: types.AzureWizardPromptStep<T> | types.AzureWizardExecuteStep<T>): string | undefined {
+    return step.telemetryId ?? ('stepName' in step && typeof step.stepName === 'string' ? step.stepName : undefined);
 }
 
 function removeFromEnd<T>(array: T[], n: number): void {

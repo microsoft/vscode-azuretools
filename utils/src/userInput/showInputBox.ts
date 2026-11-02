@@ -12,11 +12,14 @@ import { validOnTimeoutOrException } from '../utils/inputValidation';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { IInternalActionContext } from './IInternalActionContext';
+import { recordWorkflowUserDismissal, startWorkflowUserWait } from '../workflowTelemetry';
 
 export type InputBoxValidationResult = Awaited<ReturnType<Required<InputBoxOptions>['validateInput']>>;
 
 export async function showInputBox(context: IInternalActionContext, options: types.AzExtInputBoxOptions): Promise<string> {
     const disposables: Disposable[] = [];
+    let userWait: types.WorkflowUserWaitTimer | undefined;
+    let completed = false;
     try {
         const inputBox: InputBox = createInputBox(context, options);
         disposables.push(inputBox);
@@ -35,6 +38,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     }
                 }),
                 inputBox.onDidAccept(async () => {
+                    userWait?.dispose();
                     // Run final validation and resolve if value passes
                     inputBox.enabled = false;
                     inputBox.busy = true;
@@ -43,6 +47,7 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                         const validateInputResult: InputBoxValidationResult = await latestValidation;
                         const asyncValidationResult: string | undefined | null = options.asyncValidationTask ? await options.asyncValidationTask(inputBox.value) : undefined;
                         if (!validateInputResult && !asyncValidationResult) {
+                            completed = true;
                             resolve(inputBox.value);
                         } else if (validateInputResult) {
                             inputBox.validationMessage = validateInputResult;
@@ -50,15 +55,22 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                             inputBox.validationMessage = asyncValidationResult;
                         }
                     } catch (e) {
+                        completed = true;
                         const pe: types.IParsedError = parseError(e);
                         reject(new Error(pe.message, { cause: e }));
                     }
 
                     inputBox.enabled = true;
                     inputBox.busy = false;
+                    if (!completed) {
+                        userWait = startWorkflowUserWait(context);
+                        disposables.push(userWait);
+                    }
                 }),
                 inputBox.onDidTriggerButton(async btn => {
                     if (btn === QuickInputButtons.Back) {
+                        completed = true;
+                        userWait?.dispose();
                         reject(new GoBackError());
                     } else if (btn === AzExtQuickInputButtons.LearnMore) {
                         await openUrl(nonNullProp(options, 'learnMoreLink'));
@@ -66,12 +78,20 @@ export async function showInputBox(context: IInternalActionContext, options: typ
                     }
                 }),
                 inputBox.onDidHide(() => {
+                    userWait?.dispose();
+                    if (!completed) {
+                        recordWorkflowUserDismissal(context);
+                    }
+                    completed = true;
                     reject(new UserCancelledError());
                 })
             );
             inputBox.show();
+            userWait = startWorkflowUserWait(context);
+            disposables.push(userWait);
         });
     } finally {
+        completed = true;
         disposables.forEach(d => { d.dispose(); });
     }
 }

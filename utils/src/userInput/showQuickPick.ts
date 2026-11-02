@@ -12,10 +12,13 @@ import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { randomUtils } from '../utils/randomUtils';
 import { IInternalActionContext } from './IInternalActionContext';
+import { recordWorkflowUserDismissal, startWorkflowUserWait } from '../workflowTelemetry';
 
 // Picks are shown in given order, except higher priority items and recently used are moved to the top, and items are grouped if requiested
 export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unknown>>(context: IInternalActionContext, picks: TPick[] | Promise<TPick[]>, options: types.IAzureQuickPickOptions): Promise<TPick | TPick[]> {
     const disposables: Disposable[] = [];
+    let userWait: types.WorkflowUserWaitTimer | undefined;
+    let completed = false;
     try {
         const quickPick: QuickPick<TPick> = createQuickPick(context, options);
         disposables.push(quickPick);
@@ -27,7 +30,9 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
             disposables.push(
                 quickPick.onDidAccept(async () => {
                     try {
+                        userWait?.dispose();
                         if (options.canPickMany) {
+                            completed = true;
                             resolve(Array.from(quickPick.selectedItems));
                         } else {
                             const selectedItem: TPick | undefined = quickPick.selectedItems[0];
@@ -36,17 +41,26 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                                 if (selectedItem.onPicked) {
                                     await selectedItem.onPicked();
                                 } else {
+                                    completed = true;
                                     resolve(selectedItem);
                                 }
                             }
                         }
                     } catch (error) {
+                        completed = true;
                         // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- pass the caught value through as-is; it may not be an Error instance
                         reject(error);
+                    } finally {
+                        if (!completed) {
+                            userWait = startWorkflowUserWait(context);
+                            disposables.push(userWait);
+                        }
                     }
                 }),
                 quickPick.onDidTriggerButton(async btn => {
                     if (btn === QuickInputButtons.Back) {
+                        completed = true;
+                        userWait?.dispose();
                         reject(new GoBackError());
                     } else if (btn === AzExtQuickInputButtons.LearnMore) {
                         await openUrl(nonNullProp(options, 'learnMoreLink'));
@@ -54,6 +68,11 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                     }
                 }),
                 quickPick.onDidHide(() => {
+                    userWait?.dispose();
+                    if (!completed) {
+                        recordWorkflowUserDismissal(context);
+                    }
+                    completed = true;
                     reject(new UserCancelledError());
                 })
             );
@@ -78,6 +97,10 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
                 quickPick.placeholder = options.placeHolder;
                 quickPick.busy = false;
                 quickPick.enabled = true;
+                if (!completed) {
+                    userWait = startWorkflowUserWait(context);
+                    disposables.push(userWait);
+                }
             };
             loadItems().catch(reject);
         });
@@ -89,6 +112,7 @@ export async function showQuickPick<TPick extends types.IAzureQuickPickItem<unkn
 
         return result;
     } finally {
+        completed = true;
         disposables.forEach(d => { d.dispose(); });
     }
 }

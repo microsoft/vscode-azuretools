@@ -22,6 +22,7 @@ export interface IInternalAzureWizard {
     title: string | undefined;
     currentStep: number;
     currentStepId: string | undefined;
+    currentTelemetryStepId?: string;
     totalSteps: number;
     hideStepCount: boolean | undefined;
     showBackButton: boolean;

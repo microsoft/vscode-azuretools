@@ -16,6 +16,7 @@ export abstract class AzureWizardPromptStep<T extends types.IActionContext> impl
     public propertiesBeforePrompt!: string[];
     public prompted!: boolean;
     public id: string;
+    public telemetryId?: string;
 
     constructor() {
         this.id = crypto.randomUUID();

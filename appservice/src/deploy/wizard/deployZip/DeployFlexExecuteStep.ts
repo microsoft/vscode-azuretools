@@ -12,6 +12,7 @@ import { runWithZipStream } from "../../runWithZipStream";
 import { DeployZipBaseExecuteStep } from "./DeployZipBaseExecuteStep";
 
 export class DeployFlexExecuteStep extends DeployZipBaseExecuteStep {
+    public telemetryId = 'deploy.flex';
     public async deployZip(context: InnerDeployContext): Promise<AzExtPipelineResponse | void> {
         const site = await this.getFlexSite(context, context.site.subscription.subscriptionId, context.site.resourceGroup, context.site.siteName);
         const kuduClient = await context.site.createClient(context);

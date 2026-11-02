@@ -8,6 +8,7 @@ import { InnerDeployContext } from "../IDeployContext";
 import { syncTriggersPostDeploy } from "../syncTriggersPostDeploy";
 
 export class PostDeploySyncTriggersExecuteStep extends AzureWizardExecuteStep<InnerDeployContext> {
+    public telemetryId = 'deploy.syncTriggers';
     public priority: number = 310;
     public async execute(context: InnerDeployContext): Promise<void> {
         // Don't sync triggers if app is stopped https://github.com/microsoft/vscode-azurefunctions/issues/1608

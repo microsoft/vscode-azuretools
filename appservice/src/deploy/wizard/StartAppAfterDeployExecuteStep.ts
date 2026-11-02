@@ -8,6 +8,7 @@ import { Progress, l10n } from "vscode";
 import { InnerDeployContext } from "../IDeployContext";
 
 export class StartAppAfterDeployExecuteStep extends AzureWizardExecuteStepWithActivityOutput<InnerDeployContext> {
+    public telemetryId = 'deploy.startApp';
     public priority: number = 900;
     stepName: string = 'StartAppAfterDeployExecuteStep';
     protected getTreeItemLabel(context: InnerDeployContext): string {

@@ -10,6 +10,7 @@ import { runWithZipStream } from "../../runWithZipStream";
 import { DeployZipBaseExecuteStep } from "./DeployZipBaseExecuteStep";
 
 export class DeployZipPushExecuteStep extends DeployZipBaseExecuteStep {
+    public telemetryId = 'deploy.zip';
     public async deployZip(context: InnerDeployContext): Promise<AzExtPipelineResponse | void> {
         const kuduClient = await context.site.createClient(context);
         const callback = async (zipStream: NodeJS.ReadableStream) => {
