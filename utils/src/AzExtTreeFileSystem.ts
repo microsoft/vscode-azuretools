@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ParsedUrlQuery, parse as parseQuery, stringify as stringifyQuery } from "querystring";
-import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, l10n, window } from "vscode";
+import { Disposable, Event, EventEmitter, FileChangeEvent, FileStat, FileSystemError, FileSystemProvider, FileType, TextDocumentShowOptions, Uri, commands, l10n, window } from "vscode";
 import * as types from '../index';
 import { callWithTelemetryAndErrorHandling } from "./callWithTelemetryAndErrorHandling";
 import { nonNullProp } from "./utils/nonNull";
@@ -34,6 +34,12 @@ export abstract class AzExtTreeFileSystem<TItem extends types.AzExtTreeFileSyste
         const uri = this.getUriFromItem(item);
         this.itemCache.set(item.id, item);
         await window.showTextDocument(uri, options);
+    }
+
+    public async showFile(item: TItem, options?: TextDocumentShowOptions): Promise<void> {
+        const uri = this.getUriFromItem(item);
+        this.itemCache.set(item.id, item);
+        await commands.executeCommand('vscode.open', uri, options);
     }
 
     public watch(): Disposable {
