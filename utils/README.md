@@ -152,7 +152,7 @@ values must migrate deliberately.
 
 **Release boundary:** this source API is not present in the existing published
 `5.0.0` package merely because the working tree retains that version. Local tarballs
-and integrated CI verify checked-out source only. A human must publish the new utils
+verify checked-out source only. A human must publish the new utils
 API and update consumers' minimum dependency to its actual released version before
 publishing dependent packages. No package publication is performed by these changes.
 

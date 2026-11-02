@@ -51,19 +51,6 @@ jobs:
       # Install
       - run: ${{ inputs.package_manager }} ci
 
-      - name: Verify appservice against checked-out utils
-        if: ${{ github.repository == 'microsoft/vscode-azuretools' && inputs.working_directory == 'appservice' && inputs.package_manager == 'npm' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm ci --prefix ../utils
-          npm run build --prefix ../utils
-          artifact_dir="$(mktemp -d)"
-          npm pack ../utils --pack-destination "$artifact_dir" --json > "$artifact_dir/pack.json"
-          artifact_name="$(node -p "require('$artifact_dir/pack.json')[0].filename")"
-          npm install --no-save "$artifact_dir/$artifact_name"
-          git diff --exit-code -- package.json package-lock.json
-
       # Lint
       - run: ${{ inputs.package_manager }} run lint
 

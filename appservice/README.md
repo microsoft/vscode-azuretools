@@ -85,10 +85,10 @@ Keep the lockfile enabled: `--no-save` installs the artifact without writing man
 or locks; `--package-lock=false` can unnecessarily re-resolve other dependencies.
 Record the exact source SHA and artifact hashes; retained tarball versions alone do
 not identify source. Consumers install both exact tarballs locally without committing
-file references. The repository's appservice CI builds/installs sibling utils from the
-same checkout before lint/build/tests, fails explicitly on integration errors, and
-does not change external consumers of the reusable workflow. This proves integrated
-source compatibility, not availability of the API in currently published packages.
+file references. Appservice CI uses the manifest's registry dependency, not sibling
+source. Until a compatible utils release is available and the dependency is updated,
+CI cannot validate the new appservice APIs against that dependency. Local tarball
+verification proves source compatibility, not availability in published packages.
 
 The dependent consumer is
 [microsoft/vscode-azurefunctions#5266](https://github.com/microsoft/vscode-azurefunctions/pull/5266).
