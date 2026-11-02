@@ -13,6 +13,7 @@ interface ReadOnlyFile {
     id: string;
     label: string;
     content: Uint8Array;
+    mtime: number;
 }
 
 class ReadOnlyFileSystem extends AzExtTreeFileSystem<ReadOnlyFile> {
@@ -23,7 +24,7 @@ class ReadOnlyFileSystem extends AzExtTreeFileSystem<ReadOnlyFile> {
     }
 
     public statImpl(_context: IActionContext, item: ReadOnlyFile): Promise<FileStat> {
-        return Promise.resolve({ type: FileType.File, ctime: 0, mtime: 0, size: item.content.byteLength, permissions: FilePermission.Readonly });
+        return Promise.resolve({ type: FileType.File, ctime: 0, mtime: item.mtime, size: item.content.byteLength, permissions: FilePermission.Readonly });
     }
 
     public readFileImpl(_context: IActionContext, item: ReadOnlyFile): Promise<Uint8Array> {
@@ -40,6 +41,7 @@ class ReadOnlyFileSystem extends AzExtTreeFileSystem<ReadOnlyFile> {
 }
 
 let fileSystem: ReadOnlyFileSystem | undefined;
+let lastMtime = 0;
 
 export async function openReadOnlyFile(node: { label: string, fullId: string }, content: Uint8Array, options?: TextDocumentShowOptions): Promise<void> {
     if (!fileSystem) {
@@ -47,10 +49,14 @@ export async function openReadOnlyFile(node: { label: string, fullId: string }, 
         ext.context.subscriptions.push(workspace.registerFileSystemProvider(fileSystem.scheme, fileSystem, { isReadonly: true }));
     }
 
+    const id = await randomUtils.getPseudononymousStringHash(node.fullId);
+    // VS Code uses mtime and size to detect changes, including equal-length snapshots.
+    lastMtime = Math.max(Date.now(), lastMtime + 1);
     const item: ReadOnlyFile = {
-        id: await randomUtils.getPseudononymousStringHash(node.fullId),
+        id,
         label: node.label,
-        content: Uint8Array.from(content)
+        content: Uint8Array.from(content),
+        mtime: lastMtime
     };
     await fileSystem.showFile(item, options);
     fileSystem.fireSoon({ type: FileChangeType.Changed, item });

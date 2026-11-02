@@ -108,6 +108,40 @@ suite('Binary file opening', () => {
         }
     });
 
+    test('reopening a read-only text document reloads equal-length replacement bytes', async () => {
+        const node = { label: 'snapshot.txt', fullId: '/tenant/site/snapshot.txt' };
+        await openReadOnlyFile(node, Buffer.from('alpha'));
+        const editor = vscode.window.activeTextEditor;
+        assert.ok(editor);
+        const document = editor.document;
+        assert.strictEqual(document.getText(), 'alpha');
+        const originalStat = await vscode.workspace.fs.stat(document.uri);
+        let listener: vscode.Disposable | undefined;
+        let timeout: NodeJS.Timeout | undefined;
+        try {
+            const changed = new Promise<void>((resolve, reject) => {
+                timeout = setTimeout(() => reject(new Error(`Read-only document still contains "${document.getText()}" after equal-length replacement.`)), 3000);
+                listener = vscode.workspace.onDidChangeTextDocument(event => {
+                    if (event.document === document && document.getText() === 'bravo') {
+                        resolve();
+                    }
+                });
+            });
+            await openReadOnlyFile(node, Buffer.from('bravo'));
+            await changed;
+            assert.strictEqual(editor.document, document);
+            assert.strictEqual(document.getText(), 'bravo');
+            const updatedStat = await vscode.workspace.fs.stat(document.uri);
+            assert.strictEqual(updatedStat.size, originalStat.size);
+            assert.ok(updatedStat.mtime > originalStat.mtime);
+            assert.strictEqual(updatedStat.permissions, vscode.FilePermission.Readonly);
+        } finally {
+            clearTimeout(timeout);
+            listener?.dispose();
+            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+        }
+    });
+
     test('read-only bytes retain their name and identity, refresh content, and cannot be written', async () => {
         const uris: vscode.Uri[] = [];
         mock.method(vscode.commands, 'executeCommand', (command: string, uri: vscode.Uri) => {
@@ -133,6 +167,8 @@ suite('Binary file opening', () => {
         await openReadOnlyFile(node, text);
         assert.strictEqual(uris[1].toString(), uri.toString());
         assert.deepStrictEqual(Buffer.from(await vscode.workspace.fs.readFile(uri)), text);
+        const replacedStat = await vscode.workspace.fs.stat(uri);
+        assert.ok(replacedStat.mtime > stat.mtime);
         await openReadOnlyFile({ ...node, fullId: '/another-tenant/subscription/site/slot/favicon.ico' }, text);
         assert.notStrictEqual(uris[2].toString(), uri.toString());
     });
