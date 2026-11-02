@@ -31,7 +31,7 @@ export * from './deploy/getDeployFsPath';
 export * from './deploy/getDeployNode';
 export * from './deploy/IDeployContext';
 export * from './deploy/localGitDeploy';
-export { handleFailedPreDeployTask, IPreDeployTaskOptions, IPreDeployTaskResult, runPreDeployTask, tryRunPreDeployTask } from './deploy/runDeployTask';
+export { handleFailedPreDeployTask, IPreDeployTaskResult, runPreDeployTask, tryRunPreDeployTask } from './deploy/runDeployTask';
 export * from './deploy/showDeployConfirmation';
 export { disconnectRepo } from './disconnectRepo';
 export * from './editScmType';
@@ -55,3 +55,4 @@ export * from './tree/LogFilesTreeItem';
 export * from './tree/SiteFilesTreeItem';
 export * from './tryGetSiteResource';
 export * from './utils/azureClients';
+

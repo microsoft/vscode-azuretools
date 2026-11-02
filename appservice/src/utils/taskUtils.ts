@@ -58,9 +58,8 @@ export namespace taskUtils {
     /**
      * Handles condition where we don't need to start the task because it's already running
      */
-    export async function executeIfNotActive(task: Task, onExecute?: () => void): Promise<void> {
+    export async function executeIfNotActive(task: Task): Promise<void> {
         if (!codeTasks.taskExecutions.find(t => isTaskEqual(t.task, task))) {
-            onExecute?.();
             await codeTasks.executeTask(task);
         }
     }

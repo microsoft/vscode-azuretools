@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { User } from '@azure/arm-appservice';
-import { callWithMaskHandling, IActionContext, nonNullProp, setWorkflowOutcome, setWorkflowTelemetryDetails, startWorkflowUserWait, withTelemetryStage } from '@microsoft/vscode-azext-utils';
+import { callWithMaskHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { type GitError, Options, SimpleGit, simpleGit, StatusResult } from 'simple-git';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
@@ -26,7 +26,6 @@ type LocalGitOptions = {
 };
 
 export async function localGitDeploy(site: ParsedSite, options: LocalGitOptions, context: IActionContext): Promise<void> {
-    setWorkflowTelemetryDetails(context, { deploymentMechanism: 'localGit' });
     const client = await site.createClient(context);
     const publishCredentials: User = await client.getWebAppPublishCredential();
     const publishingPassword: string = nonNullProp(publishCredentials, 'publishingPassword');
@@ -53,18 +52,11 @@ export async function localGitDeploy(site: ParsedSite, options: LocalGitOptions,
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 if (err.message.indexOf('spawn git ENOENT') >= 0) {
                     const installString: string = vscode.l10n.t('Install');
-                    const wait = startWorkflowUserWait(context);
-                    let input: string | undefined;
-                    try {
-                        input = await vscode.window.showErrorMessage(vscode.l10n.t('Git must be installed to use Local Git Deploy.'), installString);
-                    } finally {
-                        wait.dispose();
-                    }
+                    const input: string | undefined = await vscode.window.showErrorMessage(vscode.l10n.t('Git must be installed to use Local Git Deploy.'), installString);
                     if (input === installString) {
                         await openUrl('https://git-scm.com/downloads');
                     }
                     context.telemetry.properties.gitNotInstalled = 'true';
-                    setWorkflowOutcome(context, 'blocked', { failureCategory: 'prerequisite', failureCode: 'unknown', cancelReason: 'prerequisite' });
                     return undefined;
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
                 } else if (err.message.indexOf('error: failed to push') >= 0) {
@@ -93,12 +85,12 @@ export async function localGitDeploy(site: ParsedSite, options: LocalGitOptions,
 
                         const pushOptions: Options = forcePush ? { '-f': null } : {};
 
-                        withTelemetryStage(context, { stage: 'upload', attempt: forcePush ? 2 : 1 }, async () => localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions)).catch((error: GitError) => {
+                        localGit.push(remote, `HEAD:${options.branch ?? 'master'}`, pushOptions).catch((error: GitError) => {
                             reject(error);
                             tokenSource.cancel();
                         });
 
-                        waitForDeploymentToComplete(context, site, { expectedId: commitId, token, internalCancellation: true }).then(resolve).catch(reject);
+                        waitForDeploymentToComplete(context, site, { expectedId: commitId, token }).then(resolve).catch(reject);
                     });
                 } finally {
                     tokenSource.dispose();

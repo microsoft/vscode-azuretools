@@ -11,7 +11,6 @@ import { InnerDeployContext } from "../../IDeployContext";
 import { waitForDeploymentToComplete } from "../../waitForDeploymentToComplete";
 
 export class WaitForDeploymentToCompleteStep extends AzureWizardExecuteStep<InnerDeployContext> {
-    public telemetryId = 'deploy.wait';
     public stepName: string = 'WaitForDeploymentToCompleteStep';
     public priority: number = 210;
     private _command: { title: string; command: string } = {

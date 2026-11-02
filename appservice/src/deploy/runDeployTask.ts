@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, recordWorkflowRetry, setWorkflowOutcome, startWorkflowUserWait, UserCancelledError, withTelemetryStage } from '@microsoft/vscode-azext-utils';
+import { IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { ScmType } from '../ScmType';
 import { ext } from '../extensionVariables';
@@ -13,33 +13,13 @@ import { IDeployContext } from './IDeployContext';
 export async function runPreDeployTask(context: IDeployContext, deployFsPath: string, scmType: string | undefined): Promise<void> {
     const preDeployResult: IPreDeployTaskResult = await tryRunPreDeployTask(context, deployFsPath, scmType);
     if (preDeployResult.failedToFindTask) {
-        setWorkflowOutcome(context, 'blocked', { failureCategory: 'task', failureCode: 'preDeployTaskMissing', cancelReason: 'preDeployTask' });
         throw new Error(`Failed to find pre-deploy task "${preDeployResult.taskName}". Modify your tasks or the setting "${ext.prefix}.preDeployTask".`);
     } else if (preDeployResult.exitCode !== undefined && preDeployResult.exitCode !== 0) {
         await handleFailedPreDeployTask(context, preDeployResult);
     }
 }
 
-export interface IPreDeployTaskOptions {
-    /** Marks an existing caller-owned retry decision. Counted only when executeTask is actually invoked. */
-    isRetry?: boolean;
-}
-
-export async function tryRunPreDeployTask(context: IDeployContext, deployFsPath: string, scmType: string | undefined, options: IPreDeployTaskOptions = {}): Promise<IPreDeployTaskResult> {
-    return await withTelemetryStage(context, { stage: 'preDeployTask' }, async stage => {
-        const result = await tryRunPreDeployTaskCore(context, deployFsPath, scmType, options);
-        if (result.failedToFindTask) {
-            stage.setOutcome('blocked', { failureCategory: 'task', failureCode: 'preDeployTaskMissing' });
-        } else if (result.exitCode !== undefined && result.exitCode !== 0) {
-            stage.setOutcome('failed', { failureCategory: 'task', failureCode: 'preDeployTaskFailed' });
-        } else if (result.exitCode === undefined) {
-            stage.setOutcome('unknown');
-        }
-        return result;
-    });
-}
-
-async function tryRunPreDeployTaskCore(context: IDeployContext, deployFsPath: string, scmType: string | undefined, options: IPreDeployTaskOptions): Promise<IPreDeployTaskResult> {
+export async function tryRunPreDeployTask(context: IDeployContext, deployFsPath: string, scmType: string | undefined): Promise<IPreDeployTaskResult> {
     const settingKey: string = 'preDeployTask';
     const taskName: string | undefined = vscode.workspace.getConfiguration(ext.prefix, vscode.Uri.file(deployFsPath)).get(settingKey);
     context.telemetry.properties.hasPreDeployTask = String(!!taskName);
@@ -52,7 +32,7 @@ async function tryRunPreDeployTaskCore(context: IDeployContext, deployFsPath: st
         if (task) {
             const progressMessage: string = vscode.l10n.t('Running preDeployTask "{0}"...', taskName);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: progressMessage }, async () => {
-                await taskUtils.executeIfNotActive(task, options.isRetry ? () => recordWorkflowRetry(context) : undefined);
+                await taskUtils.executeIfNotActive(task);
                 preDeployTaskResult = await waitForPreDeployTask(task, deployFsPath);
                 context.telemetry.properties.preDeployTaskExitCode = String(preDeployTaskResult.exitCode);
             });
@@ -102,22 +82,14 @@ export async function handleFailedPreDeployTask(context: IActionContext, preDepl
     const message: string = vscode.l10n.t('Errors exist after running preDeployTask "{0}". See task output for more info.', preDeployResult.taskName!);
     const deployAnyway: vscode.MessageItem = { title: vscode.l10n.t('Deploy Anyway') };
     const openSettings: vscode.MessageItem = { title: vscode.l10n.t('Open Settings') };
-    const userWait = startWorkflowUserWait(context);
-    let result: vscode.MessageItem | undefined;
-    try {
-        result = await vscode.window.showErrorMessage(message, { modal: true }, deployAnyway, openSettings);
-    } finally {
-        userWait.dispose();
-    }
+    const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, { modal: true }, deployAnyway, openSettings);
     if (result === deployAnyway) {
         context.telemetry.properties.preDeployTaskResponse = 'deployAnyway';
     } else if (result === openSettings) {
-        setWorkflowOutcome(context, 'failed', { cancelReason: 'preDeployTask', failureCategory: 'task', failureCode: 'preDeployTaskFailed' });
         context.telemetry.properties.preDeployTaskResponse = 'openSettings';
         await vscode.commands.executeCommand('workbench.action.openSettings');
         throw new UserCancelledError('preDeployFailed|OpenSettings');
     } else {
-        setWorkflowOutcome(context, 'failed', { cancelReason: 'preDeployTask', failureCategory: 'task', failureCode: 'preDeployTaskFailed' });
         context.telemetry.properties.preDeployTaskResponse = 'cancel';
         throw new UserCancelledError('preDeployFailed');
     }

@@ -8,7 +8,6 @@ import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { InnerDeployContext } from '../../IDeployContext';
 
 export class DelayFirstWebAppDeployStep extends AzureWizardExecuteStep<InnerDeployContext> {
-    public telemetryId = 'deploy.delay';
     public priority: number = 300;
     public constructor() {
         super();

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { sendRequestWithTimeout } from '@microsoft/vscode-azext-azureutils';
-import { ExecuteActivityContext, IActionContext, IParsedError, nonNullProp, nonNullValue, parseError, setWorkflowOutcome, setWorkflowTelemetryDetails, withTelemetryStage, WorkflowTelemetryStage } from '@microsoft/vscode-azext-utils';
+import { ExecuteActivityContext, IActionContext, IParsedError, nonNullProp, nonNullValue, parseError } from '@microsoft/vscode-azext-utils';
 import { CancellationToken, Progress, l10n, window } from 'vscode';
 import type * as KuduModels from '../KuduModels';
 import { ParsedSite, SiteClient } from '../SiteClient';
@@ -12,23 +12,16 @@ import { ext } from '../extensionVariables';
 import { delay } from '../utils/delay';
 import { ignore404Error, retryKuduCall } from '../utils/kuduUtils';
 import { InnerDeployContext } from './IDeployContext';
-import { getDeploymentStatusDetails } from './deploymentTelemetry';
 
 type DeploymentOptions = {
     expectedId?: string,
     token?: CancellationToken,
-    /** A concurrent operation canceled this poller; this is not a terminal workflow cancellation. */
-    internalCancellation?: boolean,
     pollingInterval?: number,
     locationUrl?: string
     progress?: Progress<{ message?: string; increment?: number }>;
 }
 
 export async function waitForDeploymentToComplete(context: IActionContext & Partial<InnerDeployContext> & Partial<ExecuteActivityContext>, site: ParsedSite, options: DeploymentOptions = {}): Promise<void> {
-    await withTelemetryStage(context, { stage: 'polling' }, async stage => waitForDeploymentCore(context, site, options, stage));
-}
-
-async function waitForDeploymentCore(context: IActionContext & Partial<InnerDeployContext> & Partial<ExecuteActivityContext>, site: ParsedSite, options: DeploymentOptions, pollingStage: WorkflowTelemetryStage): Promise<void> {
     let fullLog: string = '';
 
     let lastLogTime: Date = new Date(0);
@@ -67,13 +60,9 @@ async function waitForDeploymentCore(context: IActionContext & Partial<InnerDepl
                 continue;
             }
 
-            setWorkflowTelemetryDetails(context, { deploymentStatus: 'unknown' });
-            setWorkflowOutcome(context, 'failed', { failureCategory: 'deployment', failureCode: 'deploymentStatusUnavailable' });
             throw new Error(l10n.t('Failed to get status of deployment.'));
         }
 
-        const statusDetails = getDeploymentStatusDetails(deployment.status, deployment.isTemp);
-        setWorkflowTelemetryDetails(context, statusDetails);
         const deploymentId: string = deployment.id;
         let logEntries: KuduModels.LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
@@ -117,17 +106,6 @@ async function waitForDeploymentCore(context: IActionContext & Partial<InnerDepl
         // a 0 status means the deployment is still ongoing
         // a 2 status is also reported and seems to indicate that it is also currently building, but I have been unable to find any actual documentation on it
         if (deployment.status !== 0 && deployment.status !== 2) {
-            await withTelemetryStage(context, { stage: 'completion' }, async stage => {
-                const outcome = statusDetails.deploymentStatus === 'succeeded' ? 'succeeded' :
-                    statusDetails.deploymentStatus === 'failed' ? 'failed' :
-                        statusDetails.deploymentStatus === 'canceled' ? 'canceled' : 'unknown';
-                stage.setOutcome(outcome, statusDetails);
-                pollingStage.setOutcome(outcome, statusDetails);
-                if (outcome !== 'succeeded') {
-                    setWorkflowOutcome(context, outcome, statusDetails);
-                }
-                await Promise.resolve();
-            });
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
                 showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
                 const messageWithoutName: string = l10n.t('Deployment failed.');
@@ -145,6 +123,7 @@ async function waitForDeploymentCore(context: IActionContext & Partial<InnerDepl
             } else if (deployment.status === -1) {
                 throw new Error(l10n.t('Deployment was cancelled.'));
             }
+
             context.syncTriggersPostDeploy = site.isFunctionApp &&
                 !/syncing/i.test(fullLog) &&
                 !site.isKubernetesApp &&
@@ -154,10 +133,6 @@ async function waitForDeploymentCore(context: IActionContext & Partial<InnerDepl
         } else {
             await delay(pollingInterval);
         }
-    }
-    pollingStage.setOutcome('canceled', { deploymentStatus: 'unknown', cancelReason: 'unknown' });
-    if (!options.internalCancellation) {
-        setWorkflowOutcome(context, 'canceled', { deploymentStatus: 'unknown', cancelReason: 'unknown' });
     }
 
     async function tryGetLatestDeployment(context: IActionContext, kuduClient: SiteClient, permanentId: string | undefined, initialStartTime: Date | undefined, expectedId?: string): Promise<[KuduModels.DeployResult | undefined, string | undefined, Date | undefined]> {

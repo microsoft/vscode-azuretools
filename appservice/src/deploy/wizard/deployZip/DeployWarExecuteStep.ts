@@ -11,7 +11,6 @@ import { InnerDeployContext } from "../../IDeployContext";
 import { DeployZipBaseExecuteStep } from "./DeployZipBaseExecuteStep";
 
 export class DeployWarExecuteStep extends DeployZipBaseExecuteStep {
-    public telemetryId = 'deploy.war';
     public async deployZip(context: InnerDeployContext): Promise<void> {
         if (getFileExtension(context.fsPath) !== 'war') {
             throw new Error(l10n.t('Path specified is not a war file'));
