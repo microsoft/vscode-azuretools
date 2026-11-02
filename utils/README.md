@@ -8,6 +8,22 @@ This package provides common Azure UI elements for VS Code extensions:
 
 > NOTE: This package throws a `UserCancelledError` if the user cancels an operation. If you do not use `registerCommand`, you must handle this exception in your extension.
 
+## 5.1.0 release preparation
+
+This additive minor release combines the binary-file APIs from
+[#2419](https://github.com/microsoft/vscode-azuretools/pull/2419)
+(`AzExtTreeFileSystem.showFile` and `openReadOnlyFile`) with the workflow telemetry
+APIs documented below. Existing text-file APIs and legacy command results remain
+supported; dashboards using `lastStep` must account for the bounded identities.
+
+The version is prepared, not published. After the reviewed changes land, use the
+official build containing both API sets with the existing
+[npm release pipeline](../.config/release.yml), selecting
+`packageToPublish=microsoft-vscode-azext-utils` and `publishVersion=5.1.0`.
+Verify registry availability before updating appservice or extension dependencies.
+The deployment telemetry layer is preserved separately until it can require the
+actual published utils version; this utils-only delivery adds no CI workaround.
+
 ## Telemetry and Error Handling
 
 Use `registerCommand`, `registerEvent`, or `callWithTelemetryAndErrorHandling` to consistently display error messages and track commands with telemetry. You must call `registerUIExtensionVariables` first in your extension's `activate()` method. The first parameter of the function passed in will always be an `IActionContext`, which allows you to specify custom telemetry and describes the behavior of this command. The simplest example is to register a command (in this case, refreshing a node):
@@ -151,10 +167,11 @@ Legacy `result` is unchanged; dashboards relying on old high-cardinality `lastSt
 values must migrate deliberately.
 
 **Release boundary:** this source API is not present in the existing published
-`5.0.0` package merely because the working tree retains that version. Local tarballs
-verify checked-out source only. A human must publish the new utils
-API and update consumers' minimum dependency to its actual released version before
-publishing dependent packages. No package publication is performed by these changes.
+`5.0.0` package. The prepared `5.1.0` manifest and local tarballs are not proof of
+registry availability. Publish the new utils API through the existing release
+pipeline and update consumers' minimum dependency to its actual released version
+before publishing dependent packages. No package publication is performed by these
+source changes.
 
 ## Pick tree items (Azure Resources API V2)
 
