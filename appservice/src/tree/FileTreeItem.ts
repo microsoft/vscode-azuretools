@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, createContextValue, IActionContext, openReadOnlyContent, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, createContextValue, IActionContext, openReadOnlyFile, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import { l10n, ThemeIcon } from 'vscode';
 import { ext } from '../extensionVariables';
 import { ParsedSite } from '../SiteClient';
-import { getFile, ISiteFile } from '../siteFiles';
+import { getFileBytes, ISiteFileBytes } from '../siteFiles';
 import { FolderTreeItem } from './FolderTreeItem';
 
 /**
@@ -43,8 +43,8 @@ export class FileTreeItem extends AzExtTreeItem {
 
     public async openReadOnly(context: IActionContext): Promise<void> {
         await this.runWithTemporaryDescription(context, l10n.t('Opening...'), async () => {
-            const file: ISiteFile = await getFile(context, this.site, this.url);
-            await openReadOnlyContent(this, file.data, '');
+            const file: ISiteFileBytes = await getFileBytes(context, this.site, this.url);
+            await openReadOnlyFile(this, file.data);
         });
     }
 }

@@ -7,10 +7,16 @@ import { RestError, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { AzExtPipelineResponse, createGenericClient } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import retry from 'p-retry';
+import { buffer } from 'stream/consumers';
 import { ParsedSite } from './SiteClient';
 
 export interface ISiteFile {
     data: string;
+    etag: string;
+}
+
+export interface ISiteFileBytes {
+    data: Uint8Array;
     etag: string;
 }
 
@@ -49,6 +55,25 @@ export async function getFile(context: IActionContext, site: ParsedSite, url: st
     return { data: response.bodyAsText!, etag: response.headers.get('etag')! };
 }
 
+export async function getFileBytes(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFileBytes> {
+    try {
+        const response = await getFsResponse(context, site, url, new Set([200]));
+        if (response.status !== 200) {
+            throw new RestError(`Unexpected status code: ${response.status}`, {
+                statusCode: response.status, request: response.request, response
+            });
+        }
+        if (!response.readableStreamBody) {
+            throw new Error('Expected a readable stream for file content.');
+        }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return { data: await buffer(response.readableStreamBody), etag: response.headers.get('etag')! };
+    } catch (error) {
+        context.telemetry.maskEntireErrorMessage = true;
+        throw error;
+    }
+}
+
 export async function listFiles(context: IActionContext, site: ParsedSite, url: string): Promise<ISiteFileMetadata[]> {
     const response: AzExtPipelineResponse = await getFsResponse(context, site, url);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -70,7 +95,7 @@ export async function putFile(context: IActionContext, site: ParsedSite, data: s
 /**
  * Kudu APIs don't work for Linux consumption function apps and ARM APIs don't seem to work for web apps. We'll just have to use both
  */
-async function getFsResponse(context: IActionContext, site: ParsedSite, url: string): Promise<AzExtPipelineResponse> {
+async function getFsResponse(context: IActionContext, site: ParsedSite, url: string, streamResponseStatusCodes?: Set<number>): Promise<AzExtPipelineResponse> {
     try {
         if (site.isFunctionApp) {
             /*
@@ -89,6 +114,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, url: str
                         return await client.sendRequest(createPipelineRequest({
                             method: 'GET',
                             url,
+                            streamResponseStatusCodes,
                         }));
                     } catch (error) {
                         const parsedError: IParsedError = parseError(error);
@@ -103,7 +129,7 @@ async function getFsResponse(context: IActionContext, site: ParsedSite, url: str
             );
         } else {
             const kuduClient = await site.createClient(context);
-            return await kuduClient.vfsGetItem(context, url);
+            return await kuduClient.vfsGetItem(context, url, streamResponseStatusCodes);
         }
     } catch (error) {
         context.telemetry.maskEntireErrorMessage = true; // since the error could have the contents of the user's file
