@@ -95,5 +95,11 @@ The dependent consumer is
 Its exact-artifact acceptance and the human-owned release dependency are separate
 from this source package's CI result.
 
+## Remote file content
+
+Use `getFileBytes(context, site, url)` for virtual file systems and other byte-preserving downloads. It returns `{ data: Uint8Array, etag: string }`, streams the response through the existing authenticated ARM or Kudu client, and does not decode content based on its MIME type. Keep the returned ETag for conditional saves with `putFile`; byte uploads are sent without text conversion. The existing `getFile` helper continues to return text.
+
+`FileTreeItem.openReadOnly` still uses the existing text helper. Switching it to byte-preserving read-only previews is a follow-up after the utils package publishes `openReadOnlyFile` and this package updates its minimum utils dependency to that release.
+
 ## License
 [MIT](LICENSE.md)

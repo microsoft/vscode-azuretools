@@ -1863,6 +1863,12 @@ export declare class ReadOnlyContent {
 export declare function openReadOnlyContent(node: { label: string, fullId: string }, content: string, fileExtension: string, options?: TextDocumentShowOptions): Promise<ReadOnlyContent>;
 
 /**
+ * Opens raw bytes with VS Code's default editor for the file name.
+ * The backing file system is read-only. Existing text content helpers are unchanged.
+ */
+export declare function openReadOnlyFile(node: { label: string, fullId: string }, content: Uint8Array, options?: TextDocumentShowOptions): Promise<void>;
+
+/**
  * Stash a read-only editor so it can be opened by its uri later.
  * @param node Typically (but not strictly) an `AzExtTreeItem`. `label` is used for the file name displayed in VS Code and `fullId` is used to uniquely identify this file
  * @param content The content to display
@@ -1980,6 +1986,12 @@ export declare abstract class AzExtTreeFileSystem<TItem extends AzExtTreeFileSys
     public abstract writeFileImpl(context: IActionContext, item: TItem, content: Uint8Array, originalUri: Uri): Promise<void>;
 
     public showTextDocument(item: TItem, options?: TextDocumentShowOptions): Promise<void>;
+
+    /**
+     * Opens an item with VS Code's default editor, including binary/custom editors.
+     * Uses the same URI and item cache as showTextDocument.
+     */
+    public showFile(item: TItem, options?: TextDocumentShowOptions): Promise<void>;
 
     /**
      * Uses a simple buffer to group events that occur within a few milliseconds of each other

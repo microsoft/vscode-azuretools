@@ -361,6 +361,10 @@ A virtual file system that supports viewing and editing single files in Azure. I
     ]
     ```
 
+Use `fileSystem.showFile(item, options)` to let VS Code choose the editor for the file name, including image and other binary/custom editors. It registers the same item and URI as `showTextDocument`, which remains available when a text editor is explicitly required. File system implementations must return the original bytes from `readFileImpl` and upload the supplied bytes from `writeFileImpl` without decoding them as text.
+
+For a read-only byte snapshot, use `openReadOnlyFile({ label, fullId }, bytes, options)`. The label retains the file extension for editor selection; the full ID distinguishes resources, including tenants, subscriptions, and slots. Its backing file system is registered read-only and rejects writes. Existing `openReadOnlyContent` and JSON helpers remain text-only.
+
 ## License
 
 [MIT](LICENSE.md)

@@ -22,6 +22,7 @@ export * from './extensionUserAgent';
 export { registerUIExtensionVariables } from './extensionVariables';
 export { addExtensionValueToMask, callWithMaskHandling, maskUserInfo, maskValue } from './masking';
 export * from './openReadOnlyContent';
+export * from './openReadOnlyFile';
 export * from './parseError';
 export * from './pickTreeItem/contextValue/ContextValueQuickPickStep';
 export * from './pickTreeItem/contextValue/RecursiveQuickPickStep';

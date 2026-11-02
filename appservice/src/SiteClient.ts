@@ -461,11 +461,12 @@ export class SiteClient implements IAppSettingsClient {
         });
     }
 
-    public async vfsGetItem(context: IActionContext, url: string): Promise<AzExtPipelineResponse> {
+    public async vfsGetItem(context: IActionContext, url: string, streamResponseStatusCodes?: Set<number>): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await this.createKuduClient(context);
         return await client.sendRequest(createPipelineRequest({
             method: 'GET',
             url,
+            streamResponseStatusCodes,
         }));
     }
 
@@ -475,7 +476,7 @@ export class SiteClient implements IAppSettingsClient {
         return await client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url,
-            body: typeof data === 'string' ? data : new TextDecoder('utf-8').decode(data),
+            body: data instanceof ArrayBuffer ? new Uint8Array(data) : data,
             headers
         }));
     }
