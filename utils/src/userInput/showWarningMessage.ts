@@ -9,6 +9,7 @@ import { DialogResponses } from '../DialogResponses';
 import { GoBackError, UserCancelledError } from '../errors';
 import { openUrl } from '../utils/openUrl';
 import { IInternalActionContext } from './IInternalActionContext';
+import { recordWorkflowUserDismissal, startWorkflowUserWait } from '../workflowTelemetry';
 
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, ...items: T[]): Promise<T>;
 export async function showWarningMessage<T extends MessageItem>(context: IInternalActionContext, message: string, options: MessageOptions, ...items: T[]): Promise<T>;
@@ -28,11 +29,18 @@ export async function showWarningMessage<T extends MessageItem>(context: IIntern
     }
 
     while (true) {
-        const result: MessageItem | undefined = options ? await window.showWarningMessage(message, options, ...items) : await window.showWarningMessage(message, ...items);
+        const timer = startWorkflowUserWait(context);
+        let result: MessageItem | undefined;
+        try {
+            result = options ? await window.showWarningMessage(message, options, ...items) : await window.showWarningMessage(message, ...items);
+        } finally {
+            timer.dispose();
+        }
         if (learnMoreLink && result === DialogResponses.learnMore) {
             context.telemetry.properties.learnMoreStep = context.telemetry.properties.lastStep;
             await openUrl(learnMoreLink);
         } else if (result === undefined || result === DialogResponses.cancel) {
+            recordWorkflowUserDismissal(context);
             throw new UserCancelledError();
         } else if (result === back) {
             throw new GoBackError();

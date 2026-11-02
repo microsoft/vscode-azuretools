@@ -46,6 +46,10 @@ registerEvent(
 );
 ```
 
+### Workflow telemetry
+Opt in with `initializeWorkflowTelemetry` for stable steps, correlated stages/outcomes, observed retries and active/user-wait timing; independent of Copilot on Rails.
+Unreleased utils 5.1.0; see the [public API types](index.d.ts). Publish utils before updating dependent packages to require it.
+
 ## Pick tree items (Azure Resources API V2)
 
 The Azure Resources API exposes a `TreeDataProvider` for both the Azure resources view and the Workspace resources view. `azureResourceTreeDataProvider` and `workspaceResourceTreeDataProvider` are exposed by the Azure Resources API.

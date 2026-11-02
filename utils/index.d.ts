@@ -799,6 +799,74 @@ export interface ITelemetryContext {
     eventVersion?: number;
 }
 
+export type WorkflowName = 'createProject' | 'createFunction' | 'deploy' | 'unknown';
+export type WorkflowCommand = 'createNewProject' | 'createNewProjectWithDockerfile' | 'templateGallery.createProject' | 'createFunction' | 'deploy' | 'deployProject' | 'deploySlot' | 'redeploy' | 'deployByFunctionAppId' | 'unknown';
+export type WorkflowStage = 'prompt' | 'execute' | 'prerequisites' | 'projectCreation' | 'functionCreation' | 'preDeployTask' | 'deployment' | 'upload' | 'acceptance' | 'polling' | 'completion' | 'triggerSync' | 'postDeployTask' | 'unknown';
+export type WorkflowOutcome = 'succeeded' | 'failed' | 'canceled' | 'handedOff' | 'blocked' | 'unknown';
+export type WorkflowCancelReason = 'userDismissed' | 'templateGallery' | 'prerequisite' | 'preDeployTask' | 'unknown';
+export type WorkflowFailureCategory = 'prerequisite' | 'task' | 'deployment' | 'authentication' | 'authorization' | 'throttled' | 'service' | 'network' | 'unknown';
+export type WorkflowFailureCode = 'coreToolsUnavailable' | 'goUnavailable' | 'preDeployTaskMissing' | 'preDeployTaskFailed' | 'funcCliFailed' | 'deploymentFailed' | 'deploymentCanceled' | 'deploymentSuperseded' | 'deploymentPartial' | 'deploymentStatusUnavailable' | 'githubDeploymentRequired' | 'triggerDiscoveryFailed' | 'timeout' | 'dns' | 'connection' | 'tls' | 'aborted' | 'httpUnauthorized' | 'httpForbidden' | 'httpNotFound' | 'httpConflict' | 'httpThrottled' | 'httpServerError' | 'unknown';
+export type DeploymentMechanism = 'zip' | 'war' | 'flex' | 'storage' | 'localGit' | 'github' | 'funccli' | 'unknown';
+export type DeploymentStatus = 'accepted' | 'running' | 'succeeded' | 'failed' | 'canceled' | 'partial' | 'unknown';
+export type WorkflowNetworkCategory = 'timeout' | 'dns' | 'connection' | 'tls' | 'aborted' | 'unknown';
+
+export interface WorkflowTelemetryOptions {
+    workflow: WorkflowName;
+    command: WorkflowCommand;
+    /**
+     * Extension-authored, finite step identifiers (at most 128, each at most 64 ASCII characters).
+     * Never populate this list from user input, resource data, error metadata or constructor names.
+     * Unregistered wizard/UI/error step names are reported as bounded unknown/UI categories.
+     */
+    stepNames?: readonly string[];
+}
+
+export interface WorkflowTelemetryDetails {
+    cancelReason?: WorkflowCancelReason;
+    failureCategory?: WorkflowFailureCategory;
+    failureCode?: WorkflowFailureCode;
+    /** Omit when not known. This describes the observed failure, not a new retry policy. */
+    retryable?: boolean;
+    deploymentMechanism?: DeploymentMechanism;
+    deploymentStatus?: DeploymentStatus;
+    /** Only the bounded 1xx/2xx/3xx/4xx/5xx category is emitted. */
+    httpStatus?: number;
+    networkCategory?: WorkflowNetworkCategory;
+}
+
+export interface WorkflowTelemetryStage {
+    /** Set a stage-only outcome; a recovered/ignored stage failure does not terminate the root. */
+    setOutcome(outcome: WorkflowOutcome, details?: WorkflowTelemetryDetails): void;
+}
+
+export interface WorkflowUserWaitTimer extends Disposable { }
+
+/**
+ * Opt in once at a command's entry point. The existing action telemetry handler finalizes the record.
+ * Pass parentContext when a nested action creates its own telemetry context; it joins the same root.
+ * Repeated initialization of an existing context joins it rather than creating another user attempt.
+ */
+export declare function initializeWorkflowTelemetry(context: IActionContext, options: WorkflowTelemetryOptions, parentContext?: IActionContext): void;
+/** Explicit terminal outcomes survive the legacy error/cancellation handler; legacy result is unchanged. */
+export declare function setWorkflowOutcome(context: IActionContext, outcome: WorkflowOutcome, details?: WorkflowTelemetryDetails): void;
+/** Bounded details apply to the current stage, or to the action when outside a stage. */
+export declare function setWorkflowTelemetryDetails(context: IActionContext, details: WorkflowTelemetryDetails): void;
+/**
+ * Emit a child workflowStage record with a generated attemptId and parentAttemptId.
+ * For an existing retry loop, pass its actual 1-based attempt number. Do not also call
+ * recordWorkflowRetry for that same invocation. Poll iterations are not retry attempts.
+ */
+export declare function withTelemetryStage<T>(context: IActionContext, options: { stage: WorkflowStage; attempt?: number }, callback: (stage: WorkflowTelemetryStage) => Promise<T>): Promise<T>;
+/**
+ * Record one actual retry invocation when not using withTelemetryStage({ attempt }).
+ * Call at the actual invocation seam, before repeating or within the previously failed stage.
+ * This records immediately, not a deferred intent. Recovery requires that same stage to
+ * subsequently succeed; the counter alone never implies recovery.
+ */
+export declare function recordWorkflowRetry(context: IActionContext): void;
+/** Measure only extension-owned, visible user interaction. Dispose in finally, including on cancellation. */
+export declare function startWorkflowUserWait(context: IActionContext): WorkflowUserWaitTimer;
+
 export interface AzExtErrorButton extends MessageItem {
     /**
      * To be called if the button is clicked
@@ -1524,6 +1592,8 @@ export declare abstract class AzureWizardExecuteStep<T extends IActionContext & 
      * If not specified, the class name will be used instead
      */
     public id?: string;
+    /** Stable telemetry-only name registered in WorkflowTelemetryOptions.stepNames; never used for navigation. */
+    public telemetryId?: string;
 
     /**
     * Can be used to optionally configure the wizard context before determining if execution is required
@@ -1578,9 +1648,11 @@ export declare abstract class AzureWizardPromptStep<T extends IActionContext> {
     public supportsDuplicateSteps: boolean;
 
     /**
-     * An id used to determine if this step is unique, for things like caching values and telemetry
+     * Runtime uniqueness for caching and navigation. Use telemetryId for telemetry.
      */
     public id: string;
+    /** Stable telemetry-only name registered in WorkflowTelemetryOptions.stepNames; never used for navigation. */
+    public telemetryId?: string;
 
     /**
      * Prompt the user for input

@@ -8,6 +8,7 @@ import * as types from '../../index';
 
 export abstract class AzureWizardExecuteStep<T extends types.IActionContext & Partial<types.ExecuteActivityContext>> implements types.AzureWizardExecuteStep<T> {
     public id?: string;
+    public telemetryId?: string;
     public options: types.AzureWizardExecuteStepOptions = {};
 
     public abstract priority: number;

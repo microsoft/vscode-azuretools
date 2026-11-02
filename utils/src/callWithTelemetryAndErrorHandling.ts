@@ -13,6 +13,7 @@ import { cacheIssueForCommand } from './registerReportIssueCommand';
 import { IReportableIssue, reportAnIssue } from './reportAnIssue';
 import { AzExtUserInput } from './userInput/AzExtUserInput';
 import { limitLines } from './utils/textStrings';
+import { finalizeWorkflowTelemetry, recordWorkflowError, setErrorTelemetryStep } from './workflowTelemetry';
 
 const maxStackLines: number = 3;
 
@@ -129,8 +130,9 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         const maskedErrorMessage = maskUserInfo(unMaskedErrorData.message, context.valuesToMask);
 
         if (unMaskedErrorData.stepName) {
-            context.telemetry.properties.lastStep = unMaskedErrorData.stepName;
+            setErrorTelemetryStep(context, unMaskedErrorData.stepName);
         }
+        recordWorkflowError(context, errorContext.error, unMaskedErrorData.isUserCancelledError);
 
         if (unMaskedErrorData.isUserCancelledError) {
             context.telemetry.properties.result = 'Canceled';
@@ -224,6 +226,7 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
             }
         }
 
+        finalizeWorkflowTelemetry(context, context.telemetry.properties.result === 'Failed', context.telemetry.properties.result === 'Canceled');
         if (shouldSendTelemtry(context)) {
             const end: number = Date.now();
             context.telemetry.measurements.duration = (end - start) / 1000;

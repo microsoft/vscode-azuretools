@@ -12,6 +12,7 @@ import { showOpenDialog } from './showOpenDialog';
 import { showQuickPick } from './showQuickPick';
 import { showWarningMessage } from './showWarningMessage';
 import { showWorkspaceFolderPick } from './showWorkspaceFolderPick';
+import { setTelemetryStep } from '../workflowTelemetry';
 
 export class AzExtUserInput implements types.IAzureUserInput {
     public wizard?: IInternalAzureWizard;
@@ -72,7 +73,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
         try {
             this._isPrompting = true;
-            const result = await showOpenDialog(options);
+            const result = await showOpenDialog(options, this._context);
             this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         } finally {
@@ -87,7 +88,7 @@ export class AzExtUserInput implements types.IAzureUserInput {
         }
         try {
             this._isPrompting = true;
-            const result = await showWorkspaceFolderPick(options);
+            const result = await showWorkspaceFolderPick(options, this._context);
             this._onDidFinishPromptEmitter.fire({ value: result });
             return result;
         } finally {
@@ -119,18 +120,13 @@ export class AzExtUserInput implements types.IAzureUserInput {
     }
 }
 
-export function addStepTelemetry(context: IInternalActionContext, stepName: string | undefined, stepType: string, description: string | undefined): void {
+export function addStepTelemetry(context: IInternalActionContext, stepName: string | undefined, stepType: string, _description: string | undefined): void {
     if (!stepName) {
-        stepName = context.ui.wizard?.currentStepId;
+        stepName = context.ui.wizard?.currentTelemetryStepId;
     }
 
-    if (!stepName) {
-        stepName = description ? `${stepType}|${convertToStepName(description)}` : stepType;
-    }
-
-    context.telemetry.properties.lastStep = stepName;
-}
-
-function convertToStepName(prompt: string): string {
-    return prompt.replace(/\s/g, '').slice(0, 20);
+    const fallback = context.ui.wizard?.currentTelemetryStepId ?? (
+        ['quickPick', 'inputBox', 'openDialog', 'WorkspaceFolderPick', 'warningMessage'].includes(stepType) ? stepType : 'unknown'
+    );
+    setTelemetryStep(context, stepName, fallback);
 }

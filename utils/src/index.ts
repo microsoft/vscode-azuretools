@@ -71,6 +71,7 @@ export * from './wizard/AzureWizardExecuteStepWithActivityOutput';
 export * from './wizard/AzureWizardPromptStep';
 export * from './wizard/ConfirmPreviousInputStep';
 export * from './wizard/DeleteConfirmationStep';
+export { initializeWorkflowTelemetry, recordWorkflowRetry, setWorkflowOutcome, setWorkflowTelemetryDetails, startWorkflowUserWait, withTelemetryStage } from './workflowTelemetry';
 // re-export api types and utils
 export { apiUtils, AzureExtensionApi, GetApiOptions } from '@microsoft/vscode-azureresources-api';
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen
