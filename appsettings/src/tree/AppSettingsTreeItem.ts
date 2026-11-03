@@ -8,7 +8,8 @@ import { AzExtParentTreeItem, AzExtTreeItem, createContextValue, GenericTreeItem
 import * as vscode from 'vscode';
 import { ThemeIcon } from 'vscode';
 import { AppSettingsClientProvider, IAppSettingsClient } from '../IAppSettingsClient';
-import { AppSettingTreeItem, isSettingConnectionString } from './AppSettingTreeItem';
+import { isSettingConnectionString } from '../utils/isSettingConnectionString';
+import { AppSettingTreeItem } from './AppSettingTreeItem';
 
 export function validateAppSettingKey(settings: StringDictionary, client: IAppSettingsClient, newKey: string, oldKey?: string): string | undefined {
     // eslint-disable-next-line no-useless-escape

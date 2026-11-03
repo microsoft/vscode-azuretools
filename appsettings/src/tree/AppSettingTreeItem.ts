@@ -5,6 +5,7 @@
 
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, createContextValue } from '@microsoft/vscode-azext-utils';
 import { ThemeIcon, l10n } from 'vscode';
+import { isSettingConnectionString } from '../utils/isSettingConnectionString';
 import { AppSettingsTreeItem, validateAppSettingKey } from './AppSettingsTreeItem';
 
 /**
@@ -144,23 +145,4 @@ export class AppSettingTreeItem extends AzExtTreeItem {
             }
         }
     }
-}
-
-export function isSettingConnectionString(key: string, value: string): boolean {
-    if (!value || value === 'UseDevelopmentStorage=true' || key === 'DEPLOYMENT_STORAGE_CONNECTION_STRING') {
-        return false;
-    }
-
-    if ((/DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[^;]+;EndpointSuffix=[^;]+/).test(value)) {
-        // Storage connections strings are of the above format
-        return true;
-    } else if ((/Endpoint=sb:\/\/[^;]+;SharedAccessKeyName=[^;]+;SharedAccessKey=[^;]+(?:;EntityPath=[^;]+)?/).test(value)) {
-        // Event Hub and Service bus connections strings are of the above format
-        return true;
-    } else if ((/AccountEndpoint=https:\/\/[^;]+;AccountKey=[^;]+;/).test(value)) {
-        // Cosmos DB connections strings are of the above format
-        return true;
-    }
-
-    return false;
 }

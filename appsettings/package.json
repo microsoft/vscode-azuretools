@@ -28,7 +28,7 @@
         "build:esm": "tsc -p ./",
         "build:cjs": "tsc -p ./ --outDir ./dist/cjs --module nodenext --moduleResolution nodenext --declaration false",
         "lint": "eslint --max-warnings 0",
-        "test": "exit 0",
+        "test": "mocha",
         "package": "npm pack",
         "l10n": "npx @vscode/l10n-dev export --outDir ./l10n ./src"
     },
@@ -43,6 +43,17 @@
         "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/node": "22.x",
         "@types/vscode": "1.105.0"
+    },
+    "mocha": {
+        "ui": "tdd",
+        "node-option": [
+            "experimental-transform-types",
+            "disable-warning=ExperimentalWarning",
+            "import=@microsoft/vscode-azext-eng/mocha"
+        ],
+        "spec": [
+            "test/**/*.test.ts"
+        ]
     },
     "overrides": {
         "serialize-javascript": "^7.1.4"

@@ -6,11 +6,14 @@
 import * as vscode from 'vscode';
 import * as types from '../../index';
 
-export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
-    // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-    const matches: RegExpMatchArray | null = id.match(/\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/(.*)\/(.*)/i);
+const lineBreakPattern = /[\r\n\u2028\u2029]/;
 
-    if (matches === null || matches.length < 3) {
+export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
+    const matches = lineBreakPattern.test(id)
+        ? null
+        : /\/subscriptions\/([^/]*)\/resourceGroups\/([^/]*)\/providers\/((?:[^/]*\/)*[^/]*)\/([^/]*)/i.exec(id);
+
+    if (matches === null) {
         throw new Error(vscode.l10n.t('Invalid Azure Resource Id'));
     }
 
@@ -28,10 +31,11 @@ export function parseAzureResourceId(id: string): types.ParsedAzureResourceId {
  * (also compatible with generic Azure Resource Ids)
  */
 export function parseAzureResourceGroupId(id: string): types.ParsedAzureResourceGroupId {
-    // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec, no-useless-escape
-    const matches: RegExpMatchArray | null = id.match(/\/subscriptions\/(.*)\/resourceGroups\/([^\/]*)/i);
+    const matches = lineBreakPattern.test(id)
+        ? null
+        : /\/subscriptions\/([^/]*)\/resourceGroups\/([^/]*)/i.exec(id);
 
-    if (matches === null || matches.length < 3) {
+    if (matches === null) {
         throw new Error(vscode.l10n.t('Invalid Azure Resource Group Id.'));
     }
 
