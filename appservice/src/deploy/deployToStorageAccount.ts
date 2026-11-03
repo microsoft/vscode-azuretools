@@ -5,7 +5,7 @@
 
 import type { StringDictionary } from '@azure/arm-appservice';
 import { BlobSASPermissions, BlobServiceClient, BlockBlobClient, ContainerClient, generateBlobSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
-import { IActionContext, parseError, randomUtils } from '@microsoft/vscode-azext-utils';
+import { IActionContext, parseError, randomUtils, setWorkflowOutcome, setWorkflowTelemetryDetails, withTelemetryStage } from '@microsoft/vscode-azext-utils';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import utc from 'dayjs/plugin/utc';
@@ -28,6 +28,7 @@ const AzureCloudStorageEndpointSuffix = 'core.windows.net';
  * Then deploy via "zipdeploy" as usual.
  */
 export async function deployToStorageAccount(context: IDeployContext, fsPath: string, site: ParsedSite): Promise<void> {
+    setWorkflowTelemetryDetails(context, { deploymentMechanism: 'storage' });
     context.telemetry.properties.useStorageAccountDeploy = 'true';
 
     const datePart: string = dayjs().utc().format('YYYYMMDDHHmmss');
@@ -41,7 +42,12 @@ export async function deployToStorageAccount(context: IDeployContext, fsPath: st
     appSettings.properties = appSettings.properties ?? {};
     delete appSettings.properties.WEBSITE_RUN_FROM_ZIP; // delete old app setting name if it exists
     appSettings.properties.WEBSITE_RUN_FROM_PACKAGE = blobUrl;
-    await client.updateApplicationSettings(appSettings);
+    await withTelemetryStage(context, { stage: 'acceptance' }, async () => {
+        await client.updateApplicationSettings(appSettings);
+        setWorkflowTelemetryDetails(context, { deploymentStatus: 'accepted' });
+    });
+    // Updating the package setting does not observe the app's completed deployment.
+    setWorkflowOutcome(context, 'unknown');
     ext.outputChannel.appendLog(vscode.l10n.t('Deployment successful.'), { resourceName: site.fullName });
 
     context.syncTriggersPostDeploy = true;
@@ -88,7 +94,10 @@ async function createBlobFromZip(context: IActionContext, fsPath: string, site: 
     await runWithZipStream(context, {
         fsPath, site, callback: async zipStream => {
             ext.outputChannel.appendLog(vscode.l10n.t('Uploading zip package to storage container...'), { resourceName: site.fullName });
-            await blobClient.uploadStream(zipStream);
+            await withTelemetryStage(context, { stage: 'upload' }, async () => {
+                const response = await blobClient.uploadStream(zipStream);
+                setWorkflowTelemetryDetails(context, { httpStatus: response._response.status });
+            });
         }
     });
 

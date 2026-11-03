@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SiteConfig } from "@azure/arm-appservice";
-import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput } from "@microsoft/vscode-azext-utils";
+import { ActivityChildItem, ActivityChildType, activityFailContext, activityFailIcon, activitySuccessContext, activitySuccessIcon, AzureWizardExecuteStep, createContextValue, ExecuteActivityOutput, withTelemetryStage } from "@microsoft/vscode-azext-utils";
 import { l10n, Progress, Task, Uri, workspace } from "vscode";
 import { ext } from "../../extensionVariables";
 import { taskUtils } from "../../utils/taskUtils";
@@ -12,6 +12,7 @@ import { InnerDeployContext } from "../IDeployContext";
 import { shouldExecuteTask } from "../runDeployTask";
 
 export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeployContext> {
+    public telemetryId = 'deploy.postTask';
     public priority: number = 300;
     public constructor(readonly config: SiteConfig) {
         super();
@@ -44,6 +45,14 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
     }
 
     public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+        await withTelemetryStage(context, { stage: 'postDeployTask' }, async stage => {
+            await this.executeCore(context, progress);
+            // This step observes task launch, not task-process completion.
+            stage.setOutcome('unknown');
+        });
+    }
+
+    private async executeCore(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
         const settingKey: string = 'postDeployTask';
         const taskName: string | undefined = workspace.getConfiguration(ext.prefix, Uri.file(context.fsPath)).get(settingKey);
         context.telemetry.properties.hasPostDeployTask = String(!!taskName);

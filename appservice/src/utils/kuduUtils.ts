@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, parseError, withTelemetryStage } from '@microsoft/vscode-azext-utils';
 import retry from 'p-retry';
 
 /**
@@ -20,7 +20,7 @@ export async function retryKuduCall<T>(context: IActionContext, methodName: stri
                 }
             }
 
-            return await callback();
+            return await withTelemetryStage(context, { stage: 'polling', attempt }, async () => callback());
         },
         { retries: 4, minTimeout: 1000 }
     );

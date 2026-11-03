@@ -8,6 +8,7 @@ import { Progress, l10n } from "vscode";
 import { InnerDeployContext } from "../IDeployContext";
 
 export class StopAppBeforeDeployExecuteStep extends AzureWizardExecuteStepWithActivityOutput<InnerDeployContext> {
+    public telemetryId = 'deploy.stopApp';
     stepName: string = 'StopAppBeforeDeployExecuteStep';
     protected getTreeItemLabel(context: InnerDeployContext): string {
         return context.site.isSlot ? l10n.t('Stop slot "{0}" before deployment', context.site.fullName) : l10n.t('Stop app "{0}" before deployment', context.site.fullName);

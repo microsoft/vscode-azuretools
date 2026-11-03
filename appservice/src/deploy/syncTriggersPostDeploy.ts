@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext } from '@microsoft/vscode-azext-utils';
+import { IActionContext, withTelemetryStage } from '@microsoft/vscode-azext-utils';
 import retry from 'p-retry';
 import * as vscode from 'vscode';
 import { ext } from '../extensionVariables';
@@ -11,6 +11,10 @@ import { ParsedSite } from '../SiteClient';
 import { delay } from '../utils/delay';
 
 export async function syncTriggersPostDeploy(context: IActionContext, site: ParsedSite): Promise<void> {
+    await withTelemetryStage(context, { stage: 'triggerSync' }, async () => syncTriggersCore(context, site));
+}
+
+async function syncTriggersCore(context: IActionContext, site: ParsedSite): Promise<void> {
     // Per functions team a short delay is necessary before syncing triggers for two reasons:
     // (1) The call will definitely fail. (2) It will spin up a container unnecessarily in some cases.
     // Chose 10 because deploy logs say "App container will begin restart within 10 seconds."
@@ -26,7 +30,7 @@ export async function syncTriggersPostDeploy(context: IActionContext, site: Pars
                 vscode.l10n.t('Syncing triggers...') :
                 vscode.l10n.t('Syncing triggers (Attempt {0}/{1})...', currentAttempt, retries + 1);
             ext.outputChannel.appendLog(message, { resourceName: site.fullName });
-            await client.syncFunctionTriggers();
+            await withTelemetryStage(context, { stage: 'triggerSync', attempt: currentAttempt }, async () => client.syncFunctionTriggers());
         },
         { retries, minTimeout: 5 * 1000 }
     );

@@ -17,5 +17,9 @@ Use `getFileBytes(context, site, url)` for virtual file systems and other byte-p
 
 `FileTreeItem.openReadOnly` still uses the existing text helper. Switching it to byte-preserving read-only previews is a follow-up after the utils package publishes `openReadOnlyFile` and this package updates its minimum utils dependency to that release.
 
+## Deployment telemetry
+Deployment uses published utils `^5.1.0` for bounded, correlated stages; upload acceptance is not Azure completion, and deployment status is independent of command outcome.
+For caller-owned retries, `tryRunPreDeployTask(context, path, scmType, { isRetry: true })` counts actual `executeTask` invocations (including throws), not missing, skipped or active tasks; do not double-count. Consumers need appservice `6.1.0` published before using this additive API.
+
 ## License
 [MIT](LICENSE.md)
