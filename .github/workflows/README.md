@@ -33,9 +33,24 @@ on:
 
 jobs:
   Build:
+    permissions:
+      contents: read
     # Use template from https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows
     uses: microsoft/vscode-azuretools/.github/workflows/jobs.yml@main
 ```
+
+## Permissions
+
+Grant permissions on the job that calls each reusable workflow:
+
+| Workflow | Required `GITHUB_TOKEN` permissions |
+| --- | --- |
+| `jobs.yml` | `contents: read` |
+| `locker.yml` | `issues: write` |
+| `info-needed-closer.yml` | `issues: write` |
+
+Reusable workflows cannot elevate the caller's token permissions. No additional
+secrets or `secrets: inherit` are required.
 
 ## Inputs
 
@@ -74,6 +89,8 @@ Example `main.yml` job that opts into PNPM:
 ```yaml
 jobs:
   Build:
+    permissions:
+      contents: read
     # Use template from https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows
     uses: microsoft/vscode-azuretools/.github/workflows/jobs.yml@main
     with:

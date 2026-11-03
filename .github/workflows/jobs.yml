@@ -10,6 +10,9 @@ on:
         type: string
         default: "npm"
 
+permissions:
+  contents: read
+
 jobs:
   Build:
     runs-on: ubuntu-latest
