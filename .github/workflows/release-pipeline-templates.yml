@@ -9,6 +9,8 @@ on:
         default: "azext-pt/v1"
         type: string
 
+permissions: {}
+
 jobs:
   release:
     name: Update ${{ inputs.release_branch }}

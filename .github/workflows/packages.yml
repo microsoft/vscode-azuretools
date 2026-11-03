@@ -7,11 +7,15 @@ on:
       - main
       - rel/*
 
+permissions: {}
+
 jobs:
   ChangedPackages:
     # Determine changed subpaths to run the matrix on
     # See https://github.com/dorny/paths-filter/tree/v4/#examples
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     steps:
       - name: Determine changed packages
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
@@ -32,6 +36,8 @@ jobs:
 
   Build:
     if: ${{ fromJson(needs.ChangedPackages.outputs.packages)[0] != null }}
+    permissions:
+      contents: read
     # Use template from https://github.com/microsoft/vscode-azuretools/blob/main/.github/workflows/jobs.yml
     uses: ./.github/workflows/jobs.yml
     needs: [ChangedPackages]
