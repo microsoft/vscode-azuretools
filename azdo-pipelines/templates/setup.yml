@@ -26,14 +26,16 @@ steps:
     inputs:
       version: $(nodeVersion)
 
-  # Activate the pnpm version pinned by the consumer's package.json "packageManager"
-  # field (e.g. "pnpm@11.3.0"; pnpm ci needs 11+). pnpm is bootstrapped with
-  # `npm install -g` from an anonymous proxy feed (npm fetches only the packument +
-  # tarball) instead of Corepack, whose downloader hits registry.npmjs.org before
-  # any feed auth is applied and fails on network-restricted agents. The proxy feed
-  # is hardcoded for now; parametrize it if a consumer ever needs a different one.
+  # Authenticate before bootstrapping pnpm so the bootstrap uses the same registry
+  # as dependency installation.
+  - template: write-npmrc-auth.yml
+    parameters:
+      workingDirectory: $(working_directory)
+      feedBaseUrl: ${{ parameters.feedBaseUrl }}
+
+  # Activate the version pinned by package.json via npm instead of Corepack,
+  # whose downloader bypasses .npmrc and fails on network-restricted agents.
   - pwsh: |
-      $pnpmRegistry = "https://packagefeedproxy.microsoft.io/npm"
       $pm = (Get-Content "package.json" -Raw | ConvertFrom-Json).packageManager
       if (-not $pm -or -not $pm.StartsWith("pnpm@")) {
         Write-Output "##vso[task.logissue type=error]package.json 'packageManager' must be 'pnpm@<version>' when packageManager is pnpm."
@@ -43,20 +45,16 @@ steps:
       $pnpmVersion = ($pm -replace '^pnpm@', '') -replace '\+.*$', ''
       # Drop any Corepack pnpm shim first so the globally installed pnpm wins on PATH.
       corepack disable pnpm 2>$null
-      npm install -g "pnpm@$pnpmVersion" --registry="$pnpmRegistry"
+      npm install -g "pnpm@$pnpmVersion"
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       node --version
       pnpm --version
     displayName: "👉 Activate pnpm"
     workingDirectory: $(working_directory)
     condition: and(succeeded(), eq(variables['packageManager'], 'pnpm'))
-
-  # Private-feed auth: use a checked-in .npmrc, or write one from feedBaseUrl;
-  # authenticate when present, skip otherwise.
-  - template: write-npmrc-auth.yml
-    parameters:
-      workingDirectory: $(working_directory)
-      feedBaseUrl: ${{ parameters.feedBaseUrl }}
+    # Global installs ignore project .npmrc files; use the authenticated file as user config.
+    env:
+      NPM_CONFIG_USERCONFIG: $(npmrcFile)
 
   - pwsh: $(packageManager) ci
     displayName: "👉 Install Dependencies"
