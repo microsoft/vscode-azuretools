@@ -36,6 +36,23 @@ suite('parseAzureResourceId', () => {
         assert.strictEqual(parsed.resourceName, 'my-site');
     });
 
+    test('preserves child resource paths and original casing', () => {
+        const id = '/subscriptions/Sub/resourceGroups/Group/providers/Microsoft.Web/sites/Site/slots/Slot';
+        assert.deepStrictEqual(parseAzureResourceId(id), {
+            rawId: id,
+            subscriptionId: 'Sub',
+            resourceGroup: 'Group',
+            provider: 'Microsoft.Web/sites/Site/slots',
+            resourceName: 'Slot',
+        });
+    });
+
+    test('rejects repeated incomplete structural segments', () => {
+        for (const fragment of ['/subscriptions/a', '/subscriptions//resourcegroups/a']) {
+            assert.throws(() => parseAzureResourceId(fragment.repeat(10000)), /Invalid Azure Resource Id/);
+        }
+    });
+
     test('throws for a malformed id', () => {
         assert.throws(() => parseAzureResourceId('not-a-resource-id'), /Invalid Azure Resource Id/);
     });
@@ -43,9 +60,24 @@ suite('parseAzureResourceId', () => {
     test('throws for a resource-group-only id (no provider segment)', () => {
         assert.throws(() => parseAzureResourceId('/subscriptions/sub-id/resourceGroups/my-rg'), /Invalid Azure Resource Id/);
     });
+
+    test('rejects line terminators anywhere in the id', () => {
+        const id = '/subscriptions/sub-id/resourceGroups/my-rg/providers/Microsoft.Web/sites/my-site';
+        for (const separator of ['\r', '\n', '\r\n', '\u2028', '\u2029']) {
+            for (let index = 0; index <= id.length; index++) {
+                const invalidId = id.slice(0, index) + separator + id.slice(index);
+                assert.throws(() => parseAzureResourceId(invalidId), /Invalid Azure Resource Id/);
+                assert.throws(() => getResourceGroupFromId(invalidId), /Invalid Azure Resource Id/);
+            }
+        }
+    });
 });
 
 suite('parseAzureResourceGroupId', () => {
+    test('rejects repeated subscriptions without a resource group', () => {
+        assert.throws(() => parseAzureResourceGroupId('/subscriptions/a'.repeat(10000)), /Invalid Azure Resource Group Id/);
+    });
+
     test('extracts subscription and resource group from a full resource id', () => {
         const parsed = parseAzureResourceGroupId('/subscriptions/sub-id/resourceGroups/my-rg/providers/Microsoft.Web/sites/my-site');
         assert.strictEqual(parsed.subscriptionId, 'sub-id');
@@ -65,6 +97,20 @@ suite('parseAzureResourceGroupId', () => {
 
     test('throws for a malformed id', () => {
         assert.throws(() => parseAzureResourceGroupId('not-a-resource-id'), /Invalid Azure Resource Group Id/);
+    });
+
+    test('rejects line terminators anywhere in resource group and full resource ids', () => {
+        for (const id of [
+            '/subscriptions/sub-id/resourceGroups/my-rg',
+            '/subscriptions/sub-id/resourceGroups/my-rg/providers/Microsoft.Web/sites/my-site',
+        ]) {
+            for (const separator of ['\r', '\n', '\r\n', '\u2028', '\u2029']) {
+                for (let index = 0; index <= id.length; index++) {
+                    const invalidId = id.slice(0, index) + separator + id.slice(index);
+                    assert.throws(() => parseAzureResourceGroupId(invalidId), /Invalid Azure Resource Group Id/);
+                }
+            }
+        }
     });
 });
 
