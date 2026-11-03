@@ -21,8 +21,7 @@ import { marked } from 'marked';
  *     `rel="noopener noreferrer"`; non-external links are dropped to their text content.
  */
 export function renderMarkdown(md: string): string {
-    const cleanedMarkdown = md.replace(/<!--[\s\S]*?-->/g, '').trim();
-    const renderedHtml = marked.parse(cleanedMarkdown, {
+    const renderedHtml = marked.parse(md.trim(), {
         gfm: true,
         breaks: false,
         async: false,
@@ -45,4 +44,3 @@ export function renderMarkdown(md: string): string {
     }
     return document.body.innerHTML;
 }
-
