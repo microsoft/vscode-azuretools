@@ -31,8 +31,6 @@ Your project must meet the following requirements to use these templates:
 
 This template handles building, linting, testing, packaging, and signing your code.
 
-MicroBuild signing installs the .NET 8 SDK for the PME signing tool and launches DDSignFiles with `dotnet --roll-forward Major`, allowing its .NET Core 3.1 target to run on an installed newer runtime without installing .NET Core 3.1.
-
 ### Parameters
 
 | Parameter                   | Type     | Default                                | Description                                              |
