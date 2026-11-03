@@ -9,6 +9,7 @@ import { addExtensionValueToMask, addValuesToMaskFromAzureId, callWithMaskHandli
 import { parseError } from '../src/parseError';
 import { randomUtils } from '../src/utils/randomUtils';
 import { assertThrowsAsync } from './assertThrowsAsync';
+import { runWithTimeout } from './runWithTimeout';
 
 suite("masking", () => {
     const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
@@ -219,6 +220,86 @@ suite("masking", () => {
             assert.strictEqual(maskUserInfo(`Empty payload jwt: ${mockEmptyPayloadJwt}`, []), 'Empty payload jwt: redacted:jwt');
             assert.strictEqual(maskUserInfo(`redacted:url ${mockJwtTwo}`, []), 'redacted:url redacted:jwt');
             assert.strictEqual(maskUserInfo(`This message references two jwt's: ${mockJwtOne} and ${mockJwtTwo}.`, []), 'This message references two jwt\'s: redacted:jwt and redacted:jwt.');
+        });
+
+        test('jwt-like sequences retain loose masking and punctuation', () => {
+            assert.strictEqual(maskUserInfo('prefix:e.e.signature. E.E.SIG e.e.x.e.e.y', [], true), 'prredacted:jwt. redacted:jwt redacted:jwt.redacted:jwt');
+            assert.strictEqual(maskUserInfo('no.e.x e..x e.e. e.e.\nx', [], true), 'no.e.x e..x e.e. e.e.\nx');
+        });
+
+        test('jwt masking handles long incomplete segments', async function () {
+            this.timeout(20000);
+            await runWithTimeout(`
+            const segment = 'e'.repeat(100000);
+            assert.strictEqual(maskUserInfo(segment, [], true), segment);
+            assert.strictEqual(maskUserInfo(segment + '.' + segment + '.signature', [], true), 'redacted:jwt');
+            const incomplete = 'e.'.repeat(10000);
+            assert.strictEqual(maskUserInfo(incomplete, [], true), 'redacted:jwt.'.repeat(3333) + 'e.');
+            `);
+        });
+
+        test('preserves broad token coverage and existing rule precedence', () => {
+            assert.strictEqual(maskUserInfo('(a@b), !@? https://a@b.net.', []), 'redacted:email redacted:email redacted:email');
+            assert.strictEqual(maskUserInfo('@a@b @a@ @a a@@', []), 'redacted:email @a@ @a redacted:email');
+            assert.strictEqual(maskUserInfo('(example.com), pre:https://host/path; ASP.NET, .NET', [], true), 'redacted:url pre:redacted:url ASP.NET, .NET');
+            assert.strictEqual(maskUserInfo('password=a@b password=https://host/path password=e.e.sig', []), 'redacted:email redacted:key redacted:key');
+            assert.strictEqual(maskUserInfo('ASP.com ASP.org x.ASP.NET microsoft-asp.net', [], true), 'ASP.com ASP.org x.ASP.NET redacted:url');
+            assert.strictEqual(maskUserInfo('x.e.e.signature!\tE.E.signature?\r\ne.e.signature.', [], true), 'x.redacted:jwt\tredacted:jwt\r\nredacted:jwt.');
+            assert.strictEqual(maskUserInfo('\u0130e.e.signature \u0130asp.net', [], true), '\u0130redacted:jwt \u0130asp.net');
+        });
+
+        test('masks entire quoted and multiline secret values', () => {
+            for (const lessAggressive of [false, true]) {
+                assert.strictEqual(maskUserInfo('before password="private words" after', [], lessAggressive), 'before redacted:key after');
+                assert.strictEqual(maskUserInfo('"POSTGRES_PASSWORD": "private\nwords"\npublic', [], lessAggressive), 'redacted:key\npublic');
+                assert.strictEqual(maskUserInfo("pwd: 'private words' after", [], lessAggressive), 'redacted:key after');
+                assert.strictEqual(maskUserInfo('password="user@example.com private words" after', [], lessAggressive), 'redacted:key after');
+                assert.strictEqual(maskUserInfo('password="https://host/private private words" after', [], lessAggressive), 'redacted:key after');
+                assert.strictEqual(maskUserInfo('password="e.e.signature private words" after', [], lessAggressive), 'redacted:key after');
+                assert.strictEqual(maskUserInfo('password="private \\"quoted\\" words" after', [], lessAggressive), 'redacted:key after');
+                assert.strictEqual(maskUserInfo('password="unterminated\nprivate words', [], lessAggressive), 'redacted:key');
+                assert.strictEqual(maskUserInfo('--token \r\n "private words" next', [], lessAggressive), 'redacted:key next');
+            }
+        });
+
+        test('explicit masking and overlapping secrets never expose a suffix', () => {
+            assert.strictEqual(maskUserInfo('password="known private words" next', ['known'], true), 'redacted:key next');
+            assert.strictEqual(maskUserInfo('password="private token=second words" next', [], true), 'redacted:key next');
+            assert.strictEqual(maskUserInfo('password="one two";token="three four" next', [], true), 'redacted:key next');
+            assert.strictEqual(maskUserInfo('a@b e.e.signature https://host', ['a@b', 'e.e.signature', 'https://host']), '--- --- ---');
+        });
+
+        test('retains the rightmost secret marker coverage within a token', () => {
+            assert.strictEqual(maskUserInfo('token=token\nprivate', [], true), 'redacted:key');
+            assert.strictEqual(maskUserInfo('password:password keynetkey=private', [], true), 'redacted:key');
+            assert.strictEqual(maskUserInfo('prefixsig=key:token . public', [], true), 'redacted:key public');
+            assert.strictEqual(maskUserInfo('token:@:sig\n ', [], true), 'redacted:key');
+            assert.strictEqual(maskUserInfo('password="https://host" public', [], true), 'redacted:key public');
+            assert.strictEqual(maskUserInfo('key=x;password "private words" public', [], true), 'redacted:key public');
+        });
+
+        test('username metacharacters are literal', () => {
+            for (const username of ['a.buser', 'a+buser', 'a[b]user', 'a(b)user', 'a\\buser']) {
+                resetUsernameMask();
+                assert.strictEqual(maskUserInfo(`User ${username} is aXbuser`, [], true, () => username), 'User redacted:username is aXbuser');
+            }
+            resetUsernameMask();
+        });
+
+        test('masking scales for unmatched and punctuation-heavy tokens', async function () {
+            this.timeout(20000);
+            await runWithTimeout(`
+                for (const length of [10000, 100000]) {
+                    for (const input of ['!'.repeat(length), 'e'.repeat(length), 'asp.'.repeat(length), 'key'.repeat(length)]) {
+                        assert.strictEqual(maskUserInfo(input, [], true), input);
+                    }
+                    assert.strictEqual(maskUserInfo('!'.repeat(length) + '@?', []), 'redacted:email');
+                    assert.strictEqual(maskUserInfo('!'.repeat(length) + '.com', [], true), 'redacted:url');
+                    assert.strictEqual(maskUserInfo('password="' + 'x '.repeat(length) + '" next', [], true), 'redacted:key next');
+                    assert.strictEqual(maskUserInfo('key='.repeat(length), [], true), 'redacted:key');
+                    assert.strictEqual(maskUserInfo('key '.repeat(length), [], true), 'redacted:key '.repeat(length / 2));
+                }
+            `);
         });
 
         test('lessAggressive', () => {

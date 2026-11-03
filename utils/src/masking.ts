@@ -30,7 +30,7 @@ function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
                 // Too short to mask
                 _usernameMask = null;
             } else {
-                _usernameMask = new RegExp(`\\b${username}\\b`, 'gi');
+                _usernameMask = new RegExp(`\\b${escapeRegExp(username)}\\b`, 'gi');
             }
         } catch {
             _usernameMask = null;
@@ -100,21 +100,8 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
         data = maskValue(data, value);
     }
 
-    // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
-    // The first and second JWT sections begin with "e" since the header and payload represent encoded json values that always begin with "{"
-    // eslint-disable-next-line no-useless-escape
-    data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
-
-    if (!lessAggressive) {
-        data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
-        // eslint-disable-next-line no-useless-escape
-        data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
-    }
-
-    data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
-    // eslint-disable-next-line no-useless-escape
-    data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
-    data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
+    // Protect cross-token assignments before email/URL masking can remove their key or opening quote.
+    data = maskSecretAssignments(data, true, text => maskSecretAssignments(maskTokens(text, lessAggressive)));
 
     const usernameMask = getUsernameMask(getUsername);
     if (usernameMask) {
@@ -122,6 +109,150 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
     }
 
     return data;
+}
+
+function maskTokens(data: string, lessAggressive: boolean): string {
+    return data.replace(/\S+/g, token => {
+        token = maskJwtSegments(token);
+        const at = token.indexOf('@', 1);
+        if (!lessAggressive && at > 0 && at < token.length - 1) {
+            return getRedactedLabel('email');
+        }
+        if (!lessAggressive) {
+            token = token.replace(/\b[0-9a-f:.-]{4,}\b/gi, getRedactedLabel('id'));
+        }
+
+        token = maskSchemeUrl(token);
+        if (hasDomain(token)) {
+            return getRedactedLabel('url');
+        }
+        return token;
+    });
+}
+
+function maskJwtSegments(token: string): string {
+    const segments = token.split('.');
+    const result: string[] = [];
+    for (let i = 0; i < segments.length; i++) {
+        const firstE = /e/i.exec(segments[i])?.index ?? -1;
+        if (firstE >= 0 && segments[i + 1]?.[0]?.toLowerCase() === 'e' && segments[i + 2]) {
+            result.push(segments[i].slice(0, firstE) + getRedactedLabel('jwt'));
+            i += 2;
+        } else {
+            result.push(segments[i]);
+        }
+    }
+    return result.join('.');
+}
+
+function maskSchemeUrl(token: string): string {
+    let position = token.indexOf('://');
+    while (position >= 0) {
+        let start = position;
+        while (start > 0 && /[a-z]/i.test(token[start - 1])) {
+            start--;
+        }
+        if (start < position) {
+            return token.slice(0, start) + getRedactedLabel('url');
+        }
+        position = token.indexOf('://', position + 3);
+    }
+    return token;
+}
+
+function hasDomain(token: string): boolean {
+    for (const match of token.matchAll(/\.(com|org|net)/gi)) {
+        const aspStart = match.index - 3;
+        const isAsp = token.slice(Math.max(0, aspStart), match.index).toLowerCase() === 'asp' &&
+            (aspStart === 0 || /[^\w-]/.test(token[aspStart - 1]));
+        if (match.index > 0 && !isAsp) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function maskSecretAssignments(data: string, crossTokenOnly = false, transformText = (text: string): string => text): string {
+    const keyword = /key|token|sig|password|passwd|pwd/iy;
+    const parts: string[] = [];
+    let copied = 0;
+    let position = 0;
+    while (position < data.length) {
+        if (/\s/.test(data[position])) {
+            position++;
+            continue;
+        }
+        const tokenStart = position;
+        let first: number | undefined;
+        let last: number | undefined;
+        while (position < data.length && !/\s/.test(data[position])) {
+            keyword.lastIndex = position;
+            if (keyword.test(data) && /[="':\s]/.test(data[keyword.lastIndex] ?? '')) {
+                first ??= keyword.lastIndex;
+                last = keyword.lastIndex;
+            }
+            position++;
+        }
+        if (first === undefined || last === undefined) {
+            continue;
+        }
+        let end: number;
+        if (crossTokenOnly) {
+            end = quotedSecretEnd(data, tokenStart, first);
+            if (last !== first) {
+                end = Math.max(end, quotedSecretEnd(data, tokenStart, last));
+            }
+            if (end < 0) {
+                continue;
+            }
+        } else {
+            // The old greedy rule chose the rightmost marker in a token, including one
+            // whose separator/value continues on the next line.
+            end = last;
+            while (end < data.length && /[="':\s]/.test(data[end])) {
+                end++;
+            }
+            while (end < data.length && !/\s/.test(data[end])) {
+                end++;
+            }
+        }
+        parts.push(transformText(data.slice(copied, tokenStart)), getRedactedLabel('key'));
+        copied = end;
+        position = end;
+    }
+    parts.push(transformText(data.slice(copied)));
+    return parts.join('');
+}
+
+function quotedSecretEnd(data: string, tokenStart: number, position: number): number {
+    // A quote followed by a separator closes a quoted key, not its value.
+    if (/["']/.test(data[position]) && /[=:\s]/.test(data[position + 1] ?? '')) {
+        position++;
+    }
+    while (position < data.length && /[=:\s]/.test(data[position])) {
+        position++;
+    }
+    let quote: string | undefined;
+    let quoted = false;
+    while (position < data.length) {
+        const char = data[position];
+        if (quote) {
+            if (char === '\\' && position + 1 < data.length) {
+                position += 2;
+                continue;
+            }
+            if (char === quote) {
+                quote = undefined;
+            }
+        } else if (char === '"' || char === "'") {
+            quote = char;
+            quoted = true;
+        } else if (/\s/.test(char)) {
+            break;
+        }
+        position++;
+    }
+    return quoted && /\s/.test(data.slice(tokenStart, position)) ? position : -1;
 }
 
 function escapeRegExp(str: string): string {

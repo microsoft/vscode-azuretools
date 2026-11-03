@@ -10,6 +10,9 @@ import { IParsedError } from '../index';
 import { isUserCancelledError } from './errors';
 import { parseJson } from './utils/parseJson';
 
+const lineBreakPattern = /[\r\n\u2028\u2029]/;
+const trailingLineBreakPattern = new RegExp(`(?:\\r\\n|${lineBreakPattern.source})$`);
+
 export function parseError(error: any): IParsedError {
     let errorType: string = '';
     let message: string = '';
@@ -36,7 +39,7 @@ export function parseError(error: any): IParsedError {
         errorType = getCode(error, errorType);
         message = getMessage(error, message);
 
-        if (!errorType || !message || /error.*deserializing.*response.*body/i.test(message)) {
+        if (!errorType || !message || isResponseDeserializationError(message)) {
             error = unpackErrorFromField(error, 'response');
             error = unpackErrorFromField(error, 'body');
 
@@ -118,43 +121,187 @@ function parseIfJson(o: any): any {
     return o;
 }
 
+function isResponseDeserializationError(message: string): boolean {
+    return message.toLowerCase().split(lineBreakPattern).some(line => {
+        let position = 0;
+        for (const word of ['error', 'deserializing', 'response', 'body']) {
+            const index = line.indexOf(word, position);
+            if (index < 0) {
+                return false;
+            }
+            position = index + word.length;
+        }
+        return true;
+    });
+}
+
 function parseIfHtml(message: string): string {
     if (!/<html/i.test(message)) {
         return message;
     }
 
-    const paragraphBreak = '\u0000';
-    const listItem = '\u0001';
-    const tableCellBreak = '\u0002';
-    let text = message
-        .replace(/<(head|script|style|template|svg)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi, (_anchor: string, attributes: string, content: string): string => {
-            const hrefMatch: RegExpMatchArray | null = attributes.match(/(?:^|\s)href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
-            const href: string | undefined = hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3];
-            return href === undefined ? content : `${content} [${href}]`;
-        })
-        .replace(/<br\b[^>]*\/?>/gi, '\n')
-        .replace(/<\/?h[1-6]\b[^>]*>/gi, '\n')
-        .replace(/<\/?p\b[^>]*>/gi, paragraphBreak)
-        .replace(/<li\b[^>]*>/gi, `\n${listItem}`)
-        .replace(/<\/li\s*>/gi, '\n')
-        .replace(/<\/?(tr|caption)\b[^>]*>/gi, '\n')
-        .replace(/<(td|th)\b[^>]*>/gi, '')
-        .replace(/<\/(td|th)\s*>/gi, tableCellBreak)
-        .replace(/<[^>]+>/g, '')
-        .replace(/[ \t]*\n[ \t]*/g, '\n')
-        .replace(/\n+/g, '\n')
-        .replace(new RegExp(`${paragraphBreak}+`, 'g'), '\n\n')
-        .replace(new RegExp(listItem, 'g'), ' * ')
-        .replace(new RegExp(`${tableCellBreak}(?=\\n|$)`, 'g'), '')
-        .replace(new RegExp(tableCellBreak, 'g'), ' ')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
+    const parts: string[] = [];
+    const hidden: string[] = [];
+    const anchors: (string | undefined)[] = [];
+    let spaces = false;
+    let breaks = 0;
+    const append = (value: string): void => {
+        if (parts.length) {
+            parts.push(breaks ? '\n'.repeat(breaks) : spaces ? ' ' : '');
+        }
+        parts.push(value);
+        breaks = 0;
+        spaces = false;
+    };
+    const appendText = (value: string): void => {
+        for (const match of value.matchAll(/\s+|\S+/g)) {
+            if (/\s/.test(match[0][0])) {
+                spaces = true;
+            } else {
+                append(match[0]);
+            }
+        }
+    };
+    let position = 0;
+    while (position < message.length) {
+        const opening = message.indexOf('<', position);
+        if (!hidden.length) {
+            appendText(message.slice(position, opening < 0 ? message.length : opening));
+        }
+        if (opening < 0) {
+            break;
+        }
+        if (message.startsWith('<!--', opening)) {
+            const end = message.indexOf('-->', opening + 4);
+            position = end < 0 ? message.length : end + 3;
+            spaces = true;
+            continue;
+        }
+        const tag = readHtmlTag(message, opening);
+        position = tag.end;
+        if (!tag.complete) {
+            spaces = true;
+            continue;
+        }
+        const { name, closing } = tag;
+        if (!closing && (name === 'script' || name === 'style')) {
+            // Raw content may contain apparent tags and quotes; only its own closing tag matters.
+            const ending = name === 'script' ? /<\/script\s*>/gi : /<\/style\s*>/gi;
+            ending.lastIndex = position;
+            const match = ending.exec(message);
+            position = match ? ending.lastIndex : message.length;
+            spaces = true;
+            continue;
+        }
+        if (name === 'head' || name === 'template' || name === 'svg') {
+            if (closing) {
+                if (hidden[hidden.length - 1] === name) {
+                    hidden.pop();
+                }
+            } else if (!tag.selfClosing) {
+                hidden.push(name);
+            }
+            spaces = true;
+            continue;
+        }
+        if (hidden.length) {
+            continue;
+        }
+        if (name === 'p') {
+            breaks = 2;
+        } else if (name === 'br' || /^h[1-6]$/.test(name) || name === 'tr' || name === 'caption' || name === 'li') {
+            breaks = Math.max(breaks, 1);
+            if (name === 'li' && !closing) {
+                append(' * ');
+            }
+        } else if (name === 'td' || name === 'th') {
+            spaces ||= closing;
+        } else if (name === 'a') {
+            if (closing) {
+                const href = anchors.pop();
+                if (href !== undefined) {
+                    spaces = true;
+                    append(`[${href}]`);
+                }
+                spaces = false;
+            } else {
+                anchors.push(tag.href);
+                spaces ||= tag.href === undefined;
+            }
+        } else {
+            spaces = true;
+        }
+    }
+    return decodeHtmlEntities(parts.join('').trim());
+}
 
-    text = decodeHtmlEntities(text);
-    return text;
+/**
+ * A plain-text converter's tag reader, not an HTML parser or sanitizer.
+ * Malformed markup is skipped up to the next unquoted '<' or the end of the input.
+ */
+function readHtmlTag(message: string, opening: number): { name: string; closing: boolean; selfClosing: boolean; complete: boolean; end: number; href?: string } {
+    let position = opening + 1;
+    const closing = message[position] === '/';
+    if (closing) {
+        position++;
+    }
+    const start = position;
+    while (position < message.length && /[\w:-]/.test(message[position])) {
+        position++;
+    }
+    const name = message.slice(start, position).toLowerCase();
+    let href: string | undefined;
+    let selfClosing = false;
+    while (position < message.length && message[position] !== '<') {
+        if (message[position] === '>') {
+            return { name, closing, selfClosing, complete: true, end: position + 1, href };
+        }
+        if (/\s/.test(message[position])) {
+            position++;
+            continue;
+        }
+        if (message[position] === '/') {
+            selfClosing = true;
+            position++;
+            continue;
+        }
+        const attributeStart = position;
+        while (position < message.length && !/[\s=<>/"']/.test(message[position])) {
+            position++;
+        }
+        const attribute = message.slice(attributeStart, position).toLowerCase();
+        while (position < message.length && /\s/.test(message[position])) {
+            position++;
+        }
+        const hasValue = message[position] === '=';
+        if (hasValue) {
+            position++;
+            while (position < message.length && /\s/.test(message[position])) {
+                position++;
+            }
+        }
+        if (!hasValue && message[position] !== '"' && message[position] !== "'") {
+            continue;
+        }
+        const quote = message[position] === '"' || message[position] === "'" ? message[position++] : undefined;
+        const valueStart = position;
+        if (quote) {
+            while (position < message.length && message[position] !== quote) {
+                position++;
+            }
+        } else if (message[position] !== '<' && message[position] !== '>') {
+            while (position < message.length && !/[\s<>]/.test(message[position])) {
+                position++;
+            }
+        }
+        if (name === 'a' && attribute === 'href' && href === undefined) {
+            href = message.slice(valueStart, position);
+        }
+        if (quote && position < message.length) {
+            position++;
+        }
+    }
+    return { name, closing, selfClosing, complete: false, end: position };
 }
 
 function decodeHtmlEntities(text: string): string {
@@ -200,9 +347,16 @@ function decodeHtmlEntities(text: string): string {
 }
 
 function parseIfXml(message: string): string {
-    const matches: RegExpMatchArray | null = message.match(/<Message>(.*)<\/Message>/si);
-    if (matches) {
-        return matches[1];
+    const openingTag = /<message>/i.exec(message);
+    if (openingTag) {
+        let end = -1;
+        for (const closingTag of message.matchAll(/<\/message>/gi)) {
+            end = closingTag.index;
+        }
+        const start = openingTag.index + openingTag[0].length;
+        if (end >= start) {
+            return message.slice(start, end);
+        }
     }
 
     return message;
@@ -262,20 +416,25 @@ function getCallstack(error: { stack?: unknown }): string | undefined {
     const stack: string = typeof error.stack === 'string' ? error.stack : '';
 
     const minifiedLines: (string | undefined)[] = stack
-        .split(/(\r\n|\n)/g) // split by line ending
+        .split(lineBreakPattern)
         .map(l => {
             let result: string = '';
             // Get just the file name, line number and column number
             // From above example: storageserviceclient.js:751:50
-            const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
+            const fileMatch = l.split(/[\/\\(\s]/).map(part => /^.+\.[tj]s:[0-9]+:[0-9]+/i.exec(part)).find(match => match);
 
             // Ignore any lines without a file match (e.g. "at Generator.next (<anonymous>)")
             if (fileMatch) {
                 // Get the function name
                 // From above example: FileService.StorageServiceClient._processResponse
-                const functionMatch: RegExpMatchArray | null = l.match(/^[\s]*at ([^\(\\\/]+(?:\\|\/)?)+/i);
-                if (functionMatch) {
-                    result += functionMatch[1];
+                const frame = l.trimStart();
+                const opening = frame.indexOf('(');
+                if (/^at /i.test(frame) && opening >= 0) {
+                    const functionName = frame.slice(3, opening);
+                    if (!/^[\\/]/.test(functionName)) {
+                        const start = Math.max(functionName.lastIndexOf('/'), functionName.lastIndexOf('\\')) + 1;
+                        result += functionName.slice(start);
+                    }
                 }
 
                 const parts: string[] = [];
@@ -306,10 +465,11 @@ function getCallstack(error: { stack?: unknown }): string | undefined {
  * See https://github.com/microsoft/vscode-cosmosdb/issues/1580 for an example error
  */
 function parseIfFileSystemError(message: string, errorType: string): [string, string] {
-    const match: RegExpMatchArray | null = message.match(/\((([a-z]*) \(FileSystemError\).*)\)$/i);
-    if (match) {
-        message = match[1];
-        errorType = match[2];
+    const lastLine = message.replace(trailingLineBreakPattern, '').split(lineBreakPattern).pop() ?? '';
+    const match = /\(([a-z]*) \(FileSystemError\)/i.exec(lastLine);
+    if (match && match.index + match[0].length < lastLine.length && lastLine.endsWith(')')) {
+        message = lastLine.slice(match.index + 1, -1);
+        errorType = match[1];
     }
     return [message, errorType];
 }

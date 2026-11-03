@@ -8,6 +8,7 @@ import * as os from 'os';
 import { IParsedError } from '../index';
 import { UserCancelledError } from '../src/errors';
 import { parseError } from '../src/parseError';
+import { runWithTimeout } from './runWithTimeout';
 
 suite('Error Parsing Tests', () => {
     suite('Call Stacks', () => {
@@ -687,6 +688,112 @@ Time:2020-01-13T22:08:56.4055648Z`);
         assert.strictEqual(pe.errorType, 'EntryNotFound');
         assert.strictEqual(pe.message, 'EntryNotFound (FileSystemError): azureDatabases:/testCol33-cosmos-collection.json?id=/cosmosDBAttachedAccounts/127.0.0.1:27017/testDB/testCol33');
         assert.strictEqual(pe.isUserCancelledError, false);
+    });
+
+    suite('Code scanning regressions', () => {
+        test('handles repeated deserialization fragments without a matching body', () => {
+            const message = 'error deserializing response '.repeat(30);
+            assert.strictEqual(parseError({ code: 'Outer', message, response: { body: 'inner' } }).message, message);
+            assert.strictEqual(parseError({ code: 'Outer', message: `${message}body`, response: { body: 'inner' } }).message, 'inner');
+        });
+
+        test('does not match deserialization fragments across line endings', () => {
+            for (const separator of ['\n', '\r', '\u2028', '\u2029']) {
+                const message = `error deserializing${separator}response body`;
+                assert.strictEqual(parseError({ code: 'Outer', message, response: { body: 'inner' } }).message, message);
+            }
+        });
+
+        test('preserves greedy, case-insensitive XML message extraction', () => {
+            const inner = 'first</Message>\n<Message>second';
+            assert.strictEqual(parseError(`\u0130<Message>${inner}</MESSAGE>`).message, inner);
+            const incomplete = '<message>a'.repeat(30);
+            assert.strictEqual(parseError(incomplete).message, incomplete);
+            assert.strictEqual(parseError(`${incomplete}</message>`).message, incomplete.slice('<message>'.length));
+        });
+
+        test('handles repeated stack function characters', () => {
+            const name = '!'.repeat(30);
+            assert.strictEqual(parseError({ message: 'test', stack: `    at ${name} (/tmp/file.js:1:2)` }).stack, `${name} file.js:1:2`);
+        });
+
+        test('handles repeated filesystem markers and incomplete errors', () => {
+            const repeated = '( (FileSystemError)'.repeat(30);
+            assert.strictEqual(parseError(`${repeated}incomplete`).message, `${repeated}incomplete`);
+            assert.strictEqual(parseError('( (FileSystemError)').message, '( (FileSystemError)');
+            assert.strictEqual(parseError(repeated).message, repeated.slice(1, -1));
+            const parsed = parseError(`${repeated})`);
+            assert.strictEqual(parsed.message, repeated.slice(1));
+            assert.strictEqual(parsed.errorType, 'string');
+            assert.strictEqual(parseError('earlier\n(EntryNotFound (filesystemerror): missing)\n').message, 'EntryNotFound (filesystemerror): missing');
+        });
+
+        test('parses comments and hidden elements without reconstructing markup', () => {
+            assert.strictEqual(parseError('<html><body>before<!-- outer <!-- inner -->after</body></html>').message, 'before after');
+            assert.strictEqual(parseError('<html><body>before <!-- comment --> after</body></html>').message, 'before after');
+            assert.strictEqual(parseError('<html><body>visible<!-- unterminated').message, 'visible');
+            assert.strictEqual(parseError('<html><body><template><template>hidden</template>still hidden</template>visible</body></html>').message, 'visible');
+            assert.strictEqual(parseError('<html><body><p title=">">visible</p><svg><text>hidden</text></svg><script>hidden</script></body></html>').message, 'visible');
+            assert.strictEqual(parseError('<html><head><script>const text = "</head>";</script>hidden</head><body>visible</body></html>').message, 'visible');
+            assert.strictEqual(parseError('<html><body><a href="https://example.com?q=>">details</a></body></html>').message, 'details [https://example.com?q=>]');
+            assert.strictEqual(parseError('<html><body>&lt;script&gt;plain text&lt;/script&gt;</body></html>').message, '<script>plain text</script>');
+        });
+
+        test('handles long malformed HTML without restarting scans', () => {
+            assert.strictEqual(parseError(`<html><body>visible<!--${'<!--'.repeat(30)}`).message, 'visible');
+            assert.strictEqual(parseError(`<html><body>visible<a title="${'<a title="'.repeat(30)}`).message, 'visible');
+            assert.strictEqual(parseError(`<html><body>visible${'<broken '.repeat(30)}`).message, 'visible');
+        });
+
+        test('keeps formatting and anchor attributes while scanning quoted markup', () => {
+            assert.strictEqual(parseError('<HTML><body><h2 title="a > b">Heading</h2><p>First<br/>second</p><p>Third</p><ul><li>one</li><li>two</li></ul></body></HTML>').message, 'Heading\n\nFirst\nsecond\n\nThird\n\n * one\n * two');
+            assert.strictEqual(parseError('<html><a title="ignore href=wrong >" HREF = \'https://host?q=>&amp;x=2\'><b>details</b></a></html>').message, 'details [https://host?q=>&x=2]');
+            assert.strictEqual(parseError('<html><a data-href="wrong" title="href=wrong">details</a><a href="">empty</a></html>').message, 'detailsempty []');
+            assert.strictEqual(parseError('<html><a disabled href="right">details</a></html>').message, 'details [right]');
+            assert.strictEqual(parseError('<html><a href="x">unclosed</html>').message, 'unclosed');
+            assert.strictEqual(parseError('<html><body>A<em>B</em>C</body></html>').message, 'A B C');
+        });
+
+        test('handles raw text and malformed tags without interpreting their contents', () => {
+            assert.strictEqual(parseError('<html><body>before<script title=">">"</head><template>";</script>after</body></html>').message, 'before after');
+            assert.strictEqual(parseError('<html><body>before<style title=">">hidden</style>after</body></html>').message, 'before after');
+            assert.strictEqual(parseError('<html><head><template>hidden</template></head><body><svg/>visible</body></html>').message, 'visible');
+            assert.strictEqual(parseError('<html><body>visible<p title="unfinished > private').message, 'visible');
+            assert.strictEqual(parseError('<html><body>visible<broken <b>next</b></body></html>').message, 'visible next');
+            assert.strictEqual(parseError('<html><body>&lt;b&gt;literal&lt;/b&gt; &amp;lt; &unknown; &#1114112;</body></html>').message, '<b>literal</b> &lt; &unknown; &#1114112;');
+        });
+
+        test('keeps delimiter extraction and stack path privacy', () => {
+            for (const separator of ['\n', '\r', '\r\n', '\u2028', '\u2029']) {
+                assert.strictEqual(parseError(`prefix${separator}(EntryNotFound (FileSystemError): missing)${separator}`).message, 'EntryNotFound (FileSystemError): missing');
+            }
+            assert.strictEqual(parseError('<Message>unclosed').message, '<Message>unclosed');
+            assert.strictEqual(parseError('</Message><Message>unclosed').message, '</Message><Message>unclosed');
+            assert.strictEqual(parseError({ message: 'test', stack: 'at C:\\Users\\private\\file.js:1:2\nat async D:\\private\\other.ts:3:4' }).stack, 'file.js:1:2\nother.ts:3:4');
+            assert.strictEqual(parseError({ message: 'test', stack: 'at fn (C:\\private\\file(name).js:1:2)' }).stack, 'fn name).js:1:2');
+            assert.strictEqual(parseError({ code: 'Outer', message: 'ERROR x DESERIALIZING x RESPONSE x BODY', response: { body: 'inner' } }).message, 'inner');
+        });
+
+        test('string extractors and HTML complete under an external deadline', async function () {
+            this.timeout(20000);
+            await runWithTimeout(`
+                for (const size of [10000, 100000]) {
+                    for (const tail of ['<!--'.repeat(size), '<a title="'.repeat(size), '<broken '.repeat(size)]) {
+                        assert.strictEqual(parseError('<html><body>visible' + tail).message, 'visible');
+                    }
+                    const message = 'error deserializing response '.repeat(size);
+                    assert.strictEqual(parseError({ code: 'Outer', message, response: { body: 'inner' } }).message, message);
+                    assert.strictEqual(parseError({ code: 'Outer', message: message + 'body', response: { body: 'inner' } }).message, 'inner');
+                    const xml = '<message>a'.repeat(size);
+                    assert.strictEqual(parseError(xml).message, xml);
+                    assert.strictEqual(parseError(xml + '</message>').message, xml.slice(9));
+                    const filesystem = '( (FileSystemError)'.repeat(size);
+                    assert.strictEqual(parseError(filesystem + 'incomplete').message, filesystem + 'incomplete');
+                    const name = '!'.repeat(size);
+                    assert.strictEqual(parseError({ message: 'test', stack: 'at ' + name + ' (C:\\\\private\\\\file.js:1:2)' }).stack, name + ' file.js:1:2');
+                }
+            `);
+        });
     });
 
     test('Error with weird stack', () => {
