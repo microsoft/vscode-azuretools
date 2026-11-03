@@ -17,6 +17,7 @@ import { getDeploymentStatusDetails, trackDeploymentUpload } from '../src/deploy
 import { handleFailedPreDeployTask, runPreDeployTask, tryRunPreDeployTask } from '../src/deploy/runDeployTask';
 import { syncTriggersPostDeploy } from '../src/deploy/syncTriggersPostDeploy';
 import { waitForDeploymentToComplete } from '../src/deploy/waitForDeploymentToComplete';
+import { PostDeployTaskExecuteStep } from '../src/deploy/wizard/PostDeployTaskExecuteStep';
 import { ext } from '../src/extensionVariables';
 import { retryKuduCall } from '../src/utils/kuduUtils';
 import { taskUtils } from '../src/utils/taskUtils';
@@ -102,6 +103,33 @@ suite('deployment telemetry', () => {
         assert.strictEqual(rootEvent().properties.outcome, 'failed');
     });
 
+    for (const [status, outcome] of [
+        [403, 'failed'], [429, 'failed'], [500, 'failed'], [302, 'unknown']
+    ] as const) {
+        test(`HTTP acceptance ${status} preserves the response without implying deployment completion`, async () => {
+            const response: AzExtPipelineResponse = {
+                status, request: createPipelineRequest({ url: 'https://private.example/deployment' }),
+                headers: createHttpHeaders(), bodyAsText: 'private-body'
+            };
+            let invocations = 0;
+            await callWithTelemetryAndErrorHandling('root', async context => {
+                initialize(context);
+                assert.strictEqual(await trackDeploymentUpload(context, 'zip', () => {
+                    invocations++;
+                    return Promise.resolve(response);
+                }), response);
+            });
+            const acceptance = events.find(e => e.properties.stage === 'acceptance');
+            assert.ok(acceptance);
+            assert.strictEqual(acceptance.properties.outcome, outcome);
+            assert.strictEqual(acceptance.properties.httpStatus, `${Math.floor(status / 100)}xx`);
+            assert.strictEqual(acceptance.properties.deploymentStatus, 'unknown');
+            assert.strictEqual(invocations, 1);
+            assert.strictEqual(rootEvent().properties.result, 'Succeeded');
+            assert.doesNotMatch(JSON.stringify(events.filter(e => e.name === 'workflowStage')), /private/);
+        });
+    }
+
     for (const [status, legacyResult, outcome, deploymentStatus, code] of [
         [4, 'Succeeded', 'succeeded', 'succeeded', undefined],
         [3, 'Failed', 'failed', 'failed', 'deploymentFailed'],
@@ -181,19 +209,32 @@ suite('deployment telemetry', () => {
         assert.strictEqual(events.find(e => e.properties.stage === 'polling')?.properties.outcome, 'canceled');
     });
 
-    test('authoritative Azure success survives a later log retrieval command failure', async () => {
-        mock.method(client, 'getDeployResult', () => Promise.resolve({ id: 'private-id', status: 4 }));
-        mock.method(client, 'getLogEntry', () => Promise.reject(Object.assign(new Error('private log retrieval failure'), { code: 'ECONNRESET' })));
-        await callWithTelemetryAndErrorHandling('root', async context => {
-            initialize(context);
-            await waitForDeploymentToComplete(context, site, { pollingInterval: 0 });
-        });
-        assert.strictEqual(rootEvent().properties.result, 'Failed');
-        assert.strictEqual(rootEvent().properties.outcome, 'failed');
-        assert.strictEqual(rootEvent().properties.deploymentStatus, 'succeeded');
-        assert.strictEqual(rootEvent().properties.networkCategory, 'connection');
-        assert.strictEqual(rootEvent().measurements.retryCount, 4);
-    }).timeout(25000);
+    for (const method of ['getLogEntry', 'getLogEntryDetails'] as const) {
+        test(`observed Azure completion survives a later ${method} command failure`, async () => {
+            mock.method(client, 'getDeployResult', () => Promise.resolve({ id: 'private-id', status: 4 }));
+            if (method === 'getLogEntryDetails') {
+                mock.method(client, 'getLogEntry', () => Promise.resolve([{
+                    id: 'private-log', detailsUrl: 'https://private.example/log', message: 'private-log', logTime: new Date()
+                }]));
+            }
+            mock.method(client, method, () => Promise.reject(Object.assign(new Error('private log retrieval failure'), { code: 'ECONNRESET' })));
+            await callWithTelemetryAndErrorHandling('root', async context => {
+                initialize(context);
+                await waitForDeploymentToComplete(context, site, { pollingInterval: 0 });
+            });
+            assert.strictEqual(rootEvent().properties.result, 'Failed');
+            assert.strictEqual(rootEvent().properties.outcome, 'failed');
+            assert.strictEqual(rootEvent().properties.deploymentStatus, 'succeeded');
+            assert.strictEqual(rootEvent().properties.networkCategory, 'connection');
+            assert.strictEqual(rootEvent().measurements.retryCount, 4);
+            const completion = events.find(e => e.properties.stage === 'completion');
+            assert.ok(completion);
+            assert.strictEqual(completion.properties.outcome, 'succeeded');
+            assert.strictEqual(completion.properties.deploymentStatus, 'succeeded');
+            assert.strictEqual(events.find(e => e.properties.stage === 'polling' && e.properties.outcome === 'failed')?.properties.outcome, 'failed');
+            assert.doesNotMatch(JSON.stringify(events.filter(e => e.name === 'workflowStage')), /private/);
+        }).timeout(25000);
+    }
 
     test('Kudu retries count actual invocations and recovered success', async () => {
         let invocations = 0;
@@ -240,6 +281,32 @@ suite('deployment telemetry', () => {
         mock.method(vscode.workspace, 'getConfiguration', () => ({
             get: <T>(): T => 'build' as T, has: () => true, inspect: () => undefined, update: () => Promise.resolve()
         }));
+    }
+
+    for (const state of ['launched', 'alreadyActive', 'launchFailed'] as const) {
+        test(`post-deploy task ${state} does not imply observed task-process success`, async () => {
+            configureTask();
+            const task = new vscode.Task({ type: 'shell' }, vscode.TaskScope.Workspace, 'build', 'test');
+            const execution: vscode.TaskExecution = { task, terminate: (): void => { /* fixture */ } };
+            let invocations = 0;
+            mock.method(taskUtils, 'findTask', () => Promise.resolve(task));
+            mock.getter(vscode.tasks, 'taskExecutions', () => state === 'alreadyActive' ? [execution] : []);
+            mock.method(vscode.tasks, 'executeTask', () => {
+                invocations++;
+                return state === 'launchFailed' ? Promise.reject(new Error('private launch failure')) : Promise.resolve(execution);
+            });
+            await callWithTelemetryAndErrorHandling('root', async context => {
+                initialize(context);
+                const deploy = Object.assign(deployContext(context), { fsPath: 'C:\\private', site, client, aspPromise: Promise.resolve(undefined) });
+                await new PostDeployTaskExecuteStep({}).execute(deploy, { report: (): void => { /* fixture */ } });
+            });
+            const stage = events.find(e => e.properties.stage === 'postDeployTask');
+            assert.ok(stage);
+            assert.strictEqual(stage.properties.outcome, state === 'launchFailed' ? 'failed' : 'unknown');
+            assert.strictEqual(rootEvent().properties.result, state === 'launchFailed' ? 'Failed' : 'Succeeded');
+            assert.strictEqual(invocations, state === 'alreadyActive' ? 0 : 1);
+            assert.doesNotMatch(JSON.stringify(stage), /private/);
+        });
     }
 
     test('a failed task stage followed by Deploy Anyway does not prematurely fail the workflow', async () => {

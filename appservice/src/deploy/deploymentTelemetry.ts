@@ -26,8 +26,9 @@ export async function trackDeploymentUpload<T extends AzExtPipelineResponse>(con
     });
     await withTelemetryStage(context, { stage: 'acceptance' }, async stage => {
         const accepted = response.status >= 200 && response.status < 300;
+        const rejected = response.status >= 400 && response.status < 600;
         setWorkflowTelemetryDetails(context, { deploymentStatus: accepted ? 'accepted' : 'unknown', httpStatus: response.status });
-        stage.setOutcome(accepted ? 'succeeded' : 'unknown', {
+        stage.setOutcome(accepted ? 'succeeded' : rejected ? 'failed' : 'unknown', {
             httpStatus: response.status, deploymentMechanism: mechanism,
             deploymentStatus: accepted ? 'accepted' : 'unknown'
         });

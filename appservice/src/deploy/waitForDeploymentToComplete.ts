@@ -74,6 +74,15 @@ async function waitForDeploymentCore(context: IActionContext & Partial<InnerDepl
 
         const statusDetails = getDeploymentStatusDetails(deployment.status, deployment.isTemp);
         setWorkflowTelemetryDetails(context, statusDetails);
+        const outcome = statusDetails.deploymentStatus === 'succeeded' ? 'succeeded' :
+            statusDetails.deploymentStatus === 'failed' ? 'failed' :
+                statusDetails.deploymentStatus === 'canceled' ? 'canceled' : 'unknown';
+        if (deployment.status !== 0 && deployment.status !== 2) {
+            await withTelemetryStage(context, { stage: 'completion' }, async stage => {
+                stage.setOutcome(outcome, statusDetails);
+                await Promise.resolve();
+            });
+        }
         const deploymentId: string = deployment.id;
         let logEntries: KuduModels.LogEntry[] = [];
         await retryKuduCall(context, 'getLogEntry', async () => {
@@ -117,17 +126,10 @@ async function waitForDeploymentCore(context: IActionContext & Partial<InnerDepl
         // a 0 status means the deployment is still ongoing
         // a 2 status is also reported and seems to indicate that it is also currently building, but I have been unable to find any actual documentation on it
         if (deployment.status !== 0 && deployment.status !== 2) {
-            await withTelemetryStage(context, { stage: 'completion' }, async stage => {
-                const outcome = statusDetails.deploymentStatus === 'succeeded' ? 'succeeded' :
-                    statusDetails.deploymentStatus === 'failed' ? 'failed' :
-                        statusDetails.deploymentStatus === 'canceled' ? 'canceled' : 'unknown';
-                stage.setOutcome(outcome, statusDetails);
-                pollingStage.setOutcome(outcome, statusDetails);
-                if (outcome !== 'succeeded') {
-                    setWorkflowOutcome(context, outcome, statusDetails);
-                }
-                await Promise.resolve();
-            });
+            pollingStage.setOutcome(outcome, statusDetails);
+            if (outcome !== 'succeeded') {
+                setWorkflowOutcome(context, outcome, statusDetails);
+            }
             if (deployment.status === 3 /* Failed */ || deployment.isTemp) { // If the deployment completed without making it to the "permanent" phase, it must have failed
                 showErrorMessageWithOutput(l10n.t('Deployment to "{0}" failed.', site.fullName));
                 const messageWithoutName: string = l10n.t('Deployment failed.');

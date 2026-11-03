@@ -45,7 +45,11 @@ export class PostDeployTaskExecuteStep extends AzureWizardExecuteStep<InnerDeplo
     }
 
     public async execute(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
-        await withTelemetryStage(context, { stage: 'postDeployTask' }, async () => this.executeCore(context, progress));
+        await withTelemetryStage(context, { stage: 'postDeployTask' }, async stage => {
+            await this.executeCore(context, progress);
+            // This step observes task launch, not task-process completion.
+            stage.setOutcome('unknown');
+        });
     }
 
     private async executeCore(context: InnerDeployContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
