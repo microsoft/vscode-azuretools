@@ -4,16 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AppServicePlan } from '@azure/arm-appservice';
-import { AzureWizard, AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
+import { AzureWizard, AzureWizardExecuteStep, withTelemetryStage } from '@microsoft/vscode-azext-utils';
 import { l10n } from 'vscode';
 import { ParsedSite } from '../SiteClient';
 import { IDeployContext, InnerDeployContext } from './IDeployContext';
 import { createDeployExecuteSteps } from './wizard/createDeployWizard';
+import { initializeDeploymentTelemetry } from './deploymentTelemetry';
 
 /**
  * NOTE: This leverages a command with id `ext.prefix + '.showOutputChannel'` that should be registered by each extension
  */
 export async function deploy(site: ParsedSite, fsPath: string, context: IDeployContext, optionalSteps: AzureWizardExecuteStep<IDeployContext>[] = []): Promise<void> {
+    initializeDeploymentTelemetry(context);
+    await withTelemetryStage(context, { stage: 'deployment' }, async () => deployCore(site, fsPath, context, optionalSteps));
+}
+
+async function deployCore(site: ParsedSite, fsPath: string, context: IDeployContext, optionalSteps: AzureWizardExecuteStep<IDeployContext>[]): Promise<void> {
     const client = await site.createClient(context);
     const aspPromise: Promise<AppServicePlan | undefined> = client.getAppServicePlan();
 

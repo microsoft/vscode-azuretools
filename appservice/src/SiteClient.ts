@@ -16,6 +16,7 @@ import { tryGetAppServicePlan, tryGetWebApp, tryGetWebAppSlot } from './tryGetSi
 import { getAppServiceCredentials } from './utils/appServiceEnvironment';
 import { createWebSiteClient } from './utils/azureClients';
 import { convertQueryParamsValuesToString } from './utils/kuduUtils';
+import { trackDeploymentUpload } from './deploy/deploymentTelemetry';
 
 
 export class ParsedSite implements AppSettingsClientProvider {
@@ -343,7 +344,7 @@ export class SiteClient implements IAppSettingsClient {
             body: file,
         });
 
-        return await client.sendRequest(request);
+        return await trackDeploymentUpload(context, 'zip', () => client.sendRequest(request));
     }
 
     public async warPushDeploy(context: IActionContext, file: RequestBodyType, rawQueryParameters: KuduModels.PushDeploymentWarPushDeployOptionalParams): Promise<AzExtPipelineResponse> {
@@ -356,7 +357,7 @@ export class SiteClient implements IAppSettingsClient {
             body: file,
         });
 
-        return await client.sendRequest(request);
+        return await trackDeploymentUpload(context, 'war', () => client.sendRequest(request));
     }
 
     // TODO: only supporting /zip endpoint for now, but should support /zipurl as well
@@ -376,15 +377,15 @@ export class SiteClient implements IAppSettingsClient {
             body: file,
         });
 
-        return await client.sendRequest(request);
+        return await trackDeploymentUpload(context, 'flex', () => client.sendRequest(request));
     }
 
     public async deploy(context: IActionContext, id: string): Promise<AzExtPipelineResponse> {
         const client: ServiceClient = await this.createKuduClient(context);
-        return await client.sendRequest(createPipelineRequest({
+        return await trackDeploymentUpload(context, 'unknown', () => client.sendRequest(createPipelineRequest({
             method: 'PUT',
             url: `${this._site.kuduUrl}/api/deployments/${id}`
-        }));
+        })));
     }
 
     // the ARM call doesn't give all of the metadata we require so ping the scm directly
