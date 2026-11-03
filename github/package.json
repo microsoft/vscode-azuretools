@@ -46,6 +46,6 @@
         "@octokit/rest": "^22.0.1"
     },
     "overrides": {
-        "serialize-javascript": "^7.0.5"
+        "serialize-javascript": "^7.1.4"
     }
 }

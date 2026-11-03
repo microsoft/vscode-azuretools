@@ -7,9 +7,12 @@ import type { PipelinePolicy, PipelineRequest, PipelineResponse, SendRequest } f
 import type * as vscode from 'vscode';
 
 export function getDefaultScopeFromEndpoint(endpoint?: string): string {
-    let base = endpoint ?? 'https://management.azure.com/';
-    base = base.replace(/\/+$/, '');
-    return `${base}/.default`;
+    const base = endpoint ?? 'https://management.azure.com/';
+    let end = base.length;
+    while (end > 0 && base[end - 1] === '/') {
+        end--;
+    }
+    return `${base.slice(0, end)}/.default`;
 }
 
 const challengeRetriedRequests = new WeakSet<PipelineRequest>();
