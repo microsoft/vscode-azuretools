@@ -100,7 +100,7 @@ When `packageManager: pnpm`:
 - Commit a `pnpm-lock.yaml` (the build runs `pnpm ci`, which requires pnpm 11+).
 - Set a `"packageManager"` field in `package.json` (e.g. `"packageManager": "pnpm@11.3.0"`). The build reads that version and installs exactly it. `pnpm ci` requires pnpm 11+.
 
-The pinned pnpm is bootstrapped with `npm install -g pnpm@<version>` from an anonymous proxy feed (`https://packagefeedproxy.microsoft.io/npm`), which the build agents can reach. This avoids Corepack's downloader, which fetches the pnpm binary from `registry.npmjs.org` *before* any feed auth or `.npmrc` is applied and so fails on agents that can't reach `registry.npmjs.org`. Consumers keep a plain `"packageManager": "pnpm@<version>"` — no URLs or extra configuration. The proxy feed is hardcoded in the template today; it can be parametrized later if a consumer needs a different one.
+The pinned pnpm is bootstrapped with `npm install -g pnpm@<version>` after the registry configuration and authentication described below. The bootstrap sets `NPM_CONFIG_USERCONFIG` to the authenticated `.npmrc` because global npm installs ignore project `.npmrc` files. This installs pnpm itself from the same configured feed as dependencies, rather than a separate proxy. It also avoids Corepack's downloader, which bypasses `.npmrc` and fails on agents that can't reach `registry.npmjs.org`. Consumers keep a plain `"packageManager": "pnpm@<version>"` — no URLs or extra configuration. The pinned pnpm version must be available through the configured feed.
 
 ### Private feed (npm and pnpm)
 
@@ -109,7 +109,7 @@ Builds install from an internal Azure Artifacts feed rather than public npm. `fe
 - **Check in your own `.npmrc`** (in the working directory, or at the repo root as a fallback) pointing `registry` at your internal feed. The setup step uses it as-is — it doesn't overwrite it, though `npmAuthenticate@0` (below) injects credentials into it. (The setup step only checks that an `.npmrc` exists, so it's your responsibility to point it at an internal registry.)
 - **Otherwise**, set `feedBaseUrl` (the base URL of an Azure Artifacts feed, e.g. `https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/azcode`) and the setup step writes a build-time `.npmrc` pointing `registry` at `<feedBaseUrl>/npm/registry/` with `always-auth=true`.
 
-Either way, when an `.npmrc` is present the setup step runs `npmAuthenticate@0` to inject a token. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the setup step simply skips registry configuration and authentication — the build environment's network isolation (not a feed guard) is what keeps builds off public npm.
+Either way, when an `.npmrc` is present the setup step runs `npmAuthenticate@0` to inject a token before pnpm activation or dependency installation. Both npm and pnpm read `.npmrc`, so both install from the feed. If a repo checks in no `.npmrc` and provides no `feedBaseUrl`, the setup step simply skips registry configuration and authentication, and pnpm bootstrap uses npm's default registry configuration — the build environment's network isolation (not a feed guard) is what keeps builds off public npm.
 
 ## Extension Release Pipeline (`1es-mb-release-extension.yml`)
 

@@ -34,6 +34,7 @@ steps:
       }
 
       if ($npmrcPath) {
+        $npmrcPath = (Resolve-Path $npmrcPath).Path
         Write-Host "##vso[task.setvariable variable=npmrcFile]$npmrcPath"
       } else {
         Write-Host "No .npmrc and no feedBaseUrl; skipping registry configuration and authentication"
