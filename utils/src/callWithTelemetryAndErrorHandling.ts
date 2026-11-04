@@ -240,7 +240,7 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
                     } else if (value instanceof TelemetryTrustedValue) {
                         // don't mask trusted values
                     } else {
-                        context.telemetry.properties[key] = maskUserInfo(value, context.valuesToMask, true /* lessAggressive */);
+                        context.telemetry.properties[key] = maskUserInfo(value, context.valuesToMask);
                     }
                 }
             }

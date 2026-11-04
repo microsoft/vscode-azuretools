@@ -3,40 +3,14 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
-
-// No attempt will be made to mask usernames that are this length or less
-const UnmaskedUsernameMaxLength: number = 3;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
     _extValuesToMask ??= [];
     return _extValuesToMask;
-}
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-let _usernameMask: RegExp | undefined | null = undefined;
-function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
-    if (_usernameMask === undefined) {
-        try {
-            const username = getUsername();
-            _usernameMask = username.length <= UnmaskedUsernameMaxLength ? null : new RegExp(`\\b${escapeRegExp(username)}\\b`, 'gi');
-        } catch {
-            _usernameMask = null;
-        }
-    }
-
-    return _usernameMask;
-}
-
-/**
- * To be used ONLY by test code.
- */
-export function resetUsernameMask(): void {
-    _usernameMask = undefined;
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
@@ -79,13 +53,11 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
 }
 
 /**
- * Supplementary masking for explicit values, usernames, ID-like strings and bare domains.
- * VS Code's telemetry logger handles emails, scheme URLs, JWTs and generic secrets at send time.
+ * Masks only explicit action and extension values.
+ * Heuristic telemetry cleaning is handled by VS Code's telemetry logger.
  * This function alone is not a general-purpose scrubber for logs or issue reports.
- * @param lessAggressive If set to true, ID-like string masking will be skipped.
- * @param getUsername To be used ONLY by test code. Function used to get the username.
  */
-export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false, getUsername = () => os.userInfo().username): string {
+export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[]): string {
     let data = String(unknownArg);
 
     // Mask longest values first just in case one is a substring of another
@@ -94,29 +66,7 @@ export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], 
         data = maskValue(data, value);
     }
 
-    if (!lessAggressive) {
-        data = data.replace(/\b[0-9a-f:.-]{4,}\b/gi, getRedactedLabel('id'));
-    }
-    data = data.replace(/\S+/g, token => hasDomain(token) ? getRedactedLabel('url') : token);
-
-    const usernameMask = getUsernameMask(getUsername);
-    if (usernameMask) {
-        data = data.replace(usernameMask, getRedactedLabel('username'));
-    }
-
     return data;
-}
-
-function hasDomain(token: string): boolean {
-    for (const match of token.matchAll(/\.(com|org|net)/gi)) {
-        const aspStart = match.index - 3;
-        const isAsp = token.slice(Math.max(0, aspStart), match.index).toLowerCase() === 'asp' &&
-            (aspStart === 0 || /[^\w-]/.test(token[aspStart - 1]));
-        if (match.index > 0 && !isAsp) {
-            return true;
-        }
-    }
-    return false;
 }
 
 function escapeRegExp(str: string): string {

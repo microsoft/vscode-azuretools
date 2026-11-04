@@ -2081,14 +2081,14 @@ export declare namespace AzExtFsExtra {
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
 
 /**
- * Supplementary masking for explicit values, usernames, ID-like strings and bare domains.
- * VS Code's telemetry logger handles emails, scheme URLs, JWTs and generic secrets at send time.
+ * Masks only explicit action and extension values, including their URL-encoded forms.
+ * Heuristic telemetry cleaning is handled by VS Code's telemetry logger.
  * This function alone is not a general-purpose scrubber for logs or issue reports.
  *
  * @param unknownArg Any unknown value.  This value will be cast to a string and then masked before returning.
  * @param actionValuesToMask An array of strings indicating additional values to mask.
- * @param lessAggressive A boolean value that defaults to false. If set to true, ID-like string masking will be skipped.
- * @param getUsername To be used ONLY by test code.  Function used to get the username.
+ * @param lessAggressive Legacy option, ignored. No heuristic masking is performed.
+ * @param getUsername Legacy test hook, ignored. Usernames are not looked up.
  */
 export declare function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive?: boolean, getUsername?: () => string): string;
 

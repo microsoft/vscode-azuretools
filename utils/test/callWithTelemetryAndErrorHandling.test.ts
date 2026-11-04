@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
+import { mock } from 'node:test';
 import { IActionContext } from '..';
 import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync, registerTelemetryHandler } from '../src/callWithTelemetryAndErrorHandling';
+import { ext } from '../src/extensionVariables';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 function testFunc(): string {
@@ -25,6 +27,28 @@ function testFuncErrorAsync(): Promise<string> {
 }
 
 suite('callWithTelemetryAndErrorHandling tests', () => {
+    test('passes intact emails to the telemetry reporter for VS Code cleaning', async () => {
+        const messages: unknown[] = [];
+        const reporter = mock.method(ext._internalReporter, 'sendTelemetryErrorEvent', (_name, properties) => {
+            messages.push(properties?.errorMessage, properties?.errorMessageV2);
+        });
+        try {
+            for (const message of [
+                'Contact alice@cafe.de',
+                '<html><title>Contact alice@cafe.de</title></html>',
+                '<Message>Contact alice@cafe.de</Message>'
+            ]) {
+                await callWithTelemetryAndErrorHandling('emailMasking', context => {
+                    context.errorHandling.suppressDisplay = true;
+                    throw new Error(message);
+                });
+            }
+        } finally {
+            reporter.mock.restore();
+        }
+        assert.deepStrictEqual(messages, Array<string>(6).fill('Contact alice@cafe.de'));
+    });
+
     test('masks explicit credentials before markup summaries are shortened', async () => {
         const messages: unknown[] = [];
         const handler = registerTelemetryHandler(context => {
