@@ -4,322 +4,124 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as types from '../index';
-import { addExtensionValueToMask, addValuesToMaskFromAzureId, callWithMaskHandling, maskUserInfo, resetUsernameMask } from '../src/masking';
-import { parseError } from '../src/parseError';
+import { createTestActionContext } from '../src/dev/TestActionContext';
+import { UserCancelledError } from '../src/errors';
+import { addExtensionValueToMask, addValuesToMaskFromAzureId, callWithMaskHandling, maskUserInfo, maskValue, resetUsernameMask } from '../src/masking';
 import { randomUtils } from '../src/utils/randomUtils';
-import { assertThrowsAsync } from './assertThrowsAsync';
 import { runWithTimeout } from './runWithTimeout';
 
-suite("masking", () => {
-    const credentials: string = 'scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
-    const credentialsSpecialChars: string = 'sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da';
-    const credentialsWithReservedChars: string = '$scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda';
-    suite("callWithMaskHandling", () => {
-        test("Value masked (single occurance) with thrown error", async () => {
+suite('masking', () => {
+    teardown(() => resetUsernameMask());
 
-            const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
-            ! [rejected]        HEAD -> master (fetch first)
-           error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
-           hint: Updates were rejected because the remote contains work that you do
-           hint: not have locally. This is usually caused by another repository pushing
-           hint: to the same ref. You may want to first integrate the remote changes
-           hint: (e.g., 'git pull ...') before pushing again.
-           hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
-
-            await assertThrowsAsync(async (): Promise<void> => {
-                await callWithMaskHandling(() => {
-                    throw new Error(errorMessage);
-                }, credentials);
-            }, (err: unknown) => {
-                return validateError(err, credentials);
-            }, 'Credentials were not properly masked from error string');
+    suite('callWithMaskHandling', () => {
+        test('removes literal and encoded credentials before rethrowing', async () => {
+            const credential = 'sample+credential/[with].punctuation';
+            await assert.rejects(
+                callWithMaskHandling(() => Promise.reject(new Error(`Failed: ${credential} ${encodeURIComponent(credential)}`)), credential),
+                (error: unknown) => error instanceof Error && error.message === 'Failed: --- ---' && error.cause === undefined
+            );
         });
 
-        test("Value masked (multiple occurance) with thrown error", async () => {
-
-            const errorMessage: string = `"To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
-            ! [rejected]        HEAD -> master (fetch first)
-           error: failed to push some refs to 'https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
-           hint: Updates were rejected because the remote contains work that you do
-           hint: not have locally. This is usually caused by another repository pushing
-           hint: to the same ref. You may want to first integrate the remote changes
-           hint: (e.g., 'git pull ...') before pushing again.
-           hint: See the 'Note about fast-forwards' in 'git push --help' for details."
-           https://$naturins-22-error-03:scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
-           scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda`;
-
-            await assertThrowsAsync(async (): Promise<void> => {
-                await callWithMaskHandling(() => {
-                    throw new Error(errorMessage);
-                }, credentials);
-            }, (err: unknown) => {
-                return validateError(err, credentials);
-            }, 'Credentials were not properly masked from error string');
+        test('preserves cancellations', async () => {
+            const error = new UserCancelledError();
+            await assert.rejects(callWithMaskHandling(() => Promise.reject(error), 'sample'), actual => actual === error);
         });
 
-        test("Value masked (with special characters) with thrown error", async () => {
-
-            const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
-            ! [rejected]        HEAD -> master (fetch first)
-           error: failed to push some refs to 'https://$naturins-22-error-03:sc()HQ*E+RrAlXSm[CeN1$$$rhDz^^HWeDz2X[t5R343HgCN.xS0x]swc|A2CÑwf¬da@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
-           hint: Updates were rejected because the remote contains work that you do
-           hint: not have locally. This is usually caused by another repository pushing
-           hint: to the same ref. You may want to first integrate the remote changes
-           hint: (e.g., 'git pull ...') before pushing again.
-           hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
-
-            await assertThrowsAsync(async (): Promise<void> => {
-                await callWithMaskHandling(() => {
-                    throw new Error(errorMessage);
-                }, credentialsSpecialChars);
-            }, (err: unknown) => {
-                return validateError(err, credentialsSpecialChars);
-            }, 'Credentials were not properly masked from error string');
-        });
-
-        test("Value masked (empty string) with thrown error", async () => {
-            const errorMessage: string = "'ssh-keygen' is not recognized as an internal or external command";
-
-            await assertThrowsAsync(async (): Promise<void> => {
-                await callWithMaskHandling(() => {
-                    throw new Error(errorMessage);
-                }, '');
-            }, (err: Error) => {
-                return err.message === errorMessage;
-            }, 'Credentials were not properly masked from error string');
-        });
-
-        test("Value masked (encoded string) with thrown error", async () => {
-            const errorMessage: string = `To https://naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git
-            ! [rejected]        HEAD -> master (fetch first)
-           error: failed to push some refs to 'https://$naturins-22-error-03:%24scHQERrAlXSmlCeN1mrhDzsHWeDz2XZt5R343HgCNmxS0xlswcaA2Cowflda@naturins-22-error-03.scm.azurewebsites.net:443/naturins-22-error-03.git'
-           hint: Updates were rejected because the remote contains work that you do
-           hint: not have locally. This is usually caused by another repository pushing
-           hint: to the same ref. You may want to first integrate the remote changes
-           hint: (e.g., 'git pull ...') before pushing again.
-           hint: See the 'Note about fast-forwards' in 'git push --help' for details.`;
-
-            await assertThrowsAsync(async (): Promise<void> => {
-                await callWithMaskHandling(() => {
-                    throw new Error(errorMessage);
-                }, credentialsWithReservedChars);
-            }, (err: Error) => {
-                return validateError(err, credentialsWithReservedChars);
-            }, 'Credentials were not properly masked from error string');
+        test('returns successful results', async () => {
+            assert.strictEqual(await callWithMaskHandling(() => Promise.resolve('result'), 'sample'), 'result');
         });
     });
 
-    suite("maskUserInfo", () => {
-        test('generic text should not be masked', () => {
-            const loremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
-            assert.strictEqual(maskUserInfo(loremIpsum, []), loremIpsum);
+    suite('maskUserInfo', () => {
+        test('masks explicit values longest first without changing the caller array', () => {
+            const values = ['firstName', 'firstNameLastName'];
+            assert.strictEqual(maskUserInfo('firstNameLastName FIRSTNAME', values), '--- ---');
+            assert.deepStrictEqual(values, ['firstName', 'firstNameLastName']);
+            assert.strictEqual(maskUserInfo('literal a+b/c and a%2Bb%2Fc', ['a+b/c']), 'literal --- and ---');
         });
 
-        test('Action value', () => {
-            assert.strictEqual(maskUserInfo('test1', ['test1']), '---');
+        test('masks action and extension values', () => {
+            const value = randomUtils.getRandomHexString();
+            addExtensionValueToMask(value, undefined, '');
+            assert.strictEqual(maskUserInfo(`${value} action`, ['action']), '--- ---');
         });
 
-        test('Extension value', () => {
-            const extensionValue = randomUtils.getRandomHexString();
-            addExtensionValueToMask(extensionValue);
-            assert.strictEqual(maskUserInfo(extensionValue, []), '---');
+        test('masks values from an Azure resource ID', async () => {
+            const id = `/subscriptions/${randomUtils.getRandomHexString()}/resourceGroups/${randomUtils.getRandomHexString()}/providers/Microsoft.Web/sites/${randomUtils.getRandomHexString()}`;
+            const context = await createTestActionContext();
+            addValuesToMaskFromAzureId(context, id);
+            assert.strictEqual(maskUserInfo(id, context.valuesToMask), '/subscriptions/---/resourceGroups/---/providers/Microsoft.Web/sites/---');
         });
 
-        test('Multiple action and extension values', () => {
-            const extensionValue1 = randomUtils.getRandomHexString();
-            const extensionValue2 = randomUtils.getRandomHexString();
-            addExtensionValueToMask(extensionValue1);
-            addExtensionValueToMask(extensionValue2);
-            assert.strictEqual(maskUserInfo(`${extensionValue1} ${extensionValue2} action1 action2`, ['action1', 'action2']), '--- --- --- ---');
+        test('retains username boundaries and case-insensitive matching', () => {
+            assert.strictEqual(maskUserInfo('User dave Dave /dave/ davecan Userdave', [], false, () => 'dave'),
+                'User redacted:username redacted:username /redacted:username/ davecan Userdave');
         });
 
-        test('One value is substring of another', () => {
-            assert.strictEqual(maskUserInfo('firstNameLastName', ['firstName', 'firstNameLastName']), '---');
-            assert.strictEqual(maskUserInfo('firstNameLastName', ['firstNameLastName', 'firstName']), '---'); // flip order
+        test('retains short-username exclusions', () => {
+            assert.strictEqual(maskUserInfo('User dav', [], false, () => 'dav'), 'User dav');
         });
 
-        test('Values from azure id', () => {
-            const appId = `/subscriptions/${randomUtils.getRandomHexString()}/resourceGroups/${randomUtils.getRandomHexString()}/providers/Microsoft.Web/sites/${randomUtils.getRandomHexString()}`;
-            const context = <types.IActionContext><any>{ valuesToMask: [] };
-            addValuesToMaskFromAzureId(context, appId);
-            assert.strictEqual(maskUserInfo(appId, context.valuesToMask), '/subscriptions/---/resourceGroups/---/providers/Microsoft.Web/sites/---');
-        });
-
-        test('Email', () => {
-            assert.strictEqual(maskUserInfo('user@microsoft.com user2@microsoft.com us---Er@mic.rosoft.com', []), 'redacted:email redacted:email redacted:email');
-        });
-
-        test('Username', () => {
-            resetUsernameMask();
-            const getUsername = () => 'dave';
-            assert.strictEqual(maskUserInfo('User dave cannot do that', [], false, getUsername), 'User redacted:username cannot do that');
-            assert.strictEqual(maskUserInfo('User davecan do that', [], false, getUsername), 'User davecan do that');
-            assert.strictEqual(maskUserInfo('Userdave can do that', [], false, getUsername), 'Userdave can do that');
-            assert.strictEqual(maskUserInfo('User/dave cannot do that', [], false, getUsername), 'User/redacted:username cannot do that');
-            assert.strictEqual(maskUserInfo('User dave/cannot do that', [], false, getUsername), 'User redacted:username/cannot do that');
-            assert.strictEqual(maskUserInfo('Dave cannot do that', [], false, getUsername), 'redacted:username cannot do that');
-            assert.strictEqual(maskUserInfo('Cannot do that, Dave', [], false, getUsername), 'Cannot do that, redacted:username');
-        });
-
-        test('Short Username', () => {
-            resetUsernameMask();
-            const getUsername = () => 'dav';
-            assert.strictEqual(maskUserInfo('User dav can do that', [], false, getUsername), 'User dav can do that');
-            assert.strictEqual(maskUserInfo('Userdav can do that', [], false, getUsername), 'Userdav can do that');
-            assert.strictEqual(maskUserInfo('Davuser can do that', [], false, getUsername), 'Davuser can do that');
-        });
-
-        test('Guid', () => {
-            assert.strictEqual(maskUserInfo('c35d6342-5917-46f8-953e-9d3faffd1c72 C35D6342-5917-46F8-953E-9D3FAFFD1C72 c35d6342591746f8953e9d3faffd1c72', []), 'redacted:id redacted:id redacted:id');
-        });
-
-        test('id with word breaks', () => {
-            assert.strictEqual(maskUserInfo('(c35d6342) "c35d6342" \'c35d6342\'', []), '(redacted:id) "redacted:id" \'redacted:id\'');
-        });
-
-        test('Ip address', () => {
-            assert.strictEqual(maskUserInfo('127.0.0.1 aaaa:0000:0000:0000:ffff:0000:0000:0001', []), 'redacted:id redacted:id');
-        });
-
-        test('Phone number', () => {
-            assert.strictEqual(maskUserInfo('000-0000 000-111-2222', []), 'redacted:id redacted:id');
-        });
-
-        test('Url', () => {
-            assert.strictEqual(maskUserInfo('https://microsoft.com http://microsoft.com mongodb://mongodb0.example.com:27017', []), 'redacted:url redacted:url redacted:url');
-        });
-
-        test('Url without scheme', () => {
-            assert.strictEqual(maskUserInfo('microsoft.com microsoft.org?queryParam=test1 microsoft.net', []), 'redacted:url redacted:url redacted:url');
-        });
-
-        test('Url masking exclusions', () => {
-            // ".NET" and "ASP.NET" with no scheme should not be masked, but something like "microsoft-asp.net" or "microsoftasp.net" *should* be masked.
-            assert.strictEqual(maskUserInfo('microsoft.NET .NET ASP.NET microsoft-asp.net microsoftasp.net', []), 'redacted:url .NET ASP.NET redacted:url redacted:url');
-            assert.strictEqual(maskUserInfo('http://microsoft.NET http://.NET http://ASP.NET http://microsoft-asp.net http://microsoftasp.net', []), 'redacted:url redacted:url redacted:url redacted:url redacted:url');
-        });
-
-        test('key', () => {
-            assert.strictEqual(maskUserInfo('sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dddddddddddddddddddddddddddddddddddddddddddddddd', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=dddddddddddddddddddddddddddddddddddddddddddddddd/dddddddd/dddddddd==;', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('AccountEndpoint=accountname.documents.azure:443;AccountKey=accountkey==;', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('microsoft.co?token=dddd', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('--password ddddddd', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('"POSTGRES_PASSWORD": "ddddddd"', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('PGPASSWORD=ddddddd', []), 'redacted:key');
-            assert.strictEqual(maskUserInfo('pwd: "ddddddd!@#$%^&*()_+"', []), 'redacted:key');
-        });
-
-        test('jwt', () => {
-            const mockJwtOne: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
-            const mockJwtTwo: string = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkphbmUgRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.bmgFNnfHiZ1my09OnrZaconwIkp2RH94jjJWXavLTugEsxvwCM-3IJPakw7y5-3aLLZq1eA9NxEZK0a3ZjHc2A';
-            const mockEmptyPayloadJwt: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.Et9HFtf9R3GEMA0IICOfFMVXY7kkTX1wr4qCyhIf58U';
-
-            assert.strictEqual(maskUserInfo(`Bearer ${mockJwtOne}`, []), 'Bearer redacted:jwt');
-            assert.strictEqual(maskUserInfo(`Empty payload jwt: ${mockEmptyPayloadJwt}`, []), 'Empty payload jwt: redacted:jwt');
-            assert.strictEqual(maskUserInfo(`redacted:url ${mockJwtTwo}`, []), 'redacted:url redacted:jwt');
-            assert.strictEqual(maskUserInfo(`This message references two jwt's: ${mockJwtOne} and ${mockJwtTwo}.`, []), 'This message references two jwt\'s: redacted:jwt and redacted:jwt.');
-        });
-
-        test('jwt-like sequences retain loose masking and punctuation', () => {
-            assert.strictEqual(maskUserInfo('prefix:e.e.signature. E.E.SIG e.e.x.e.e.y', [], true), 'prredacted:jwt. redacted:jwt redacted:jwt.redacted:jwt');
-            assert.strictEqual(maskUserInfo('no.e.x e..x e.e. e.e.\nx', [], true), 'no.e.x e..x e.e. e.e.\nx');
-        });
-
-        test('jwt masking handles long incomplete segments', async function () {
-            this.timeout(20000);
-            await runWithTimeout(`
-            const segment = 'e'.repeat(100000);
-            assert.strictEqual(maskUserInfo(segment, [], true), segment);
-            assert.strictEqual(maskUserInfo(segment + '.' + segment + '.signature', [], true), 'redacted:jwt');
-            const incomplete = 'e.'.repeat(10000);
-            assert.strictEqual(maskUserInfo(incomplete, [], true), 'redacted:jwt.'.repeat(3333) + 'e.');
-            `);
-        });
-
-        test('preserves broad token coverage and existing rule precedence', () => {
-            assert.strictEqual(maskUserInfo('(a@b), !@? https://a@b.net.', []), 'redacted:email redacted:email redacted:email');
-            assert.strictEqual(maskUserInfo('@a@b @a@ @a a@@', []), 'redacted:email @a@ @a redacted:email');
-            assert.strictEqual(maskUserInfo('(example.com), pre:https://host/path; ASP.NET, .NET', [], true), 'redacted:url pre:redacted:url ASP.NET, .NET');
-            assert.strictEqual(maskUserInfo('password=a@b password=https://host/path password=e.e.sig', []), 'redacted:email redacted:key redacted:key');
-            assert.strictEqual(maskUserInfo('ASP.com ASP.org x.ASP.NET microsoft-asp.net', [], true), 'ASP.com ASP.org x.ASP.NET redacted:url');
-            assert.strictEqual(maskUserInfo('x.e.e.signature!\tE.E.signature?\r\ne.e.signature.', [], true), 'x.redacted:jwt\tredacted:jwt\r\nredacted:jwt.');
-            assert.strictEqual(maskUserInfo('\u0130e.e.signature \u0130asp.net', [], true), '\u0130redacted:jwt \u0130asp.net');
-        });
-
-        test('masks entire quoted and multiline secret values', () => {
-            for (const lessAggressive of [false, true]) {
-                assert.strictEqual(maskUserInfo('before password="private words" after', [], lessAggressive), 'before redacted:key after');
-                assert.strictEqual(maskUserInfo('"POSTGRES_PASSWORD": "private\nwords"\npublic', [], lessAggressive), 'redacted:key\npublic');
-                assert.strictEqual(maskUserInfo("pwd: 'private words' after", [], lessAggressive), 'redacted:key after');
-                assert.strictEqual(maskUserInfo('password="user@example.com private words" after', [], lessAggressive), 'redacted:key after');
-                assert.strictEqual(maskUserInfo('password="https://host/private private words" after', [], lessAggressive), 'redacted:key after');
-                assert.strictEqual(maskUserInfo('password="e.e.signature private words" after', [], lessAggressive), 'redacted:key after');
-                assert.strictEqual(maskUserInfo('password="private \\"quoted\\" words" after', [], lessAggressive), 'redacted:key after');
-                assert.strictEqual(maskUserInfo('password="unterminated\nprivate words', [], lessAggressive), 'redacted:key');
-                assert.strictEqual(maskUserInfo('--token \r\n "private words" next', [], lessAggressive), 'redacted:key next');
-            }
-        });
-
-        test('explicit masking and overlapping secrets never expose a suffix', () => {
-            assert.strictEqual(maskUserInfo('password="known private words" next', ['known'], true), 'redacted:key next');
-            assert.strictEqual(maskUserInfo('password="private token=second words" next', [], true), 'redacted:key next');
-            assert.strictEqual(maskUserInfo('password="one two";token="three four" next', [], true), 'redacted:key next');
-            assert.strictEqual(maskUserInfo('a@b e.e.signature https://host', ['a@b', 'e.e.signature', 'https://host']), '--- --- ---');
-        });
-
-        test('retains the rightmost secret marker coverage within a token', () => {
-            assert.strictEqual(maskUserInfo('token=token\nprivate', [], true), 'redacted:key');
-            assert.strictEqual(maskUserInfo('password:password keynetkey=private', [], true), 'redacted:key');
-            assert.strictEqual(maskUserInfo('prefixsig=key:token . public', [], true), 'redacted:key public');
-            assert.strictEqual(maskUserInfo('token:@:sig\n ', [], true), 'redacted:key');
-            assert.strictEqual(maskUserInfo('password="https://host" public', [], true), 'redacted:key public');
-            assert.strictEqual(maskUserInfo('key=x;password "private words" public', [], true), 'redacted:key public');
-        });
-
-        test('username metacharacters are literal', () => {
+        test('treats username regex metacharacters literally', () => {
             for (const username of ['a.buser', 'a+buser', 'a[b]user', 'a(b)user', 'a\\buser']) {
                 resetUsernameMask();
                 assert.strictEqual(maskUserInfo(`User ${username} is aXbuser`, [], true, () => username), 'User redacted:username is aXbuser');
             }
-            resetUsernameMask();
         });
 
-        test('masking scales for unmatched and punctuation-heavy tokens', async function () {
+        test('retains GUID, IP and phone-like ID masking', () => {
+            for (const value of ['c35d6342-5917-46f8-953e-9d3faffd1c72', 'C35D6342591746F8953E9D3FAFFD1C72', '127.0.0.1', 'aaaa:0000:0000:0000:ffff:0000:0000:0001', '000-111-2222']) {
+                assert.strictEqual(maskUserInfo(`(${value})`, []), '(redacted:id)');
+                assert.strictEqual(maskUserInfo(value, [], true), value);
+            }
+        });
+
+        test('retains bare-domain coverage and .NET exceptions', () => {
+            assert.strictEqual(maskUserInfo('(microsoft.com), microsoft.org?q=yes microsoft.NET', [], true), 'redacted:url redacted:url redacted:url');
+            assert.strictEqual(maskUserInfo('.NET ASP.NET ASP.NET, microsoft-asp.net microsoftasp.net', [], true), '.NET ASP.NET ASP.NET, redacted:url redacted:url');
+        });
+
+        test('leaves telemetry-covered formats to VS Code, not a local telemetry logger', () => {
+            for (const value of [
+                'user@example.invalid',
+                'https://host/path',
+                'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.signature',
+                'password="private words"',
+                '"POSTGRES_PASSWORD": "private\nwords"',
+                '--token private'
+            ]) {
+                for (const lessAggressive of [false, true]) {
+                    assert.strictEqual(maskUserInfo(value, [], lessAggressive), value);
+                }
+            }
+        });
+
+        test('explicit secrets remain protected regardless of heuristic coverage', () => {
+            assert.strictEqual(maskUserInfo('password="private words" https://host', ['private words', 'https://host'], true), 'password="---" ---');
+        });
+
+        test('converts non-string inputs', () => {
+            for (const [input, expected] of [[4, '4'], [true, 'true'], [undefined, 'undefined'], [null, 'null'], [{}, '[object Object]'], [[], '']] as const) {
+                assert.strictEqual(maskUserInfo(input, []), expected);
+            }
+        });
+
+        test('supplementary masking completes under an external deadline', async function () {
             this.timeout(20000);
             await runWithTimeout(`
-                for (const length of [10000, 100000]) {
-                    for (const input of ['!'.repeat(length), 'e'.repeat(length), 'asp.'.repeat(length), 'key'.repeat(length)]) {
+                for (const size of [10000, 100000]) {
+                    for (const input of ['!'.repeat(size), 'e.'.repeat(size), 'asp.'.repeat(size), 'key='.repeat(size)]) {
                         assert.strictEqual(maskUserInfo(input, [], true), input);
                     }
-                    assert.strictEqual(maskUserInfo('!'.repeat(length) + '@?', []), 'redacted:email');
-                    assert.strictEqual(maskUserInfo('!'.repeat(length) + '.com', [], true), 'redacted:url');
-                    assert.strictEqual(maskUserInfo('password="' + 'x '.repeat(length) + '" next', [], true), 'redacted:key next');
-                    assert.strictEqual(maskUserInfo('key='.repeat(length), [], true), 'redacted:key');
-                    assert.strictEqual(maskUserInfo('key '.repeat(length), [], true), 'redacted:key '.repeat(length / 2));
+                    assert.strictEqual(maskUserInfo('!'.repeat(size) + '.com', [], true), 'redacted:url');
                 }
             `);
         });
+    });
 
-        test('lessAggressive', () => {
-            const valueToMask = 'valueToMask';
-            assert.strictEqual(maskUserInfo('https://microsoft.com c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world accountkey=1234 valueToMask', [valueToMask], true /* lessAggressive */), 'redacted:url c35d6342-5917-46f8-953e-9d3faffd1c72 hello@world redacted:key ---');
-        });
-
-        // https://github.com/microsoft/vscode-azuretools/issues/967
-        test('non-strings', () => {
-            assert.strictEqual(maskUserInfo(4, []), '4');
-            assert.strictEqual(maskUserInfo(true, []), 'true');
-            assert.strictEqual(maskUserInfo(undefined, []), 'undefined');
-            assert.strictEqual(maskUserInfo(null, []), 'null');
-            assert.strictEqual(maskUserInfo({}, []), '[object Object]');
-            assert.strictEqual(maskUserInfo([], []), '');
-        });
+    test('maskValue handles empty and literal values', () => {
+        assert.strictEqual(maskValue('hello', undefined), 'hello');
+        assert.strictEqual(maskValue('hello', ''), 'hello');
+        assert.strictEqual(maskValue('a+b A+B a%2Bb', 'a+b'), '--- --- ---');
     });
 });
-
-function validateError(err: unknown, value: string): boolean {
-    return !JSON.stringify(parseError(err)).includes(value) &&
-        !JSON.stringify(parseError(err)).includes(encodeURIComponent(value));
-}

@@ -75,12 +75,7 @@ export function parseError(error: any): IParsedError {
 
     errorType ||= typeof (error);
     message ||= vscode.l10n.t('Unknown Error');
-
-    message = parseIfHtml(message);
-
-    // Azure storage SDK errors are presented in XML
-    // https://github.com/Azure/azure-sdk-for-js/issues/6927
-    message = parseIfXml(message);
+    message = summarizeMarkupError(message, errorType);
 
     return {
         name: errorType,
@@ -135,231 +130,47 @@ function isResponseDeserializationError(message: string): boolean {
     });
 }
 
-function parseIfHtml(message: string): string {
-    if (!/<html/i.test(message)) {
+function summarizeMarkupError(message: string, errorType: string): string {
+    const kind = /<(?:html\b|!doctype\s+html\b)/i.test(message) ? 'HTML'
+        : /<(?:\?xml\b|error\b|message\b)/i.test(message) ? 'XML' : undefined;
+    if (!kind) {
         return message;
     }
 
-    const parts: string[] = [];
-    const hidden: string[] = [];
-    const anchors: (string | undefined)[] = [];
-    let spaces = false;
-    let breaks = 0;
-    const append = (value: string): void => {
-        if (parts.length) {
-            parts.push(breaks ? '\n'.repeat(breaks) : spaces ? ' ' : '');
-        }
-        parts.push(value);
-        breaks = 0;
-        spaces = false;
-    };
-    const appendText = (value: string): void => {
-        for (const match of value.matchAll(/\s+|\S+/g)) {
-            if (/\s/.test(match[0][0])) {
-                spaces = true;
-            } else {
-                append(match[0]);
+    const tag = kind === 'HTML' ? 'title' : 'message';
+    const opening = new RegExp(`<${tag}\\s*>`, 'i').exec(message);
+    if (opening) {
+        const content = message.slice(opening.index + opening[0].length);
+        const closing = new RegExp(`</${tag}\\s*>`, 'i').exec(content);
+        if (closing) {
+            let summary = content.slice(0, closing.index).trim();
+            if (kind === 'XML') {
+                summary = summary.split(lineBreakPattern)[0];
             }
-        }
-    };
-    let position = 0;
-    while (position < message.length) {
-        const opening = message.indexOf('<', position);
-        if (!hidden.length) {
-            appendText(message.slice(position, opening < 0 ? message.length : opening));
-        }
-        if (opening < 0) {
-            break;
-        }
-        if (message.startsWith('<!--', opening)) {
-            const end = message.indexOf('-->', opening + 4);
-            position = end < 0 ? message.length : end + 3;
-            spaces = true;
-            continue;
-        }
-        const tag = readHtmlTag(message, opening);
-        position = tag.end;
-        if (!tag.complete) {
-            spaces = true;
-            continue;
-        }
-        const { name, closing } = tag;
-        if (!closing && (name === 'script' || name === 'style')) {
-            // Raw content may contain apparent tags and quotes; only its own closing tag matters.
-            const ending = name === 'script' ? /<\/script\s*>/gi : /<\/style\s*>/gi;
-            ending.lastIndex = position;
-            const match = ending.exec(message);
-            position = match ? ending.lastIndex : message.length;
-            spaces = true;
-            continue;
-        }
-        if (name === 'head' || name === 'template' || name === 'svg') {
-            if (closing) {
-                if (hidden[hidden.length - 1] === name) {
-                    hidden.pop();
+            if (summary && !/[<>]/.test(summary)) {
+                summary = decodeSummaryEntities(summary).replace(/\s+/g, ' ').trim();
+                if (summary) {
+                    return summary.length > 300 ? `${summary.slice(0, 297)}...` : summary;
                 }
-            } else if (!tag.selfClosing) {
-                hidden.push(name);
             }
-            spaces = true;
-            continue;
-        }
-        if (hidden.length) {
-            continue;
-        }
-        if (name === 'p') {
-            breaks = 2;
-        } else if (name === 'br' || /^h[1-6]$/.test(name) || name === 'tr' || name === 'caption' || name === 'li') {
-            breaks = Math.max(breaks, 1);
-            if (name === 'li' && !closing) {
-                append(' * ');
-            }
-        } else if (name === 'td' || name === 'th') {
-            spaces ||= closing;
-        } else if (name === 'a') {
-            if (closing) {
-                const href = anchors.pop();
-                if (href !== undefined) {
-                    spaces = true;
-                    append(`[${href}]`);
-                }
-                spaces = false;
-            } else {
-                anchors.push(tag.href);
-                spaces ||= tag.href === undefined;
-            }
-        } else {
-            spaces = true;
         }
     }
-    return decodeHtmlEntities(parts.join('').trim());
+
+    return /^\d{3}$/.test(errorType)
+        ? vscode.l10n.t('The server returned an {0} error response (HTTP {1}).', kind, errorType)
+        : vscode.l10n.t('The server returned an {0} error response.', kind);
 }
 
-/**
- * A plain-text converter's tag reader, not an HTML parser or sanitizer.
- * Malformed markup is skipped up to the next unquoted '<' or the end of the input.
- */
-function readHtmlTag(message: string, opening: number): { name: string; closing: boolean; selfClosing: boolean; complete: boolean; end: number; href?: string } {
-    let position = opening + 1;
-    const closing = message[position] === '/';
-    if (closing) {
-        position++;
-    }
-    const start = position;
-    while (position < message.length && /[\w:-]/.test(message[position])) {
-        position++;
-    }
-    const name = message.slice(start, position).toLowerCase();
-    let href: string | undefined;
-    let selfClosing = false;
-    while (position < message.length && message[position] !== '<') {
-        if (message[position] === '>') {
-            return { name, closing, selfClosing, complete: true, end: position + 1, href };
-        }
-        if (/\s/.test(message[position])) {
-            position++;
-            continue;
-        }
-        if (message[position] === '/') {
-            selfClosing = true;
-            position++;
-            continue;
-        }
-        const attributeStart = position;
-        while (position < message.length && !/[\s=<>/"']/.test(message[position])) {
-            position++;
-        }
-        const attribute = message.slice(attributeStart, position).toLowerCase();
-        while (position < message.length && /\s/.test(message[position])) {
-            position++;
-        }
-        const hasValue = message[position] === '=';
-        if (hasValue) {
-            position++;
-            while (position < message.length && /\s/.test(message[position])) {
-                position++;
-            }
-        }
-        if (!hasValue && message[position] !== '"' && message[position] !== "'") {
-            continue;
-        }
-        const quote = message[position] === '"' || message[position] === "'" ? message[position++] : undefined;
-        const valueStart = position;
-        if (quote) {
-            while (position < message.length && message[position] !== quote) {
-                position++;
-            }
-        } else if (message[position] !== '<' && message[position] !== '>') {
-            while (position < message.length && !/[\s<>]/.test(message[position])) {
-                position++;
-            }
-        }
-        if (name === 'a' && attribute === 'href' && href === undefined) {
-            href = message.slice(valueStart, position);
-        }
-        if (quote && position < message.length) {
-            position++;
-        }
-    }
-    return { name, closing, selfClosing, complete: false, end: position };
-}
-
-function decodeHtmlEntities(text: string): string {
-    const namedEntities: Record<string, string> = {
-        amp: '&',
-        apos: '\'',
-        bull: '\u2022',
-        cent: '\u00A2',
-        copy: '\u00A9',
-        deg: '\u00B0',
-        divide: '\u00F7',
-        euro: '\u20AC',
-        gt: '>',
-        hellip: '\u2026',
-        laquo: '\u00AB',
-        ldquo: '\u201C',
-        lsquo: '\u2018',
-        lt: '<',
-        mdash: '\u2014',
-        middot: '\u00B7',
-        nbsp: ' ',
-        ndash: '\u2013',
-        pound: '\u00A3',
-        quot: '"',
-        raquo: '\u00BB',
-        rdquo: '\u201D',
-        reg: '\u00AE',
-        rsquo: '\u2019',
-        times: '\u00D7',
-        trade: '\u2122',
-        yen: '\u00A5'
-    };
-
+function decodeSummaryEntities(text: string): string {
+    const entities: Record<string, string> = { amp: '&', apos: "'", gt: '>', lt: '<', nbsp: ' ', quot: '"' };
     return text.replace(/&(#(?:x[\da-f]+|\d+)|[a-z]+);/gi, (entity: string, name: string): string => {
         if (name[0] !== '#') {
-            return namedEntities[name.toLowerCase()] ?? entity;
+            return entities[name.toLowerCase()] ?? entity;
         }
-
-        const isHex: boolean = name[1].toLowerCase() === 'x';
-        const codePoint: number = parseInt(name.slice(isHex ? 2 : 1), isHex ? 16 : 10);
+        const hex = name[1].toLowerCase() === 'x';
+        const codePoint = parseInt(name.slice(hex ? 2 : 1), hex ? 16 : 10);
         return codePoint <= 0x10FFFF ? String.fromCodePoint(codePoint) : entity;
     });
-}
-
-function parseIfXml(message: string): string {
-    const openingTag = /<message>/i.exec(message);
-    if (openingTag) {
-        let end = -1;
-        for (const closingTag of message.matchAll(/<\/message>/gi)) {
-            end = closingTag.index;
-        }
-        const start = openingTag.index + openingTag[0].length;
-        if (end >= start) {
-            return message.slice(start, end);
-        }
-    }
-
-    return message;
 }
 
 function getMessage(o: any, defaultMessage: string): string {

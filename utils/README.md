@@ -25,13 +25,15 @@ Here are a few of the benefits this provides:
 
 - Parses Azure errors of the form `{ "Code": "Conflict", "Message": "This is the actual message" }` and only displays the 'Message' property
 - Displays single line errors normally and multi-line errors in the output window
-- Converts HTML error pages to plain text with a forward-only scanner and no HTML parser dependency, omitting comments and non-visible content. This is not a browser-compatible parser or sanitizer; parsed messages must not be injected into HTML.
+- Summarizes HTML errors using a plain `<title>` and XML errors using the first line of `<Message>`, limited to 300 characters. Missing, empty or nested markup produces a generic error, including the HTTP status when available. Document bodies, formatting and XML request metadata are not preserved. Returned messages are plain text, not sanitized HTML.
 - Tracks multiple properties in addition to the [common extension properties](https://github.com/Microsoft/vscode-extension-telemetry#common-properties):
   - result (Succeeded, Failed, or Canceled)
   - duration
   - error
 
-Telemetry masking is best-effort. Quoted secret assignments containing whitespace are redacted through their closing quote (or the end of the message if it is missing), including multiline values. These assignments use the `redacted:key` label before token-level email, URL, and loose JWT heuristics run, so overlapping matches cannot expose the rest of a quoted value. The `lessAggressive` option still skips only email and ID masking.
+Telemetry masking is best-effort. `maskUserInfo` removes explicit action/extension values, the local username, ID-like strings and bare `.com`/`.org`/`.net` domains (retaining the existing .NET/ASP.NET exceptions). `lessAggressive` skips only ID-like strings. Email, scheme URL, JWT and generic secret detection is delegated to VS Code's telemetry logger through `@vscode/extension-telemetry`; it happens at send time, not when `maskUserInfo` returns.
+
+**Prototype compatibility change:** `maskUserInfo` alone no longer provides those generic protections for local logs or issue reports, including verbose `DEBUGTELEMETRY` output, which bypasses the telemetry logger. Downstream diagnostic consumers must be migrated before release. VS Code's cleaner can redact an entire telemetry property rather than just the sensitive substring. Known credentials should still be removed using `maskValue` or `callWithMaskHandling`, independently of telemetry enablement. No additional telemetry logger or network request is created for masking.
 
 You can also register events. By default, every event is tracked in telemetry. It is _highly recommended_ to leverage the IActionContext.telemetry.suppressIfSuccessful parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 

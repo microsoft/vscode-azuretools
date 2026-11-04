@@ -16,7 +16,7 @@ export async function runWithTimeout(source: string): Promise<void> {
         const load = Module._load;
         Module._load = function (id, ...args) {
             return id === 'vscode'
-                ? { l10n: { t: value => value }, CancellationError: class extends Error {} }
+                ? { l10n: { t: (value, ...args) => value.replace(/\\{(\\d+)\\}/g, (_, index) => String(args[index])) }, CancellationError: class extends Error {} }
                 : load.call(this, id, ...args);
         };
         require(workerData.tsx);
