@@ -46,6 +46,28 @@ suite('callWithTelemetryAndErrorHandling tests', () => {
         assert.deepStrictEqual(messages, Array<string>(4).fill(`${prefix}---`));
     });
 
+    test('uses generic summaries instead of truncating credentials delegated to VS Code', async () => {
+        const messages: unknown[] = [];
+        const handler = registerTelemetryHandler(context => {
+            messages.push(context.telemetry.properties.errorMessage);
+        });
+        const title = 'z'.repeat(270) + 'AIza' + 'x'.repeat(35);
+        try {
+            for (const message of [`<html><title>${title}</title></html>`, `<Message>${title}</Message>`]) {
+                await callWithTelemetryAndErrorHandling('longSummary', context => {
+                    context.errorHandling.suppressDisplay = true;
+                    throw new Error(message);
+                });
+            }
+        } finally {
+            handler.dispose();
+        }
+        assert.deepStrictEqual(messages, [
+            'The server returned an HTML error response.',
+            'The server returned an XML error response.'
+        ]);
+    });
+
     test('sync', () => {
         assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFunc), testFunc());
         assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFuncError), undefined);

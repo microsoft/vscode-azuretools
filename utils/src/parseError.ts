@@ -158,8 +158,13 @@ function summarizeMarkupError(message: string, httpStatus: number | undefined, m
                     summary = summary.split(lineBreakPattern)[0];
                 }
                 summary = summary.replace(/\s+/g, ' ').trim();
-                if (summary) {
-                    return summary.length > 300 ? `${summary.slice(0, 297)}...` : summary;
+                if (summary && summary.length <= 300) {
+                    return summary;
+                }
+                // Truncation can prevent downstream cleaners from recognizing a credential.
+                if (summary && !maskMessage) {
+                    const prefix = summary.slice(0, 297).replace(/[\uD800-\uDBFF]$/, '');
+                    return `${prefix}...`;
                 }
             }
         }
@@ -193,10 +198,13 @@ function getCode(o: any, defaultCode: string): string {
 }
 
 function getHttpStatus(o: any, defaultStatus: number | undefined): number | undefined {
-    const status = o && (o.statusCode ?? o.status ?? o.response?.statusCode ?? o.response?.status);
-    const numericStatus = typeof status === 'string' && /^\d{3}$/.test(status) ? Number(status) : status;
-    return typeof numericStatus === 'number' && Number.isInteger(numericStatus) && numericStatus >= 100 && numericStatus <= 599
-        ? numericStatus : defaultStatus;
+    for (const status of [o?.statusCode, o?.status, o?.response?.statusCode, o?.response?.status]) {
+        const numericStatus = typeof status === 'string' && /^\d{3}$/.test(status) ? Number(status) : status;
+        if (typeof numericStatus === 'number' && Number.isInteger(numericStatus) && numericStatus >= 100 && numericStatus <= 599) {
+            return numericStatus;
+        }
+    }
+    return defaultStatus;
 }
 
 function unpackErrorsInMessage(message: string): string {

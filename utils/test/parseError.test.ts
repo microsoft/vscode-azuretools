@@ -737,6 +737,8 @@ Time:2020-01-13T22:08:56.4055648Z</Message></Error>`
             assert.strictEqual(parseError(`<Message>${'x'.repeat(300)}</Message>`).message, 'x'.repeat(300));
             assert.strictEqual(parseError('<html><title>&amp;lt; &#x1F680; &#1114112; &unknown;</title></html>').message, '&lt; \u{1F680} &#1114112; &unknown;');
             assert.strictEqual(parseError('<html><title>&constructor; &AMP;</title></html>').message, '&constructor; &');
+            const unicodeTitle = `${'x'.repeat(296)}\u{1F680}more`;
+            assert.strictEqual(parseError(`<html><title>${unicodeTitle}</title></html>`).message, `${'x'.repeat(296)}...`);
         });
 
         test('selects the first XML line after decoding entities once', () => {
@@ -765,6 +767,10 @@ Time:2020-01-13T22:08:56.4055648Z</Message></Error>`
                 }
                 for (const statusCode of [undefined, 99, 600, '503junk']) {
                     assert.strictEqual(parseError({ code: 123, statusCode, message }).message, `The server returned an ${kind} error response.`);
+                    assert.strictEqual(
+                        parseError({ code: 'ServiceUnavailable', statusCode, response: { status: 503 }, message }).message,
+                        `The server returned an ${kind} error response (HTTP 503).`
+                    );
                 }
             }
         });

@@ -988,6 +988,8 @@ export declare function registerTelemetryHandler(handler: TelemetryHandler): Dis
  * Returned messages are plain text, not sanitized HTML.
  * @param maskMessage Optional masking applied to plain messages or decoded markup content before
  * whitespace normalization, XML line selection and truncation can prevent full-value matching.
+ * With masking enabled, overlength markup summaries use a generic fallback instead of truncation,
+ * so a partial credential cannot bypass downstream detection.
  */
 export declare function parseError(error: any, maskMessage?: (message: string) => string): IParsedError;
 
