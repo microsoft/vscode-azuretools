@@ -11,6 +11,12 @@ On top of that, this package provides functionality specifically designed for us
 
 > NOTE: This package throws a `UserCancelledError` if the user cancels an operation. This error should be handled appropriately by your extension.
 
+## Site lifecycle
+
+Use `await siteClient.restart()` to invoke Azure's native restart operation. Like `stop()` and `start()`, it automatically targets the production site or the deployment slot represented by the client. It awaits the ARM request and propagates failures; it does not stop and then start the app or wait for application health.
+
+To try an unpublished change in a consumer, run `npm ci`, `npm run build`, and `npm run package` in this package. In a clean consumer checkout, run `npm ci` followed by `npm install --no-save <path-to-generated-tgz>` (leave the lockfile enabled), then build the consumer. Do not commit the tarball or local paths to its dependency manifests; use a published package version for the final dependency update.
+
 ## Remote file content
 
 Use `getFileBytes(context, site, url)` for virtual file systems and other byte-preserving downloads. It returns `{ data: Uint8Array, etag: string }`, streams the response through the existing authenticated ARM or Kudu client, and does not decode content based on its MIME type. Keep the returned ETag for conditional saves with `putFile`; byte uploads are sent without text conversion. The existing `getFile` helper continues to return text.
