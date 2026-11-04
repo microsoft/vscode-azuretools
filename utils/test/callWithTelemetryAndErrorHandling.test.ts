@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { IActionContext } from '..';
-import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync } from '../src/callWithTelemetryAndErrorHandling';
+import { callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync, registerTelemetryHandler } from '../src/callWithTelemetryAndErrorHandling';
 import { assertThrowsAsync } from './assertThrowsAsync';
 
 function testFunc(): string {
@@ -25,6 +25,27 @@ function testFuncErrorAsync(): Promise<string> {
 }
 
 suite('callWithTelemetryAndErrorHandling tests', () => {
+    test('masks explicit credentials before markup summaries are shortened', async () => {
+        const messages: unknown[] = [];
+        const handler = registerTelemetryHandler(context => {
+            messages.push(context.telemetry.properties.errorMessage, context.telemetry.properties.errorMessageV2);
+        });
+        const credential = 'synthetic-credential-' + 'Z'.repeat(44);
+        const prefix = 'x'.repeat(250);
+        try {
+            for (const message of [`<html><title>${prefix}${credential}</title></html>`, `<Message>${prefix}${credential}</Message>`]) {
+                await callWithTelemetryAndErrorHandling('summaryMasking', context => {
+                    context.errorHandling.suppressDisplay = true;
+                    context.valuesToMask.push(credential);
+                    throw new Error(message);
+                });
+            }
+        } finally {
+            handler.dispose();
+        }
+        assert.deepStrictEqual(messages, Array<string>(4).fill(`${prefix}---`));
+    });
+
     test('sync', () => {
         assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFunc), testFunc());
         assert.strictEqual(callWithTelemetryAndErrorHandlingSync('callbackId', testFuncError), undefined);

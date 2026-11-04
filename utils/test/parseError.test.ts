@@ -739,6 +739,36 @@ Time:2020-01-13T22:08:56.4055648Z</Message></Error>`
             assert.strictEqual(parseError('<html><title>&constructor; &AMP;</title></html>').message, '&constructor; &');
         });
 
+        test('selects the first XML line after decoding entities once', () => {
+            for (const separator of ['&#10;', '&#13;', '&#xA;', '&#xD;', '&#8232;', '&#8233;']) {
+                assert.strictEqual(parseError(`<Message>Try again.${separator}RequestId: private</Message>`).message, 'Try again.');
+            }
+            assert.strictEqual(parseError('<Message>Try again.&amp;#10;RequestId: private</Message>').message, 'Try again.&#10;RequestId: private');
+        });
+
+        test('uses actual HTTP statuses independently of error codes', () => {
+            for (const message of ['<html>details</html>', '<Error>details</Error>']) {
+                const kind = message.startsWith('<html>') ? 'HTML' : 'XML';
+                for (const status of [503, '503']) {
+                    for (const error of [
+                        { code: 'ServiceUnavailable', statusCode: status, message },
+                        { code: 'ServiceUnavailable', response: { status, body: message } },
+                        { value: { statusCode: status, error: { code: 'ServiceUnavailable', message } } },
+                        { errors: [{ code: 'ServiceUnavailable', statusCode: status, message }] },
+                        { message: JSON.stringify({ statusCode: status, error: { code: 'ServiceUnavailable', message } }) },
+                        { message: JSON.stringify({ code: 'ServiceUnavailable', statusCode: status, message }) }
+                    ]) {
+                        const parsed = parseError(error);
+                        assert.strictEqual(parsed.errorType, 'ServiceUnavailable');
+                        assert.strictEqual(parsed.message, `The server returned an ${kind} error response (HTTP 503).`);
+                    }
+                }
+                for (const statusCode of [undefined, 99, 600, '503junk']) {
+                    assert.strictEqual(parseError({ code: 123, statusCode, message }).message, `The server returned an ${kind} error response.`);
+                }
+            }
+        });
+
         test('keeps delimiter extraction and stack path privacy', () => {
             for (const separator of ['\n', '\r', '\r\n', '\u2028', '\u2029']) {
                 assert.strictEqual(parseError(`prefix${separator}(EntryNotFound (FileSystemError): missing)${separator}`).message, 'EntryNotFound (FileSystemError): missing');

@@ -986,8 +986,10 @@ export declare function registerTelemetryHandler(handler: TelemetryHandler): Dis
  * HTML responses use a plain title; XML responses use the first line of Message.
  * These summaries are limited to 300 characters, with generic fallbacks for unsupported markup.
  * Returned messages are plain text, not sanitized HTML.
+ * @param maskMessage Optional masking applied to plain messages or decoded markup content before
+ * whitespace normalization, XML line selection and truncation can prevent full-value matching.
  */
-export declare function parseError(error: any): IParsedError;
+export declare function parseError(error: any, maskMessage?: (message: string) => string): IParsedError;
 
 export interface IParsedError extends Error {
     errorType: string;

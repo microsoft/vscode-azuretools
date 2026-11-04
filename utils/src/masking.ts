@@ -67,14 +67,14 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
     try {
         return await callback();
     } catch (error) {
-        const parsedError: IParsedError = parseError(error);
+        const parsedError: IParsedError = parseError(error, message => maskValue(message, valueToMask));
 
         if (parsedError.isUserCancelledError) {
             throw error;
         }
 
         // eslint-disable-next-line preserve-caught-error -- intentionally omit `cause`: the caught error may contain unmasked PII and must not be attached to the rethrown error
-        throw new Error(maskValue(parsedError.message, valueToMask));
+        throw new Error(parsedError.message);
     }
 }
 

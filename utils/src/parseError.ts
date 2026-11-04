@@ -13,11 +13,12 @@ import { parseJson } from './utils/parseJson';
 const lineBreakPattern = /[\r\n\u2028\u2029]/;
 const trailingLineBreakPattern = new RegExp(`(?:\\r\\n|${lineBreakPattern.source})$`);
 
-export function parseError(error: any): IParsedError {
+export function parseError(error: any, maskMessage?: (message: string) => string): IParsedError {
     let errorType: string = '';
     let message: string = '';
     let stack: string | undefined;
     let stepName: string | undefined;
+    let httpStatus: number | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
@@ -26,22 +27,26 @@ export function parseError(error: any): IParsedError {
 
         stack = getCallstack(error);
         errorType = getCode(error, errorType);
+        httpStatus = getHttpStatus(error, httpStatus);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
-        error = unpackErrorFromField(error, 'value');
-        error = unpackErrorFromField(error, '_value');
-        error = unpackErrorFromField(error, 'error');
-        error = unpackErrorFromField(error, 'error');
+        for (const field of ['value', '_value', 'error', 'error']) {
+            error = unpackErrorFromField(error, field);
+            httpStatus = getHttpStatus(error, httpStatus);
+        }
         if (Array.isArray(error.errors) && error.errors.length) {
             error = error.errors[0];
         }
 
         errorType = getCode(error, errorType);
+        httpStatus = getHttpStatus(error, httpStatus);
         message = getMessage(error, message);
 
         if (!errorType || !message || isResponseDeserializationError(message)) {
-            error = unpackErrorFromField(error, 'response');
-            error = unpackErrorFromField(error, 'body');
+            for (const field of ['response', 'body']) {
+                error = unpackErrorFromField(error, field);
+                httpStatus = getHttpStatus(error, httpStatus);
+            }
 
             errorType = getCode(error, errorType);
             message = getMessage(error, message);
@@ -51,12 +56,14 @@ export function parseError(error: any): IParsedError {
         let parsedMessage: any = parseIfJson(error.message);
         // For some reason, the message is sometimes serialized twice and we need to parse it again
         parsedMessage = parseIfJson(parsedMessage);
+        httpStatus = getHttpStatus(parsedMessage, httpStatus);
         // Extract out the "internal" error if it exists
         if (parsedMessage && parsedMessage.error) {
             parsedMessage = parsedMessage.error;
         }
 
         errorType = getCode(parsedMessage, errorType);
+        httpStatus = getHttpStatus(parsedMessage, httpStatus);
         message = getMessage(parsedMessage, message);
 
         message ||= convertCodeToError(errorType) || JSON.stringify(error);
@@ -75,7 +82,7 @@ export function parseError(error: any): IParsedError {
 
     errorType ||= typeof (error);
     message ||= vscode.l10n.t('Unknown Error');
-    message = summarizeMarkupError(message, errorType);
+    message = summarizeMarkupError(message, httpStatus, maskMessage);
 
     return {
         name: errorType,
@@ -130,11 +137,11 @@ function isResponseDeserializationError(message: string): boolean {
     });
 }
 
-function summarizeMarkupError(message: string, errorType: string): string {
+function summarizeMarkupError(message: string, httpStatus: number | undefined, maskMessage?: (message: string) => string): string {
     const kind = /<(?:html\b|!doctype\s+html\b)/i.test(message) ? 'HTML'
         : /<(?:\?xml\b|error\b|message\b)/i.test(message) ? 'XML' : undefined;
     if (!kind) {
-        return message;
+        return maskMessage ? maskMessage(message) : message;
     }
 
     const tag = kind === 'HTML' ? 'title' : 'message';
@@ -143,12 +150,14 @@ function summarizeMarkupError(message: string, errorType: string): string {
         const content = message.slice(opening.index + opening[0].length);
         const closing = new RegExp(`</${tag}\\s*>`, 'i').exec(content);
         if (closing) {
-            let summary = content.slice(0, closing.index).trim();
-            if (kind === 'XML') {
-                summary = summary.split(lineBreakPattern)[0];
-            }
+            let summary = content.slice(0, closing.index);
             if (summary && !/[<>]/.test(summary)) {
-                summary = decodeSummaryEntities(summary).replace(/\s+/g, ' ').trim();
+                summary = decodeSummaryEntities(summary);
+                summary = (maskMessage ? maskMessage(summary) : summary).trim();
+                if (kind === 'XML') {
+                    summary = summary.split(lineBreakPattern)[0];
+                }
+                summary = summary.replace(/\s+/g, ' ').trim();
                 if (summary) {
                     return summary.length > 300 ? `${summary.slice(0, 297)}...` : summary;
                 }
@@ -156,8 +165,8 @@ function summarizeMarkupError(message: string, errorType: string): string {
         }
     }
 
-    return /^\d{3}$/.test(errorType)
-        ? vscode.l10n.t('The server returned an {0} error response (HTTP {1}).', kind, errorType)
+    return httpStatus !== undefined
+        ? vscode.l10n.t('The server returned an {0} error response (HTTP {1}).', kind, httpStatus)
         : vscode.l10n.t('The server returned an {0} error response.', kind);
 }
 
@@ -181,6 +190,13 @@ function getMessage(o: any, defaultMessage: string): string {
 function getCode(o: any, defaultCode: string): string {
     const code: any = o && (o.code || o.Code || o.errorCode || o.statusCode);
     return code ? String(code) : defaultCode;
+}
+
+function getHttpStatus(o: any, defaultStatus: number | undefined): number | undefined {
+    const status = o && (o.statusCode ?? o.status ?? o.response?.statusCode ?? o.response?.status);
+    const numericStatus = typeof status === 'string' && /^\d{3}$/.test(status) ? Number(status) : status;
+    return typeof numericStatus === 'number' && Number.isInteger(numericStatus) && numericStatus >= 100 && numericStatus <= 599
+        ? numericStatus : defaultStatus;
 }
 
 function unpackErrorsInMessage(message: string): string {

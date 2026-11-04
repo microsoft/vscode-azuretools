@@ -29,6 +29,25 @@ suite('masking', () => {
         test('returns successful results', async () => {
             assert.strictEqual(await callWithMaskHandling(() => Promise.resolve('result'), 'sample'), 'result');
         });
+
+        test('masks credentials before HTML and XML summaries lose text', async () => {
+            const credential = 'synthetic-credential-' + 'Z'.repeat(44);
+            for (const [opening, closing] of [['<html><title>', '</title></html>'], ['<Message>', '</Message>']]) {
+                for (const [value, content] of [
+                    [credential, credential],
+                    ['private words', 'private words'],
+                    ['private\nwords', 'private\nwords'],
+                    ['private words', 'private&#32;words'],
+                    ['private\nwords', 'private&#10;words']
+                ]) {
+                    const prefix = 'x'.repeat(250);
+                    await assert.rejects(
+                        callWithMaskHandling(() => Promise.reject(new Error(`${opening}${prefix}${content}${closing}`)), value),
+                        (error: unknown) => error instanceof Error && error.message === `${prefix}---`
+                    );
+                }
+            }
+        });
     });
 
     suite('maskUserInfo', () => {
