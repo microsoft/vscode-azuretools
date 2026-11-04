@@ -165,7 +165,8 @@ function decodeSummaryEntities(text: string): string {
     const entities: Record<string, string> = { amp: '&', apos: "'", gt: '>', lt: '<', nbsp: ' ', quot: '"' };
     return text.replace(/&(#(?:x[\da-f]+|\d+)|[a-z]+);/gi, (entity: string, name: string): string => {
         if (name[0] !== '#') {
-            return entities[name.toLowerCase()] ?? entity;
+            const key = name.toLowerCase();
+            return Object.hasOwn(entities, key) ? entities[key] : entity;
         }
         const hex = name[1].toLowerCase() === 'x';
         const codePoint = parseInt(name.slice(hex ? 2 : 1), hex ? 16 : 10);
