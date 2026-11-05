@@ -567,14 +567,7 @@ callWithTelemetryAndErrorHandling.js.__awaiter vscode-azureextensionui/extension
         const pe: IParsedError = parseError(err);
 
         assert.strictEqual(pe.errorType, 'string');
-        assert.strictEqual(pe.message, `404 Web Site not found.
-
-You may be seeing this error due to one of the reasons listed below :
-
- * Custom domain has not been configured inside Azure. See how to map an existing domain [https://docs.microsoft.com/en-us/azure/app-service-web/app-service-web-tutorial-custom-domain] to resolve this.
- * Client cache is still pointing the domain to old IP address. Clear the cache by running the command ipconfig/flushdns.
-
-Checkout App Service Domain FAQ [https://blogs.msdn.microsoft.com/appserviceteam/2017/08/08/faq-app-service-domain-preview-and-custom-domains/] for more questions.`);
+        assert.strictEqual(pe.message, 'Microsoft Azure Web App - Error 404');
         assert.strictEqual(pe.isUserCancelledError, false);
 
         const err2: string = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -609,19 +602,15 @@ background-color:#555555;}
         const pe2: IParsedError = parseError(err2);
 
         assert.strictEqual(pe2.errorType, 'string');
-        assert.strictEqual(pe2.message, `Server Error
-401 - Unauthorized: Access is denied due to invalid credentials.
-You do not have permission to view this directory or page using the credentials that you supplied.`);
+        assert.strictEqual(pe2.message, '401 - Unauthorized: Access is denied due to invalid credentials.');
         assert.strictEqual(pe2.isUserCancelledError, false);
 
         const pe3: IParsedError = parseError('<html><body><p>Failure&nbsp;&amp; retry &#x2014; see <a href="https://example.com?a=1&amp;b=2">details</a>.</p><script>ignored()</script></body></html>');
-        assert.strictEqual(pe3.message, 'Failure & retry \u2014 see details [https://example.com?a=1&b=2].');
+        assert.strictEqual(pe3.message, 'The server returned an HTML error response.');
 
-        assert.strictEqual(parseError('<html><body><a data-href="wrong" href=https://example.com>details</a></body></html>').message, 'details [https://example.com]');
-        assert.strictEqual(parseError('<html><body>&copy; Contoso &mdash; unavailable&hellip;</body></html>').message, '\u00A9 Contoso \u2014 unavailable\u2026');
-        assert.strictEqual(parseError('<html><body><table><tr><th>Name</th><th>Status</th></tr><tr><td>API</td><td>Unavailable</td></tr></table></body></html>').message, 'Name Status\nAPI Unavailable');
-        assert.strictEqual(parseError('<html><body>Visible<script>ignored()').message, 'Visible');
-        assert.strictEqual(parseError('<html><body>Visible<style>.hidden { display: none; }').message, 'Visible');
+        for (const body of ['<a href="https://example.com">details</a>', '&copy; Contoso', '<table><tr><td>Unavailable</td></tr></table>', 'Visible<script>ignored()', 'Visible<style>.hidden { display: none; }']) {
+            assert.strictEqual(parseError(`<html><body>${body}`).message, 'The server returned an HTML error response.');
+        }
     });
 
     test('Docker Request Error', () => {
@@ -659,9 +648,7 @@ Time:2020-01-13T21:57:13.6831007Z</Message></Error>`
         const pe1: IParsedError = parseError(err1);
 
         assert.strictEqual(pe1.errorType, '409');
-        assert.strictEqual(pe1.message, `The specified container is being deleted. Try operation later.
-RequestId:35eae91c-a01e-0010-1b5c-ca2979000000
-Time:2020-01-13T21:57:13.6831007Z`);
+        assert.strictEqual(pe1.message, 'The specified container is being deleted. Try operation later.');
         assert.strictEqual(pe1.isUserCancelledError, false);
 
         const err2 = {
@@ -673,9 +660,7 @@ Time:2020-01-13T22:08:56.4055648Z</Message></Error>`
         const pe2: IParsedError = parseError(err2);
 
         assert.strictEqual(pe2.errorType, '412');
-        assert.strictEqual(pe2.message, `There is currently a lease on the blob and no lease ID was specified in the request.
-RequestId:2392b993-901e-0018-625e-ca320a000000
-Time:2020-01-13T22:08:56.4055648Z`);
+        assert.strictEqual(pe2.message, 'There is currently a lease on the blob and no lease ID was specified in the request.');
         assert.strictEqual(pe2.isUserCancelledError, false);
     });
 
@@ -687,6 +672,137 @@ Time:2020-01-13T22:08:56.4055648Z`);
         assert.strictEqual(pe.errorType, 'EntryNotFound');
         assert.strictEqual(pe.message, 'EntryNotFound (FileSystemError): azureDatabases:/testCol33-cosmos-collection.json?id=/cosmosDBAttachedAccounts/127.0.0.1:27017/testDB/testCol33');
         assert.strictEqual(pe.isUserCancelledError, false);
+    });
+
+    suite('Code scanning regressions', () => {
+        test('handles repeated deserialization fragments without a matching body', () => {
+            const message = 'error deserializing response '.repeat(30);
+            assert.strictEqual(parseError({ code: 'Outer', message, response: { body: 'inner' } }).message, message);
+            assert.strictEqual(parseError({ code: 'Outer', message: `${message}body`, response: { body: 'inner' } }).message, 'inner');
+        });
+
+        test('does not match deserialization fragments across line endings', () => {
+            for (const separator of ['\n', '\r', '\u2028', '\u2029']) {
+                const message = `error deserializing${separator}response body`;
+                assert.strictEqual(parseError({ code: 'Outer', message, response: { body: 'inner' } }).message, message);
+            }
+        });
+
+        test('uses the first XML message rather than greedily combining elements', () => {
+            assert.strictEqual(parseError('\u0130<Message>first</Message><Message>second</MESSAGE>').message, 'first');
+            assert.strictEqual(parseError('<message>unclosed').message, 'The server returned an XML error response.');
+        });
+
+        test('handles repeated stack function characters', () => {
+            const name = '!'.repeat(30);
+            assert.strictEqual(parseError({ message: 'test', stack: `    at ${name} (/tmp/file.js:1:2)` }).stack, `${name} file.js:1:2`);
+        });
+
+        test('handles repeated filesystem markers and incomplete errors', () => {
+            const repeated = '( (FileSystemError)'.repeat(30);
+            assert.strictEqual(parseError(`${repeated}incomplete`).message, `${repeated}incomplete`);
+            assert.strictEqual(parseError('( (FileSystemError)').message, '( (FileSystemError)');
+            assert.strictEqual(parseError(repeated).message, repeated.slice(1, -1));
+            const parsed = parseError(`${repeated})`);
+            assert.strictEqual(parsed.message, repeated.slice(1));
+            assert.strictEqual(parsed.errorType, 'string');
+            assert.strictEqual(parseError('earlier\n(EntryNotFound (filesystemerror): missing)\n').message, 'EntryNotFound (filesystemerror): missing');
+        });
+
+        test('uses plain titles and XML messages without formatting documents', () => {
+            assert.strictEqual(parseError('<HTML><head><TITLE>  Service\n unavailable &amp; retry &#33; </TITLE></head><body>private details</body></HTML>').message, 'Service unavailable & retry !');
+            assert.strictEqual(parseError('<?xml version="1.0"?><Error><Message>Try again.\r\nRequestId: private</Message></Error>').message, 'Try again.');
+            assert.strictEqual(parseError('<Error><Message>Missing &quot;name&quot; &lt;value&gt; &apos;x&apos;.</Message></Error>').message, 'Missing "name" <value> \'x\'.');
+            assert.strictEqual(parseError('A plain error with <path> in it.').message, 'A plain error with <path> in it.');
+        });
+
+        test('uses generic summaries for missing, malformed or nested markup', () => {
+            for (const document of ['<html><body>details</body></html>', '<!DOCTYPE html><body>details</body>', '<html><title>unclosed', '<html><title> </title>', '<html><title><b>private</b></title>']) {
+                assert.strictEqual(parseError(document).message, 'The server returned an HTML error response.');
+            }
+            for (const document of ['<?xml version="1.0"?><Fault>details</Fault>', '<Error><Code>Unknown</Code></Error>', '<Message><Details>private</Details></Message>', '<Message> </Message>']) {
+                assert.strictEqual(parseError(document).message, 'The server returned an XML error response.');
+            }
+            const html = parseError({ statusCode: 503, message: '<html>details</html>' });
+            assert.strictEqual(html.errorType, '503');
+            assert.strictEqual(html.message, 'The server returned an HTML error response (HTTP 503).');
+            const xml = parseError({ statusCode: 409, message: '<Error>details</Error>' });
+            assert.strictEqual(xml.errorType, '409');
+            assert.strictEqual(xml.message, 'The server returned an XML error response (HTTP 409).');
+        });
+
+        test('bounds summaries and decodes entities only once', () => {
+            const title = 'x'.repeat(301);
+            assert.strictEqual(parseError(`<html><title>${title}</title>`).message, `${'x'.repeat(297)}...`);
+            assert.strictEqual(parseError(`<Message>${'x'.repeat(300)}</Message>`).message, 'x'.repeat(300));
+            assert.strictEqual(parseError('<html><title>&amp;lt; &#x1F680; &#1114112; &unknown;</title></html>').message, '&lt; \u{1F680} &#1114112; &unknown;');
+            assert.strictEqual(parseError('<html><title>&constructor; &AMP;</title></html>').message, '&constructor; &');
+            const unicodeTitle = `${'x'.repeat(296)}\u{1F680}more`;
+            assert.strictEqual(parseError(`<html><title>${unicodeTitle}</title></html>`).message, `${'x'.repeat(296)}...`);
+        });
+
+        test('selects the first XML line after decoding entities once', () => {
+            for (const separator of ['&#10;', '&#13;', '&#xA;', '&#xD;', '&#8232;', '&#8233;']) {
+                assert.strictEqual(parseError(`<Message>Try again.${separator}RequestId: private</Message>`).message, 'Try again.');
+            }
+            assert.strictEqual(parseError('<Message>Try again.&amp;#10;RequestId: private</Message>').message, 'Try again.&#10;RequestId: private');
+        });
+
+        test('uses actual HTTP statuses independently of error codes', () => {
+            for (const message of ['<html>details</html>', '<Error>details</Error>']) {
+                const kind = message.startsWith('<html>') ? 'HTML' : 'XML';
+                for (const status of [503, '503']) {
+                    for (const error of [
+                        { code: 'ServiceUnavailable', statusCode: status, message },
+                        { code: 'ServiceUnavailable', response: { status, body: message } },
+                        { value: { statusCode: status, error: { code: 'ServiceUnavailable', message } } },
+                        { errors: [{ code: 'ServiceUnavailable', statusCode: status, message }] },
+                        { message: JSON.stringify({ statusCode: status, error: { code: 'ServiceUnavailable', message } }) },
+                        { message: JSON.stringify({ code: 'ServiceUnavailable', statusCode: status, message }) }
+                    ]) {
+                        const parsed = parseError(error);
+                        assert.strictEqual(parsed.errorType, 'ServiceUnavailable');
+                        assert.strictEqual(parsed.message, `The server returned an ${kind} error response (HTTP 503).`);
+                    }
+                }
+                for (const statusCode of [undefined, 99, 600, '503junk']) {
+                    assert.strictEqual(parseError({ code: 123, statusCode, message }).message, `The server returned an ${kind} error response.`);
+                    assert.strictEqual(
+                        parseError({ code: 'ServiceUnavailable', statusCode, response: { status: 503 }, message }).message,
+                        `The server returned an ${kind} error response (HTTP 503).`
+                    );
+                }
+            }
+        });
+
+        test('keeps delimiter extraction and stack path privacy', () => {
+            for (const separator of ['\n', '\r', '\r\n', '\u2028', '\u2029']) {
+                assert.strictEqual(parseError(`prefix${separator}(EntryNotFound (FileSystemError): missing)${separator}`).message, 'EntryNotFound (FileSystemError): missing');
+            }
+            assert.strictEqual(parseError('<Message>unclosed').message, 'The server returned an XML error response.');
+            assert.strictEqual(parseError({ message: 'test', stack: 'at C:\\Users\\private\\file.js:1:2\nat async D:\\private\\other.ts:3:4' }).stack, 'file.js:1:2\nother.ts:3:4');
+            assert.strictEqual(parseError({ message: 'test', stack: 'at fn (C:\\private\\file(name).js:1:2)' }).stack, 'fn name).js:1:2');
+            assert.strictEqual(parseError({ code: 'Outer', message: 'ERROR x DESERIALIZING x RESPONSE x BODY', response: { body: 'inner' } }).message, 'inner');
+        });
+
+        test('handles repeated markup and error fragments', () => {
+            for (const size of [1000, 10000]) {
+                for (const tail of ['<!--'.repeat(size), '<a title="'.repeat(size), '<broken '.repeat(size)]) {
+                    assert.strictEqual(parseError('<html><body>visible' + tail).message, 'The server returned an HTML error response.');
+                }
+                const message = 'error deserializing response '.repeat(size);
+                assert.strictEqual(parseError({ code: 'Outer', message, response: { body: 'inner' } }).message, message);
+                assert.strictEqual(parseError({ code: 'Outer', message: message + 'body', response: { body: 'inner' } }).message, 'inner');
+                const xml = '<message>a'.repeat(size);
+                assert.strictEqual(parseError(xml).message, 'The server returned an XML error response.');
+                assert.strictEqual(parseError(xml + '</message>').message, 'The server returned an XML error response.');
+                assert.strictEqual(parseError('<html><title>' + 'x'.repeat(size) + '</title></html>').message, 'x'.repeat(297) + '...');
+                const filesystem = '( (FileSystemError)'.repeat(size);
+                assert.strictEqual(parseError(filesystem + 'incomplete').message, filesystem + 'incomplete');
+                const name = '!'.repeat(size);
+                assert.strictEqual(parseError({ message: 'test', stack: 'at ' + name + ' (C:\\private\\file.js:1:2)' }).stack, name + ' file.js:1:2');
+            }
+        });
     });
 
     test('Error with weird stack', () => {

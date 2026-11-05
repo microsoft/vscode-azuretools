@@ -981,7 +981,17 @@ export declare function registerErrorHandler(handler: ErrorHandler): Disposable;
  */
 export declare function registerTelemetryHandler(handler: TelemetryHandler): Disposable;
 
-export declare function parseError(error: any): IParsedError;
+/**
+ * Extracts common SDK error fields and cancellation information.
+ * HTML responses use a plain title; XML responses use the first line of Message.
+ * These summaries are limited to 300 characters, with generic fallbacks for unsupported markup.
+ * Returned messages are plain text, not sanitized HTML.
+ * @param maskMessage Optional masking applied to plain messages or decoded markup content before
+ * whitespace normalization, XML line selection and truncation can prevent full-value matching.
+ * With masking enabled, overlength markup summaries use a generic fallback instead of truncation,
+ * so a partial credential cannot bypass downstream detection.
+ */
+export declare function parseError(error: any, maskMessage?: (message: string) => string): IParsedError;
 
 export interface IParsedError extends Error {
     errorType: string;
@@ -2071,12 +2081,14 @@ export declare namespace AzExtFsExtra {
 export declare function maskValue(data: string, valueToMask: string | undefined): string;
 
 /**
- * Best effort to mask all data that could potentially identify a user
+ * Masks only explicit action and extension values, including their URL-encoded forms.
+ * Heuristic telemetry cleaning is handled by VS Code's telemetry logger.
+ * This function alone is not a general-purpose scrubber for logs or issue reports.
  *
  * @param unknownArg Any unknown value.  This value will be cast to a string and then masked before returning.
  * @param actionValuesToMask An array of strings indicating additional values to mask.
- * @param lessAggressive A boolean value that defaults to false.  If set to true, the most aggressive masking will be skipped.
- * @param getUsername To be used ONLY by test code.  Function used to get the username.
+ * @param lessAggressive Legacy option, ignored. No heuristic masking is performed.
+ * @param getUsername Legacy test hook, ignored. Usernames are not looked up.
  */
 export declare function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive?: boolean, getUsername?: () => string): string;
 

@@ -3,48 +3,14 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as os from 'os';
 import { IActionContext, IParsedError } from "../index";
 import { parseError } from "./parseError";
-
-// No attempt will be made to mask usernames that are this length or less
-const UnmaskedUsernameMaxLength: number = 3;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 let _extValuesToMask: string[] | undefined;
 function getExtValuesToMask(): string[] {
     _extValuesToMask ??= [];
     return _extValuesToMask;
-}
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-let _usernameMask: RegExp | undefined | null = undefined;
-function getUsernameMask(getUsername: () => string): RegExp | undefined | null {
-    // _usernameMask starts out as undefined, and is set to null if building it fails or it is too short
-    // Specifically checking for undefined here ensures we will only run the code once
-    if (_usernameMask === undefined) {
-        try {
-            const username = getUsername();
-
-            if (username.length <= UnmaskedUsernameMaxLength) {
-                // Too short to mask
-                _usernameMask = null;
-            } else {
-                _usernameMask = new RegExp(`\\b${username}\\b`, 'gi');
-            }
-        } catch {
-            _usernameMask = null;
-        }
-    }
-
-    return _usernameMask;
-}
-
-/**
- * To be used ONLY by test code.
- */
-export function resetUsernameMask(): void {
-    _usernameMask = undefined;
 }
 
 export function addExtensionValueToMask(...values: (string | undefined)[]): void {
@@ -75,50 +41,29 @@ export async function callWithMaskHandling<T>(callback: () => Promise<T>, valueT
     try {
         return await callback();
     } catch (error) {
-        const parsedError: IParsedError = parseError(error);
+        const parsedError: IParsedError = parseError(error, message => maskValue(message, valueToMask));
 
         if (parsedError.isUserCancelledError) {
             throw error;
         }
 
         // eslint-disable-next-line preserve-caught-error -- intentionally omit `cause`: the caught error may contain unmasked PII and must not be attached to the rethrown error
-        throw new Error(maskValue(parsedError.message, valueToMask));
+        throw new Error(parsedError.message);
     }
 }
 
 /**
- * Best effort to mask all data that could potentially identify a user
- * @param lessAggressive If set to true, the most aggressive masking will be skipped
- * @param getUsername To be used ONLY by test code. Function used to get the username.
+ * Masks only explicit action and extension values.
+ * Heuristic telemetry cleaning is handled by VS Code's telemetry logger.
+ * This function alone is not a general-purpose scrubber for logs or issue reports.
  */
-export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[], lessAggressive: boolean = false, getUsername = () => os.userInfo().username): string {
+export function maskUserInfo(unknownArg: unknown, actionValuesToMask: string[]): string {
     let data = String(unknownArg);
 
     // Mask longest values first just in case one is a substring of another
     const valuesToMask = actionValuesToMask.concat(getExtValuesToMask()).sort((a, b) => b.length - a.length);
     for (const value of valuesToMask) {
         data = maskValue(data, value);
-    }
-
-    // Loose pattern matching to identify any JWT-like character sequences; prevents any accidental inclusions to telemetry
-    // The first and second JWT sections begin with "e" since the header and payload represent encoded json values that always begin with "{"
-    // eslint-disable-next-line no-useless-escape
-    data = data.replace(/e[^\.\s]*\.e[^\.\s]*\.[^\.\s]+/gi, getRedactedLabel('jwt'));
-
-    if (!lessAggressive) {
-        data = data.replace(/\S+@\S+/gi, getRedactedLabel('email'));
-        // eslint-disable-next-line no-useless-escape
-        data = data.replace(/\b[0-9a-f\-\:\.]{4,}\b/gi, getRedactedLabel('id')); // should cover guids, ip addresses, etc.
-    }
-
-    data = data.replace(/[a-z]+:\/\/\S*/gi, getRedactedLabel('url'));
-    // eslint-disable-next-line no-useless-escape
-    data = data.replace(/\S+(?<!(?<!\-)\basp)\.(com|org|net)\S*/gi, getRedactedLabel('url'));
-    data = data.replace(/\S*(key|token|sig|password|passwd|pwd)[="':\s]+\S*/gi, getRedactedLabel('key'));
-
-    const usernameMask = getUsernameMask(getUsername);
-    if (usernameMask) {
-        data = data.replace(usernameMask, getRedactedLabel('username'));
     }
 
     return data;

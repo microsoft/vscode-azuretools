@@ -10,11 +10,15 @@ import { IParsedError } from '../index';
 import { isUserCancelledError } from './errors';
 import { parseJson } from './utils/parseJson';
 
-export function parseError(error: any): IParsedError {
+const lineBreakPattern = /[\r\n\u2028\u2029]/;
+const trailingLineBreakPattern = new RegExp(`(?:\\r\\n|${lineBreakPattern.source})$`);
+
+export function parseError(error: any, maskMessage?: (message: string) => string): IParsedError {
     let errorType: string = '';
     let message: string = '';
     let stack: string | undefined;
     let stepName: string | undefined;
+    let httpStatus: number | undefined;
 
     if (typeof (error) === 'object' && error !== null) {
         if (error.constructor !== Object) {
@@ -23,22 +27,26 @@ export function parseError(error: any): IParsedError {
 
         stack = getCallstack(error);
         errorType = getCode(error, errorType);
+        httpStatus = getHttpStatus(error, httpStatus);
 
         // See https://github.com/Microsoft/vscode-azureappservice/issues/419 for an example error that requires these 'unpack's
-        error = unpackErrorFromField(error, 'value');
-        error = unpackErrorFromField(error, '_value');
-        error = unpackErrorFromField(error, 'error');
-        error = unpackErrorFromField(error, 'error');
+        for (const field of ['value', '_value', 'error', 'error']) {
+            error = unpackErrorFromField(error, field);
+            httpStatus = getHttpStatus(error, httpStatus);
+        }
         if (Array.isArray(error.errors) && error.errors.length) {
             error = error.errors[0];
         }
 
         errorType = getCode(error, errorType);
+        httpStatus = getHttpStatus(error, httpStatus);
         message = getMessage(error, message);
 
-        if (!errorType || !message || /error.*deserializing.*response.*body/i.test(message)) {
-            error = unpackErrorFromField(error, 'response');
-            error = unpackErrorFromField(error, 'body');
+        if (!errorType || !message || isResponseDeserializationError(message)) {
+            for (const field of ['response', 'body']) {
+                error = unpackErrorFromField(error, field);
+                httpStatus = getHttpStatus(error, httpStatus);
+            }
 
             errorType = getCode(error, errorType);
             message = getMessage(error, message);
@@ -48,12 +56,14 @@ export function parseError(error: any): IParsedError {
         let parsedMessage: any = parseIfJson(error.message);
         // For some reason, the message is sometimes serialized twice and we need to parse it again
         parsedMessage = parseIfJson(parsedMessage);
+        httpStatus = getHttpStatus(parsedMessage, httpStatus);
         // Extract out the "internal" error if it exists
         if (parsedMessage && parsedMessage.error) {
             parsedMessage = parsedMessage.error;
         }
 
         errorType = getCode(parsedMessage, errorType);
+        httpStatus = getHttpStatus(parsedMessage, httpStatus);
         message = getMessage(parsedMessage, message);
 
         message ||= convertCodeToError(errorType) || JSON.stringify(error);
@@ -72,12 +82,7 @@ export function parseError(error: any): IParsedError {
 
     errorType ||= typeof (error);
     message ||= vscode.l10n.t('Unknown Error');
-
-    message = parseIfHtml(message);
-
-    // Azure storage SDK errors are presented in XML
-    // https://github.com/Azure/azure-sdk-for-js/issues/6927
-    message = parseIfXml(message);
+    message = summarizeMarkupError(message, httpStatus, maskMessage);
 
     return {
         name: errorType,
@@ -118,94 +123,69 @@ function parseIfJson(o: any): any {
     return o;
 }
 
-function parseIfHtml(message: string): string {
-    if (!/<html/i.test(message)) {
-        return message;
-    }
-
-    const paragraphBreak = '\u0000';
-    const listItem = '\u0001';
-    const tableCellBreak = '\u0002';
-    let text = message
-        .replace(/<(head|script|style|template|svg)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, '')
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi, (_anchor: string, attributes: string, content: string): string => {
-            const hrefMatch: RegExpMatchArray | null = attributes.match(/(?:^|\s)href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
-            const href: string | undefined = hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3];
-            return href === undefined ? content : `${content} [${href}]`;
-        })
-        .replace(/<br\b[^>]*\/?>/gi, '\n')
-        .replace(/<\/?h[1-6]\b[^>]*>/gi, '\n')
-        .replace(/<\/?p\b[^>]*>/gi, paragraphBreak)
-        .replace(/<li\b[^>]*>/gi, `\n${listItem}`)
-        .replace(/<\/li\s*>/gi, '\n')
-        .replace(/<\/?(tr|caption)\b[^>]*>/gi, '\n')
-        .replace(/<(td|th)\b[^>]*>/gi, '')
-        .replace(/<\/(td|th)\s*>/gi, tableCellBreak)
-        .replace(/<[^>]+>/g, '')
-        .replace(/[ \t]*\n[ \t]*/g, '\n')
-        .replace(/\n+/g, '\n')
-        .replace(new RegExp(`${paragraphBreak}+`, 'g'), '\n\n')
-        .replace(new RegExp(listItem, 'g'), ' * ')
-        .replace(new RegExp(`${tableCellBreak}(?=\\n|$)`, 'g'), '')
-        .replace(new RegExp(tableCellBreak, 'g'), ' ')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-
-    text = decodeHtmlEntities(text);
-    return text;
-}
-
-function decodeHtmlEntities(text: string): string {
-    const namedEntities: Record<string, string> = {
-        amp: '&',
-        apos: '\'',
-        bull: '\u2022',
-        cent: '\u00A2',
-        copy: '\u00A9',
-        deg: '\u00B0',
-        divide: '\u00F7',
-        euro: '\u20AC',
-        gt: '>',
-        hellip: '\u2026',
-        laquo: '\u00AB',
-        ldquo: '\u201C',
-        lsquo: '\u2018',
-        lt: '<',
-        mdash: '\u2014',
-        middot: '\u00B7',
-        nbsp: ' ',
-        ndash: '\u2013',
-        pound: '\u00A3',
-        quot: '"',
-        raquo: '\u00BB',
-        rdquo: '\u201D',
-        reg: '\u00AE',
-        rsquo: '\u2019',
-        times: '\u00D7',
-        trade: '\u2122',
-        yen: '\u00A5'
-    };
-
-    return text.replace(/&(#(?:x[\da-f]+|\d+)|[a-z]+);/gi, (entity: string, name: string): string => {
-        if (name[0] !== '#') {
-            return namedEntities[name.toLowerCase()] ?? entity;
+function isResponseDeserializationError(message: string): boolean {
+    return message.toLowerCase().split(lineBreakPattern).some(line => {
+        let position = 0;
+        for (const word of ['error', 'deserializing', 'response', 'body']) {
+            const index = line.indexOf(word, position);
+            if (index < 0) {
+                return false;
+            }
+            position = index + word.length;
         }
-
-        const isHex: boolean = name[1].toLowerCase() === 'x';
-        const codePoint: number = parseInt(name.slice(isHex ? 2 : 1), isHex ? 16 : 10);
-        return codePoint <= 0x10FFFF ? String.fromCodePoint(codePoint) : entity;
+        return true;
     });
 }
 
-function parseIfXml(message: string): string {
-    const matches: RegExpMatchArray | null = message.match(/<Message>(.*)<\/Message>/si);
-    if (matches) {
-        return matches[1];
+function summarizeMarkupError(message: string, httpStatus: number | undefined, maskMessage?: (message: string) => string): string {
+    const kind = /<(?:html\b|!doctype\s+html\b)/i.test(message) ? 'HTML'
+        : /<(?:\?xml\b|error\b|message\b)/i.test(message) ? 'XML' : undefined;
+    if (!kind) {
+        return maskMessage ? maskMessage(message) : message;
     }
 
-    return message;
+    const tag = kind === 'HTML' ? 'title' : 'message';
+    const opening = new RegExp(`<${tag}\\s*>`, 'i').exec(message);
+    if (opening) {
+        const content = message.slice(opening.index + opening[0].length);
+        const closing = new RegExp(`</${tag}\\s*>`, 'i').exec(content);
+        if (closing) {
+            let summary = content.slice(0, closing.index);
+            if (summary && !/[<>]/.test(summary)) {
+                summary = decodeSummaryEntities(summary);
+                summary = (maskMessage ? maskMessage(summary) : summary).trim();
+                if (kind === 'XML') {
+                    summary = summary.split(lineBreakPattern)[0];
+                }
+                summary = summary.replace(/\s+/g, ' ').trim();
+                if (summary && summary.length <= 300) {
+                    return summary;
+                }
+                // Truncation can prevent downstream cleaners from recognizing a credential.
+                if (summary && !maskMessage) {
+                    const prefix = summary.slice(0, 297).replace(/[\uD800-\uDBFF]$/, '');
+                    return `${prefix}...`;
+                }
+            }
+        }
+    }
+
+    return httpStatus !== undefined
+        ? vscode.l10n.t('The server returned an {0} error response (HTTP {1}).', kind, httpStatus)
+        : vscode.l10n.t('The server returned an {0} error response.', kind);
+}
+
+function decodeSummaryEntities(text: string): string {
+    const entities: Record<string, string> = { amp: '&', apos: "'", gt: '>', lt: '<', nbsp: ' ', quot: '"' };
+    return text.replace(/&(#(?:x[\da-f]+|\d+)|[a-z]+);/gi, (entity: string, name: string): string => {
+        if (name[0] !== '#') {
+            const key = name.toLowerCase();
+            return Object.hasOwn(entities, key) ? entities[key] : entity;
+        }
+        const hex = name[1].toLowerCase() === 'x';
+        const codePoint = parseInt(name.slice(hex ? 2 : 1), hex ? 16 : 10);
+        return codePoint <= 0x10FFFF ? String.fromCodePoint(codePoint) : entity;
+    });
 }
 
 function getMessage(o: any, defaultMessage: string): string {
@@ -215,6 +195,16 @@ function getMessage(o: any, defaultMessage: string): string {
 function getCode(o: any, defaultCode: string): string {
     const code: any = o && (o.code || o.Code || o.errorCode || o.statusCode);
     return code ? String(code) : defaultCode;
+}
+
+function getHttpStatus(o: any, defaultStatus: number | undefined): number | undefined {
+    for (const status of [o?.statusCode, o?.status, o?.response?.statusCode, o?.response?.status]) {
+        const numericStatus = typeof status === 'string' && /^\d{3}$/.test(status) ? Number(status) : status;
+        if (typeof numericStatus === 'number' && Number.isInteger(numericStatus) && numericStatus >= 100 && numericStatus <= 599) {
+            return numericStatus;
+        }
+    }
+    return defaultStatus;
 }
 
 function unpackErrorsInMessage(message: string): string {
@@ -262,20 +252,25 @@ function getCallstack(error: { stack?: unknown }): string | undefined {
     const stack: string = typeof error.stack === 'string' ? error.stack : '';
 
     const minifiedLines: (string | undefined)[] = stack
-        .split(/(\r\n|\n)/g) // split by line ending
+        .split(lineBreakPattern)
         .map(l => {
             let result: string = '';
             // Get just the file name, line number and column number
             // From above example: storageserviceclient.js:751:50
-            const fileMatch: RegExpMatchArray | null = l.match(/[^\/\\\(\s]+\.(t|j)s:[0-9]+:[0-9]+/i);
+            const fileMatch = l.split(/[\/\\(\s]/).map(part => /^.+\.[tj]s:[0-9]+:[0-9]+/i.exec(part)).find(match => match);
 
             // Ignore any lines without a file match (e.g. "at Generator.next (<anonymous>)")
             if (fileMatch) {
                 // Get the function name
                 // From above example: FileService.StorageServiceClient._processResponse
-                const functionMatch: RegExpMatchArray | null = l.match(/^[\s]*at ([^\(\\\/]+(?:\\|\/)?)+/i);
-                if (functionMatch) {
-                    result += functionMatch[1];
+                const frame = l.trimStart();
+                const opening = frame.indexOf('(');
+                if (/^at /i.test(frame) && opening >= 0) {
+                    const functionName = frame.slice(3, opening);
+                    if (!/^[\\/]/.test(functionName)) {
+                        const start = Math.max(functionName.lastIndexOf('/'), functionName.lastIndexOf('\\')) + 1;
+                        result += functionName.slice(start);
+                    }
                 }
 
                 const parts: string[] = [];
@@ -306,10 +301,11 @@ function getCallstack(error: { stack?: unknown }): string | undefined {
  * See https://github.com/microsoft/vscode-cosmosdb/issues/1580 for an example error
  */
 function parseIfFileSystemError(message: string, errorType: string): [string, string] {
-    const match: RegExpMatchArray | null = message.match(/\((([a-z]*) \(FileSystemError\).*)\)$/i);
-    if (match) {
-        message = match[1];
-        errorType = match[2];
+    const lastLine = message.replace(trailingLineBreakPattern, '').split(lineBreakPattern).pop() ?? '';
+    const match = /\(([a-z]*) \(FileSystemError\)/i.exec(lastLine);
+    if (match && match.index + match[0].length < lastLine.length && lastLine.endsWith(')')) {
+        message = lastLine.slice(match.index + 1, -1);
+        errorType = match[1];
     }
     return [message, errorType];
 }

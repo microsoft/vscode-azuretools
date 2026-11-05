@@ -127,7 +127,7 @@ function handleError(context: types.IActionContext, callbackId: string, error: u
         const unMaskedErrorData: types.IParsedError = parseError(errorContext.error);
 
         // A copy of the error data after masking private user information as much as possible
-        const maskedErrorMessage = maskUserInfo(unMaskedErrorData.message, context.valuesToMask);
+        const maskedErrorMessage = parseError(errorContext.error, message => maskUserInfo(message, context.valuesToMask)).message;
 
         if (unMaskedErrorData.stepName) {
             setErrorTelemetryStep(context, unMaskedErrorData.stepName);
@@ -240,7 +240,7 @@ function handleTelemetry(context: types.IActionContext, callbackId: string, star
                     } else if (value instanceof TelemetryTrustedValue) {
                         // don't mask trusted values
                     } else {
-                        context.telemetry.properties[key] = maskUserInfo(value, context.valuesToMask, true /* lessAggressive */);
+                        context.telemetry.properties[key] = maskUserInfo(value, context.valuesToMask);
                     }
                 }
             }

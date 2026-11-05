@@ -25,10 +25,17 @@ Here are a few of the benefits this provides:
 
 - Parses Azure errors of the form `{ "Code": "Conflict", "Message": "This is the actual message" }` and only displays the 'Message' property
 - Displays single line errors normally and multi-line errors in the output window
+- Summarizes HTML errors using a plain `<title>` and XML errors using the first decoded line of `<Message>`, limited to 300 characters. Missing, empty or nested markup produces a generic error, including a valid `statusCode`/`status` from the error or its response when available, independently of the error code. Document bodies, formatting and XML request metadata are not preserved. Returned messages are plain text, not sanitized HTML.
 - Tracks multiple properties in addition to the [common extension properties](https://github.com/Microsoft/vscode-extension-telemetry#common-properties):
   - result (Succeeded, Failed, or Canceled)
   - duration
   - error
+
+`maskUserInfo` replaces only explicit action/extension values and their URL-encoded forms. It does not guess whether text contains a username, ID, domain, email or secret. The legacy `lessAggressive` and `getUsername` arguments are ignored. Heuristic telemetry cleaning belongs to VS Code's telemetry logger through `@vscode/extension-telemetry` and happens at send time, not when `maskUserInfo` returns.
+
+**Prototype compatibility change:** local diagnostic scrubbing is outside this utility's scope. Local logs, issue reports and verbose `DEBUGTELEMETRY` output do not receive VS Code's cleaning. Downstream diagnostic consumers must be migrated before release. VS Code's cleaner can redact an entire telemetry property and does not cover every standalone username, ID or domain; register specific sensitive values explicitly when needed. Known credentials should still be removed using `maskValue` or `callWithMaskHandling`, independently of telemetry enablement. No additional telemetry logger or network request is created for masking.
+
+When masking an error for diagnostics, use `parseError(error, message => maskValue(message, credential))` (or a callback using `maskUserInfo`) rather than masking the returned summary. The callback runs on decoded markup content before whitespace normalization or XML line selection can expose a partial credential. With a masking callback, summaries over 300 characters use the generic fallback instead of truncation, which could prevent downstream credential detection. `callWithMaskHandling` and error telemetry use this ordering; ordinary user-facing error messages remain unmasked and overlength summaries are truncated without splitting a Unicode surrogate pair.
 
 You can also register events. By default, every event is tracked in telemetry. It is _highly recommended_ to leverage the IActionContext.telemetry.suppressIfSuccessful parameter to filter only the events that apply to your extension. For example, if your extension only handles `json` files in the `onDidSaveTextDocument`, it might look like this:
 
