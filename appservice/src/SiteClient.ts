@@ -168,6 +168,13 @@ export class SiteClient implements IAppSettingsClient {
             await this._client.webApps.start(this._site.resourceGroup, this._site.siteName);
     }
 
+    public async restart(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        this._site.slotName ?
+            await this._client.webApps.restartSlot(this._site.resourceGroup, this._site.siteName, this._site.slotName) :
+            await this._client.webApps.restart(this._site.resourceGroup, this._site.siteName);
+    }
+
     public async getSite(): Promise<Site | undefined> {
         return (this._site.slotName ?
             await tryGetWebAppSlot(this._client, this._site.resourceGroup, this._site.siteName, this._site.slotName) :
