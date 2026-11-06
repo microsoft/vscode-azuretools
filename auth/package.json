@@ -56,7 +56,7 @@
         "@azure/arm-resources-subscriptions": "^3.0.0-beta.1",
         "@azure/core-auth": "^1.10.1",
         "@azure/core-rest-pipeline": "^1.23.0",
-        "@azure/identity": "^4.13.1",
+        "@azure/identity": "^4.14.1",
         "@azure/ms-rest-azure-env": "^2.0.0"
     },
     "publishConfig": {
