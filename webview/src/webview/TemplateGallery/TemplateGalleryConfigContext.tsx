@@ -15,7 +15,9 @@ import {
     defaultResourceOrder,
     type InitialTemplateFilters,
     type TemplateGalleryConfig,
+    type TemplateGalleryExternalTab,
 } from './types';
+import { getValidExternalTabs } from './externalTabs';
 
 export interface TemplateGalleryConfigContextValue {
     serviceName: string;
@@ -30,6 +32,7 @@ export interface TemplateGalleryConfigContextValue {
     categoryOrder: string[];
     resourceOrder: string[];
     initialFilters: InitialTemplateFilters;
+    externalTabs: TemplateGalleryExternalTab[];
 }
 
 const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextValue>({
@@ -45,6 +48,7 @@ const TemplateGalleryConfigContext = createContext<TemplateGalleryConfigContextV
     categoryOrder: defaultCategoryOrder,
     resourceOrder: defaultResourceOrder,
     initialFilters: {},
+    externalTabs: [],
 });
 
 /**
@@ -70,6 +74,7 @@ export const TemplateGalleryConfigProvider = ({
         categoryOrder: config.categoryOrder ?? defaultCategoryOrder,
         resourceOrder: config.resourceOrder ?? defaultResourceOrder,
         initialFilters: config.initialFilters ?? {},
+        externalTabs: getValidExternalTabs(config.externalTabs),
     }), [config]);
 
     return (

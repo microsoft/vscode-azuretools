@@ -88,7 +88,26 @@ export interface TemplateGalleryConfig {
     resourceOrder?: string[];
     /** Filters applied when the gallery first opens. Omitted filters use the gallery defaults. */
     initialFilters?: InitialTemplateFilters;
+    /**
+     * Extra tabs that hand off to an extension-owned experience instead of rendering gallery content.
+     * Selecting one posts an `externalTabSelected` message and keeps the current gallery tab active.
+     */
+    externalTabs?: TemplateGalleryExternalTab[];
 }
+
+export interface TemplateGalleryExternalTab {
+    /** Stable identifier sent back to the extension when the tab is selected. */
+    id: string;
+    /** Tab label. */
+    label: string;
+    /** Optional codicon name (without the `codicon-` prefix), e.g. "plug". */
+    icon?: string;
+    /** Use-case filter values that open this tab instead of filtering the gallery. */
+    useCases?: string[];
+}
+
+/** How the user reached an external tab. */
+export type ExternalTabSelectionSource = 'tab' | 'filter';
 
 // ── Messages: Webview → Extension ──
 
@@ -137,7 +156,16 @@ export interface ShowErrorMessage {
     message: string;
 }
 
+export interface ExternalTabSelectedMessage {
+    type: 'externalTabSelected';
+    tabId: string;
+    source: ExternalTabSelectionSource;
+    /** Gallery filters at the time of selection, so the extension can carry them over. */
+    filters: FilterState;
+}
+
 export type WebviewToExtensionMessage =
+    | ExternalTabSelectedMessage
     | GetTemplatesMessage
     | RefreshTemplatesMessage
     | UseCachedTemplatesMessage

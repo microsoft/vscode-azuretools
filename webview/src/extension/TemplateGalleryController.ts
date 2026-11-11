@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ext } from './extensionVariables';
 import { WebviewBaseController } from './WebviewBaseController';
-import type { IProjectTemplate, ProjectCreationEntryPoint, TemplateGalleryConfig, WebviewToExtensionMessage, ExtensionToWebviewMessage } from '../webview/TemplateGallery/types';
+import type { ExternalTabSelectionSource, FilterState, IProjectTemplate, ProjectCreationEntryPoint, TemplateGalleryConfig, WebviewToExtensionMessage, ExtensionToWebviewMessage } from '../webview/TemplateGallery/types';
 
 /**
  * Abstract controller for the Template Gallery webview panel.
@@ -106,6 +106,11 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
         // No-op by default.
     }
 
+    /** Called when a tab or use-case filter declared in `config.externalTabs` is selected. */
+    protected async onExternalTabSelected(_tabId: string, _source: ExternalTabSelectionSource, _filters: FilterState): Promise<void> {
+        // No-op by default.
+    }
+
     /** Show an error to the user. */
     protected async showError(message: string): Promise<void> {
         await vscode.window.showErrorMessage(message);
@@ -173,6 +178,10 @@ export abstract class TemplateGalleryController extends WebviewBaseController<Te
 
             case 'showError':
                 await this.showError(message.message);
+                break;
+
+            case 'externalTabSelected':
+                await this.onExternalTabSelected(message.tabId, message.source, message.filters);
                 break;
         }
     }

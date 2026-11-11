@@ -11,6 +11,7 @@ import '../styles/templateGalleryView.scss';
 import { useConfiguration } from '../useConfiguration';
 import { TemplateGalleryConfigProvider, useTemplateGalleryConfig } from './TemplateGalleryConfigContext';
 import { createApplyFilters } from './applyFilters';
+import { findExternalTabById, findExternalTabForUseCase } from './externalTabs';
 import { AiGenerateView } from './components/AiGenerateView';
 import { CreatingView } from './components/CreatingView';
 import { FilterBar } from './components/FilterBar';
@@ -246,8 +247,29 @@ const TemplateGalleryViewInner = (): JSX.Element => {
     }, [postMessage]);
 
     const handleTabSelect = useCallback((_event: SelectTabEvent, data: SelectTabData) => {
-        dispatch({ type: 'SET_MODE', mode: data.value as ViewMode });
-    }, [dispatch]);
+        const tabId = String(data.value);
+        if (findExternalTabById(config.externalTabs, tabId)) {
+            postMessage({ type: 'externalTabSelected', tabId, source: 'tab', filters: state.filters });
+            return;
+        }
+        dispatch({ type: 'SET_MODE', mode: tabId as ViewMode });
+    }, [config.externalTabs, postMessage, state.filters]);
+
+    const handleFilterChange = useCallback((key: keyof FilterState, value: string) => {
+        if (key === 'useCase') {
+            const externalTab = findExternalTabForUseCase(config.externalTabs, value);
+            if (externalTab) {
+                postMessage({
+                    type: 'externalTabSelected',
+                    tabId: externalTab.id,
+                    source: 'filter',
+                    filters: { ...state.filters, useCase: value },
+                });
+                return;
+            }
+        }
+        dispatch({ type: 'SET_FILTER', key, value });
+    }, [config.externalTabs, postMessage, state.filters]);
 
     // ── Render ──
 
@@ -296,6 +318,15 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                             Build with Copilot Chat
                         </Tab>
                     )}
+                    {config.externalTabs.map(tab => (
+                        <Tab
+                            key={tab.id}
+                            value={tab.id}
+                            icon={tab.icon ? <span className={`codicon codicon-${tab.icon}`}></span> : undefined}
+                        >
+                            {tab.label}
+                        </Tab>
+                    ))}
                 </TabList>
             </div>
 
@@ -305,7 +336,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     <FilterBar
                         templates={state.templates}
                         filters={state.filters}
-                        onFilterChange={(key, value) => dispatch({ type: 'SET_FILTER', key, value })}
+                        onFilterChange={handleFilterChange}
                         onClearFilters={() => dispatch({ type: 'CLEAR_FILTERS' })}
                     />
 
