@@ -23,6 +23,15 @@ export function findExternalTabById(tabs: TemplateGalleryExternalTab[], id: stri
     return tabs.find(tab => tab.id === id);
 }
 
+/** Orders gallery tabs as Browse Templates, external tabs, then Build with Copilot Chat when supported. */
+export function getGalleryTabs(externalTabs: TemplateGalleryExternalTab[], supportsAiGeneration: boolean): TemplateGalleryExternalTab[] {
+    return [
+        { id: 'browse', label: 'Browse Templates', icon: 'extensions' },
+        ...externalTabs,
+        ...(supportsAiGeneration ? [{ id: 'ai', label: 'Build with Copilot Chat', icon: 'sparkle' }] : []),
+    ];
+}
+
 /** Returns the external tab that owns a use-case filter value, if any. "all" is never owned. */
 export function findExternalTabForUseCase(tabs: TemplateGalleryExternalTab[], useCase: string): TemplateGalleryExternalTab | undefined {
     if (!useCase || useCase === 'all') {

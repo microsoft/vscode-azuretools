@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { findExternalTabById, findExternalTabForUseCase, getValidExternalTabs } from '../../src/webview/TemplateGallery/externalTabs';
+import { findExternalTabById, findExternalTabForUseCase, getGalleryTabs, getValidExternalTabs } from '../../src/webview/TemplateGallery/externalTabs';
 
 suite('(unit) externalTabs', () => {
     const connectors = { id: 'connectors', label: 'Connectors', useCases: ['Connectors'] };
@@ -27,6 +27,12 @@ suite('(unit) externalTabs', () => {
     test('finds tabs by id', () => {
         assert.strictEqual(findExternalTabById([connectors], 'connectors'), connectors);
         assert.strictEqual(findExternalTabById([connectors], 'browse'), undefined);
+    });
+
+    test('places external tabs between Browse Templates and Copilot Chat', () => {
+        assert.deepStrictEqual(getGalleryTabs([connectors], true).map(tab => tab.id), ['browse', 'connectors', 'ai']);
+        assert.deepStrictEqual(getGalleryTabs([connectors], false).map(tab => tab.id), ['browse', 'connectors']);
+        assert.deepStrictEqual(getGalleryTabs([], true).map(tab => tab.id), ['browse', 'ai']);
     });
 
     test('maps owned use cases case-insensitively and never owns "all"', () => {

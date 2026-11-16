@@ -90,6 +90,7 @@ export interface TemplateGalleryConfig {
     initialFilters?: InitialTemplateFilters;
     /**
      * Extra tabs that hand off to an extension-owned experience instead of rendering gallery content.
+     * They render between Browse Templates and Build with Copilot Chat.
      * Selecting one posts an `externalTabSelected` message and keeps the current gallery tab active.
      */
     externalTabs?: TemplateGalleryExternalTab[];
