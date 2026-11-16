@@ -11,7 +11,7 @@ import '../styles/templateGalleryView.scss';
 import { useConfiguration } from '../useConfiguration';
 import { TemplateGalleryConfigProvider, useTemplateGalleryConfig } from './TemplateGalleryConfigContext';
 import { createApplyFilters } from './applyFilters';
-import { findExternalTabById, findExternalTabForUseCase } from './externalTabs';
+import { findExternalTabById, findExternalTabForUseCase, getGalleryTabs } from './externalTabs';
 import { AiGenerateView } from './components/AiGenerateView';
 import { CreatingView } from './components/CreatingView';
 import { FilterBar } from './components/FilterBar';
@@ -310,15 +310,7 @@ const TemplateGalleryViewInner = (): JSX.Element => {
                     selectedValue={state.mode}
                     onTabSelect={handleTabSelect}
                 >
-                    <Tab value="browse" icon={<span className="codicon codicon-extensions"></span>}>
-                        Browse Templates
-                    </Tab>
-                    {config.supportsAiGeneration && (
-                        <Tab value="ai" icon={<span className="codicon codicon-sparkle"></span>}>
-                            Build with Copilot Chat
-                        </Tab>
-                    )}
-                    {config.externalTabs.map(tab => (
+                    {getGalleryTabs(config.externalTabs, config.supportsAiGeneration).map(tab => (
                         <Tab
                             key={tab.id}
                             value={tab.id}
